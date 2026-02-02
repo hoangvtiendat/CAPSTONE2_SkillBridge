@@ -1,70 +1,68 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# SkillBridge — Frontend
 
-## Available Scripts
+Giao diện người dùng cho dự án SkillBridge, xây dựng bằng React. Bao gồm các trang cho người quản trị, nhà tuyển dụng, ứng viên và chức năng xác thực.
 
-In the project directory, you can run:
+**Stack chính**: React, React Router, Context / Redux (store), JavaScript, CSS.
 
-### `npm start`
+**Thư mục chính**:
+- `src/` — mã nguồn ứng dụng
+	- `components/` — các component theo chức năng
+	- `config/` — cấu hình API và môi trường
+	- `context/` — React context (Auth, User, Company...)
+	- `hooks/` — custom hooks
+	- `pages/` — các trang (routes)
+	- `services/` — gọi API, logic phía client
+	- `store/` — Redux store, actions, reducers
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Khởi động nhanh
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Yêu cầu: Node.js (14+) và npm hoặc yarn
 
-### `npm test`
+1. Cài dependencies
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+```
 
-### `npm run build`
+2. Chạy môi trường phát triển
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Truy cập: http://localhost:3000
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Build để deploy
 
-### `npm run eject`
+```bash
+npm run build
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Build sẽ tạo thư mục `build/` chứa tệp tĩnh để đưa lên server hoặc dịch vụ hosting (Netlify, Vercel, GitHub Pages, v.v.).
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+4. Chạy test (nếu có)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+npm test
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Cấu hình môi trường
 
-## Learn More
+- API base URL và các flag cấu hình nằm trong `src/config/` (`environment.js`, `api.config.js`, `featureFlags.js`).
+- Thay đổi cấu hình trước khi build cho môi trường production/staging.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Triển khai
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Upload nội dung `build/` lên static host hoặc cấu hình CI/CD để build và deploy tự động.
 
-### Code Splitting
+## Góp ý & Phát triển
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- Tạo branch mới cho tính năng hoặc fix: `git checkout -b feat/your-feature`
+- Commit thay đổi rõ ràng, push và tạo Pull Request.
 
-### Analyzing the Bundle Size
+Nếu cần giúp cấu hình backend hoặc môi trường, cho tôi biết để hướng dẫn chi tiết.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
+---
+Vietnamese README created by the project maintainer. For detailed docs, check `src/` folder and the app code.
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
