@@ -4,6 +4,8 @@ import com.skillbridge.backend.dto.request.LoginRequest;
 //import com.skillbridge.backend.dto.request.LoginResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.entity.User;
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +28,9 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         System.out.println("user: " + user.toString());
+        if(!"ACTIVE".equals(user.getStatus())){
+            throw new AppException(ErrorCode.USER_STATUS);
+        }
         boolean matches = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if (!matches) {
             throw new RuntimeException("Invalid email or password");
