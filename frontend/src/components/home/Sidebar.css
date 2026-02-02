@@ -1,0 +1,108 @@
+/* Sidebar layout redesigned to follow main content height */
+.sidebar {
+	width: 260px;
+	background: #f8f9fa;
+	border-right: 1px solid #e0e0e0;
+	padding: 30px 0;
+	/* Let sidebar height follow the main content (job cards) so its bottom meets the CTA) */
+	height: auto;
+	position: relative;
+	align-self: stretch;
+	overflow: visible;
+}
+
+.sidebar-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+}
+
+.sidebar-section h4 {
+	font-size: 13px;
+	font-weight: 700;
+	color: #999;
+	text-transform: uppercase;
+	padding: 0 25px;
+	margin-bottom: 18px;
+	letter-spacing: 0.6px;
+}
+
+.sidebar-section ul {
+	list-style: none;
+	padding: 0;
+}
+
+.sidebar-section li {
+	margin: 0;
+}
+
+.sidebar-link {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	padding: 14px 25px;
+	color: #333;
+	text-decoration: none;
+	font-size: 15px;
+	font-weight: 500;
+	transition: all 0.18s ease;
+	position: relative;
+}
+
+.sidebar-link:hover {
+	background: #e8e8e8;
+	color: #667eea;
+	padding-left: 28px;
+}
+
+.sidebar-link .icon {
+	font-size: 18px;
+	display: inline-block;
+	width: 24px;
+	text-align: center;
+}
+
+/* Active state */
+.sidebar-link.active {
+	background: #e8f0fe;
+	color: #667eea;
+	border-left: 4px solid #667eea;
+	padding-left: 21px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+	.sidebar {
+		width: 200px;
+		padding: 20px 0;
+	}
+
+	.sidebar-link {
+		padding: 12px 18px;
+		font-size: 14px;
+	}
+
+	.sidebar-link:hover {
+		padding-left: 21px;
+	}
+
+	.sidebar-link .icon {
+		font-size: 16px;
+	}
+}
+
+@media (max-width: 768px) {
+	.sidebar {
+		position: fixed;
+		left: 0;
+		top: 70px;
+		width: 220px;
+		height: auto;
+		max-height: 300px;
+		z-index: 50;
+		transform: translateX(-100%);
+		transition: transform 0.3s ease;
+		box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+	}
+}
+
