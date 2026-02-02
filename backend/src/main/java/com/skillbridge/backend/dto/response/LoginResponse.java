@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 //@AllArgsConstructor
 //@NoArgsConstructor
-public class LoginResponse {
+public class LoginResponse extends ApiResponse<LoginResponse> {
 //    private String accessToken;
 //    private String refreshToken;
 
@@ -20,7 +20,6 @@ public class LoginResponse {
     }
 
     public String getAccessToken() {
-
         return accessToken;
     }
 

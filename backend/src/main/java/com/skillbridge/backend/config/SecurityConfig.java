@@ -23,7 +23,11 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()   // 👈 mở toàn bộ API
+                        .requestMatchers(
+                                "/auth/**",
+                                "/api/public/**"
+                        ).permitAll()
+                        .anyRequest().authenticated() // Bắt buộc login ngoaị trừ api auth và api public
                 )
                 .build();
     }

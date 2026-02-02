@@ -5,6 +5,7 @@ import com.skillbridge.backend.dto.request.UserUpdateRequest;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,9 @@ public class  UserController {
         return userService.getUsers();
     }
 
+    //Chỉ cho phép ADMIN getuser
+    // api get - .../identity/users
+    @PreAuthorize("hashRole('ADMIN')")
     @GetMapping("/{userid}")
     User getUser(@PathVariable String userid) {
         return userService.getUser(userid);
