@@ -1,0 +1,277 @@
+.carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+.carousel-slides {
+  position: relative;
+  width: 100%;
+  padding-bottom: 30%; /* Chiếm 30% màn hình */
+  height: 0;
+}
+
+.carousel-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 4s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-slide.active {
+  opacity: 1;
+  z-index: 10;
+}
+
+.slide-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 30px 50px;
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: white;
+}
+
+.slide-text {
+  z-index: 2;
+}
+
+.slide-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.slide-subtitle {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  opacity: 0.95;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+.slide-description {
+  font-size: 13px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  opacity: 0.9;
+  max-width: 500px;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-slide {
+  display: inline-block;
+  padding: 10px 28px;
+  background-color: white;
+  color: #667eea;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.btn-slide:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.slide-image {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.slide-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Navigation Arrows */
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.carousel-nav:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav svg {
+  width: 24px;
+  height: 24px;
+}
+
+.carousel-nav-prev {
+  left: 30px;
+}
+
+.carousel-nav-next {
+  right: 30px;
+}
+
+/* Indicators */
+.carousel-indicators {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 20;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator.active {
+  background: white;
+  width: 30px;
+  border-radius: 6px;
+}
+
+.indicator:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Info Counter */
+.carousel-info {
+  position: absolute;
+  bottom: 30px;
+  right: 50px;
+  z-index: 20;
+}
+
+.info-counter {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .slide-content {
+    grid-template-columns: 1fr;
+    padding: 30px 20px;
+    gap: 30px;
+  }
+
+  .slide-title {
+    font-size: 26px;
+  }
+
+  .slide-subtitle {
+    font-size: 14px;
+  }
+
+  .slide-description {
+    font-size: 12px;
+  }
+
+  .carousel-nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .carousel-nav-prev {
+    left: 15px;
+  }
+
+  .carousel-nav-next {
+    right: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-slides {
+    padding-bottom: 35%;
+  }
+
+  .slide-content {
+    padding: 20px 15px;
+  }
+
+  .slide-title {
+    font-size: 22px;
+  }
+
+  .slide-subtitle {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .slide-description {
+    font-size: 11px;
+    margin-bottom: 12px;
+  }
+
+  .btn-slide {
+    padding: 8px 20px;
+    font-size: 12px;
+  }
+
+  .carousel-nav {
+    width: 35px;
+    height: 35px;
+  }
+
+  .carousel-nav svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .carousel-info {
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .indicator.active {
+    width: 24px;
+  }
+}
