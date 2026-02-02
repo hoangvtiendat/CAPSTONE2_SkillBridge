@@ -1,0 +1,26 @@
+#spring.application.name=backend
+
+server:
+  port: 8081
+  servlet:
+    context-path: /identity
+spring:
+  web:
+    error:
+      include-stacktrace: never
+      include-message: always
+  application:
+    name:backend
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  datasource:
+    url: "jdbc:mysql://localhost:3306/skillbridge"
+    username: root
+    password: tiendat2004
+
+jwt:
+  secret: skillbridge-super-secret-key-should-be-very-long-256bit
+  expiration: 3600000        # 1h (ms)
+  refresh-expiration: 604800000 # 7 ngày
