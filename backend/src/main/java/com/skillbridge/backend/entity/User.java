@@ -1,35 +1,62 @@
 package com.skillbridge.backend.entity;
 
 import jakarta.persistence.*;
-
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "user_id",length = 50)
     private String id;
 
-    private String username;
-    private String password;
-    @Column(unique = true)
+    @Email
+    @NotBlank
+    @Column(name="email", nullable = false,unique = true)
     private String email;
-    private LocalDate dob;
 
-    public String getUsername() {
-        return username;
+    @NotBlank
+    @Size(min=8)
+    @Column(name="password", nullable = false)
+    private String password;
+
+    @Column(name="role", nullable = false)
+    private String role = "CANDIDATE";
+
+    @Column(name="status",nullable = false)
+    private String status = "ACTIVE";
+
+    @Column(name="refresh_token")
+    private String refreshToken;
+
+    @Column(name="is_2fa_enabled", nullable = false)
+    private boolean is2faEnabled = false;
+
+    @Column(name="created_at", nullable = false,updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate(){
+        this.createdAt = LocalDateTime.now();
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public boolean isIs2faEnabled() {
+        return is2faEnabled;
     }
 
-    public String getPassword() {
-        return password;
+    public void setIs2faEnabled(boolean is2faEnabled) {
+        this.is2faEnabled = is2faEnabled;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getEmail() {
@@ -40,19 +67,38 @@ public class User {
         this.email = email;
     }
 
-    public LocalDate getDob() {
-        return dob;
+    public String getPassword() {
+        return password;
     }
 
-    public void setDob(LocalDate dob) {
-        this.dob = dob;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
-    public String getId() {
-        return id;
+    public String getRole() {
+        return role;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 }

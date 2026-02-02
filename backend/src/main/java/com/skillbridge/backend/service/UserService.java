@@ -19,13 +19,9 @@ public class UserService {
 
     public User createUser(UserCreationRequest request) {
         User user = new User();
-
-        user.setUsername(request.getUsername());
-
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         user.setPassword(hashedPassword);
         user.setEmail(request.getEmail());
-        user.setDob(request.getDob());
 
         return userRepository.save(user);
     }
@@ -35,7 +31,6 @@ public class UserService {
 
         user.setPassword(request.getPassword());
         user.setEmail(request.getEmail());
-        user.setDob(request.getDob());
 
         return userRepository.save(user);
     }
