@@ -25,10 +25,7 @@ const Header = () => {
         {/* Auth Buttons */}
         <div className="header-actions">
           <Link to="/login" className="btn-login">
-            Đăng Nhập
-          </Link>
-          <Link to="/signup" className="btn-signup">
-            Đăng Ký
+            Tham gia
           </Link>
         </div>
 

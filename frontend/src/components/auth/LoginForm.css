@@ -1,0 +1,148 @@
+.welcome-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  padding: 1rem;
+  font-family: sans-serif;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 2rem;
+}
+
+.google-btn {
+  font-size: 15px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #334155;
+  transition: background 0.2s;
+  margin-bottom: 1.5rem;
+}
+
+.google-btn:hover { background-color: #f9fafb; }
+.google-btn img { width: 1.25rem; height: 1.25rem; }
+
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.divider::before, .divider::after {
+  content: "";
+  height: 1px;
+  background-color: #e5e7eb;
+  flex: 1;
+}
+
+.divider span {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.auth-form { width: 100%; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+.form-group input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.forgot-link {
+  display: flex;
+  justify-content: flex-end;
+  margin: -0.5rem 0 1.5rem 0;
+}
+
+.forgot-link button {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.forgot-link button:hover { text-decoration: underline; }
+
+.submit-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0f172a;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
+}
+
+.submit-btn:hover { background-color: #1e293b; }
+
+.toggle-btn {
+  margin-top: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.toggle-btn:hover { color: #2563eb; }
