@@ -20,6 +20,10 @@ public class AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private OtpService otpService;
+
     @Autowired
     private JwtService jwtService;
     // sử dụng preAuthorize
@@ -58,15 +62,38 @@ public class AuthService {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
         //Xử lý trường hợp nếu người dùng mở xác thực 2 lớp
+        if (user.isIs2faEnabled()) {
+            otpService.sendOtpEmail(user.getEmail());
 
+            return new LoginResponse("1", null, null);
+        }
         //
-        String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
-        String refreshToken = jwtService.generateRefreshToken(user.getId());
-        user.setRefreshToken(refreshToken);
+        return issueToken(user);
+    }
+    public LoginResponse verifyOtp(LoginRequest request) {
 
+        boolean valid = otpService.verifyOtp(
+                request.getEmail(),
+                request.getOtp()
+        );
+
+        if (!valid) {
+            throw new AppException(ErrorCode.INVALID_OTP);
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+
+        return issueToken(user);
+    }
+    private LoginResponse issueToken(User user) {
+
+        String accessToken = jwtService.generateAccesToken(user.getId(),user.getEmail(),user.getRole());
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        System.out.println("accessToken: " + accessToken);
-        return new LoginResponse(accessToken, refreshToken);
+        return new LoginResponse("0", accessToken, refreshToken);
     }
 }

@@ -7,6 +7,7 @@ import com.skillbridge.backend.dto.request.RegisterRequest;
 import com.skillbridge.backend.dto.response.RegisterResponse;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.service.OtpService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+    private OtpService otpService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
@@ -55,7 +57,6 @@ public class AuthController {
 
             if (result == null) {
                 System.out.println("[LOGIN] Login failed: invalid email or password");
-
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             System.out.println("[LOGIN] Login success");
@@ -71,5 +72,15 @@ public class AuthController {
             System.out.println("[LOGIN] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
+    }
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        LoginResponse result = authService.verifyOtp(request);
+        ApiResponse<LoginResponse> response = new ApiResponse<>(
+                HttpStatus.OK.value(), "Mã OTP Đúng", result
+        );
+        return ResponseEntity.ok(response);
     }
 }
