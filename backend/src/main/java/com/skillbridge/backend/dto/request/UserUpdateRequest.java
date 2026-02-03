@@ -5,7 +5,8 @@ import java.time.LocalDate;
 public class UserUpdateRequest {
     private String password;
     private String email;
-    private LocalDate dob;
+    private String role = "CANDIDATE";
+    private String status = "ACTIVE";
 
     public String getPassword() {
         return password;
@@ -23,11 +24,19 @@ public class UserUpdateRequest {
         this.email = email;
     }
 
-    public LocalDate getDob() {
-        return dob;
+    public String getRole() {
+        return role;
     }
 
-    public void setDob(LocalDate dob) {
-        this.dob = dob;
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

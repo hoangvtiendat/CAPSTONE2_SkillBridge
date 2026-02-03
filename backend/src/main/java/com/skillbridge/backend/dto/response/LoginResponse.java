@@ -1,5 +1,6 @@
 package com.skillbridge.backend.dto.response;
 
+import com.skillbridge.backend.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,10 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 //@AllArgsConstructor
 //@NoArgsConstructor
-public class LoginResponse {
-//    private String accessToken;
+public class LoginResponse extends ApiResponse<LoginResponse> {
+    //    private String accessToken;
 //    private String refreshToken;
-
     private String accessToken;
     private String refreshToken;
 
@@ -18,9 +18,7 @@ public class LoginResponse {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }
-
     public String getAccessToken() {
-
         return accessToken;
     }
 

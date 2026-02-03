@@ -18,7 +18,7 @@ spring:
   datasource:
     url: "jdbc:mysql://localhost:3306/skillbridge"
     username: root
-    password: tiendat2004
+    password: 15102004
 
 jwt:
   secret: skillbridge-super-secret-key-should-be-very-long-256bit

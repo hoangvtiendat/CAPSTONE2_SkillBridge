@@ -1,10 +1,16 @@
 package com.skillbridge.backend.dto.request;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class LoginRequest {
+    @NotBlank(message = "REQUIRED")
+    @Email(message = "EMAIL_INVALID")
     private String email;
+
+    @NotBlank(message = "REQUIRED")
     private String password;
 
     public String getEmail() {
