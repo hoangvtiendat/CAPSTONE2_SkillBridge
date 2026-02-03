@@ -6,11 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-//@AllArgsConstructor
-//@NoArgsConstructor
 public class LoginResponse extends ApiResponse<LoginResponse> {
-    //    private String accessToken;
-//    private String refreshToken;
     private String accessToken;
     private String refreshToken;
 
