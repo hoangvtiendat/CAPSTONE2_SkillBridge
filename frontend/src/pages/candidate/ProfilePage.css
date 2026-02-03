@@ -1,0 +1,42 @@
+.home-page {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.home-container {
+  display: flex;
+  min-height: calc(100vh - 70px);
+}
+
+.ProfileEditor-main{
+  flex: 1;
+  overflow: auto;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .home-container {
+    flex-direction: column;
+  }
+
+  .home-main {
+    min-height: auto;
+  }
+}

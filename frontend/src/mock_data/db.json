@@ -1,0 +1,12 @@
+{
+  "profile": {
+    "Full_name": "Nguyễn Văn ACak",
+    "Email": "dev@skillbridge.vn",
+    "Phone_number": "0901234567",
+    "area": "Hội An, Quảng Nam",
+    "status": true,
+    "protect_card": true,
+    "description": "Lập trình viên đang phát triển dự án SkillBridge. Đam mê React và AI.",
+    "avatar": "https://i.pravatar.cc/150?u=skillbridge"
+  }
+}

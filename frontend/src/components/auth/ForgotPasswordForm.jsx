@@ -36,7 +36,6 @@ export function ForgotPasswordForm() {
             <Toaster position="top-right" richColors />
             
             <div className="auth-card">
-                {/* Icon chìa khóa với nền tròn nhạt */}
                 <div className="icon-header">
                     <div className="icon-circle">
                         <KeyRound size={28} color="#2563eb" strokeWidth={2.5} />
