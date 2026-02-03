@@ -12,7 +12,7 @@ public enum ErrorCode {
     REQUIRED(2002, "Không được để trống"),
     PASSWORD_INVALID(2003, "Mật khẩu không hơp lệ"),
     EMAIL_EXIST(2004, "Email đã tồn tại"),
-
+    INVALID_OTP(2005,"Mã OTP SAI"),
     // ===== AUTH / SECURITY =====
     TOKEN_EXPIRED(401,"Token đã hết hạn, vui lòng đăng nhập lại"),
     UNAUTHORIZED(3001, "Bạn chưa đăng nhập"),
