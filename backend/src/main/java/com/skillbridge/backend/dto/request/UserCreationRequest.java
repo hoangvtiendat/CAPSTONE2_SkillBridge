@@ -3,18 +3,10 @@ package com.skillbridge.backend.dto.request;
 import java.time.LocalDate;
 
 public class UserCreationRequest {
-    private String username;
     private String password;
     private String email;
-    private LocalDate dob;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    private String role = "CANDIDATE";
+    private String status = "ACTIVE";
 
     public String getPassword() {
         return password;
@@ -32,11 +24,19 @@ public class UserCreationRequest {
         this.email = email;
     }
 
-    public LocalDate getDob() {
-        return dob;
+    public String getRole() {
+        return role;
     }
 
-    public void setDob(LocalDate dob) {
-        this.dob = dob;
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -1,35 +1,49 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.UserRepository;
+import io.jsonwebtoken.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
+import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import com.skillbridge.backend.entity.User;
 
 @Service
 public class JwtService {
     private final SecretKey key;
     private final long expiration;
     private final long refreshExpiration;
-
+    private UserRepository userRepository;
     public JwtService(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration}") long expiration,
-            @Value("${jwt.refresh-expiration}") long refreshExpiration
+            @Value("${jwt.refresh-expiration}") long refreshExpiration,
+            UserRepository userRepository
     ) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.expiration = expiration;
         this.refreshExpiration = refreshExpiration;
-
+        this.userRepository = userRepository;
     }
 
     public String generateAccesToken(String userId, String email, String role) {
@@ -60,11 +74,41 @@ public class JwtService {
     }
 
     public Claims extractClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJwt(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException e) {
+            throw new AppException(ErrorCode.TOKEN_EXPIRED);
+        } catch (JwtException e) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
     }
 
+    public boolean validateToken(String token) {
+        try {
+            extractClaims(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
+    public String getUserId(String token) {
+        return extractClaims(token).getSubject();
+    }
+
+    public String getEmail(String token) {
+        String email = extractClaims(token).get("email", String.class);
+        System.out.println("Email : "+email);
+        return email;
+    }
+
+    public String getRole(String token) {
+        String role = extractClaims(token).get("role", String.class);
+        System.out.println("Role : "+role);
+        return role;
+    }
 }
