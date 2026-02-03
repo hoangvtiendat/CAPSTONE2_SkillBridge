@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("users")
+@RequestMapping("/users")
 public class  UserController {
     @Autowired
     private UserService userService;
@@ -21,6 +21,7 @@ public class  UserController {
         return userService.createUser(request);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     List<User> getAllUsers() {
         return userService.getUsers();
@@ -28,8 +29,7 @@ public class  UserController {
 
     //Chỉ cho phép ADMIN getuser
     // api get - .../identity/users
-    @PreAuthorize("hashRole('ADMIN')")
-    @GetMapping("/{userid}")
+    @GetMapping("/{userid}  ")
     User getUser(@PathVariable String userid) {
         return userService.getUser(userid);
 

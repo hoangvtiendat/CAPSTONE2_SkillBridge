@@ -17,7 +17,10 @@ public enum ErrorCode {
     TOKEN_EXPIRED(401,"Token đã hết hạn, vui lòng đăng nhập lại"),
     UNAUTHORIZED(3001, "Bạn chưa đăng nhập"),
     FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),
-    USER_STATUS(3003,"Tài khoản đã bị khóa");
+    USER_STATUS(3003,"Tài khoản đã bị khóa"),
+    USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),
+
+    ;
 
     private int code;
     private String message;
