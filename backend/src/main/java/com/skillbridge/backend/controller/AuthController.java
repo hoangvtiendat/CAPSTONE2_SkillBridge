@@ -4,6 +4,8 @@ import com.skillbridge.backend.dto.request.LoginRequest;
 //import com.skillbridge.backend.dto.request.LoginResponse;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,16 +25,37 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-//    User login(@RequestBody LoginRequest request) {
-//        return authService.login();
-//    }
     public ResponseEntity<ApiResponse<LoginResponse>> login(
-        @Valid @RequestBody LoginRequest request
+            @Valid @RequestBody LoginRequest request
     ) {
-        LoginResponse result = authService.login(request);
-        ApiResponse<LoginResponse> response = new ApiResponse<>(200,"Đăng nhập thành công",result);
-        System.out.println("Login request : "+request);
-        System.out.println("Tình trạng login: " + ResponseEntity.ok(result));
-        return ResponseEntity.ok(response);
+        System.out.println("[LOGIN] Request received");
+        System.out.println("[LOGIN] Email: " + request.getEmail());
+
+        try {
+            LoginResponse result = authService.login(request);
+
+            if (result == null) {
+                System.out.println("[LOGIN] Login failed: invalid email or password");
+
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            System.out.println("[LOGIN] Login success");
+
+            ApiResponse<LoginResponse> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Đăng nhập thành công", result
+            );
+
+            return ResponseEntity.ok(response);
+
+        } catch (AppException ex) {
+            System.out.println("[LOGIN] AppException occurred");
+            System.out.println("[LOGIN] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+
+        } catch (Exception ex) {
+            System.out.println("[LOGIN] Unexpected error occurred");
+            ex.printStackTrace();
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 }

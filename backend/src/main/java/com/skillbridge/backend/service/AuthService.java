@@ -33,15 +33,18 @@ public class AuthService {
         }
         boolean matches = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if (!matches) {
-            throw new RuntimeException("Invalid email or password");
+            throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
         //Xử lý trường hợp nếu người dùng mở xác thực 2 lớp
 
         //
         String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
+        user.setRefreshToken(refreshToken);
+
+        userRepository.save(user);
+
         System.out.println("accessToken: " + accessToken);
         return new LoginResponse(accessToken, refreshToken);
     }
-
 }

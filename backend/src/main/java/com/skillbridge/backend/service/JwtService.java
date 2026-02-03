@@ -87,42 +87,6 @@ public class JwtService {
         }
     }
 
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token = authHeader.substring(7);
-
-        if (!validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-
-        String email = getEmail(token);
-        String role = getRole(token);
-
-        Optional<User> user = userRepository.findByEmail(email);
-
-        List<GrantedAuthority> authorities =
-                List.of(new SimpleGrantedAuthority("ROLE_" + role));
-
-        Authentication auth = new UsernamePasswordAuthenticationToken(
-                user, null, authorities
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        filterChain.doFilter(request, response);
-    }
-
     public boolean validateToken(String token) {
         try {
             extractClaims(token);

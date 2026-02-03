@@ -3,6 +3,8 @@ package com.skillbridge.backend.service;
 import com.skillbridge.backend.dto.request.UserCreationRequest;
 import com.skillbridge.backend.dto.request.UserUpdateRequest;
 import com.skillbridge.backend.entity.User;
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,7 +42,7 @@ public class UserService {
     }
 
     public User getUser(String id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found!"));
+        return userRepository.findById(id).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
     public void deleteUser(String id) {
