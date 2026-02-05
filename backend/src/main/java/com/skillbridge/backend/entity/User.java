@@ -37,12 +37,27 @@ public class User {
     @Column(name="created_at", nullable = false,updatable = false)
     private LocalDateTime createdAt;
 
+    @Column
+    private String provider;
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
     @PrePersist
     protected void onCreate(){
         this.createdAt = LocalDateTime.now();
     }
 
-    public boolean isIs2faEnabled() {
+    public boolean getIsIs2faEnabled() {
         return is2faEnabled;
     }
 

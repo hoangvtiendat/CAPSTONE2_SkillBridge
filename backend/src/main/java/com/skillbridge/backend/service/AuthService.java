@@ -1,8 +1,10 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.dto.request.ForgotPasswordRequest;
 import com.skillbridge.backend.dto.request.LoginRequest;
 //import com.skillbridge.backend.dto.request.LoginResponse;
 import com.skillbridge.backend.dto.request.RegisterRequest;
+import com.skillbridge.backend.dto.request.ResetPasswordRequest;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.dto.response.RegisterResponse;
 import com.skillbridge.backend.entity.User;
@@ -17,13 +19,10 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private OtpService otpService;
-
     @Autowired
     private JwtService jwtService;
     // sử dụng preAuthorize
@@ -39,12 +38,13 @@ public class AuthService {
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         user.setPassword(hashedPassword);
         user.setEmail(request.getEmail());
+        user.setProvider("LOCAL");
 
-        userRepository.save(user);
 
         String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
         user.setRefreshToken(refreshToken);
+        userRepository.save(user);
 
         return new RegisterResponse(request.getEmail(), hashedPassword, accessToken, refreshToken);
 
@@ -61,15 +61,36 @@ public class AuthService {
         if (!matches) {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
-        //Xử lý trường hợp nếu người dùng mở xác thực 2 lớp
-        if (user.isIs2faEnabled()) {
-            otpService.sendOtpEmail(user.getEmail());
+
+        if (user.getIsIs2faEnabled()) {
+            System.out.println("is2faEnabled");
+            String subject = "[SkillBridge] Mã xác thực đăng nhập";
+            String otp = otpService.generateOtp(user.getEmail());
+
+            String content = "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
+                    "    <h2 style=\"color: #1a73e8; text-align: center; margin-top: 0;\">Xác thực đăng nhập</h2>" +
+                    "    <p style=\"font-size: 15px; color: #555;\">Chào bạn,</p>" +
+                    "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Bạn đang thực hiện đăng nhập vào hệ thống <b>SkillBridge</b>. Vui lòng nhập mã xác thực dưới đây để hoàn tất:</p>" +
+                    "    " +
+                    "    <div style=\"text-align: center; margin: 30px 0;\">" +
+                    "        <span style=\"display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a73e8; background: #f0f7ff; padding: 15px 30px; border-radius: 8px; border: 1px solid #1a73e8;\">" + otp + "</span>" +
+                    "    </div>" +
+                    "    " +
+                    "    <p style=\"font-size: 14px; color: #666; font-style: italic; text-align: center;\">Mã có hiệu lực trong vòng <b>180 giây</b>.</p>" +
+                    "    " +
+                    "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
+                    "        <p style=\"margin: 5px 0;\">⚠️ <b>Lưu ý:</b> Vui lòng không chia sẻ mã này cho bất kỳ ai. Đội ngũ SkillBridge không bao giờ yêu cầu cung cấp mã này.</p>" +
+                    "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br>Đội ngũ SkillBridge</p>" +
+                    "    </div>" +
+                    "</div>";
+            otpService.sendOtpEmail(user.getEmail(), subject, content);
 
             return new LoginResponse("1", null, null);
         }
         //
         return issueToken(user);
     }
+
     public LoginResponse verifyOtp(LoginRequest request) {
 
         boolean valid = otpService.verifyOtp(
@@ -86,14 +107,54 @@ public class AuthService {
 
         return issueToken(user);
     }
+
     private LoginResponse issueToken(User user) {
 
-        String accessToken = jwtService.generateAccesToken(user.getId(),user.getEmail(),user.getRole());
+        String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
         return new LoginResponse("0", accessToken, refreshToken);
+    }
+
+    public String forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        String subject = "[SkillBridge] Mã xác thực quên mật khẩu";
+        String otp = otpService.generateOtp(user.getEmail());
+        String content = "<div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;'>" +
+                "<h2 style='color: #2D3FE0; text-align: center;'>Đặt lại mật khẩu</h2>" +
+                "<p>Xin chào,</p>" +
+                "<p>Chúng tôi nhận được yêu cầu khôi phục mật khẩu cho tài khoản <strong>" + user.getEmail() + "</strong> của bạn.</p>" +
+                "<p style='text-align: center; margin: 30px 0;'>" +
+                "<span style='font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #2D3FE0; background: #f4f4f4; padding: 10px 20px; border-radius: 5px; border: 1px dashed #2D3FE0;'>" + otp + "</span>" +
+                "</p>" +
+                "<p>Mã này có hiệu lực trong vòng <strong>180 giây</strong>. Vui lòng không chia sẻ mã này cho bất kỳ ai để bảo mật tài khoản.</p>" +
+                "<hr style='border: none; border-top: 1px solid #eee;'>" +
+                "<p style='font-size: 12px; color: #888;'>Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng bỏ qua email này hoặc liên hệ bộ phận hỗ trợ của chúng tôi.</p>" +
+                "<p style='font-size: 14px;'>Trân trọng,<br><strong>Đội ngũ SkillBridge</strong></p>" +
+                "</div>";
+        otpService.sendOtpEmail(user.getEmail(), subject, content);
+        return "Mã xác thực đã được gửi về gmail của bạn";
+    }
+
+    public LoginResponse resetPassword(ResetPasswordRequest request) {
+        if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
+            throw new AppException(ErrorCode.INVALID_OTP);
+        }
+
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        user.setPassword(hashedPassword);
+
+        String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
+
+        return new LoginResponse(String.valueOf(user.getIsIs2faEnabled()), accessToken, refreshToken);
     }
 }

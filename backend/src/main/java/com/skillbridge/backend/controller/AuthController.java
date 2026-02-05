@@ -1,6 +1,8 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.dto.request.ForgotPasswordRequest;
 import com.skillbridge.backend.dto.request.LoginRequest;
+import com.skillbridge.backend.dto.request.ResetPasswordRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.dto.request.RegisterRequest;
@@ -13,11 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.skillbridge.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.converter.json.GsonBuilderUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +45,6 @@ public class AuthController {
             log.error("Register failed. Email={}", request.getEmail(), ex);
             throw ex;
         }
-
     }
 
     @PostMapping("/login")
@@ -61,8 +58,12 @@ public class AuthController {
             }
             System.out.println("[LOGIN] Login success");
 
+            String message = "Đăng nhập thành công";
+            if (String.valueOf(result.getIs2faEnabled()) == "1") {
+                message = "Mã xác thực 2 lớp đã được gửi về email " + request.getEmail();
+            }
             ApiResponse<LoginResponse> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Đăng nhập thành công", result
+                    HttpStatus.OK.value(), message, result
             );
 
             return ResponseEntity.ok(response);
@@ -73,14 +74,55 @@ public class AuthController {
             throw ex;
         }
     }
+
     @PostMapping("/verify-otp")
-    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(
-            @Valid @RequestBody LoginRequest request
-    ) {
-        LoginResponse result = authService.verifyOtp(request);
-        ApiResponse<LoginResponse> response = new ApiResponse<>(
-                HttpStatus.OK.value(), "Mã OTP Đúng", result
-        );
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(@Valid @RequestBody LoginRequest request) {
+        try {
+            System.out.println(1);
+            LoginResponse result = authService.verifyOtp(request);
+            System.out.println(2);
+            ApiResponse<LoginResponse> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Mã OTP Đúng", result
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[VERIFY-OTP] AppException occurred");
+            System.out.println("[VERIFY-OTP] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            String rs = authService.forgotPassword(request);
+            ApiResponse<String> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Mã OTP đã được gửi về gmail của bạn", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[FORGOT PASSWORD] AppException occurred");
+            System.out.println("[FORGOT PASSWORD] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<LoginResponse>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            LoginResponse rs = authService.resetPassword(request);
+            ApiResponse<LoginResponse> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Đổi mật khẩu thành công", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[FORGOT PASSWORD] AppException occurred");
+            System.out.println("[FORGOT PASSWORD] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<>>
 }

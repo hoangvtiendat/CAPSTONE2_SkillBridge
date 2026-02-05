@@ -13,11 +13,12 @@ public class LoginResponse extends ApiResponse<LoginResponse> {
     private String accessToken;
     private String refreshToken;
 
-    public LoginResponse(String status, String accessToken, String refreshToken) {
-        this.is2faEnabled = status;
+    public LoginResponse(String is2faEnabled, String accessToken, String refreshToken) {
+        this.is2faEnabled = is2faEnabled;
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }
+
     public String getIs2faEnabled() {
         return is2faEnabled;
     }

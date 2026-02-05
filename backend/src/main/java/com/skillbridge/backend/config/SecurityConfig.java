@@ -1,6 +1,7 @@
 package com.skillbridge.backend.config;
 
 import com.skillbridge.backend.service.JwtAuthenticationFilter;
+import com.skillbridge.backend.service.OAuth2LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -13,10 +14,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final OAuth2LoginSuccessHandler successHandler;
+
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            OAuth2LoginSuccessHandler successHandler
+    ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.successHandler = successHandler;
     }
 
     @Bean
@@ -24,16 +31,27 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12);
     }
 
-    //khi sử dụng spring-boost-starter-security thì nó sẽ tự động khoá toàn bộ các API nếu như không có token(chưa login)
-    //hàm này để cho phép gọi các API mà không cần dùng Auth
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/users/**", "/api/public/**").permitAll()
+                        .requestMatchers(
+                                "/auth/**",
+                                "/users/**",
+                                "/api/public/**",
+                                "/oauth2/**",
+                                "/login/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
+
+                // Google OAuth2 Login
+                .oauth2Login(oauth -> oauth
+                        .successHandler(successHandler)
+                )
+                // JWT Filter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
