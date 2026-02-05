@@ -1,10 +1,7 @@
 package com.skillbridge.backend.service;
 
-import com.skillbridge.backend.dto.request.ForgotPasswordRequest;
-import com.skillbridge.backend.dto.request.LoginRequest;
+import com.skillbridge.backend.dto.request.*;
 //import com.skillbridge.backend.dto.request.LoginResponse;
-import com.skillbridge.backend.dto.request.RegisterRequest;
-import com.skillbridge.backend.dto.request.ResetPasswordRequest;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.dto.response.RegisterResponse;
 import com.skillbridge.backend.entity.User;
@@ -29,25 +26,62 @@ public class AuthService {
     // @PreAuthorize("hasRole('ADMIN')") chỉ Admin mới được dùng api
     // @PreAuthorize("hasAnyRole('USER','ADMIN')") Admin hoặc user dùng api
 
-    public RegisterResponse register(RegisterRequest request) {
+    public String register(RegisterRequest request) {
         User user = new User();
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             System.out.println("email exist");
             throw new AppException(ErrorCode.EMAIL_EXIST);
         }
+        System.out.println(111);
+
+        String subject = "[SkillBridge] Mã xác thực đăng ký tài khoản";
+        String otp = otpService.generateOtp(request.getEmail());
+        String content =
+                "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
+                        "    <h2 style=\"color: #1a73e8; text-align: center; margin-top: 0;\">Xác thực đăng ký tài khoản</h2>" +
+                        "    <p style=\"font-size: 15px; color: #555;\">Chào bạn,</p>" +
+                        "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Bạn đang thực hiện <b>đăng ký tài khoản</b> trên hệ thống <b>SkillBridge</b>. Vui lòng nhập mã xác thực dưới đây để hoàn tất quá trình đăng ký:</p>" +
+                        "    " +
+                        "    <div style=\"text-align: center; margin: 30px 0;\">" +
+                        "        <span style=\"display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a73e8; background: #f0f7ff; padding: 15px 30px; border-radius: 8px; border: 1px solid #1a73e8;\">" +
+                        otp +
+                        "        </span>" +
+                        "    </div>" +
+                        "    " +
+                        "    <p style=\"font-size: 14px; color: #666; font-style: italic; text-align: center;\">Mã xác thực có hiệu lực trong vòng <b>180 giây</b>.</p>" +
+                        "    " +
+                        "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
+                        "        <p style=\"margin: 5px 0;\">⚠️ <b>Lưu ý:</b> Vui lòng không chia sẻ mã này cho bất kỳ ai. Đội ngũ SkillBridge không bao giờ yêu cầu cung cấp mã xác thực.</p>" +
+                        "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br>Đội ngũ SkillBridge</p>" +
+                        "    </div>" +
+                        "</div>";
+        System.out.println(request.getEmail());
+        otpService.sendOtpEmail(request.getEmail(), subject, content);
+        System.out.println(2222);
+        return "Mã xác thực đăng ký tài khoản đã được gửi về mail";
+    }
+
+    public RegisterResponse registerOtp(RegisterOtpRequest request) {
+        if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
+            throw new AppException(ErrorCode.INVALID_OTP);
+        }
+        User user = new User();
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            System.out.println("email exist");
+            throw new AppException(ErrorCode.EMAIL_EXIST);
+        }
+
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         user.setPassword(hashedPassword);
         user.setEmail(request.getEmail());
         user.setProvider("LOCAL");
-
 
         String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new RegisterResponse(request.getEmail(), hashedPassword, accessToken, refreshToken);
-
+        return new RegisterResponse(request.getEmail(), accessToken, refreshToken);
     }
 
     public LoginResponse login(LoginRequest request) {

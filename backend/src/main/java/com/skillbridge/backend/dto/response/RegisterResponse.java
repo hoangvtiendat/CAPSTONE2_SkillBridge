@@ -1,14 +1,15 @@
 package com.skillbridge.backend.dto.response;
 
+import lombok.Data;
+
+@Data
 public class RegisterResponse {
     private String email;
-    private String password;
     private String accessToken;
     private String refreshToken;
 
-   public  RegisterResponse(String email, String password, String accessToken, String refreshToken) {
+   public  RegisterResponse(String email, String accessToken, String refreshToken) {
        this.email = email;
-       this.password = password;
        this.accessToken = accessToken;
        this.refreshToken = refreshToken;
    }
@@ -18,14 +19,6 @@ public class RegisterResponse {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getAccessToken() {

@@ -1,11 +1,8 @@
 package com.skillbridge.backend.controller;
 
-import com.skillbridge.backend.dto.request.ForgotPasswordRequest;
-import com.skillbridge.backend.dto.request.LoginRequest;
-import com.skillbridge.backend.dto.request.ResetPasswordRequest;
+import com.skillbridge.backend.dto.request.*;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
-import com.skillbridge.backend.dto.request.RegisterRequest;
 import com.skillbridge.backend.dto.response.RegisterResponse;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -27,25 +24,41 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
-    private OtpService otpService;
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
+    @PostMapping("/register/verify-otp")
+    public ResponseEntity<ApiResponse<RegisterResponse>> registerOtp(@Valid @RequestBody RegisterOtpRequest request) {
         try {
-            RegisterResponse rs = authService.register(request);
-            System.out.println("rs: " + rs.toString());
+            RegisterResponse rs = authService.registerOtp(request);
             ApiResponse<RegisterResponse> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Đăng ký thành công", rs
+                    HttpStatus.OK.value(), "Đăng ký tài khoản thành công", rs
             );
+
             return ResponseEntity.ok(response);
+
         } catch (AppException ex) {
-//            System.out.println("[REGISTER] Error from AuthService:");
-//            System.out.println("Code: " + ex.getErrorCode());
-//            System.out.println("Message: " + ex.getMessage());
-            log.error("Register failed. Email={}", request.getEmail(), ex);
+            System.out.println("[REGISTER] AppException occurred");
+            System.out.println("[REGISTER] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
     }
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequest request) {
+        try {
+            String rs = authService.register(request);
+            ApiResponse<String> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Xác thực email", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[REGISTER] Error from AuthService:");
+            System.out.println("Code: " + ex.getErrorCode());
+            System.out.println("Message: " + ex.getMessage());
+            throw ex;
+        }
+    }
+
+
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -75,12 +88,10 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/verify-otp")
+    @PostMapping("/login/verify-otp")
     public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(@Valid @RequestBody LoginRequest request) {
         try {
-            System.out.println(1);
             LoginResponse result = authService.verifyOtp(request);
-            System.out.println(2);
             ApiResponse<LoginResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Mã OTP Đúng", result
             );
@@ -123,6 +134,6 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<>>
+//    @GetMapping("/me")
+//    public ResponseEntity<ApiResponse<>>
 }

@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-public class LoginResponse extends ApiResponse<LoginResponse> {
+public class LoginResponse {
     //    private String accessToken;
 //    private String refreshToken;
     private String is2faEnabled;
