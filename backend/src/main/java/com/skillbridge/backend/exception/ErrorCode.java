@@ -6,6 +6,10 @@ public enum ErrorCode {
     // ===== SYSTEM =====
     UNCATEGORIZED_EXCEPTION(9999,"Lỗi hệ thống"),
     INVALID_KEY(1001, "Invalid enum key"),
+    // ===== HTTP =====
+    ENDPOINT_NOT_FOUND(4040, "API không tồn tại"),
+    METHOD_NOT_ALLOWED(4050, "Method không được hỗ trợ"),
+    UNSUPPORTED_MEDIA_TYPE(4150, "Content-Type không được hỗ trợ"),
 
     // ===== VALIDATION =====
     EMAIL_INVALID(2001, "Email không hợp lệ"),
@@ -15,7 +19,7 @@ public enum ErrorCode {
     INVALID_OTP(2005,"Mã OTP SAI"),
     // ===== AUTH / SECURITY =====
     TOKEN_EXPIRED(401,"Token đã hết hạn, vui lòng đăng nhập lại"),
-    UNAUTHORIZED(3001, "Bạn chưa đăng nhập"),
+    UNAUTHORIZED(404, "Bạn chưa đăng nhập"),
     FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),
     USER_STATUS(3003,"Tài khoản đã bị khóa"),
     USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),
