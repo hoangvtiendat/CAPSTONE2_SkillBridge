@@ -1,9 +1,10 @@
 package com.skillbridge.backend.entity;
 
+import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
-
+/// Done
 @Entity
 @Table(name = "subscription_plans")
 public class SubscriptionPlan {
@@ -12,7 +13,8 @@ public class SubscriptionPlan {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String name;
+    @Enumerated(EnumType.STRING)
+    private SubscriptionPlanStatus name;
 
     private BigDecimal price;
 
@@ -30,11 +32,11 @@ public class SubscriptionPlan {
         this.id = id;
     }
 
-    public String getName() {
+    public SubscriptionPlanStatus getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(SubscriptionPlanStatus name) {
         this.name = name;
     }
 

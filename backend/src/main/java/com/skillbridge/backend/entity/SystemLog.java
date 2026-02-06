@@ -3,7 +3,7 @@ package com.skillbridge.backend.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-
+/// Done
 @Entity
 @Table(name = "system_logs")
 public class SystemLog {
@@ -12,7 +12,9 @@ public class SystemLog {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     private String action;
 
@@ -32,12 +34,12 @@ public class SystemLog {
         this.id = id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getAction() {

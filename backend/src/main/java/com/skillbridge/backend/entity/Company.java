@@ -1,8 +1,9 @@
 package com.skillbridge.backend.entity;
 
+import com.skillbridge.backend.enums.CompanyStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
+/// Done
 @Entity
 @Table(
         name = "companies",

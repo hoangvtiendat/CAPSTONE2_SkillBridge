@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-
+/// Done
 @Entity
 @Table(name = "knowledge_base")
 @NoArgsConstructor

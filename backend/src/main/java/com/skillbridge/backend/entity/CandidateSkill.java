@@ -1,31 +1,29 @@
 package com.skillbridge.backend.entity;
 
+import com.skillbridge.backend.enums.SkillLevel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-
+/// Done
 @Entity
-@Table(
-        name = "candidate_skills",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"candidate_id", "skill_id"})
-        }
-)
+@Table( name = "candidate_skills")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class CandidateSkill {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(name = "candidate_id", nullable = false)
-    private String candidateId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "candidate_id")
+    private Candidate candidate;
 
-    @Column(name = "skill_id", nullable = false)
-    private String skillId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "skill_id")
+    private Skill skill;
 
     private Integer experienceYears;
 
@@ -40,20 +38,20 @@ public class CandidateSkill {
         this.id = id;
     }
 
-    public String getCandidateId() {
-        return candidateId;
+    public Candidate getCandidate() {
+        return candidate;
     }
 
-    public void setCandidateId(String candidateId) {
-        this.candidateId = candidateId;
+    public void setCandidate(Candidate candidate) {
+        this.candidate = candidate;
     }
 
-    public String getSkillId() {
-        return skillId;
+    public Skill getSkill() {
+        return skill;
     }
 
-    public void setSkillId(String skillId) {
-        this.skillId = skillId;
+    public void setSkill(Skill skill) {
+        this.skill = skill;
     }
 
     public Integer getExperienceYears() {

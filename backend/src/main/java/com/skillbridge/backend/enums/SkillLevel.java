@@ -1,4 +1,4 @@
-package com.skillbridge.backend.entity;
+package com.skillbridge.backend.enums;
 
 public enum SkillLevel {
     JUNIOR,

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
+/// Done
 @Entity
 @Table(name = "job_skills")
 @NoArgsConstructor
@@ -16,11 +17,13 @@ public class JobSkill {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(name = "job_id", nullable = false)
-    private Long jobId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_id")
+    private Job job;
 
-    @Column(name = "skill_id", nullable = false)
-    private Long skillId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "skill_id")
+    private Skill skill;
 
     @Column(name = "is_required")
     private Boolean isRequired;
@@ -33,27 +36,27 @@ public class JobSkill {
         this.id = id;
     }
 
-    public Long getJobId() {
-        return jobId;
+    public Job getJob() {
+        return job;
     }
 
-    public void setJobId(Long jobId) {
-        this.jobId = jobId;
+    public void setJob(Job job) {
+        this.job = job;
     }
 
-    public Long getSkillId() {
-        return skillId;
+    public Skill getSkill() {
+        return skill;
     }
 
-    public void setSkillId(Long skillId) {
-        this.skillId = skillId;
+    public void setSkill(Skill skill) {
+        this.skill = skill;
     }
 
-    public Boolean getRequired() {
+    public Boolean getIsRequired() {
         return isRequired;
     }
 
-    public void setRequired(Boolean required) {
+    public void setIsRequired(Boolean required) {
         isRequired = required;
     }
 }

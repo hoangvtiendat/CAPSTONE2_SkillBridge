@@ -1,8 +1,7 @@
 package com.skillbridge.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-
+/// Done
 @Entity
 @Table(name = "skills")
 public class Skill {
@@ -13,7 +12,9 @@ public class Skill {
 
     private String name;
 
-    private Long categoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     public String getId() {
         return id;
@@ -31,11 +32,11 @@ public class Skill {
         this.name = name;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }
