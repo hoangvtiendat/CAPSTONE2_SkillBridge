@@ -1,25 +1,54 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import JobCard from './JobCard';
-import { jobsCardsMockData } from '../../data/jobsCardsMockData';
+// import { jobsCardsMockData } from '../../data/jobsCardsMockData';
 import './JobGrid.css';
 
 const JobGrid = () => {
-  const [jobs] = useState(jobsCardsMockData);
+
+  const [jobs, setJobs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
+  const get_API_data = async()=> {
+    try{
+      setIsLoading(true);
+      const response = await fetch('http://localhost:5001/Jobs', 
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },  
+        }
+      ); 
+      const data = await response.json();
+      if(response.ok){
+        setJobs(data);
+        console.log("Fetched jobs:", data);
+      }
+
+    }catch(err){
+      console.error("Error fetching jobs:", err);
+    }
+    finally{
+      setIsLoading(false);
+    }
+  } 
+    useEffect(() => {
+      get_API_data();
+    } , []);
+ 
   const filteredJobs = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    if (!q) return jobs;
-    return jobs.filter((job) => {
-      const inTitle = job.position.toLowerCase().includes(q);
-      const inCompany = job.company.toLowerCase().includes(q);
-      const inLocation = job.location.toLowerCase().includes(q);
-      const inTags = (job.tags || []).some((t) => t.toLowerCase().includes(q));
-      return inTitle || inCompany || inLocation || inTags;
-    });
-  }, [jobs, searchTerm]);
-
-  return (
+      const q = searchTerm.trim().toLowerCase();
+      if (!q) return jobs;
+      return jobs.filter((job) => {
+        const inTitle = (job.position || job.title || "").toLowerCase().includes(q);
+        const inCompany = (job.company || "").toLowerCase().includes(q);
+        const inLocation = (job.location || "").toLowerCase().includes(q);
+        const inTags = (job.tags || []).some((t) => t.toLowerCase().includes(q));
+        return inTitle || inCompany || inLocation || inTags;
+      });
+    }, [jobs, searchTerm]);
+    return (
     <section className="job-grid-section">
       <div className="job-grid-header">
         <h2>Featured & Latest Jobs</h2>
@@ -43,9 +72,15 @@ const JobGrid = () => {
       </div>
 
       <div className="job-grid">
-        {filteredJobs.map((job) => (
-          <JobCard key={job.id} job={job} featured={job.featured} />
-        ))}
+        {isLoading ? (
+          <p>Đang tải dữ liệu...</p>
+        ) : filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => (
+            <JobCard key={job.id} job={job} featured={job.featured} />
+          ))
+        ) : (
+          <p>Không tìm thấy công việc nào.</p>
+        )}
       </div>
 
       <div className="view-all">

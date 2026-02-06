@@ -9,7 +9,6 @@ const LoginPage = () => {
     <div className="home-page">
         <Header />
         <div className="home-container">
-        <Sidebar />
         <main className="Login-main">
             <LoginForm />
         </main>

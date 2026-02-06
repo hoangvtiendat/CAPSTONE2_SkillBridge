@@ -10,7 +10,6 @@ const ForgotPasswordPage = () => {
     <div className="home-page">
         <Header />
         <div className="home-container">
-        <Sidebar />
         <main className="ForgotPassword-main">
             <ForgotPasswordForm />
         </main>

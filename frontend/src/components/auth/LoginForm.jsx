@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast, Toaster } from "sonner";
 import { useNavigate } from "react-router";
 import "./LoginForm.css";
+import { da } from "@faker-js/faker";
 export function LoginForm() {
   const navigate = useNavigate();
   const mock_email = "quctonnn@gmail.com";
@@ -17,32 +18,112 @@ export function LoginForm() {
     success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
     error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
   };
-
-  const handleAuth = (e) => {
+  const handleAuth_register = async(e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim() || (mode === "register" && !confirmPassword.trim())) {
+    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       toast.warning("Thiếu thông tin", { description: "Vui lòng điền đầy đủ thông tin", style: toastStyles.warning });
       return;
     }
-
-    if (mode === "login") {
-      if (email === mock_email && password === mock_password) {
-        toast.success("Đăng nhập thành công", { style: toastStyles.success });
-      } else {
-        toast.error("Đăng nhập thất bại", { description: "Email hoặc mật khẩu không đúng", style: toastStyles.error });
-      }
-    } else {
-      if (password !== confirmPassword) {
-        toast.error("Đăng ký thất bại", { description: "Mật khẩu không khớp", style: toastStyles.error });
-        return;
-      }
-      toast.success("Đăng ký thành công", { style: toastStyles.success });
+    if (password !== confirmPassword) {
+      toast.error("Đăng ký thất bại", { description: "Mật khẩu không khớp", style: toastStyles.error });
+      return;
     }
-  };
+    try{
+      const response = await fetch('http://localhost:5001/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+       body: JSON.stringify({email, password}),
+      });
+      const data = await response.json();
+      if(response.ok){
+        console.log("Registration successful:", data);
+      setTimeout(() => {
+          navigate("/login"); 
+      }, 3000);
+        toast.success("Đăng ký thành công", { style: toastStyles.success });
+     
+
+      }
+      else{
+        console.log("Registration failed:", data);
+        const errorData = await response.json();
+        toast.error("Đăng ký thất bại", { description: errorData.message || "Có lỗi xảy ra", style: toastStyles.error });
+      }
+    }catch(err){
+      console.error("Registration error:", err);
+    }
+  }
+  const handleAuth_login = async (e) => {
+  e.preventDefault();
+
+  if (!email.trim() || !password.trim()) {
+    toast.warning("Thiếu thông tin", {
+      description: "Vui lòng điền đầy đủ thông tin",
+      style: toastStyles.warning
+    });
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:5001/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log("Login successful:", data);
+
+      if (data.accessToken) {
+          localStorage.setItem("accessToken", data.accessToken);
+      }
+
+      toast.success("Đăng nhập thành công", { style: toastStyles.success });
+
+    
+
+      setTimeout(() => {
+          navigate("/"); 
+      }, 1500);
+
+    } else {
+   
+      console.log("Login failed response:", data);
+      
+      const errorMessage = data.message || (typeof data === 'string' ? data : "Email hoặc mật khẩu không đúng");
+      
+      toast.error("Đăng nhập thất bại", {
+        description: errorMessage,
+        style: toastStyles.error
+      });
+    }
+
+  } catch (err) {
+    console.error("Network error:", err);
+    toast.error("Lỗi kết nối", {
+        description: "Không thể kết nối đến máy chủ. Vui lòng thử lại.",
+        style: toastStyles.error
+    });
+  }
+};
 
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
     setEmail(""); setPassword(""); setConfirmPassword("");
+  };
+
+  const handleAuth = (e) => {
+    if (mode === "login") {
+      handleAuth_login(e);
+    } else {
+      handleAuth_register(e);
+    }
   };
 
   return (
@@ -101,9 +182,22 @@ export function LoginForm() {
             </div>
           )}
 
-          <button type="submit" className="submit-btn">
-            {mode === "login" ? "Đăng Nhập" : "Tạo tài khoản"}
+          
+          {mode === "login" ? (
+            <button 
+            onClick={handleAuth_login}
+            type="submit" 
+            className="submit-btn">
+            Đăng Nhập 
           </button>
+          ) : (
+             <button 
+            onClick={handleAuth_register}
+            type="submit" 
+            className="submit-btn">
+            Đăng ký tài khoản 
+          </button>
+          )}
         </form>
 
         <button onClick={toggleMode} className="toggle-btn">

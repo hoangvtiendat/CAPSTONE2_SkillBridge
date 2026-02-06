@@ -1,3 +1,6 @@
 {
-  "/candidate/profile": "/profile"
+  "/auth/login": "/Users",
+  "/auth/register": "/Users",
+  "/": "/Jobs",
+  "/jobs/:id": "/JobDetails/:id"
 }
