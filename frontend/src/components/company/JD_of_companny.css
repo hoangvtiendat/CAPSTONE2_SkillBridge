@@ -1,0 +1,245 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  margin-top: 75px;
+}
+
+.JD-company-main {
+  max-width: max-content;
+  margin: 40px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 42px; 
+  
+}
+
+
+.title_header, 
+.jd-section {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+
+.in4_company {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.img_logo {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #ef4444; 
+}
+
+.img_logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; 
+}
+
+.detail_company {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.postion-tag {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.company-tag {
+  font-size: 16px;
+  color: #4b5563;
+  font-weight: 400;
+}
+
+.location-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  background-color: #9ca3af;
+  border-radius: 50%;
+}
+
+.status-tag {
+  color: #10b981; 
+  font-weight: 600;
+}
+
+.in4_company::after {
+  content: ""; 
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%239CA3AF' class='w-6 h-6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z' /%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+}
+
+.short_description {
+  margin-bottom: 24px;
+}
+
+.tag-description {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag-item {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.tag-item:nth-child(1) {
+  background-color: #fff7ed;
+  color: #9a3412;
+}
+.tag-item:nth-child(2) {
+  background-color: #f5f5f4;
+  color: #57534e;
+}
+.tag-item:nth-child(3) {
+  background-color: #ecfdf5;
+  color: #047857;
+}
+.tag-item:nth-child(4) {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.Action_tag {
+  display: flex;
+  gap: 16px;
+}
+
+.Action_tag button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.apply_now {
+  background-color: #111827;
+  color: #ffffff;
+  border: none;
+}
+
+.apply_now:hover {
+  background-color: #1f2937;
+}
+
+.apply_now::before {
+  content: "➤"; 
+  margin-right: 8px;
+  font-size: 14px;
+  transform: rotate(-45deg);
+}
+
+.AI_analyze {
+  background-color: #ffffff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.AI_analyze:hover {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+}
+
+
+.description {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.jd-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.jd-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4b5563;
+  white-space: pre-line; 
+}
+
+.jd-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jd-list li {
+  position: relative;
+  padding-left: 30px; 
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.jd-list li::before {
+  content: "✔"; 
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 900;
+  color: #10b981;
+  font-size: 16px;
+}
+.location-tag{
+    font-size: 18px;
+
+    
+}
+.status-tag{
+    font-size: 12px;
+
+}
