@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 /// Done
 @Entity
 @Table(name = "candidates")
-public class Candidate {
+public class Candidate extends BaseEntity{
 
     @Id
     @OneToOne(fetch = FetchType.LAZY)

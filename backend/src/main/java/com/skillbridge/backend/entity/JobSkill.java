@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobSkill {
+public class JobSkill extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 /// Done
 @Entity
 @Table(name = "system_logs")
-public class SystemLog {
+public class SystemLog extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -17,14 +17,6 @@ public class SystemLog {
     private User user;
 
     private String action;
-
-    @Column(name="created_at", nullable = false,updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate(){
-        this.createdAt = LocalDateTime.now();
-    }
 
     public String getId() {
         return id;
@@ -48,13 +40,5 @@ public class SystemLog {
 
     public void setAction(String action) {
         this.action = action;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }

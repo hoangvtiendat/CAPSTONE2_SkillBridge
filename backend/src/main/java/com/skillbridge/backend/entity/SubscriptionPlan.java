@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 /// Done
 @Entity
 @Table(name = "subscription_plans")
-public class SubscriptionPlan {
+public class SubscriptionPlan extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

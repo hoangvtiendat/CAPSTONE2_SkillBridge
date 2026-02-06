@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class KnowledgeBase {
+public class KnowledgeBase extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

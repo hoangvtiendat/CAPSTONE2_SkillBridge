@@ -18,8 +18,8 @@ public enum ErrorCode {
     EMAIL_EXIST(2004, "Email đã tồn tại"),
     INVALID_OTP(2005,"Mã OTP SAI"),
     // ===== AUTH / SECURITY =====
-    TOKEN_EXPIRED(401,"Token đã hết hạn, vui lòng đăng nhập lại"),
-    UNAUTHORIZED(404, "Bạn chưa đăng nhập"),
+    TOKEN_EXPIRED(402,"Token đã hết hạn, vui lòng đăng nhập lại"),
+    UNAUTHORIZED(401, "Bạn chưa đăng nhập"),
     FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),
     USER_STATUS(3003,"Tài khoản đã bị khóa"),
     USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),
