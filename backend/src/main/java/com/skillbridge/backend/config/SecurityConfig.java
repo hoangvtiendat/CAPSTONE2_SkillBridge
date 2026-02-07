@@ -56,11 +56,11 @@ public class SecurityConfig {
                                 "/users/**",
                                 "/api/public/**",
                                 "/oauth2/**",
-                                "/login/**"
+                               "/login/**"
                         ).permitAll()
+                        .requestMatchers("/jobs/**").authenticated()
                         .anyRequest().authenticated()
                 )
-
                 // Google OAuth2 Login
                 .oauth2Login(oauth -> oauth
                         .successHandler(successHandler)

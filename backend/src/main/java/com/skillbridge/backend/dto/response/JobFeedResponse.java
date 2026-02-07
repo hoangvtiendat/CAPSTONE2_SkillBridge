@@ -6,25 +6,37 @@ import java.util.List;
 
 public class JobFeedResponse {
 
-    private List<Job> jobs;
-    private int nextCursor;
+    private List<JobFeedItemResponse> JobFeedItemResponse;
+    private String nextCursor;
     private boolean hasMore;
 
-    public JobFeedResponse(List<Job> jobs, int  nextCursor, boolean hasMore) {
-        this.jobs = jobs;
+    public JobFeedResponse(List<JobFeedItemResponse> JobFeedItemResponse, String  nextCursor, boolean hasMore) {
+        this.JobFeedItemResponse = JobFeedItemResponse;
         this.nextCursor = nextCursor;
         this.hasMore = hasMore;
     }
 
-    public List<Job> getJobs() {
-        return jobs;
+    public List<JobFeedItemResponse> getJobs() {
+        return JobFeedItemResponse;
     }
 
-    public int  getNextCursor() {
+    public void setJobs(List<JobFeedItemResponse> jobs) {
+        this.JobFeedItemResponse = jobs;
+    }
+
+    public String getNextCursor() {
         return nextCursor;
+    }
+
+    public void setNextCursor(String nextCursor) {
+        this.nextCursor = nextCursor;
     }
 
     public boolean isHasMore() {
         return hasMore;
+    }
+
+    public void setHasMore(boolean hasMore) {
+        this.hasMore = hasMore;
     }
 }

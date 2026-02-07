@@ -3,6 +3,11 @@ package com.skillbridge.backend.entity;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.Map;
+
 /// Done
 @Entity
 @Table(name = "jobs")
@@ -22,7 +27,9 @@ public class Job extends BaseEntity{
 
     private String position;
 
-    private String title;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "json")
+    private Map<String, Object> title;
 
     @Enumerated(EnumType.STRING)
     private ModerationStatus moderationStatus;
@@ -81,11 +88,11 @@ public class Job extends BaseEntity{
         this.position = position;
     }
 
-    public String getTitle() {
+    public Map<String, Object> getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
+    public void setTitle(Map<String, Object> title) {
         this.title = title;
     }
 

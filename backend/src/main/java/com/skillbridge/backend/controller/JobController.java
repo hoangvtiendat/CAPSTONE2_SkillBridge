@@ -26,19 +26,19 @@ public class JobController {
 
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<JobFeedResponse>> getFeed(
-            @RequestParam(defaultValue = "0") int cursor,
-            @RequestParam(defaultValue = "10") int limit
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String categoryId,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) Double salary
     ) {
-        try{
-            JobFeedResponse rs = jobService.getJobFeed(cursor,limit);
-            ApiResponse<JobFeedResponse> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Job Feed", rs
-            );
-            return ResponseEntity.ok(response);
-        } catch (AppException ex) {
-            System.out.println("[JobFeed] AppException occurred");
-            System.out.println("[JobFeed] ErrorCode: " + ex.getErrorCode());
-            throw ex;
-        }
+//        JobFeedResponse rs = jobService.getJobFeed(cursor, limit);
+        JobFeedResponse rs = jobService.getJobFeed(cursor, limit, categoryId, location, salary);
+        ApiResponse<JobFeedResponse> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Job Feed",
+                rs
+        );
+        return ResponseEntity.ok(response);
     }
 }

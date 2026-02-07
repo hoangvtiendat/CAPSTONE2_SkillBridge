@@ -29,6 +29,17 @@ public class Company extends BaseEntity{
     @Column(name = "gpkd_url")
     private String gpkdUrl; // link ảnh GPKD
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CompanyStatus status;
