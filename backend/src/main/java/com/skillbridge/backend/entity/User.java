@@ -4,10 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 @Entity
-public class User {
+public class User  {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id",length = 50)
@@ -57,7 +56,7 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
-    public boolean getIsIs2faEnabled() {
+    public boolean getIs2faEnabled() {
         return is2faEnabled;
     }
 

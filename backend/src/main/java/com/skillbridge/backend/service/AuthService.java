@@ -96,7 +96,7 @@ public class AuthService {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
 
-        if (user.getIsIs2faEnabled()) {
+        if (user.getIs2faEnabled()) {
             System.out.println("is2faEnabled");
             String subject = "[SkillBridge] Mã xác thực đăng nhập";
             String otp = otpService.generateOtp(user.getEmail());
@@ -189,6 +189,42 @@ public class AuthService {
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new LoginResponse(String.valueOf(user.getIsIs2faEnabled()), accessToken, refreshToken);
+        return new LoginResponse(String.valueOf(user.getIs2faEnabled()), accessToken, refreshToken);
+    }
+
+    public User getMe(String token) {
+        if (token == null || token.isBlank()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String userId;
+        try {
+            userId = jwtService.getUserId(token);
+            System.out.println("userId = " + userId);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        System.out.println("user = " + user);
+
+        return user;
+    }
+
+    public User toggleTwoFactor(boolean is2faEnabled, String token) {
+        if (token == null || token.isBlank()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String userId;
+        try {
+            userId = jwtService.getUserId(token);
+            System.out.println("userId = " + userId);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        System.out.println("is2faEnabled = " + is2faEnabled);
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setIs2faEnabled(is2faEnabled);
+        return userRepository.save(user);
+
     }
 }
