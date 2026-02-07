@@ -1,0 +1,19 @@
+Client (Web / FE)
+    |
+    |  multipart/form-data
+    v
+UploadController
+    |
+    v
+CvUploadService
+    |
+    +--> FileStorageService (lưu file)
+    |
+    +--> OcrService (Tesseract)
+    |
+    +--> CvParsingService
+    |
+    +--> CvPersistenceService
+    |
+    v
+Database
