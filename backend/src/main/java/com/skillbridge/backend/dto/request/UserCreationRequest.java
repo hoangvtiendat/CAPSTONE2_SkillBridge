@@ -7,6 +7,15 @@ public class UserCreationRequest {
     private String email;
     private String role = "CANDIDATE";
     private String status = "ACTIVE";
+    private String is2faEnabled;
+
+    public String getIs2faEnabled() {
+        return is2faEnabled;
+    }
+
+    public void setIs2faEnabled(String is2faEnabled) {
+        this.is2faEnabled = is2faEnabled;
+    }
 
     public String getPassword() {
         return password;
