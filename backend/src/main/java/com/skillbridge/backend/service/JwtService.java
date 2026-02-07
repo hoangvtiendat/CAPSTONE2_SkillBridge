@@ -2,38 +2,32 @@ package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.InvalidatedTokenRepository;
 import com.skillbridge.backend.repository.UserRepository;
 import io.jsonwebtoken.*;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import javax.crypto.SecretKey;
 
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.skillbridge.backend.entity.User;
 
 @Service
 public class JwtService {
+    @Autowired
+    private InvalidatedTokenRepository invalidatedTokenRepository;
     private final SecretKey key;
     private final long expiration;
     private final long refreshExpiration;
     private UserRepository userRepository;
+
     public JwtService(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration}") long expiration,
@@ -67,6 +61,7 @@ public class JwtService {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -88,10 +83,24 @@ public class JwtService {
     }
 
     public boolean validateToken(String token) {
+//        try {
+//            extractClaims(token);
+//            return true;
+//        } catch (JwtException e) {
+//            return false;
+//        }
         try {
-            extractClaims(token);
+            Claims claims = extractClaims(token);
+            String jti = claims.getId(); // Lấy ID duy nhất của token
+
+            // Kiểm tra xem token này có nằm trong danh sách đen không
+            if (jti != null && invalidatedTokenRepository.existsById(jti)) {
+                System.out.println("[AUTH] Token đã bị vô hiệu hóa (Blacklisted): " + jti);
+                return false;
+            }
             return true;
-        } catch (JwtException e) {
+        } catch (JwtException | AppException e) {
+            // Nếu token hết hạn hoặc không hợp lệ, trả về false
             return false;
         }
     }
@@ -102,13 +111,13 @@ public class JwtService {
 
     public String getEmail(String token) {
         String email = extractClaims(token).get("email", String.class);
-        System.out.println("Email : "+email);
+        System.out.println("Email : " + email);
         return email;
     }
 
     public String getRole(String token) {
         String role = extractClaims(token).get("role", String.class);
-        System.out.println("Role : "+role);
+        System.out.println("Role : " + role);
         return role;
     }
 }

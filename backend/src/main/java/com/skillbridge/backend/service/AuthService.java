@@ -4,16 +4,23 @@ import com.skillbridge.backend.dto.request.*;
 //import com.skillbridge.backend.dto.request.LoginResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.dto.response.RegisterResponse;
+import com.skillbridge.backend.entity.InvalidatedToken;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.InvalidatedTokenRepository;
 import com.skillbridge.backend.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 @Service
 public class AuthService {
+    @Autowired
+    private InvalidatedTokenRepository invalidatedTokenRepository;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -193,7 +200,7 @@ public class AuthService {
     }
 
     public User getMe(String token) {
-        if (token == null || token.isBlank()) {
+        if (token == null || token.isBlank() || !jwtService.validateToken(token)) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         String userId;
@@ -211,7 +218,7 @@ public class AuthService {
     }
 
     public User toggleTwoFactor(boolean is2faEnabled, String token) {
-        if (token == null || token.isBlank()) {
+        if (token == null || token.isBlank() || !jwtService.validateToken(token)) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         String userId;
@@ -226,5 +233,37 @@ public class AuthService {
         user.setIs2faEnabled(is2faEnabled);
         return userRepository.save(user);
 
+    }
+
+    public void logout(String jwt) {
+
+        try {
+            // 2. Trích xuất thông tin từ token thông qua JwtService
+            Claims claims = jwtService.extractClaims(jwt);
+            String jti = claims.getId(); // Lấy ID duy nhất của token
+            Date expiryTime = claims.getExpiration();
+            String userId = claims.getSubject();
+
+            // 3. Đưa Access Token vào danh sách đen (Blacklist)
+            InvalidatedToken invalidatedToken = new InvalidatedToken();
+            invalidatedToken.setId(jti);
+            invalidatedToken.setExpiryTime(expiryTime);
+            invalidatedTokenRepository.save(invalidatedToken);
+
+            // 4. Vô hiệu hóa Refresh Token trong Database của User
+            userRepository.findById(userId).ifPresent(user -> {
+                user.setRefreshToken(null);
+                userRepository.save(user);
+            });
+
+            System.out.println("[LOGOUT] User ID: " + userId + " đã logout thành công.");
+
+        } catch (AppException e) {
+            // Nếu token đã hết hạn sẵn (TOKEN_EXPIRED), coi như đã logout xong
+            if (e.getErrorCode() == ErrorCode.TOKEN_EXPIRED) {
+                return;
+            }
+            throw e;
+        }
     }
 }
