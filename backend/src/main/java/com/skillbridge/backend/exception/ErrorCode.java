@@ -7,6 +7,7 @@ public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999,"Lỗi hệ thống"),
     INVALID_KEY(1001, "Invalid enum key"),
     INVALID_JSON_FORMAT(1002, "Định dạng JSON không hợp lệ"),
+    INVALID_FILE_FORMAT(1010, "Định dạng file không hợp lệ. Chỉ chấp nhận .pdf, .jpg, .png"),
     // ===== HTTP =====
     ENDPOINT_NOT_FOUND(4040, "API không tồn tại"),
     METHOD_NOT_ALLOWED(4050, "Method không được hỗ trợ"),

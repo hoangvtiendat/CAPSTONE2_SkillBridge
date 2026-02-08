@@ -1,0 +1,72 @@
+{
+  "degrees": [
+    {
+      "standard": "Bachelor",
+      "synonyms": [
+        "bachelor", "cử nhân", "đại học", "university", "b.s", "bs", "be", "b.e",
+        "engineer", "kỹ sư", "undergraduate", "graduate", "duy tan", "bach khoa"
+      ]
+    },
+    {
+      "standard": "Master",
+      "synonyms": [
+        "master", "thạc sĩ", "m.s", "ms", "mba", "postgraduate", "thạc sỹ"
+      ]
+    },
+    {
+      "standard": "Associate",
+      "synonyms": [
+        "associate", "cao đẳng", "college", "vocational"
+      ]
+    }
+  ],
+  "certificates": [
+    {
+      "standard": "English Language",
+      "synonyms": ["ielts", "toeic", "toefl", "vstep", "cefr", "cambridge"]
+    },
+    {
+      "standard": "Java Certified",
+      "synonyms": ["oracle certified", "ocpjp", "oca", "java developer certified"]
+    },
+    {
+      "standard": "Cloud Certified",
+      "synonyms": ["aws", "azure", "google cloud", "solutions architect", "practitioner"]
+    },
+    {
+      "standard": "Project Management",
+      "synonyms": ["pmp", "pmi", "scrum master", "psm", "agile"]
+    }
+  ],
+  "majors": [
+    {
+      "standard": "Information Technology",
+      "synonyms": [
+        "it", "information technology", "công nghệ thông tin", "cntt",
+        "computer science", "khoa học máy tính", "software engineering",
+        "kỹ thuật phần mềm", "hệ thống thông tin"
+      ]
+    },
+    {
+      "standard": "Business Administration",
+      "synonyms": [
+        "business administration", "quản trị kinh doanh", "qtkd",
+        "economics", "kinh tế", "marketing"
+      ]
+    }
+  ],
+  "experience_keywords": [
+    "year", "years", "năm", "exp", "yoe", "kinh nghiệm", "experience", "thâm niên"
+  ],
+  "salary_keywords": [
+    "salary", "expected", "lương", "mong muốn", "range", "deal", "thu nhập"
+  ],
+  "ocr_noise_replacement": {
+    "|": "",
+    "⁄": "/",
+    "@": "",
+    "==": "",
+    "0CR": "OCR",
+    "GĐ": "Gmail"
+  }
+}

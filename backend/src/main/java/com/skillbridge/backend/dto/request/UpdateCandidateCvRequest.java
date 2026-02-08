@@ -11,11 +11,9 @@ public class UpdateCandidateCvRequest {
     private Integer yearsOfExperience;
     private Double expectedSalary;
     private String categoryId;
-
+    private List<CandidateSkillRequest> skills;
     // 🔥 Degrees / Certificates
     private List<DegreeRequest> degrees;
-
-    private List<String> skills;
 
     public Boolean getOpenToWork() {
         return isOpenToWork;
@@ -57,11 +55,11 @@ public class UpdateCandidateCvRequest {
         this.degrees = degrees;
     }
 
-    public List<String> getSkills() {
+    public List<CandidateSkillRequest> getSkills() {
         return skills;
     }
 
-    public void setSkills(List<String> skills) {
+    public void setSkills(List<CandidateSkillRequest> skills) {
         this.skills = skills;
     }
 }

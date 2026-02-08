@@ -13,7 +13,25 @@ public class UpdateCandidateCvResponse {
     private String categoryId;
     private String categoryName;
 
-    public UpdateCandidateCvResponse(String candidateId, Boolean isOpenToWork, Integer yearsOfExperience, Double expectedSalary, String categoryId, String categoryName, List<DegreeResponse> degrees) {
+    public List<CandidateSkillResponse> getSkills() {
+        return skills;
+    }
+
+    public void setSkills(List<CandidateSkillResponse> skills) {
+        this.skills = skills;
+    }
+
+    public Boolean getOpenToWork() {
+        return isOpenToWork;
+    }
+
+    public void setOpenToWork(Boolean openToWork) {
+        isOpenToWork = openToWork;
+    }
+
+    private List<CandidateSkillResponse> skills;
+
+    public UpdateCandidateCvResponse(String candidateId, Boolean isOpenToWork, Integer yearsOfExperience, Double expectedSalary, String categoryId, String categoryName, List<DegreeResponse> degrees,List<CandidateSkillResponse> skills) {
         this.candidateId = candidateId;
         this.isOpenToWork = isOpenToWork;
         this.yearsOfExperience = yearsOfExperience;
@@ -21,9 +39,10 @@ public class UpdateCandidateCvResponse {
         this.categoryId = categoryId;
         this.categoryName = categoryName;
         this.degrees = degrees;
+        this.skills = skills;
     }
 
-    // 🔥 Degrees / Certificates
+    //Degrees / Certificates
     private List<DegreeResponse> degrees;
 
     public String getCandidateId() {
