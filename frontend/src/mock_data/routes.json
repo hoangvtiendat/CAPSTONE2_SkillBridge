@@ -1,6 +1,7 @@
 {
-  "/auth/login": "/Users",
-  "/auth/register": "/Users",
-  "/": "/Jobs",
-  "/jobs/:id": "/JobDetails/:id"
+
+    "/auth/login": "/Users",
+    "/auth/register": "/Users",
+    "/": "/Jobs",
+    "/jobs/:id": "/JobDetails/:id"
 }

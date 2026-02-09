@@ -6,6 +6,7 @@ import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.service.OtpService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     @Autowired
     private AuthService authService;
+    private OtpService otpService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
@@ -36,7 +38,6 @@ public class AuthController {
 
             if (result == null) {
                 System.out.println("[LOGIN] Login failed: invalid email or password");
-
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             System.out.println("[LOGIN] Login success");
@@ -51,11 +52,16 @@ public class AuthController {
             System.out.println("[LOGIN] AppException occurred");
             System.out.println("[LOGIN] ErrorCode: " + ex.getErrorCode());
             throw ex;
-
-        } catch (Exception ex) {
-            System.out.println("[LOGIN] Unexpected error occurred");
-            ex.printStackTrace();
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
+    }
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        LoginResponse result = authService.verifyOtp(request);
+        ApiResponse<LoginResponse> response = new ApiResponse<>(
+                HttpStatus.OK.value(), "Mã OTP Đúng", result
+        );
+        return ResponseEntity.ok(response);
     }
 }

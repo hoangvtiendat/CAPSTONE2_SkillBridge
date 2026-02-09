@@ -1,0 +1,143 @@
+/* UserCard.css */
+.user-card-container {
+    background-color: white;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f3f4f6;
+    text-align: center;
+}
+
+.user-card-header {
+    margin-bottom: 2rem;
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: 6rem;
+    height: 6rem;
+    margin: 0 auto 1rem auto;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.change-avatar-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: #111827;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    border: 2px solid white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.change-avatar-btn:hover {
+    transform: scale(1.1);
+}
+
+.user-name-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.user-role-subtitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Toggle Styles */
+.open-to-work-section {
+    background-color: #f9fafb;
+    border-radius: 1rem;
+    padding: 0.5rem;
+}
+
+.open-to-work-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+}
+
+.open-to-work-toggle.active {
+    background-color: #ecfdf5;
+    border-color: #a7f3d0;
+}
+
+.toggle-label {
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #059669;
+    letter-spacing: 0.05em;
+    display: flex;
+    flex-direction: column;
+}
+
+.toggle-sublabel {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: #10b981;
+    text-transform: none;
+    margin-top: 2px;
+}
+
+.open-to-work-toggle.inactive .toggle-label {
+    color: #6b7280;
+}
+
+.open-to-work-toggle.inactive .toggle-sublabel {
+    color: #9ca3af;
+}
+
+.toggle-switch {
+    width: 3.1rem;
+    height: 1.5rem;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    position: relative;
+    transition: background-color 0.3s;
+    flex-shrink: 0;
+}
+
+.open-to-work-toggle.active .toggle-switch {
+    background-color: #10b981;
+}
+
+.toggle-switch-dot {
+    position: absolute;
+    top: 0.125rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.open-to-work-toggle.active .toggle-switch-dot {
+    transform: translateX(1.5rem);
+}

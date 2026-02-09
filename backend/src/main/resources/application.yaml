@@ -19,6 +19,17 @@ spring:
     url: "jdbc:mysql://localhost:3306/skillbridge"
     username: root
     password: 15102004
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hodangquynh2k4@gmail.com
+    password: waixnbpzerjayain
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
   secret: skillbridge-super-secret-key-should-be-very-long-256bit
