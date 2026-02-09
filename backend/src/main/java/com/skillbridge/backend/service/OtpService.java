@@ -34,7 +34,7 @@ public class OtpService {
     }
 
     public boolean verifyOtp(String email, String otp) {
-        try{
+        try {
             if (!otpStore.containsKey(email)) {
                 return false;
             }
@@ -45,17 +45,21 @@ public class OtpService {
                 return false;
             }
 
-            boolean valid = otpStore.get(email).equals(otp);
-            if (valid) {
-                otpStore.remove(email);
-                otpExpire.remove(email);
-            }
-            return valid;
-        }
-        catch (Exception e){
-            System.out.println("Catch: "+ e.getMessage());
+            return otpStore.get(email).equals(otp);
+//            boolean valid = otpStore.get(email).equals(otp);
+//            if (valid) {
+//                otpStore.remove(email);
+//                otpExpire.remove(email);
+//            }
+//            return valid;
+        } catch (Exception e) {
+            System.out.println("Catch: " + e.getMessage());
             return false;
         }
+    }
 
+    public void consumeOtp(String email) {
+        otpStore.remove(email);
+        otpExpire.remove(email);
     }
 }

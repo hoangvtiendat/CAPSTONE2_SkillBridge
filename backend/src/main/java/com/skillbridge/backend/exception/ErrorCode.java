@@ -19,7 +19,7 @@ public enum ErrorCode {
     PASSWORD_INVALID(2003, "Mật khẩu không hơp lệ"),
     EMAIL_EXIST(2004, "Email đã tồn tại"),
     INVALID_OTP(2005,"Mã OTP SAI"),
-
+    INVALID_INPUT(2006, "Dữ liệu đầu vào không hợp lệ"),
     FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),
     USER_STATUS(3003,"Tài khoản đã bị khóa"),
     USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),

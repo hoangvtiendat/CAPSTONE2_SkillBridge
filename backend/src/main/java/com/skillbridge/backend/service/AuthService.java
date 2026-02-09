@@ -11,6 +11,7 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.InvalidatedTokenRepository;
 import com.skillbridge.backend.repository.UserRepository;
 import io.jsonwebtoken.Claims;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -68,27 +69,35 @@ public class AuthService {
         return "Mã xác thực đăng ký tài khoản đã được gửi về mail";
     }
 
+    @Transactional
     public RegisterResponse registerOtp(RegisterOtpRequest request) {
         if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }
+
         User user = new User();
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            System.out.println("email exist");
-            throw new AppException(ErrorCode.EMAIL_EXIST);
-        }
-
-        String hashedPassword = passwordEncoder.encode(request.getPassword());
-        user.setPassword(hashedPassword);
         user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider("LOCAL");
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setName(request.getName());
+        user.setAddress(request.getAddress());
 
-        String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
+        userRepository.saveAndFlush(user);
+
+        String accessToken = jwtService.generateAccesToken(
+                user.getId(), user.getEmail(), user.getRole()
+        );
         String refreshToken = jwtService.generateRefreshToken(user.getId());
-        user.setRefreshToken(refreshToken);
-        userRepository.save(user);
 
-        return new RegisterResponse(request.getEmail(), accessToken, refreshToken);
+        user.setRefreshToken(refreshToken);
+        otpService.consumeOtp(request.getEmail());
+
+        return new RegisterResponse(
+                user.getEmail(),
+                accessToken,
+                refreshToken
+        );
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -138,6 +147,8 @@ public class AuthService {
                 request.getEmail(),
                 request.getOtp()
         );
+
+        otpService.consumeOtp(request.getEmail());
 
         if (!valid) {
             throw new AppException(ErrorCode.INVALID_OTP);
@@ -198,7 +209,6 @@ public class AuthService {
 
         return new LoginResponse(String.valueOf(user.getIs2faEnabled()), accessToken, refreshToken);
     }
-
 
 
     public User toggleTwoFactor(boolean is2faEnabled, String token) {

@@ -14,7 +14,14 @@ public class ApiResponse<T> {
         this.message = message;
         this.result = result;
     }
+    public static <T> ApiResponse<T> success(T result) {
+        return new ApiResponse<>(0, "SUCCESS", result);
+    }
 
+    // 🔥 ERROR – CÁI MÀ MÀY ĐANG THIẾU
+    public static ApiResponse<?> error(int code, String message) {
+        return new ApiResponse<>(code, message, null);
+    }
     public int getCode() {
         return code;
     }

@@ -94,6 +94,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(@Valid @RequestBody LoginRequest request) {
         try {
             LoginResponse result = authService.verifyOtp(request);
+
             ApiResponse<LoginResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Mã OTP Đúng", result
             );
