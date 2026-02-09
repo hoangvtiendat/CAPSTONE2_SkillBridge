@@ -199,23 +199,7 @@ public class AuthService {
         return new LoginResponse(String.valueOf(user.getIs2faEnabled()), accessToken, refreshToken);
     }
 
-    public User getMe(String token) {
-        if (token == null || token.isBlank() || !jwtService.validateToken(token)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-        String userId;
-        try {
-            userId = jwtService.getUserId(token);
-            System.out.println("userId = " + userId);
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
 
-        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        System.out.println("user = " + user);
-
-        return user;
-    }
 
     public User toggleTwoFactor(boolean is2faEnabled, String token) {
         if (token == null || token.isBlank() || !jwtService.validateToken(token)) {

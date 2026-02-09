@@ -136,26 +136,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<User>> getMe(@Valid @RequestHeader(value = "Authorization") String token) {
-        try {
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            String jwt = token.substring(7);
 
-            User rs = authService.getMe(jwt);
-            ApiResponse<User> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Lấy dữ liệu cá nhân thành công", rs
-            );
-            return ResponseEntity.ok(response);
-        } catch (AppException ex) {
-            System.out.println("[GET-ME] AppException occurred");
-            System.out.println("[GET-ME] ErrorCode: " + ex.getErrorCode());
-            throw ex;
-        }
-
-    }
 
     @PatchMapping("/me/2fa")
     public ResponseEntity<ApiResponse<User>> toggleTwoFactor(@Valid @RequestBody TwoFactorToggleRequest request, @Valid @RequestHeader(value = "Authorization") String token) {

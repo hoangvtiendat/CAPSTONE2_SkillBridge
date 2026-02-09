@@ -18,6 +18,8 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtService jwtService;
 
     public User createUser(UserCreationRequest request) {
         User user = new User();
@@ -48,5 +50,23 @@ public class UserService {
     public void deleteUser(String id) {
         User user = getUser(id);
         userRepository.delete(user);
+    }
+
+    public User getMe(String token) {
+        if (token == null || token.isBlank() || !jwtService.validateToken(token)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String userId;
+        try {
+            userId = jwtService.getUserId(token);
+            System.out.println("userId = " + userId);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        System.out.println("user = " + user);
+
+        return user;
     }
 }
