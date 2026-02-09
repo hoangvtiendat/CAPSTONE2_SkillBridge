@@ -3,13 +3,36 @@ import { Camera } from 'lucide-react';
 import './UserCard.css';
 
 export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork }) => {
+    const fileInputRef = React.useRef(null);
+    const [avatarPreview, setAvatarPreview] = React.useState(null);
+
+    const handleAvatarClick = () => {
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file);
+            setAvatarPreview(imageUrl);
+            // In a real app, you would upload the file here
+        }
+    };
+
     return (
         <div className="user-card-container">
             <div className="user-card-header">
-                <div className="avatar-wrapper">
+                <div className="avatar-wrapper" onClick={handleAvatarClick} style={{ cursor: 'pointer' }}>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                    />
                     <div className="profile-avatar">
                         <img
-                            src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
+                            src={avatarPreview || user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
                             alt="Avatar"
                             className="avatar-image"
                         />
