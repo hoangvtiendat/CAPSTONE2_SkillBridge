@@ -2,11 +2,9 @@ import React, { useState } from "react";
 import { toast, Toaster } from "sonner";
 import { useNavigate } from "react-router";
 import "./LoginForm.css";
-import { da } from "@faker-js/faker";
 export function LoginForm() {
   const navigate = useNavigate();
-  const mock_email = "quctonnn@gmail.com";
-  const mock_password = "12345678";
+
 
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");

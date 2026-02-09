@@ -4,13 +4,13 @@ import Header from '../../components/home/Header';
 import Sidebar from '../../components/home/Sidebar';
 import Hero from '../../components/home/Hero';
 
-import './ForgotPasswordPage.css';
+import './authForm.css';
 const ForgotPasswordPage = () => {
     return(
     <div className="home-page">
         <Header />
         <div className="home-container">
-        <main className="ForgotPassword-main">
+        <main className="card-main">
             <ForgotPasswordForm />
         </main>
         </div>
