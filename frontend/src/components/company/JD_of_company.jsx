@@ -11,7 +11,7 @@ const JD_of_company = () => {
       const get_API_data = async (id) => {
           try {
               setIsLoading(true);
-              const response = await fetch(`http://localhost:5001/jobs/${id}`, {
+              const response = await fetch(`http://localhost:3001/jobs/${id}`, {
                   method: 'GET',
                   headers: {
                       'Content-Type': 'application/json',

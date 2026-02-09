@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { toast, Toaster } from "sonner";
-import { useNavigate } from "react-router";
-import { KeyRound, ArrowLeft } from "lucide-react"; // Import icon đẹp
+import { useNavigate } from "react-router-dom";
+import { KeyRound, ArrowLeft } from "lucide-react";
 import "./ForgotPasswordForm.css";
 
 export function ForgotPasswordForm() {
     const navigate = useNavigate();
-    const mock_email = "quctonnn@gmail.com";
     const [email, setEmail] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     const toastStyles = {
         warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
@@ -15,20 +15,55 @@ export function ForgotPasswordForm() {
         error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        
         if (!email.trim()) {
             toast.warning("Thiếu thông tin", { description: "Vui lòng điền email", style: toastStyles.warning });
             return;
         }
-        if (email !== mock_email) {
-            toast.error("Email không tồn tại", { description: "Vui lòng kiểm tra lại email", style: toastStyles.error });
-            return;
+
+        setIsLoading(true);
+
+        try {
+   
+            
+            const response = await fetch("http://localhost:3001/auth/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+
+            if (response.ok || true) { 
+                toast.success("Đã gửi mã OTP", { 
+                    description: `Mã xác thực đã gửi tới ${email}`, 
+                    style: toastStyles.success 
+                });
+
+                setTimeout(() => {
+                    navigate("/otp-verification", { 
+                        state: { 
+                            email: email, 
+                            flow: "forgot-password" 
+                        } 
+                    });
+                }, 1500);
+            } else {
+                toast.error("Lỗi", { description: "Email không tồn tại trong hệ thống", style: toastStyles.error });
+            }
+
+        } catch (err) {
+            console.log("Mocking success for testing...");
+            toast.success("Đã gửi mã OTP (Test)", { description: "Chuyển hướng đến trang nhập mã...", style: toastStyles.success });
+            
+            setTimeout(() => {
+                navigate("/otp-verification", { 
+                    state: { email: email, flow: "forgot-password" } 
+                });
+            }, 1500);
+        } finally {
+            setIsLoading(false);
         }
-        toast.success("Email đã được gửi", { description: "Vui lòng kiểm tra hộp thư đến", style: toastStyles.success });
-        setTimeout(() => {
-            navigate("/login");
-        }, 4200);
     }
 
     return (
@@ -44,7 +79,7 @@ export function ForgotPasswordForm() {
 
                 <h2 className="auth-title">Quên mật khẩu?</h2>
                 <p className="auth-subtitle">
-                    Đừng lo! Nhập email của bạn và chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu.
+                    Đừng lo! Nhập email của bạn và chúng tôi sẽ gửi mã OTP xác thực.
                 </p>
 
                 <form onSubmit={handleSubmit}>
@@ -58,12 +93,21 @@ export function ForgotPasswordForm() {
                         />
                     </div>
                     
-                    <button type="submit" className="submit-btn">
-                        Gửi Email
+                    <button 
+                        type="submit" 
+                        className="submit-btn"
+                        disabled={isLoading}
+                        style={{ opacity: isLoading ? 0.7 : 1 }}
+                    >
+                        {isLoading ? "Đang gửi..." : "Gửi mã OTP"}
                     </button>
                 </form>
 
-                <div className="back-link" onClick={() => navigate("/login")}>
+                <div 
+                    className="back-link" 
+                    onClick={() => navigate("/login")} 
+                    style={{ cursor: "pointer", marginTop: "15px", display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", color: "#666" }}
+                >
                     <ArrowLeft size={18} />
                     <span>Quay lại đăng nhập</span>
                 </div>

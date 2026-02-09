@@ -10,7 +10,7 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 
 import ProfilePage from './pages/profile/ProfilePage';
 import { OTPVerification } from './components/auth/OTPVerification';
-
+import { SetPass } from './components/auth/SetPass';
 function App() {
   return (
     <>
@@ -22,8 +22,8 @@ function App() {
           <Route path='/forgot-password' element={<ForgotPasswordPage />} />
           <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path='/reset-password' element={<ResetPasswordPage />} />
-          <Route path='/jobs/:id' element={<JD_of_companyPage />} />
+          <Route path='/set-password' element={<SetPass />} />
+          {/* <Route path='/jobs/:id' element={<JD_of_companyPage />} /> */} */
 
           {/* Thêm routes khác ở đây */}
         </Routes>

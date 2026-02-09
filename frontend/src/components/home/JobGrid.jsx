@@ -14,7 +14,7 @@ const JobGrid = () => {
   const get_API_data = async()=> {
     try{
       setIsLoading(true);
-      const response = await fetch('http://localhost:5001/Jobs', 
+      const response = await fetch('http://localhost:3001/Jobs', 
         {
           method: 'GET',
           headers: {

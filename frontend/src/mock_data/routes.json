@@ -3,5 +3,8 @@
     "/auth/login": "/Users",
     "/auth/register": "/Users",
     "/": "/Jobs",
-    "/jobs/:id": "/JobDetails/:id"
+    "/jobs/:id": "/JobDetails/:id",
+    "/auth/forgot-password": "/Users",
+    "/auth/set-password": "/Users",
+    "/auth/complete-profile": "/Users"
 }
