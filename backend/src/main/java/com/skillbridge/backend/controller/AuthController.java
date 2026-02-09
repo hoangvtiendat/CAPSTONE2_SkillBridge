@@ -4,9 +4,11 @@ import com.skillbridge.backend.dto.request.*;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.dto.response.RegisterResponse;
+import com.skillbridge.backend.entity.InvalidatedToken;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.InvalidatedTokenRepository;
 import com.skillbridge.backend.service.OtpService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -134,26 +136,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<User>> getMe(@Valid @RequestHeader(value = "Authorization") String token) {
-        try {
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            String jwt = token.substring(7);
 
-            User rs = authService.getMe(jwt);
-            ApiResponse<User> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Lấy dữ liệu cá nhân thành công", rs
-            );
-            return ResponseEntity.ok(response);
-        } catch (AppException ex) {
-            System.out.println("[GET-ME] AppException occurred");
-            System.out.println("[GET-ME] ErrorCode: " + ex.getErrorCode());
-            throw ex;
-        }
-
-    }
 
     @PatchMapping("/me/2fa")
     public ResponseEntity<ApiResponse<User>> toggleTwoFactor(@Valid @RequestBody TwoFactorToggleRequest request, @Valid @RequestHeader(value = "Authorization") String token) {
@@ -173,6 +156,26 @@ public class AuthController {
         } catch (AppException ex) {
             System.out.println("[TOGGLE-TWO-FACTOR] AppException occurred");
             System.out.println("[TOGGLE-TWO-FACTOR] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestHeader(value = "Authorization") String token) {
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            String jwt = token.substring(7);
+
+            authService.logout(jwt);
+            ApiResponse<String> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Đăng xuất", "Đăng xuất tài khoản thànhc công"
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[LOGOUT] AppException occurred");
+            System.out.println("[LOGOUT] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
     }
