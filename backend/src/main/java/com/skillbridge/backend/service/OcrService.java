@@ -3,47 +3,52 @@ package com.skillbridge.backend.service;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Service
 public class OcrService {
-    public String scanFile(MultipartFile file) throws Exception {
-        // 1. Chỉ định đường dẫn thư viện Native TRƯỚC khi khởi tạo Tesseract
-        System.setProperty("jna.library.path", "C:\\Program Files\\Tesseract-OCR");
 
-        // 2. Kiểm tra file trống
-        if (file.isEmpty()) throw new AppException(ErrorCode.INVALID_FILE_FORMAT);
+    // Đọc giá trị từ file .env/properties. Nếu không có sẽ lấy giá trị mặc định sau dấu hai chấm
+    @Value("${TESSERACT_DATAPATH:C:/Program Files/Tesseract-OCR/tessdata}")
+    private String dataPath;
 
-        // 3. Tạo file tạm an toàn hơn
-        File convFile = File.createTempFile("ocr_upload_", "_" + file.getOriginalFilename());
-        file.transferTo(convFile);
+    @Value("${TESSERACT_LIBPATH:C:/Program Files/Tesseract-OCR}")
+    private String libraryPath;
 
+    public String scanFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_FILE_FORMAT);
+        }
+
+        // Thiết lập thư viện bằng biến từ file env
+        System.setProperty("jna.library.path", libraryPath);
+
+        File convFile = null;
         try {
-            Tesseract tesseract = new Tesseract();
+            Path tempPath = Files.createTempFile("ocr_upload_", "_" + file.getOriginalFilename());
+            convFile = tempPath.toFile();
+            file.transferTo(convFile);
 
-            // Dùng đường dẫn tuyệt đối chuẩn Windows
-            tesseract.setDatapath("C:\\Program Files\\Tesseract-OCR\\tessdata");
+            Tesseract tesseract = new Tesseract();
+            tesseract.setDatapath(dataPath); // Sử dụng biến dataPath
             tesseract.setLanguage("vie+eng");
 
-            // Log để kiểm tra tiến trình
-            System.out.println("--- Đang bắt đầu quét OCR cho file: " + convFile.getName());
+            System.out.println("--- Đang quét OCR với cấu hình từ ENV ---");
+            return tesseract.doOCR(convFile).trim();
 
-            String result = tesseract.doOCR(convFile);
-
-            // Nếu result vẫn rỗng, có thể do file PDF không có Ghostscript
-            if (result == null || result.trim().isEmpty()) {
-                System.out.println("警告: Tesseract trả về kết quả rỗng. Kiểm tra định dạng file!");
-            }
-
-            return result;
+        } catch (TesseractException | IOException e) {
+            System.err.println("Lỗi xử lý OCR: " + e.getMessage());
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         } finally {
-            // Luôn xóa file tạm dù thành công hay thất bại
-            if (convFile.exists()) {
+            if (convFile != null && convFile.exists()) {
                 convFile.delete();
             }
         }
