@@ -166,10 +166,8 @@
 
 /* BUTTON */
 .btn-primary {
-    width: 100%;
+    width: 30%;
     padding: 12px;
-    background: #111827;
-    color: white;
     border-radius: 10px;
     border: none;
     cursor: pointer;
