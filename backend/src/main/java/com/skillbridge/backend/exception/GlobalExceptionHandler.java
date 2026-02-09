@@ -1,6 +1,7 @@
 package com.skillbridge.backend.exception;
 
 import com.skillbridge.backend.dto.response.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -21,29 +22,25 @@ public class GlobalExceptionHandler {
 
     // ===== 405 METHOD NOT ALLOWED =====
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ApiResponse<?>> handleMethodNotAllowed(
-            HttpRequestMethodNotSupportedException ex) {
+    public ResponseEntity<ApiResponse<?>> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
         return buildResponse(ErrorCode.METHOD_NOT_ALLOWED, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     // ===== 415 UNSUPPORTED MEDIA TYPE =====
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ApiResponse<?>> handleUnsupportedMedia(
-            HttpMediaTypeNotSupportedException ex) {
+    public ResponseEntity<ApiResponse<?>> handleUnsupportedMedia(HttpMediaTypeNotSupportedException ex) {
         return buildResponse(ErrorCode.UNSUPPORTED_MEDIA_TYPE, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
 
     // ===== BUSINESS EXCEPTION =====
     @ExceptionHandler(AppException.class)
-    public ResponseEntity<ApiResponse<?>> handleAppException(AppException ex) {
-        ErrorCode errorCode = ex.getErrorCode();
+    public ResponseEntity<ApiResponse<?>> handleAppException(AppException ex) {ErrorCode errorCode = ex.getErrorCode();
         return buildResponse(errorCode, mapErrorCodeToStatus(errorCode));
     }
 
     // ===== VALIDATION =====
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<?>> handlingValidation(
-            MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<?>> handlingValidation(MethodArgumentNotValidException ex) {
         ErrorCode errorCode = parseEnum(ex);
         return buildResponse(errorCode, HttpStatus.BAD_REQUEST);
     }
@@ -60,10 +57,7 @@ public class GlobalExceptionHandler {
 
     // ================== PRIVATE METHODS ==================
 
-    private ResponseEntity<ApiResponse<?>> buildResponse(
-            ErrorCode errorCode,
-            HttpStatus status
-    ) {
+    private ResponseEntity<ApiResponse<?>> buildResponse(ErrorCode errorCode, HttpStatus status) {
         ApiResponse<?> response = new ApiResponse<>();
         response.setCode(errorCode.getCode());
         response.setMessage(errorCode.getMessage());
@@ -95,5 +89,22 @@ public class GlobalExceptionHandler {
         } catch (IllegalArgumentException e) {
             return ErrorCode.INVALID_KEY;
         }
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<?>> handleConstraint(
+            ConstraintViolationException ex) {
+
+        String message = ex.getConstraintViolations()
+                .iterator()
+                .next()
+                .getMessage();
+
+        return ResponseEntity.badRequest().body(
+                ApiResponse.error(
+                        ErrorCode.INVALID_INPUT.getCode(),
+                        message
+                )
+        );
     }
 }
