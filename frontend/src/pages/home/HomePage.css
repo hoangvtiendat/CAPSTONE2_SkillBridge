@@ -10,7 +10,9 @@
 
 .home-main {
   flex: 1;
-  overflow: auto;
+  min-width: 0;
+  /* Prevents flex child from overflowing */
+  overflow-x: hidden;
 }
 
 * {

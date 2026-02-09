@@ -16,7 +16,7 @@
             "name": "Nguyễn Văn Meo",
             "email": "quctonnn@gmail.com",
             "password": "12345678",
-            "two_fa_enabled": true,
+            "two_fa_enabled": false,
             "avatar": "https://ui-avatars.com/api/?name=Nguyen+Van+Meo&background=random"
         },
         {

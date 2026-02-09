@@ -8,9 +8,9 @@ const JobCard = ({ job, featured = false }) => {
   return (
     <div className={`job-card ${featured ? 'featured' : ''}`}>
       {featured && <div className="featured-badge">Featured</div>}
-      
+
       <div className="job-card-header">
-        <div className="company-logo">{logo}</div>
+        <div className="job-card-logo">{logo}</div>
         <div className="job-info">
           <h3 className="job-position">{position}</h3>
           <p className="job-company">{company}</p>
