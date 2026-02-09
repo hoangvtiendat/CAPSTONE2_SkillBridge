@@ -1,0 +1,377 @@
+{
+    "profile": {
+        "Full_name": "Nguyễn Văn Meoấuiasu",
+        "Email": "dev@skillbridge.vn",
+        "Phone_number": "0901234567",
+        "area": "Hội An, Quảng Nam",
+        "status": false,
+        "protect_card": false,
+        "description": "Lập trình viên đang phát triển dự án SkillBridge.",
+        "avatar": "https://i.pravatar.cc/150?u=skillbridge",
+        "is_open_to_work": true
+    },
+    "Users": [
+        {
+            "id": 1,
+            "name": "Nguyễn Văn Meo",
+            "email": "quctonnn@gmail.com",
+            "password": "12345678",
+            "two_fa_enabled": true,
+            "avatar": "https://ui-avatars.com/api/?name=Nguyen+Van+Meo&background=random"
+        },
+        {
+            "id": 2,
+            "name": "Trần Thị Miu",
+            "email": "muicas@gmail.com",
+            "password": "87654321",
+            "two_fa_enabled": false,
+            "avatar": "https://ui-avatars.com/api/?name=Tran+Thi+Miu&background=random"
+        }
+    ],
+    "Jobs": [
+        {
+            "id": 1,
+            "position": "Frontend Engineer (React)",
+            "company": "FPT Software",
+            "location": "Remote",
+            "salary": {
+                "min": 20000000,
+                "max": 35000000
+            },
+            "jobType": "Full-time",
+            "tags": [
+                "React",
+                "TypeScript"
+            ],
+            "logo": "F",
+            "featured": false,
+            "moderation_status": "GREEN",
+            "moderation_score": 0.98,
+            "category_id": "IT-001",
+            "category_name": "Web Development",
+            "vector_embedding": [
+                0.12,
+                -0.45,
+                0.89
+            ],
+            "view_count": 1200,
+            "status": "OPEN"
+        },
+        {
+            "id": 2,
+            "position": "AI Engineer (YOLO/DeepSeek)",
+            "company": "VNG Corporation",
+            "location": "Đà Nẵng",
+            "salary": {
+                "min": 30000000,
+                "max": 55000000
+            },
+            "jobType": "Full-time",
+            "tags": [
+                "AI",
+                "Computer Vision"
+            ],
+            "logo": "V",
+            "featured": true,
+            "moderation_status": "GREEN",
+            "moderation_score": 0.95,
+            "category_id": "IT-005",
+            "category_name": "Artificial Intelligence",
+            "vector_embedding": [
+                0.78,
+                0.12,
+                -0.34
+            ],
+            "view_count": 850,
+            "status": "OPEN"
+        },
+        {
+            "id": 3,
+            "position": "Senior UX Designer",
+            "company": "Google Inc.",
+            "location": "Mountain View",
+            "salary": {
+                "min": 3100,
+                "max": 5100
+            },
+            "jobType": "Contract",
+            "tags": [
+                "Figma",
+                "Prototyping"
+            ],
+            "logo": "G",
+            "featured": true,
+            "moderation_status": "YELLOW",
+            "moderation_score": 0.65,
+            "category_id": "DS-001",
+            "category_name": "Design",
+            "vector_embedding": [
+                0.05,
+                0.11,
+                -0.09
+            ],
+            "view_count": 400,
+            "status": "PENDING"
+        },
+        {
+            "id": 4,
+            "position": "Backend Engineer (Java)",
+            "company": "Viettel Group",
+            "location": "Hà Nội",
+            "salary": {
+                "min": 15000000,
+                "max": 25000000
+            },
+            "jobType": "Full-time",
+            "tags": [
+                "Spring Boot",
+                "MySQL"
+            ],
+            "logo": "V",
+            "featured": false,
+            "moderation_status": "GREEN",
+            "moderation_score": 0.88,
+            "category_id": "IT-002",
+            "category_name": "Backend Development",
+            "vector_embedding": [
+                -0.21,
+                0.67,
+                0.44
+            ],
+            "view_count": 620,
+            "status": "OPEN"
+        }
+    ],
+    "JobDetails": [
+        {
+            "id": 1,
+            "position": "Frontend Engineer (React)",
+            "company": "FPT Software",
+            "location": "Remote",
+            "salary": {
+                "min": 20000000,
+                "max": 35000000
+            },
+            "jobType": "Full-time",
+            "tags": [
+                "React",
+                "TypeScript",
+                "Tailwind"
+            ],
+            "logo": "F",
+            "featured": false,
+            "moderation_status": "GREEN",
+            "moderation_score": 0.98,
+            "category_id": "IT-001",
+            "category_name": "Web Development",
+            "vector_embedding": [
+                0.12,
+                -0.45,
+                0.89
+            ],
+            "view_count": 1200,
+            "status": "OPEN",
+            "in4": [
+                {
+                    "1": {
+                        "title": "Mô tả công việc",
+                        "description": "Tham gia phát triển các dự án quốc tế sử dụng công nghệ React mới nhất. Bạn sẽ chịu trách nhiệm xây dựng giao diện người dùng mượt mà, tối ưu hóa hiệu suất ứng dụng và phối hợp chặt chẽ với đội ngũ UI/UX."
+                    }
+                },
+                {
+                    "2": {
+                        "title": "Yêu cầu công việc",
+                        "description": [
+                            "Tối thiểu 2 năm kinh nghiệm làm việc với ReactJS và TypeScript",
+                            "Thành thạo HTML5, CSS3, SCSS và các thư viện UI như Material UI hoặc Tailwind CSS",
+                            "Hiểu biết sâu về State Management (Redux, Zustand) và tối ưu hóa Render"
+                        ]
+                    }
+                },
+                {
+                    "3": {
+                        "title": "Quyền lợi",
+                        "description": [
+                            "Lương thưởng tháng 13 và thưởng KPI dự án hấp dẫn",
+                            "Gói bảo hiểm sức khỏe FPT Care dành riêng cho nhân viên và gia đình",
+                            "Làm việc Remote linh hoạt, hỗ trợ thiết bị làm việc hiện đại"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "position": "AI Engineer (YOLO/DeepSeek)",
+            "company": "VNG Corporation",
+            "location": "Đà Nẵng",
+            "salary": {
+                "min": 30000000,
+                "max": 55000000
+            },
+            "jobType": "Full-time",
+            "tags": [
+                "AI",
+                "Computer Vision",
+                "Deep Learning"
+            ],
+            "logo": "V",
+            "featured": true,
+            "moderation_status": "GREEN",
+            "moderation_score": 0.95,
+            "category_id": "IT-005",
+            "category_name": "Artificial Intelligence",
+            "vector_embedding": [
+                0.78,
+                0.12,
+                -0.34
+            ],
+            "view_count": 850,
+            "status": "OPEN",
+            "in4": [
+                {
+                    "1": {
+                        "title": "Mô tả công việc",
+                        "description": "Nghiên cứu và triển khai các mô hình Computer Vision (YOLO) và các mô hình ngôn ngữ lớn (DeepSeek) vào hệ sinh thái sản phẩm của VNG."
+                    }
+                },
+                {
+                    "2": {
+                        "title": "Yêu cầu công việc",
+                        "description": [
+                            "Nắm vững kiến thức về Deep Learning, CNN, Transformer và Computer Vision",
+                            "Thành thạo Python và các framework: PyTorch, TensorFlow",
+                            "Có kinh nghiệm thực tế trong việc fine-tuning các mô hình LLM"
+                        ]
+                    }
+                },
+                {
+                    "3": {
+                        "title": "Quyền lợi",
+                        "description": [
+                            "Lương cạnh tranh cùng gói ESOP (cổ phiếu ưu đãi)",
+                            "Môi trường làm việc tại VNG Campus hiện đại",
+                            "Ăn trưa và cà phê miễn phí tại công ty"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "position": "Senior Product Designer",
+            "company": "Google Inc.",
+            "location": "Hà Nội",
+            "salary": {
+                "min": 2000,
+                "max": 3000
+            },
+            "jobType": "Full-time",
+            "tags": [
+                "Figma",
+                "UX Research",
+                "Design Thinking"
+            ],
+            "logo": "G",
+            "featured": true,
+            "moderation_status": "GREEN",
+            "moderation_score": 0.99,
+            "category_id": "DS-001",
+            "category_name": "Design",
+            "vector_embedding": [
+                0.05,
+                0.11,
+                -0.09
+            ],
+            "view_count": 400,
+            "status": "OPEN",
+            "in4": [
+                {
+                    "1": {
+                        "title": "Mô tả công việc",
+                        "description": "Chúng tôi đang tìm kiếm một Senior Product Designer tài năng để tham gia vào team thiết kế sản phẩm của Google. Bạn sẽ làm việc trên các dự án lớn, tác động đến hàng triệu người dùng trên toàn thế giới."
+                    }
+                },
+                {
+                    "2": {
+                        "title": "Yêu cầu công việc",
+                        "description": [
+                            "Kinh nghiệm tối thiểu 5 năm trong thiết kế sản phẩm hoặc UX/UI",
+                            "Thành thạo các công cụ: Figma, Adobe XD hoặc tương đương",
+                            "Hiểu biết sâu về User Research và Design Thinking",
+                            "Khả năng giao tiếp và làm việc nhóm xuất sắc"
+                        ]
+                    }
+                },
+                {
+                    "3": {
+                        "title": "Quyền lợi",
+                        "description": [
+                            "Lương cạnh tranh: $2000 - $3000/tháng",
+                            "Bảo hiểm sức khỏe: 100% trả cho nhân viên",
+                            "Đào tạo & Phát triển: Ngân sách học tập hàng năm",
+                            "Flexible Working: Làm việc từ nhà được"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "position": "Backend Engineer (Java)",
+            "company": "Viettel Group",
+            "location": "Hà Nội",
+            "salary": {
+                "min": 15000000,
+                "max": 25000000
+            },
+            "jobType": "Full-time",
+            "tags": [
+                "Spring Boot",
+                "MySQL",
+                "Microservices"
+            ],
+            "logo": "V",
+            "featured": false,
+            "moderation_status": "GREEN",
+            "moderation_score": 0.88,
+            "category_id": "IT-002",
+            "category_name": "Backend Development",
+            "vector_embedding": [
+                -0.21,
+                0.67,
+                0.44
+            ],
+            "view_count": 620,
+            "status": "OPEN",
+            "in4": [
+                {
+                    "1": {
+                        "title": "Mô tả công việc",
+                        "description": "Phát triển hệ thống backend quy mô lớn cho các dịch vụ viễn thông và tài chính số của Viettel. Tối ưu hóa database và microservices."
+                    }
+                },
+                {
+                    "2": {
+                        "title": "Yêu cầu công việc",
+                        "description": [
+                            "Thành thạo ngôn ngữ lập trình Java (ưu tiên Java 11/17)",
+                            "Kinh nghiệm làm việc với Spring Boot, Spring Cloud, Hibernate",
+                            "Hiểu biết về cơ sở dữ liệu MySQL, Oracle và NoSQL"
+                        ]
+                    }
+                },
+                {
+                    "3": {
+                        "title": "Quyền lợi",
+                        "description": [
+                            "Chế độ đãi ngộ tốt, cơ hội thăng tiến rõ ràng",
+                            "Trải nghiệm môi trường làm việc chuyên nghiệp, kỷ luật",
+                            "Hỗ trợ tiền ăn trưa, điện thoại và đi lại hàng tháng"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
