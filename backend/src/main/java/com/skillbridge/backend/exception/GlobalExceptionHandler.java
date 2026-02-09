@@ -1,56 +1,99 @@
 package com.skillbridge.backend.exception;
+
 import com.skillbridge.backend.dto.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import com.skillbridge.backend.exception.ErrorCode;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // ===== 404 API NOT FOUND =====
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleNotFound(NoHandlerFoundException ex) {
+        return buildResponse(ErrorCode.ENDPOINT_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+
+    // ===== 405 METHOD NOT ALLOWED =====
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<?>> handleMethodNotAllowed(
+            HttpRequestMethodNotSupportedException ex) {
+        return buildResponse(ErrorCode.METHOD_NOT_ALLOWED, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    // ===== 415 UNSUPPORTED MEDIA TYPE =====
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiResponse<?>> handleUnsupportedMedia(
+            HttpMediaTypeNotSupportedException ex) {
+        return buildResponse(ErrorCode.UNSUPPORTED_MEDIA_TYPE, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
+
+    // ===== BUSINESS EXCEPTION =====
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<?>> handleAppException(AppException ex) {
         ErrorCode errorCode = ex.getErrorCode();
+        return buildResponse(errorCode, mapErrorCodeToStatus(errorCode));
+    }
+
+    // ===== VALIDATION =====
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<?>> handlingValidation(
+            MethodArgumentNotValidException ex) {
+        ErrorCode errorCode = parseEnum(ex);
+        return buildResponse(errorCode, HttpStatus.BAD_REQUEST);
+    }
+
+    // ===== SYSTEM ERROR =====
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<?>> handleOther(Exception ex) {
+        ex.printStackTrace();
+        return buildResponse(
+                ErrorCode.UNCATEGORIZED_EXCEPTION,
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    }
+
+    // ================== PRIVATE METHODS ==================
+
+    private ResponseEntity<ApiResponse<?>> buildResponse(
+            ErrorCode errorCode,
+            HttpStatus status
+    ) {
         ApiResponse<?> response = new ApiResponse<>();
         response.setCode(errorCode.getCode());
         response.setMessage(errorCode.getMessage());
-
-        // Return appropriate HTTP status based on error code
-        HttpStatus status = mapErrorCodeToStatus(errorCode.getCode());
         return ResponseEntity.status(status).body(response);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<?>> handleOther(Exception ex) {
-        ApiResponse<?> response = new ApiResponse<>();
-        response.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
-        response.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
-
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<?>> handlingValidation(MethodArgumentNotValidException exception) {
-        ApiResponse<?> apiResponse = new ApiResponse<>();
-        String enumkey = exception.getFieldError().getDefaultMessage();
-        ErrorCode errorCode = ErrorCode.INVALID_KEY;
-        try {
-            errorCode = ErrorCode.valueOf(enumkey);
-        } catch (Exception e) {
-            // Keep default error code if parsing fails
-        }
-        apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(errorCode.getMessage());
-        return ResponseEntity.badRequest().body(apiResponse);
-    }
-
-    private HttpStatus mapErrorCodeToStatus(int code) {
-        return switch (code) {
-            case 401 -> HttpStatus.UNAUTHORIZED;           // UNAUTHORIZED
-            case 402 -> HttpStatus.FORBIDDEN;              // USER_STATUS (locked)
-            case 403 -> HttpStatus.FORBIDDEN;              // FORBIDDEN_ROLE
-            case 1002, 1004, 2001, 2002 -> HttpStatus.BAD_REQUEST;  // Email exists, password invalid, etc
+    private HttpStatus mapErrorCodeToStatus(ErrorCode errorCode) {
+        return switch (errorCode) {
+            case TOKEN_EXPIRED, UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
+            case FORBIDDEN, USER_STATUS -> HttpStatus.FORBIDDEN;
+            case EMAIL_INVALID, PASSWORD_INVALID, REQUIRED,
+                 EMAIL_EXIST, INVALID_OTP -> HttpStatus.BAD_REQUEST;
+            case USER_NOT_FOUND -> HttpStatus.NOT_FOUND;
             default -> HttpStatus.BAD_REQUEST;
         };
+    }
+
+    /**
+     * Parse enum key from @Valid message
+     */
+    private ErrorCode parseEnum(MethodArgumentNotValidException ex) {
+        if (ex.getFieldError() == null) {
+            return ErrorCode.INVALID_KEY;
+        }
+
+        String enumKey = ex.getFieldError().getDefaultMessage();
+        try {
+            return ErrorCode.valueOf(enumKey);
+        } catch (IllegalArgumentException e) {
+            return ErrorCode.INVALID_KEY;
+        }
     }
 }
