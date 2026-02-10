@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.AuthProvider;
 import java.util.Date;
 
 @Service
@@ -99,6 +100,57 @@ public class AuthService {
                 refreshToken
         );
     }
+
+    private User createUserCommon(
+            String email,
+            String fullName,
+            String provider
+    ) {
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new AppException(ErrorCode.EMAIL_EXIST);
+        }
+
+        User user = new User();
+        user.setEmail(email);
+        user.setName(fullName);
+        user.setProvider(provider);
+
+        return user;
+    }
+
+    public RegisterResponse registerGoogle(String name, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() ->
+                        createUserCommon(email, name, "GOOGLE")
+                );
+
+        // Nếu email tồn tại nhưng không phải Google
+        if (!"GOOGLE".equals(user.getProvider())) {
+            throw new AppException(ErrorCode.EMAIL_ALREADY_REGISTERED_BY_PASSWORD);
+        }
+
+        // ✅ SAVE TRƯỚC (đảm bảo có ID)
+        user = userRepository.save(user);
+
+        String accessToken = jwtService.generateAccesToken(
+                user.getId(),
+                user.getEmail(),
+                user.getRole()
+        );
+
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user); // OK: update refresh token
+
+        return new RegisterResponse(
+                user.getEmail(),
+                accessToken,
+                refreshToken
+        );
+    }
+
 
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -209,7 +261,6 @@ public class AuthService {
 
         return new LoginResponse(String.valueOf(user.getIs2faEnabled()), accessToken, refreshToken);
     }
-
 
     public User toggleTwoFactor(boolean is2faEnabled, String token) {
         if (token == null || token.isBlank() || !jwtService.validateToken(token)) {

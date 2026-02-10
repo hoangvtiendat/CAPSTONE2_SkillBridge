@@ -12,12 +12,12 @@ public enum ErrorCode {
     ENDPOINT_NOT_FOUND(4040, "API không tồn tại"),
     METHOD_NOT_ALLOWED(4050, "Method không được hỗ trợ"),
     UNSUPPORTED_MEDIA_TYPE(4150, "Content-Type không được hỗ trợ"),
-
     // ===== VALIDATION =====
     EMAIL_INVALID(2001, "Email không hợp lệ"),
     REQUIRED(2002, "Không được để trống"),
     PASSWORD_INVALID(2003, "Mật khẩu không hơp lệ"),
     EMAIL_EXIST(2004, "Email đã tồn tại"),
+    EMAIL_ALREADY_REGISTERED_BY_PASSWORD(2007, "Email đã được đăng ký bằng tài khoản LOCAL"),
     INVALID_OTP(2005,"Mã OTP SAI"),
     INVALID_INPUT(2006, "Dữ liệu đầu vào không hợp lệ"),
     FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),

@@ -1,12 +1,13 @@
 package com.skillbridge.backend.config;
 
 import com.skillbridge.backend.service.JwtAuthenticationFilter;
-import com.skillbridge.backend.service.JwtService;
 import com.skillbridge.backend.service.OAuth2LoginSuccessHandler;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -17,18 +18,18 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final OAuth2LoginSuccessHandler successHandler;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtAuthEntryPoint jwtAuthEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            OAuth2LoginSuccessHandler successHandler,
+            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
             JwtAuthEntryPoint jwtAuthEntryPoint,
             JwtAccessDeniedHandler jwtAccessDeniedHandler
     ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.successHandler = successHandler;
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
         this.jwtAuthEntryPoint = jwtAuthEntryPoint;
         this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
     }
@@ -39,25 +40,28 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+        http
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
-
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(jwtAuthEntryPoint)
                         .accessDeniedHandler(jwtAccessDeniedHandler)
                 )
 
+                //Phân quyền
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/**",
-                                "/users/**",
-                                "/api/public/**",
                                 "/oauth2/**",
                                 "/login/**",
+                                "/api/public/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/identity/swagger-ui/**",
@@ -66,15 +70,17 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // Google OAuth2 Login
+                // Google OAuth2 Redirect Login
                 .oauth2Login(oauth -> oauth
-                        .successHandler(successHandler)
+                        .successHandler(oAuth2LoginSuccessHandler)
                 )
-                // JWT Filter
+
+                // JWT Filter (chạy trước UsernamePasswordAuthenticationFilter)
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
-                )
-                .build();
+                );
+
+        return http.build();
     }
 }
