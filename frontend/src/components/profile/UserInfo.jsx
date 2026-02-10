@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Camera, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import './UserInfo.css';
 

@@ -28,7 +28,7 @@ export function ForgotPasswordForm() {
         try {
    
             
-            const response = await fetch("http://localhost:3001/auth/forgot-password", {
+            const response = await fetch("http://localhost:8081/identity/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
@@ -48,9 +48,7 @@ export function ForgotPasswordForm() {
                         } 
                     });
                 }, 1500);
-            } else {
-                toast.error("Lỗi", { description: "Email không tồn tại trong hệ thống", style: toastStyles.error });
-            }
+            } 
 
         } catch (err) {
             console.log("Mocking success for testing...");
@@ -70,7 +68,7 @@ export function ForgotPasswordForm() {
         <main className="welcome-container">
             <Toaster position="top-right" richColors />
             
-            <div className="auth-card">
+            <div className="auth-card2">
                 <div className="icon-header">
                     <div className="icon-circle">
                         <KeyRound size={28} color="#2563eb" strokeWidth={2.5} />

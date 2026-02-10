@@ -7,13 +7,11 @@ const JobGrid = () => {
 
   const [jobs, setJobs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 6; // Display 9 jobs (3 rows of 3)
 
   const get_API_data = async()=> {
     try{
-      setIsLoading(true);
       const response = await fetch('http://localhost:3001/Jobs', 
         {
           method: 'GET',
@@ -31,9 +29,7 @@ const JobGrid = () => {
     }catch(err){
       console.error("Error fetching jobs:", err);
     }
-    finally{
-      setIsLoading(false);
-    }
+    
   } 
     useEffect(() => {
       get_API_data();

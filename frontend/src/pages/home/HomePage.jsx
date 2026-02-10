@@ -1,4 +1,3 @@
-import React, { useRef } from 'react';
 import Sidebar from '../../components/home/Sidebar';
 import Hero from '../../components/home/Hero';
 import JobGrid from '../../components/home/JobGrid';

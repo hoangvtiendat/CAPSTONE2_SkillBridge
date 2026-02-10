@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Wand2, CheckCircle, Upload, Plus, X, ArrowRight, Loader2 } from 'lucide-react';
+import React, { useState, } from 'react';
+import { FileText, Wand2, Upload, Plus, X, ArrowRight } from 'lucide-react';
 import './CVParser.css';
 
 /* ================= MOCK AI DATA ================= */
