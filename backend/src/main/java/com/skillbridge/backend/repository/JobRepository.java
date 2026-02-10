@@ -15,7 +15,7 @@ import java.util.List;
 public interface JobRepository extends JpaRepository<Job, String> {
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.position, j.location, 
+            j.id, j.title, j.location, 
             j.salaryMin, j.salaryMax, j.createdAt, 
             c.name,c.imageUrl,sp.name, cat.name
         )
@@ -35,13 +35,13 @@ public interface JobRepository extends JpaRepository<Job, String> {
     """)
     List<JobFeedItemResponse> getJobFeed(
             @Param("cursor") String cursor,
-            @Param("status") JobStatus status,
+            @Param("status") String status,
             Pageable pageable
     );
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.position, j.location, 
+            j.id, j.title, j.location, 
             j.salaryMin, j.salaryMax, j.createdAt, 
             c.name,c.imageUrl,sp.name, cat.name
         )
@@ -61,7 +61,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
     """)
         List<JobFeedItemResponse> getJobFeedFiltered(
                 @Param("cursor") String cursor,
-                @Param("status") JobStatus status,
+                @Param("status") String status,
                 @Param("categoryId") String categoryId,
                 @Param("location") String location,
                 @Param("salary") Double minSalary,

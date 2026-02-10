@@ -11,11 +11,11 @@ public class DegreeResponse {
     private String degree;
     private String major;
     private String institution;
-    private Integer graduationYear;
+    private String graduationYear;
 
     // Certificate
     private String name;
-    private Integer year;
+    private String year;
 
     public String getType() {
         return type;
@@ -49,11 +49,11 @@ public class DegreeResponse {
         this.institution = institution;
     }
 
-    public Integer getGraduationYear() {
+    public String getGraduationYear() {
         return graduationYear;
     }
 
-    public void setGraduationYear(Integer graduationYear) {
+    public void setGraduationYear(String graduationYear) {
         this.graduationYear = graduationYear;
     }
 
@@ -65,11 +65,11 @@ public class DegreeResponse {
         this.name = name;
     }
 
-    public Integer getYear() {
+    public String getYear() {
         return year;
     }
 
-    public void setYear(Integer year) {
+    public void setYear(String year) {
         this.year = year;
     }
 }

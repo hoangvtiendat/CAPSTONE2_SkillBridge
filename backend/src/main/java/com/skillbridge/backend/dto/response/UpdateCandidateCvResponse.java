@@ -1,103 +1,53 @@
 package com.skillbridge.backend.dto.response;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.skillbridge.backend.dto.request.ExperienceDetail;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdateCandidateCvResponse {
-    private String candidateId;
+    private String name;
+    private String description;
+    private String address;
+    private String category;
 
-    private Boolean isOpenToWork;
-    private Integer yearsOfExperience;
-    private Double expectedSalary;
-
-    private String categoryId;
-    private String categoryName;
-
-    public List<CandidateSkillResponse> getSkills() {
-        return skills;
-    }
-
-    public void setSkills(List<CandidateSkillResponse> skills) {
-        this.skills = skills;
-    }
-
-    public Boolean getOpenToWork() {
-        return isOpenToWork;
-    }
-
-    public void setOpenToWork(Boolean openToWork) {
-        isOpenToWork = openToWork;
-    }
-
-    private List<CandidateSkillResponse> skills;
-
-    public UpdateCandidateCvResponse(String candidateId, Boolean isOpenToWork, Integer yearsOfExperience, Double expectedSalary, String categoryId, String categoryName, List<DegreeResponse> degrees,List<CandidateSkillResponse> skills) {
-        this.candidateId = candidateId;
-        this.isOpenToWork = isOpenToWork;
-        this.yearsOfExperience = yearsOfExperience;
-        this.expectedSalary = expectedSalary;
-        this.categoryId = categoryId;
-        this.categoryName = categoryName;
-        this.degrees = degrees;
-        this.skills = skills;
-    }
-
-    //Degrees / Certificates
     private List<DegreeResponse> degrees;
+    private List<CandidateSkillResponse> skills;
+    private List<ExperienceDetail> experience;
 
-    public String getCandidateId() {
-        return candidateId;
-    }
+    public UpdateCandidateCvResponse() {}
 
-    public void setCandidateId(String candidateId) {
-        this.candidateId = candidateId;
-    }
-
-    public Boolean getIsOpenToWork() {
-        return isOpenToWork;
-    }
-
-    public void setIsOpenToWork(Boolean openToWork) {
-        isOpenToWork = openToWork;
-    }
-
-    public Integer getYearsOfExperience() {
-        return yearsOfExperience;
-    }
-
-    public void setYearsOfExperience(Integer yearsOfExperience) {
-        this.yearsOfExperience = yearsOfExperience;
-    }
-
-    public Double getExpectedSalary() {
-        return expectedSalary;
-    }
-
-    public void setExpectedSalary(Double expectedSalary) {
-        this.expectedSalary = expectedSalary;
-    }
-
-    public String getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
-    public List<DegreeResponse> getDegrees() {
-        return degrees;
-    }
-
-    public void setDegrees(List<DegreeResponse> degrees) {
+    public UpdateCandidateCvResponse(String name, String description, String address, String category,
+                                     List<DegreeResponse> degrees, List<CandidateSkillResponse> skills,
+                                     List<ExperienceDetail> experience) {
+        this.name = name;
+        this.description = description;
+        this.address = address;
+        this.category = category;
         this.degrees = degrees;
+        this.skills = skills;
+        this.experience = experience;
     }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public List<DegreeResponse> getDegrees() { return degrees; }
+    public void setDegrees(List<DegreeResponse> degrees) { this.degrees = degrees; }
+
+    public List<CandidateSkillResponse> getSkills() { return skills; }
+    public void setSkills(List<CandidateSkillResponse> skills) { this.skills = skills; }
+
+    public List<ExperienceDetail> getExperience() { return experience; }
+    public void setExperience(List<ExperienceDetail> experience) { this.experience = experience; }
 }
