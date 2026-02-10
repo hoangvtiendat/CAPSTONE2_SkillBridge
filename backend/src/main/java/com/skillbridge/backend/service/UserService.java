@@ -6,6 +6,7 @@ import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,10 +33,7 @@ public class UserService {
 
     public User updateUser(String id, UserUpdateRequest request) {
         User user = getUser(id);
-
-        user.setPassword(request.getPassword());
         user.setEmail(request.getEmail());
-
         return userRepository.save(user);
     }
 
@@ -44,7 +42,7 @@ public class UserService {
     }
 
     public User getUser(String id) {
-        return userRepository.findById(id).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
+        return userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
     public void deleteUser(String id) {
@@ -68,5 +66,25 @@ public class UserService {
         System.out.println("user = " + user);
 
         return user;
+    }
+
+    @Transactional
+    public User updateMe(String token, UserUpdateRequest request) {
+        User user = getMe(token);
+
+        if (request.getName() != null) {
+            user.setName(request.getName());
+        }
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress());
+        }
+        if (request.getPhoneNumber() != null) {
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+        return userRepository.saveAndFlush(user);
+
     }
 }

@@ -171,7 +171,7 @@ public class AuthController {
 
             authService.logout(jwt);
             ApiResponse<String> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Đăng xuất", "Đăng xuất tài khoản thànhc công"
+                    HttpStatus.OK.value(), "Đăng xuất", "Đăng xuất tài khoản thành công"
             );
             return ResponseEntity.ok(response);
         } catch (AppException ex) {

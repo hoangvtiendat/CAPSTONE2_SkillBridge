@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
-public class  UserController {
+public class UserController {
     @Autowired
     private UserService userService;
 
@@ -53,7 +53,6 @@ public class  UserController {
         return "User deleted";
     }
 
-
     // Personal Information
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<User>> getMe(@Valid @RequestHeader(value = "Authorization") String token) {
@@ -76,4 +75,23 @@ public class  UserController {
 
     }
 
+    @PatchMapping("/me")
+    public ResponseEntity<ApiResponse<User>> updateMe(@Valid @RequestHeader(value = "Authorization") String token, @RequestBody UserUpdateRequest request) {
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            String jwt = token.substring(7);
+
+            User rs = userService.updateMe(jwt, request);
+            ApiResponse<User> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Chỉnh sửa thông tin cá nhân thành công", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[PATCH-ME] AppException occurred");
+            System.out.println("[PATCH-ME] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
 }
