@@ -2,6 +2,7 @@ package com.skillbridge.backend.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.dto.request.CandidateSkillRequest;
 import com.skillbridge.backend.dto.request.DegreeRequest;
@@ -15,12 +16,16 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,19 +37,33 @@ public class CandidateService {
     private final UserRepository userRepository;
     private final SkillRepository skillRepository;
     private final CandidateSkillRepository candidateSkillRepository;
+    private OcrService ocrService;
+    @Value("${gemini.api.key}")
+    private String apiKey;
 
+    private static class LLMResumeResponse {
+        public String name;
+        public String description;
+        public String address;
+        public List<DegreeRequest> degrees;
+        public List<ExperienceDetail> experience;
+        public List<CandidateSkillResponse> skills;
+    }
+    private final RestTemplate restTemplate = new RestTemplate();
     public CandidateService(CandidateRepository candidateRepository,
                             CategoryRepository categoryRepository,
                             UserRepository userRepository,
                             SkillRepository skillRepository,
                             CandidateSkillRepository candidateSkillRepository,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            OcrService ocrService) {
         this.candidateRepository = candidateRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.skillRepository = skillRepository;
         this.candidateSkillRepository = candidateSkillRepository;
         this.objectMapper = objectMapper;
+        this.ocrService = ocrService;
     }
 
     private List<DegreeResponse> deserializeDegrees(Object degreeObj) {
@@ -98,7 +117,7 @@ public class CandidateService {
 
         List<CandidateSkill> currentSkills = candidateSkillRepository.findByCandidate(candidate);
         List<CandidateSkillResponse> skillResponses = currentSkills.stream().map(s -> {
-            CandidateSkillResponse res = new CandidateSkillResponse(s.getSkill().getId(),s.getExperienceYears());
+            CandidateSkillResponse res = new CandidateSkillResponse(s.getSkill().getId(),s.getSkill().getName(),s.getExperienceYears());
             return res;
         }).toList();
 
@@ -183,138 +202,135 @@ public class CandidateService {
             }
         }
     }
-    private String cleanLine(String line) {
-        if (line == null) return "";
-        // Loại bỏ các ký tự đặc biệt đứng đầu dòng thường gặp trong CV rác
-        return line.replaceAll("^[*•\\-$@|⁄\\\\=]+", "").trim();
+    private List<CandidateSkillRequest> mapLLMSkillsToRequests(List<CandidateSkillResponse> llmSkills) {
+        if (llmSkills == null) return new ArrayList<>();
+        List<CandidateSkillRequest> requests = new ArrayList<>();
+
+        for (CandidateSkillResponse s : llmSkills) {
+            if (s.getSkillName() == null) continue;
+            skillRepository.findByNameContainingIgnoreCase(s.getSkillName().trim())
+                    .stream().findFirst().ifPresent(skillEntity -> {
+                        CandidateSkillRequest req = new CandidateSkillRequest();
+                        req.setSkillId(skillEntity.getId());
+                        req.setExperienceYears(s.getExperienceYears() != null ? s.getExperienceYears() : 1);
+                        requests.add(req);
+                    });
+        }
+        return requests;
+    }
+    private static final String SYSTEM_PROMPT = """
+        Bạn là chuyên gia phân tích dữ liệu nhân sự cao cấp. 
+        Nhiệm vụ: Trình bày thông tin từ văn bản CV (được trích xuất từ PDF) thành cấu trúc JSON chuẩn xác.
+        
+        Cấu trúc JSON yêu cầu:
+        {
+          "name": "Họ và tên",
+          "address": "Địa chỉ liên lạc",
+          "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+          "degrees": [
+            {
+              "type": "DEGREE hoặc CERTIFICATE",
+              "degree": "Tên bằng cấp (nếu là DEGREE)",
+              "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+              "major": "Ngành học",
+              "institution": "Tên trường/tổ chức cấp",
+              "graduationYear": 2023 (năm tốt nghiệp dạng số)
+            }
+          ],
+          "experience": [
+            {
+              "startDate": "yyyy-MM-dd",
+              "endDate": "yyyy-MM-dd hoặc null nếu đang làm",
+              "description": "Chi tiết công việc và thành tựu"
+            }
+          ],
+          "skills": [
+            {
+              "skillName": "Tên kỹ năng (VD: Java, SQL, Communication)",
+              "experienceYears": 3 (Số năm kinh nghiệm, tự ước lượng dựa trên timeline làm việc)
+            }
+          ]
+        }
+        Quy tắc bắt buộc:
+        1. Chỉ trả về JSON, tuyệt đối không có văn bản dẫn nhập hoặc giải thích.
+        2. Định dạng ngày tháng: yyyy-MM-dd. Nếu chỉ có năm, hãy để yyyy-01-01.
+        3. Làm sạch dữ liệu: Loại bỏ các ký tự rác từ PDF (@, *, -, bullet points không cần thiết).
+        4. Ngôn ngữ: Giữ nguyên ngôn ngữ gốc của CV (Tiếng Anh hoặc Tiếng Việt).
+        5. 'skills': Phải tách riêng từng kỹ năng rõ rệt để hệ thống dễ dàng mapping ID.
+        """;
+    public UpdateCandidateCvRequest handleCvOcrUpload(String userId, MultipartFile file) {
+
+        String rawText = ocrService.scanFile(file);
+        System.out.println(rawText);
+        UpdateCandidateCvRequest updateRequest = parseRawText(rawText);
+        System.out.println(updateRequest);
+        return updateRequest;
     }
     public UpdateCandidateCvRequest parseRawText(String rawText) {
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        System.out.println(url);
+        Map<String, Object> requestBody = Map.of(
+                "contents", List.of(Map.of(
+                        "parts", List.of(Map.of("text", SYSTEM_PROMPT + "\n\nCV TEXT FROM OCR:\n" + rawText))
+                ))
+        );
+
+        try {
+            JsonNode response = restTemplate.postForObject(url, requestBody, JsonNode.class);
+
+            if (response == null || !response.has("candidates")) {
+                throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
+            }
+
+            String jsonStr = response.path("candidates").get(0)
+                    .path("content").path("parts").get(0)
+                    .path("text").asText();
+            jsonStr = cleanJsonString(jsonStr);
+
+            return convertLLMToRequest(objectMapper.readValue(jsonStr, LLMResumeResponse.class));
+        } catch (Exception e) {
+            System.err.println("Gemini Error: " + e.getMessage());
+            throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
+        }
+    }
+    private String cleanJsonString(String raw) {
+        String cleaned = raw.trim();
+        if (cleaned.startsWith("```json")) {
+            cleaned = cleaned.substring(7);
+        } else if (cleaned.startsWith("```")) {
+            cleaned = cleaned.substring(3);
+        }
+        if (cleaned.endsWith("```")) {
+            cleaned = cleaned.substring(0, cleaned.length() - 3);
+        }
+        return cleaned.trim();
+    }
+
+    private UpdateCandidateCvRequest convertLLMToRequest(LLMResumeResponse res) {
         UpdateCandidateCvRequest request = new UpdateCandidateCvRequest();
-        String[] lines = rawText.split("\\r?\\n");
-
-        // Tìm tên: Thường là dòng in hoa, không chứa từ khóa mục lục
-        List<String> blackList = Arrays.asList("about", "experience", "education", "skills", "contact", "summary", "profile");
-
-        for (String line : lines) {
-            String cleaned = cleanLine(line);
-            if (cleaned.length() > 3 && !blackList.contains(cleaned.toLowerCase())) {
-                request.setName(cleaned);
-                break;
+        request.setName(res.name);
+        request.setAddress(res.address);
+        request.setDescription(res.description);
+        request.setDegrees(res.degrees);
+        request.setExperience(res.experience);
+        if (res.skills != null && !res.skills.isEmpty()) {
+            List<CandidateSkillRequest> skillRequests = new ArrayList<>();
+            for (CandidateSkillResponse llmSkill : res.skills) {
+                if (llmSkill.getSkillName() == null) continue;
+                String skillNameFromAI = llmSkill.getSkillName().trim();
+                skillRepository.findByNameContainingIgnoreCase(skillNameFromAI)
+                        .stream()
+                        .findFirst()
+                        .ifPresent(skillEntity -> {
+                            CandidateSkillRequest sr = new CandidateSkillRequest();
+                            sr.setSkillId(skillEntity.getId());
+                            Integer years = llmSkill.getExperienceYears();
+                            sr.setExperienceYears(years != null ? years : 1);
+                            skillRequests.add(sr);
+                        });
             }
+            request.setSkills(skillRequests);
         }
-
-        // Địa chỉ: Lấy dòng chứa "Da Nang" nhưng cắt bớt phần thừa
-        for (String line : lines) {
-            if (line.toLowerCase().contains("da nang") || line.toLowerCase().contains("đà nẵng")) {
-                String addr = cleanLine(line);
-                if (addr.contains(",")) {
-                    // Thường địa chỉ kết thúc sau tỉnh thành, phần sau là mô tả thừa
-                    request.setAddress(addr.split(",")[0] + ", Da Nang");
-                } else {
-                    request.setAddress(addr);
-                }
-                break;
-            }
-        }
-
-        request.setExperience(extractExperiences(rawText));
-        request.setDegrees(extractDegreesAndCertificates(rawText));
-        request.setSkills(extractSkills(rawText));
-
         return request;
-    }
-
-    private List<ExperienceDetail> extractExperiences(String text) {
-        List<ExperienceDetail> experiences = new ArrayList<>();
-        // Regex chặt chẽ hơn cho năm: yêu cầu đủ 4 chữ số
-        Pattern yearPattern = Pattern.compile("\\b(19|20)\\d{2}\\b");
-        String[] lines = text.split("\\r?\\n");
-
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i];
-            Matcher matcher = yearPattern.matcher(line);
-
-            if (matcher.find()) {
-                try {
-                    int startYear = Integer.parseInt(matcher.group());
-                    if (startYear < 1950 || startYear > 2030) continue; // Loại bỏ số rác
-
-                    ExperienceDetail exp = new ExperienceDetail();
-                    exp.setStartDate(LocalDate.of(startYear, 1, 1));
-
-                    // Tìm năm kết thúc trong cùng dòng
-                    int endYear = 2026;
-                    if (matcher.find()) {
-                        endYear = Integer.parseInt(matcher.group());
-                    } else if (line.toLowerCase().matches(".*(present|nay|today|hiện tại).*")) {
-                        endYear = 2026;
-                    }
-
-                    exp.setEndDate(LocalDate.of(endYear, 1, 1));
-
-                    // Làm sạch mô tả: Lấy phần text còn lại của dòng hoặc dòng tiếp theo
-                    String desc = cleanLine(line.replaceAll("\\b\\d{4}\\b", "").replaceAll("[-–/]", ""));
-                    if (desc.length() < 5 && i + 1 < lines.length) {
-                        desc = cleanLine(lines[i+1]);
-                    }
-
-                    // Chỉ thêm nếu mô tả không chứa từ khóa học vấn (để tránh trùng lặp)
-                    if (!desc.toLowerCase().contains("university") && !desc.toLowerCase().contains("đại học")) {
-                        exp.setDescription(desc);
-                        experiences.add(exp);
-                    }
-                } catch (Exception e) {}
-            }
-        }
-        return experiences;
-    }
-
-    private List<DegreeRequest> extractDegreesAndCertificates(String rawText) {
-        List<DegreeRequest> results = new ArrayList<>();
-        String[] lines = rawText.split("\\r?\\n");
-
-        for (String line : lines) {
-            String cleaned = cleanLine(line);
-            String l = cleaned.toLowerCase();
-
-            if (cleaned.length() < 5 || cleaned.length() > 100) continue; // Bỏ qua dòng quá ngắn hoặc quá dài (đoạn văn)
-
-            if (l.contains("university") || l.contains("đại học")) {
-                // Nếu dòng chứa cả "IELTS" và "University" thì ưu tiên là Certificate
-                if (l.contains("ielts") || l.contains("toeic")) continue;
-
-                DegreeRequest d = new DegreeRequest();
-                d.setType("DEGREE");
-                d.setInstitution(cleaned);
-                d.setDegree(l.contains("bachelor") ? "Bachelor" : "Engineer");
-                d.setMajor("Information Technology");
-                results.add(d);
-            } else if (l.contains("certified") || l.contains("chứng chỉ") || l.contains("ielts") || l.contains("certificate")) {
-                if (l.equals("certificates")) continue; // Bỏ qua tiêu đề mục
-
-                DegreeRequest c = new DegreeRequest();
-                c.setType("CERTIFICATE");
-                c.setName(cleaned);
-                results.add(c);
-            }
-        }
-        return results;
-    }
-
-    private List<CandidateSkillRequest> extractSkills(String cleanText) {
-        List<CandidateSkillRequest> skillRequests = new ArrayList<>();
-        List<Skill> allSkills = skillRepository.findAll();
-        String normalizedText = cleanText.toLowerCase();
-
-        for (Skill skill : allSkills) {
-            String skillName = skill.getName().toLowerCase();
-            if (normalizedText.contains(" " + skillName + " ") || normalizedText.contains("," + skillName)) {
-                CandidateSkillRequest sReq = new CandidateSkillRequest();
-                sReq.setSkillId(skill.getId());
-                sReq.setExperienceYears(1);
-                skillRequests.add(sReq);
-            }
-        }
-        return skillRequests;
     }
 }

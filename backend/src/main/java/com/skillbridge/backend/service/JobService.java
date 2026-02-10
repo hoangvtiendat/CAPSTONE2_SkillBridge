@@ -36,7 +36,7 @@ public class JobService {
         Pageable pageable = PageRequest.of(0, limit + 1);
 
         List<JobFeedItemResponse> jobFeed = jobRepository.getJobFeedFiltered(
-                cursor, JobStatus.OPEN.toString(), categoryId, location, salary, pageable
+                cursor, JobStatus.OPEN, categoryId, location, salary, pageable
         );
 
         if (jobFeed.isEmpty()) {

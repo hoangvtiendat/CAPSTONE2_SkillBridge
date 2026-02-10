@@ -61,7 +61,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
     """)
         List<JobFeedItemResponse> getJobFeedFiltered(
                 @Param("cursor") String cursor,
-                @Param("status") String status,
+                @Param("status") Enum status,
                 @Param("categoryId") String categoryId,
                 @Param("location") String location,
                 @Param("salary") Double minSalary,

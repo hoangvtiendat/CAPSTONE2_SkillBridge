@@ -26,25 +26,20 @@ public class CandidateController {
     }
 
     @PostMapping("/parse-cv")
-    public ResponseEntity<ApiResponse<UpdateCandidateCvRequest>> parseCv(@RequestParam("file") MultipartFile file) {
-        try {
-            //Dùng Tesseract lấy text
-            String rawText = ocrService.scanFile(file);
-            System.out.println("LOG RAW TEXT: [" + rawText + "]");
+    public ResponseEntity<ApiResponse<UpdateCandidateCvRequest>> parseCv(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam("file") MultipartFile file
+    ) {
+        // Gọi hàm xử lý trọn gói trong Service
+        UpdateCandidateCvRequest response = candidateService.handleCvOcrUpload(user.getUserId(), file);
 
-            if (rawText == null || rawText.trim().isEmpty()) {
-                System.out.println(">>> Tesseract KHÔNG đọc được chữ nào!");
-            }
-            //Dùng Regex/Logic bóc tách sang DTO
-            UpdateCandidateCvRequest parsedRequest = candidateService.parseRawText(rawText);
+        ApiResponse<UpdateCandidateCvRequest> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(response);
+        apiResponse.setMessage("CV đã được tải lên và phân tích thành công");
 
-            ApiResponse<UpdateCandidateCvRequest> response = new ApiResponse<>();
-            response.setResult(parsedRequest);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.INVALID_FILE_FORMAT);
-        }
+        return ResponseEntity.ok(apiResponse);
     }
+
     @GetMapping("/cv")
     public ResponseEntity<ApiResponse<UpdateCandidateCvResponse>> getCv(
             @AuthenticationPrincipal CustomUserDetails user
