@@ -17,6 +17,8 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,7 +51,9 @@ public class CandidateService {
         public List<ExperienceDetail> experience;
         public List<CandidateSkillResponse> skills;
     }
+
     private final RestTemplate restTemplate = new RestTemplate();
+
     public CandidateService(CandidateRepository candidateRepository,
                             CategoryRepository categoryRepository,
                             UserRepository userRepository,
@@ -70,7 +74,8 @@ public class CandidateService {
         if (degreeObj == null) return new ArrayList<>();
         try {
             String json = degreeObj instanceof String ? (String) degreeObj : objectMapper.writeValueAsString(degreeObj);
-            List<DegreeRequest> list = objectMapper.readValue(json, new TypeReference<List<DegreeRequest>>() {});
+            List<DegreeRequest> list = objectMapper.readValue(json, new TypeReference<List<DegreeRequest>>() {
+            });
             return list.stream().map(this::toDegreeResponse).toList();
         } catch (Exception e) {
             return new ArrayList<>();
@@ -81,10 +86,12 @@ public class CandidateService {
         if (expObj == null) return new ArrayList<>();
         try {
             if (expObj instanceof List) {
-                return objectMapper.convertValue(expObj, new TypeReference<List<ExperienceDetail>>() {});
+                return objectMapper.convertValue(expObj, new TypeReference<List<ExperienceDetail>>() {
+                });
             }
             String json = expObj.toString();
-            return objectMapper.readValue(json, new TypeReference<List<ExperienceDetail>>() {});
+            return objectMapper.readValue(json, new TypeReference<List<ExperienceDetail>>() {
+            });
         } catch (Exception e) {
             return new ArrayList<>();
         }
@@ -101,6 +108,7 @@ public class CandidateService {
         res.setYear(req.getYear() != null ? String.valueOf(req.getYear()) : null);
         return res;
     }
+
     private ExperienceDetail toExperienceDetail(ExperienceDetail req) {
         ExperienceDetail res = new ExperienceDetail();
         res.setStartDate(req.getStartDate());
@@ -108,6 +116,7 @@ public class CandidateService {
         res.setDescription(req.getDescription());
         return res;
     }
+
     public UpdateCandidateCvResponse getCv(String userId) {
         Candidate candidate = candidateRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -117,7 +126,7 @@ public class CandidateService {
 
         List<CandidateSkill> currentSkills = candidateSkillRepository.findByCandidate(candidate);
         List<CandidateSkillResponse> skillResponses = currentSkills.stream().map(s -> {
-            CandidateSkillResponse res = new CandidateSkillResponse(s.getSkill().getId(),s.getSkill().getName(),s.getExperienceYears());
+            CandidateSkillResponse res = new CandidateSkillResponse(s.getSkill().getId(), s.getSkill().getName(), s.getExperienceYears());
             return res;
         }).toList();
 
@@ -202,6 +211,7 @@ public class CandidateService {
             }
         }
     }
+
     private List<CandidateSkillRequest> mapLLMSkillsToRequests(List<CandidateSkillResponse> llmSkills) {
         if (llmSkills == null) return new ArrayList<>();
         List<CandidateSkillRequest> requests = new ArrayList<>();
@@ -218,46 +228,48 @@ public class CandidateService {
         }
         return requests;
     }
+
     private static final String SYSTEM_PROMPT = """
-        Bạn là chuyên gia phân tích dữ liệu nhân sự cao cấp. 
-        Nhiệm vụ: Trình bày thông tin từ văn bản CV (được trích xuất từ PDF) thành cấu trúc JSON chuẩn xác.
-        
-        Cấu trúc JSON yêu cầu:
-        {
-          "name": "Họ và tên",
-          "address": "Địa chỉ liên lạc",
-          "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
-          "degrees": [
+            Bạn là chuyên gia phân tích dữ liệu nhân sự cao cấp. 
+            Nhiệm vụ: Trình bày thông tin từ văn bản CV (được trích xuất từ PDF) thành cấu trúc JSON chuẩn xác.
+            
+            Cấu trúc JSON yêu cầu:
             {
-              "type": "DEGREE hoặc CERTIFICATE",
-              "degree": "Tên bằng cấp (nếu là DEGREE)",
-              "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
-              "major": "Ngành học",
-              "institution": "Tên trường/tổ chức cấp",
-              "graduationYear": 2023 (năm tốt nghiệp dạng số)
+              "name": "Họ và tên",
+              "address": "Địa chỉ liên lạc",
+              "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+              "degrees": [
+                {
+                  "type": "DEGREE hoặc CERTIFICATE",
+                  "degree": "Tên bằng cấp (nếu là DEGREE)",
+                  "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+                  "major": "Ngành học",
+                  "institution": "Tên trường/tổ chức cấp",
+                  "graduationYear": 2023 (năm tốt nghiệp dạng số)
+                }
+              ],
+              "experience": [
+                {
+                  "startDate": "yyyy-MM-dd",
+                  "endDate": "yyyy-MM-dd hoặc null nếu đang làm",
+                  "description": "Chi tiết công việc và thành tựu"
+                }
+              ],
+              "skills": [
+                {
+                  "skillName": "Tên kỹ năng (VD: Java, SQL, Communication)",
+                  "experienceYears": 3 (Số năm kinh nghiệm, tự ước lượng dựa trên timeline làm việc)
+                }
+              ]
             }
-          ],
-          "experience": [
-            {
-              "startDate": "yyyy-MM-dd",
-              "endDate": "yyyy-MM-dd hoặc null nếu đang làm",
-              "description": "Chi tiết công việc và thành tựu"
-            }
-          ],
-          "skills": [
-            {
-              "skillName": "Tên kỹ năng (VD: Java, SQL, Communication)",
-              "experienceYears": 3 (Số năm kinh nghiệm, tự ước lượng dựa trên timeline làm việc)
-            }
-          ]
-        }
-        Quy tắc bắt buộc:
-        1. Chỉ trả về JSON, tuyệt đối không có văn bản dẫn nhập hoặc giải thích.
-        2. Định dạng ngày tháng: yyyy-MM-dd. Nếu chỉ có năm, hãy để yyyy-01-01.
-        3. Làm sạch dữ liệu: Loại bỏ các ký tự rác từ PDF (@, *, -, bullet points không cần thiết).
-        4. Ngôn ngữ: Giữ nguyên ngôn ngữ gốc của CV (Tiếng Anh hoặc Tiếng Việt).
-        5. 'skills': Phải tách riêng từng kỹ năng rõ rệt để hệ thống dễ dàng mapping ID.
-        """;
+            Quy tắc bắt buộc:
+            1. Chỉ trả về JSON, tuyệt đối không có văn bản dẫn nhập hoặc giải thích.
+            2. Định dạng ngày tháng: yyyy-MM-dd. Nếu chỉ có năm, hãy để yyyy-01-01.
+            3. Làm sạch dữ liệu: Loại bỏ các ký tự rác từ PDF (@, *, -, bullet points không cần thiết).
+            4. Ngôn ngữ: Giữ nguyên ngôn ngữ gốc của CV (Tiếng Anh hoặc Tiếng Việt).
+            5. 'skills': Phải tách riêng từng kỹ năng rõ rệt để hệ thống dễ dàng mapping ID.
+            """;
+
     public UpdateCandidateCvRequest handleCvOcrUpload(String userId, MultipartFile file) {
 
         String rawText = ocrService.scanFile(file);
@@ -266,44 +278,67 @@ public class CandidateService {
         System.out.println(updateRequest);
         return updateRequest;
     }
+
     public UpdateCandidateCvRequest parseRawText(String rawText) {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
-        System.out.println(url);
+        // SỬA TẠI ĐÂY: Dùng đúng tên model có trong danh sách của bạn
+        String modelName = "gemini-2.5-flash";
+        // Dùng v1 vì đây là các bản stable
+        String url = "https://generativelanguage.googleapis.com/v1/models/" + modelName + ":generateContent?key=" + apiKey;
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(Map.of(
                         "parts", List.of(Map.of("text", SYSTEM_PROMPT + "\n\nCV TEXT FROM OCR:\n" + rawText))
                 ))
         );
 
-        try {
-            JsonNode response = restTemplate.postForObject(url, requestBody, JsonNode.class);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-            if (response == null || !response.has("candidates")) {
+        try {
+            System.out.println("Connecting to Gemini API: " + url);
+
+            // ĐỔI TẠI ĐÂY: Nhận phản hồi là String.class thay vì JsonNode.class
+            org.springframework.http.ResponseEntity<String> responseEntity =
+                    restTemplate.postForEntity(url, entity, String.class);
+
+            String responseBody = responseEntity.getBody();
+
+            if (responseBody == null) {
                 throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
             }
 
-            String jsonStr = response.path("candidates").get(0)
+            // Dùng objectMapper (đã được Spring inject) để đọc String thành JsonNode
+            JsonNode response = objectMapper.readTree(responseBody);
+
+            if (!response.has("candidates")) {
+                throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
+            }
+
+            String aiRawResponse = response.path("candidates").get(0)
                     .path("content").path("parts").get(0)
                     .path("text").asText();
-            jsonStr = cleanJsonString(jsonStr);
 
+            String jsonStr = cleanJsonWithRegex(aiRawResponse);
             return convertLLMToRequest(objectMapper.readValue(jsonStr, LLMResumeResponse.class));
+
         } catch (Exception e) {
-            System.err.println("Gemini Error: " + e.getMessage());
+            System.err.println("Lỗi hệ thống: " + e.getMessage());
             throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
         }
     }
-    private String cleanJsonString(String raw) {
-        String cleaned = raw.trim();
-        if (cleaned.startsWith("```json")) {
-            cleaned = cleaned.substring(7);
-        } else if (cleaned.startsWith("```")) {
-            cleaned = cleaned.substring(3);
+
+    private String cleanJsonWithRegex(String raw) {
+        if (raw == null || raw.isEmpty()) return "{}";
+
+        // Tìm nội dung nằm giữa dấu ngoặc nhọn đầu tiên và cuối cùng
+        Pattern pattern = Pattern.compile("\\{.*\\}", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(raw);
+
+        if (matcher.find()) {
+            return matcher.group();
         }
-        if (cleaned.endsWith("```")) {
-            cleaned = cleaned.substring(0, cleaned.length() - 3);
-        }
-        return cleaned.trim();
+        return raw.trim();
     }
 
     private UpdateCandidateCvRequest convertLLMToRequest(LLMResumeResponse res) {

@@ -30,7 +30,6 @@ public class JobController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Double salary
     ) {
-//        JobFeedResponse rs = jobService.getJobFeed(cursor, limit);
         JobFeedResponse rs = jobService.getJobFeed(cursor, limit, categoryId, location, salary);
         ApiResponse<JobFeedResponse> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
