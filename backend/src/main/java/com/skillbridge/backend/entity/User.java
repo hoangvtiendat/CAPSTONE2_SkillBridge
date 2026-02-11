@@ -25,19 +25,20 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @NotBlank(message = "Số điện thoại không hợp lệ")
+
+//    @NotBlank(message = "Số điện thoại không hợp lệ")
     @Pattern(
             regexp = "^(0[3|5|7|8|9])[0-9]{8}$|^(\\+84[3|5|7|8|9])[0-9]{8}$",
             message = "Số điện thoại không hợp lệ"
     )
-    @Column(name = "phone_number", length = 10)
+    @Column(name = "phone_number", length = 15)
     private String phoneNumber;
 
     @Column(name = "address")
     private String address;
 
-    @NotBlank
-    @Column(name = "password", nullable = false)
+//    @NotBlank
+    @Column(name = "password")
     private String password;
 
     @Column(name = "role", nullable = false)

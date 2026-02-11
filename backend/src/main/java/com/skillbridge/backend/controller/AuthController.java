@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.skillbridge.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,26 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/oauth2/success")
+    public ResponseEntity<?> success(OAuth2AuthenticationToken authentication) {
+        try {
+            OAuth2User oauthUser = authentication.getPrincipal();
+
+            String email = oauthUser.getAttribute("email");
+            String name = oauthUser.getAttribute("name");
+
+            RegisterResponse rs = authService.registerGoogle(email, name);
+            ApiResponse<RegisterResponse> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Đăng ký tài khoản thành công", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[REGISTER-2Oauth] AppException occurred");
+            System.out.println("[REGISTER-2Oauth] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequest request) {
         try {
@@ -60,7 +82,6 @@ public class AuthController {
             throw ex;
         }
     }
-
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -137,8 +158,6 @@ public class AuthController {
         }
     }
 
-
-
     @PatchMapping("/me/2fa")
     public ResponseEntity<ApiResponse<User>> toggleTwoFactor(@Valid @RequestBody TwoFactorToggleRequest request, @Valid @RequestHeader(value = "Authorization") String token) {
         try {
@@ -180,4 +199,6 @@ public class AuthController {
             throw ex;
         }
     }
+
+
 }

@@ -5,6 +5,10 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui/index.html
+logging:
+  level:
+    org.springframework.security.oauth2: TRACE
+    org.springframework.security.web.FilterChainProxy: DEBUG
 spring:
   security:
     oauth2:
@@ -16,6 +20,12 @@ spring:
             scope:
               - email
               - profile
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            user-name-attribute: sub
   application:
     name: backend
   web:
