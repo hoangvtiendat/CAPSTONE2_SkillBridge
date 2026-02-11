@@ -1,20 +1,22 @@
 /* Sidebar layout redesigned to follow main content height */
 .sidebar {
-	width: 260px;
-	background: #f8f9fa;
+	width: 280px;
+	background: #fff;
 	border-right: 1px solid #e0e0e0;
 	padding: 30px 0;
-	/* Let sidebar height follow the main content (job cards) so its bottom meets the CTA) */
-	height: auto;
-	position: relative;
-	align-self: stretch;
-	overflow: visible;
+	flex-shrink: 0;
+	/* Prevent sidebar from shrinking */
+	min-height: calc(100vh - 72px);
+	z-index: 40;
 }
 
 .sidebar-nav {
 	display: flex;
 	flex-direction: column;
 	gap: 40px;
+	/* Sticky Positioning for elements only */
+	position: sticky;
+	top: 20px;
 }
 
 .sidebar-section h4 {
@@ -105,4 +107,3 @@
 		box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 	}
 }
-
