@@ -1,6 +1,5 @@
 package com.skillbridge.backend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,9 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -40,6 +37,7 @@ public class CandidateService {
     private final SkillRepository skillRepository;
     private final CandidateSkillRepository candidateSkillRepository;
     private OcrService ocrService;
+    private GeminiService geminiService;
     @Value("${gemini.api.key}")
     private String apiKey;
 
@@ -52,15 +50,14 @@ public class CandidateService {
         public List<CandidateSkillResponse> skills;
     }
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
     public CandidateService(CandidateRepository candidateRepository,
                             CategoryRepository categoryRepository,
                             UserRepository userRepository,
                             SkillRepository skillRepository,
                             CandidateSkillRepository candidateSkillRepository,
                             ObjectMapper objectMapper,
-                            OcrService ocrService) {
+                            OcrService ocrService,
+                            GeminiService geminiService) {
         this.candidateRepository = candidateRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
@@ -68,6 +65,7 @@ public class CandidateService {
         this.candidateSkillRepository = candidateSkillRepository;
         this.objectMapper = objectMapper;
         this.ocrService = ocrService;
+        this.geminiService = geminiService;
     }
 
     private List<DegreeResponse> deserializeDegrees(Object degreeObj) {
@@ -229,116 +227,65 @@ public class CandidateService {
         return requests;
     }
 
-    private static final String SYSTEM_PROMPT = """
-            Bạn là chuyên gia phân tích dữ liệu nhân sự cao cấp. 
-            Nhiệm vụ: Trình bày thông tin từ văn bản CV (được trích xuất từ PDF) thành cấu trúc JSON chuẩn xác.
-            
-            Cấu trúc JSON yêu cầu:
-            {
-              "name": "Họ và tên",
-              "address": "Địa chỉ liên lạc",
-              "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
-              "degrees": [
-                {
-                  "type": "DEGREE hoặc CERTIFICATE",
-                  "degree": "Tên bằng cấp (nếu là DEGREE)",
-                  "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
-                  "major": "Ngành học",
-                  "institution": "Tên trường/tổ chức cấp",
-                  "graduationYear": 2023 (năm tốt nghiệp dạng số)
-                }
-              ],
-              "experience": [
-                {
-                  "startDate": "yyyy-MM-dd",
-                  "endDate": "yyyy-MM-dd hoặc null nếu đang làm",
-                  "description": "Chi tiết công việc và thành tựu"
-                }
-              ],
-              "skills": [
-                {
-                  "skillName": "Tên kỹ năng (VD: Java, SQL, Communication)",
-                  "experienceYears": 3 (Số năm kinh nghiệm, tự ước lượng dựa trên timeline làm việc)
-                }
-              ]
-            }
-            Quy tắc bắt buộc:
-            1. Chỉ trả về JSON, tuyệt đối không có văn bản dẫn nhập hoặc giải thích.
-            2. Định dạng ngày tháng: yyyy-MM-dd. Nếu chỉ có năm, hãy để yyyy-01-01.
-            3. Làm sạch dữ liệu: Loại bỏ các ký tự rác từ PDF (@, *, -, bullet points không cần thiết).
-            4. Ngôn ngữ: Giữ nguyên ngôn ngữ gốc của CV (Tiếng Anh hoặc Tiếng Việt).
-            5. 'skills': Phải tách riêng từng kỹ năng rõ rệt để hệ thống dễ dàng mapping ID.
-            """;
+    private static final String PROMPT = """
+    Bạn là chuyên gia phân tích dữ liệu nhân sự cao cấp. 
+    Nhiệm vụ: Trình bày thông tin từ văn bản CV được cung cấp bên dưới thành cấu trúc JSON chuẩn xác.
+    
+    Cấu trúc JSON yêu cầu:
+    {
+      "name": "Họ và tên",
+      "address": "Địa chỉ liên lạc",
+      "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+      "degrees": [
+        {
+          "type": "DEGREE",
+          "degree": "Tên bằng cấp (nếu là DEGREE)",
+          "major": "Ngành học",
+          "institution": "Tên trường/tổ chức cấp",
+          "graduationYear": 2023
+        },
+        {
+          "type": "CERTIFICATE",
+          "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+          "year" 2025
+        }
+      ],
+      "experience": [
+        {
+          "startDate": "yyyy-MM-dd",
+          "endDate": "yyyy-MM-dd hoặc null",
+          "description": "Chi tiết công việc"
+        }
+      ],
+      "skills": [
+        {
+          "skillName": "Tên kỹ năng",
+          "experienceYears": 3
+        }
+      ]
+    }
+    
+    Quy tắc:
+    1. Trả về DUY NHẤT JSON.
+    2. Định dạng ngày: yyyy-MM-dd.
+    3. Tách kỹ năng rõ rệt để mapping ID.
+    
+    DỮ LIỆU CV CẦN PHÂN TÍCH:
+    ---
+    %s
+    ---
+    """;
 
-    public UpdateCandidateCvRequest handleCvOcrUpload(String userId, MultipartFile file) {
+    private String buildPrompt(String rawText) {
+        return String.format(PROMPT, rawText);
+    }
 
+    public UpdateCandidateCvRequest parsingCV(MultipartFile file) {
         String rawText = ocrService.scanFile(file);
         System.out.println(rawText);
-        UpdateCandidateCvRequest updateRequest = parseRawText(rawText);
-        System.out.println(updateRequest);
-        return updateRequest;
-    }
-
-    public UpdateCandidateCvRequest parseRawText(String rawText) {
-        // SỬA TẠI ĐÂY: Dùng đúng tên model có trong danh sách của bạn
-        String modelName = "gemini-2.5-flash";
-        // Dùng v1 vì đây là các bản stable
-        String url = "https://generativelanguage.googleapis.com/v1/models/" + modelName + ":generateContent?key=" + apiKey;
-
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        Map<String, Object> requestBody = Map.of(
-                "contents", List.of(Map.of(
-                        "parts", List.of(Map.of("text", SYSTEM_PROMPT + "\n\nCV TEXT FROM OCR:\n" + rawText))
-                ))
-        );
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-        try {
-            System.out.println("Connecting to Gemini API: " + url);
-
-            // ĐỔI TẠI ĐÂY: Nhận phản hồi là String.class thay vì JsonNode.class
-            org.springframework.http.ResponseEntity<String> responseEntity =
-                    restTemplate.postForEntity(url, entity, String.class);
-
-            String responseBody = responseEntity.getBody();
-
-            if (responseBody == null) {
-                throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
-            }
-
-            // Dùng objectMapper (đã được Spring inject) để đọc String thành JsonNode
-            JsonNode response = objectMapper.readTree(responseBody);
-
-            if (!response.has("candidates")) {
-                throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
-            }
-
-            String aiRawResponse = response.path("candidates").get(0)
-                    .path("content").path("parts").get(0)
-                    .path("text").asText();
-
-            String jsonStr = cleanJsonWithRegex(aiRawResponse);
-            return convertLLMToRequest(objectMapper.readValue(jsonStr, LLMResumeResponse.class));
-
-        } catch (Exception e) {
-            System.err.println("Lỗi hệ thống: " + e.getMessage());
-            throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
-        }
-    }
-
-    private String cleanJsonWithRegex(String raw) {
-        if (raw == null || raw.isEmpty()) return "{}";
-
-        // Tìm nội dung nằm giữa dấu ngoặc nhọn đầu tiên và cuối cùng
-        Pattern pattern = Pattern.compile("\\{.*\\}", Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(raw);
-
-        if (matcher.find()) {
-            return matcher.group();
-        }
-        return raw.trim();
+        LLMResumeResponse llmRes = geminiService.callGemini(buildPrompt(rawText), LLMResumeResponse.class);
+        System.out.println(llmRes);
+        return convertLLMToRequest(llmRes);
     }
 
     private UpdateCandidateCvRequest convertLLMToRequest(LLMResumeResponse res) {

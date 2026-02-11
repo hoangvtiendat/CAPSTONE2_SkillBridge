@@ -19,10 +19,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class CandidateController {
 
     private final CandidateService candidateService;
-    private final OcrService ocrService;
-    public CandidateController(CandidateService candidateService, OcrService ocrService) {
+
+    public CandidateController(CandidateService candidateService) {
         this.candidateService = candidateService;
-        this.ocrService = ocrService;
     }
 
     @PostMapping("/parse-cv")
@@ -30,8 +29,7 @@ public class CandidateController {
             @AuthenticationPrincipal CustomUserDetails user,
             @RequestParam("file") MultipartFile file
     ) {
-        // Gọi hàm xử lý trọn gói trong Service
-        UpdateCandidateCvRequest response = candidateService.handleCvOcrUpload(user.getUserId(), file);
+        UpdateCandidateCvRequest response = candidateService.parsingCV(file);
 
         ApiResponse<UpdateCandidateCvRequest> apiResponse = new ApiResponse<>();
         apiResponse.setResult(response);

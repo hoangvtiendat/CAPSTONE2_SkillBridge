@@ -16,16 +16,6 @@ public class Skill extends BaseEntity{
     @JoinColumn(name = "category_id")
     private Category category;
 
-    public int getExperienceYears() {
-        return experienceYears;
-    }
-
-    public void setExperienceYears(int experienceYears) {
-        this.experienceYears = experienceYears;
-    }
-
-    private int experienceYears;
-
     public String getId() {
         return id;
     }
