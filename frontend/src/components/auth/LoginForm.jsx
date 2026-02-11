@@ -1,66 +1,125 @@
 import React, { useState } from "react";
 import { toast, Toaster } from "sonner";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
 import { useAuth } from "../../context/AuthContext";
+
 export function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const mock_email = "quctonnn@gmail.com";
-  const mock_password = "12345678";
 
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("login"); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const toastStyles = {
-    warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
-    success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
-    error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
-  };
+ 
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim() || (mode === "register" && !confirmPassword.trim())) {
-      toast.warning("Thiếu thông tin", { description: "Vui lòng điền đầy đủ thông tin", style: toastStyles.warning });
-      return;
+  const handleRegister = async () => {
+  if (!email.trim()) {
+    toast.warning("Thiếu thông tin");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "http://localhost:8081/identity/auth/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      }
+    );
+    const data = await response.json();
+    
+    if (!response.ok) {
+      
+      toast.error(data.message || "Đăng ký thất bại");
+      
+      if (data.code === 2004) {
+         console.log("Xử lý riêng cho lỗi trùng email ở đây");
+      }
+      return; 
+    }
+    toast.success(data.message || "Vui lòng xác thực OTP");
+
+    navigate("/otp-verification", {
+      state: {
+        flow: "register",
+        email,
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Không thể kết nối backend");
+  }
+};
+
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+        toast.warning("Thiếu thông tin", { description: "Vui lòng điền email và mật khẩu" });
+        return;
     }
 
-    if (mode === "login") {
-      try {
-        const response = await fetch(`http://localhost:3001/Users?email=${email}&password=${password}`);
-        const users = await response.json();
+    try {
+        const response = await fetch("http://localhost:8081/identity/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
 
-        if (users.length > 0) {
-          const user = users[0];
-          if (user.two_fa_enabled) {
-            toast.info("Yêu cầu xác thực 2FA", { description: "Vui lòng nhập mã OTP" });
-            navigate("/otp-verification", { state: { email: user.email, userData: user } }); // Pass userData
-          } else {
-            login(user); // Use context login
-            toast.success("Đăng nhập thành công", { style: toastStyles.success });
-            navigate("/");
-          }
+        const data = await response.json();
+
+        console.log("Login Response:", data); 
+
+        if (response.ok && data.result) { 
+            const userData = data.result; 
+
+            if (userData.is2faEnabled === "1") { 
+                toast.success("Yêu cầu xác thực 2 bước", { description: "Chuyển đến trang xác thực OTP" });
+                setTimeout(() => {
+                    navigate("/otp-verification", { 
+                        state: { 
+                            email: email, 
+                            flow: "login",
+                            userData: userData 
+                        } 
+                    });
+                }, 1000);
+            } else {
+                login(userData); 
+                toast.success("Đăng nhập thành công");
+                setTimeout(() => { navigate("/"); }, 1000);
+            }
+
         } else {
-          toast.error("Đăng nhập thất bại", { description: "Email hoặc mật khẩu không đúng", style: toastStyles.error });
+            throw new Error(data.message || "Email hoặc mật khẩu không đúng");
         }
-      } catch (error) {
-        console.error("Login error:", error);
-        toast.error("Lỗi kết nối", { description: "Không thể kết nối đến server" });
-      }
+
+    } catch (err) {
+        console.error("Login error:", err);
+        toast.error("Đăng nhập thất bại", { description: err.message });
+    }
+};
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (mode === "login") {
+      handleLogin();
     } else {
-      if (password !== confirmPassword) {
-        toast.error("Đăng ký thất bại", { description: "Mật khẩu không khớp", style: toastStyles.error });
-        return;
-      }
-      toast.success("Đăng ký thành công", { style: toastStyles.success });
+      handleRegister();
     }
   };
 
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
-    setEmail(""); setPassword(""); setConfirmPassword("");
+    setEmail(""); 
+    setPassword(""); 
   };
 
   return (
@@ -71,7 +130,7 @@ export function LoginForm() {
           {mode === "login" ? "Đăng nhập hệ thống" : "Đăng ký tài khoản"}
         </h1>
 
-        <button className="google-btn">
+        <button className="google-btn" type="button">
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
           {mode === "login" ? "Đăng nhập với Google" : "Đăng ký với Google"}
         </button>
@@ -80,7 +139,7 @@ export function LoginForm() {
           <span>HOẶC</span>
         </div>
 
-        <form onSubmit={handleAuth} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label>Email</label>
             <input
@@ -90,27 +149,20 @@ export function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-
-          <div className="form-group">
+          {mode === "login" && (
+             <div className="form-group">
             <label>Mật khẩu</label>
             <input
               type="password"
+              placeholder={mode === "register" ? "Tạo mật khẩu" : "Nhập mật khẩu"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          {mode === "register" && (
-            <div className="form-group">
-              <label>Xác nhận mật khẩu</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
           )}
-
+         
+        
           {mode === "login" && (
             <div className="forgot-link">
               <button type="button" onClick={() => navigate("/forgot-password")}>
@@ -120,12 +172,12 @@ export function LoginForm() {
           )}
 
           <button type="submit" className="submit-btn">
-            {mode === "login" ? "Đăng Nhập" : "Tạo tài khoản"}
+            {mode === "login" ? "Đăng Nhập" : "Đăng ký tài khoản"}
           </button>
         </form>
 
         <button onClick={toggleMode} className="toggle-btn">
-          {mode === "login" ? "Đăng ký tài khoản mới" : "Đã có tài khoản? Đăng nhập"}
+          {mode === "login" ? "Chưa có tài khoản? Đăng ký ngay" : "Đã có tài khoản? Đăng nhập"}
         </button>
       </div>
     </main>
