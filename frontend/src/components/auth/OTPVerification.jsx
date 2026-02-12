@@ -8,7 +8,6 @@ export function OTPVerification() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Lấy thông tin từ trang trước truyền qua
     const { email: initialEmail, flow, userData } = location.state || {};
 
     const [name, setName] = useState("");

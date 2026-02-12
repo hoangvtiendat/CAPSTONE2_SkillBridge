@@ -3,7 +3,6 @@ import { toast, Toaster } from "sonner";
 import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
 import { useAuth } from "../../context/AuthContext";
-
 export function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -12,7 +11,9 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
- 
+  const register_Google = () => {
+  window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
+  }
 
   const handleRegister = async () => {
   if (!email.trim()) {
@@ -60,7 +61,10 @@ export function LoginForm() {
   }
 };
 
+const login_Google = () => {
+    window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
 
+}
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
         toast.warning("Thiếu thông tin", { description: "Vui lòng điền email và mật khẩu" });
@@ -130,7 +134,7 @@ export function LoginForm() {
           {mode === "login" ? "Đăng nhập hệ thống" : "Đăng ký tài khoản"}
         </h1>
 
-        <button className="google-btn" type="button">
+        <button className="google-btn" type="button" onClick={mode === "login" ? login_Google : register_Google}>
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
           {mode === "login" ? "Đăng nhập với Google" : "Đăng ký với Google"}
         </button>

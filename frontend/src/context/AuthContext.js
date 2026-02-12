@@ -1,32 +1,36 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    // Initialize user from localStorage if available
     const [user, setUser] = useState(() => {
+        // Đọc từ key 'user' vì đây là object chứa cả token và info
         const savedUser = localStorage.getItem('user');
-        return savedUser ? JSON.parse(savedUser) : null;
+        try {
+            return savedUser ? JSON.parse(savedUser) : null;
+        } catch (error) {
+            return null;
+        }
     });
 
     const login = (userData) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
+        
+        if (userData.accessToken) {
+            localStorage.setItem('accessToken', userData.accessToken);
+        }
     };
 
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
-    };
-
-    const updateUser = (newData) => {
-        const updatedUser = { ...user, ...newData };
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+        <AuthContext.Provider value={{ user, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

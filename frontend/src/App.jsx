@@ -11,7 +11,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import { OTPVerification } from './components/auth/OTPVerification';
 import { SetPass } from './components/auth/SetPass';
 import UpdateProfileDetail from './pages/auth/Update_profile_of_register';
-
+import OAuthSuccess from './pages/auth/OAuthSuccess';
 function App() {
   return (
     <>
@@ -23,6 +23,7 @@ function App() {
           <Route path='/forgot-password' element={<ForgotPasswordPage />} />
           <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/oauth-success" element={<OAuthSuccess />} />
           <Route path='/set-password' element={<SetPass />} />
           <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
 
