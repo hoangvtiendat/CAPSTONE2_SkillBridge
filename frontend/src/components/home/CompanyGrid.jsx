@@ -1,31 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import companyService from '../../services/api/companyService';
 import './CompanyGrid.css';
 
-const MOCK_COMPANIES = [
-    { id: 1, name: 'Tech Solutions Inc.', logo: 'https://via.placeholder.com/80', description: 'Leading provider of enterprise software solutions.', jobs: 12 },
-    { id: 2, name: 'Creative Web Agency', logo: 'https://via.placeholder.com/80', description: 'Award-winning digital agency specializing in UI/UX.', jobs: 5 },
-    { id: 3, name: 'Global Finance Corp', logo: 'https://via.placeholder.com/80', description: 'International banking and financial services.', jobs: 8 },
-    { id: 4, name: 'EduTech Systems', logo: 'https://via.placeholder.com/80', description: 'Transforming education through technology.', jobs: 3 },
-    { id: 5, name: 'HealthPlus', logo: 'https://via.placeholder.com/80', description: 'Innovative healthcare solutions for modern living.', jobs: 7 },
-    { id: 6, name: 'Green Energy Co.', logo: 'https://via.placeholder.com/80', description: 'Sustainable energy solutions for a better future.', jobs: 4 },
-    { id: 7, name: 'Logistics Pro', logo: 'https://via.placeholder.com/80', description: 'Global logistics and supply chain management.', jobs: 9 },
-    { id: 8, name: 'Smart Home IoT', logo: 'https://via.placeholder.com/80', description: 'Connecting your home with smart technology.', jobs: 6 },
-    // A duplicate set to demonstrate pagination
-    { id: 9, name: 'Tech Solutions Inc. 2', logo: 'https://via.placeholder.com/80', description: 'Leading provider of enterprise software solutions.', jobs: 12 },
-    { id: 10, name: 'Creative Web Agency 2', logo: 'https://via.placeholder.com/80', description: 'Award-winning digital agency specializing in UI/UX.', jobs: 5 },
-];
-
-const ITEMS_ER_PAGE = 6;
+const ITEMS_PER_PAGE = 6;
 
 const CompanyGrid = () => {
+    const [companies, setCompanies] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    const totalPages = Math.ceil(MOCK_COMPANIES.length / ITEMS_ER_PAGE);
+    const fetchCompanies = async (page) => {
+        setLoading(true);
+        try {
+            const data = await companyService.getFeed({ page, limit: ITEMS_PER_PAGE });
+            // Assuming data structure: { result: { content: [...], totalPages: ... } } 
+            // OR { result: [...] } if no pagination metadata
+            // Adjust based on actual API response
+            if (data && data.result) {
+                if (Array.isArray(data.result)) {
+                    setCompanies(data.result);
+                    // If just a list, handle client-side calc if needed, or assume all returned?
+                    // If backend implements pagination but just returns list for that page:
+                    setCompanies(data.result);
+                    // We might miss totalPages info if not provided
+                    setTotalPages(Math.ceil(data.result.length / ITEMS_PER_PAGE) || 1); // Fallback
+                } else if (data.result.content) {
+                    setCompanies(data.result.content);
+                    setTotalPages(data.result.totalPages || 1);
+                }
+            } else if (Array.isArray(data)) {
+                setCompanies(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch companies:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const currentCompanies = MOCK_COMPANIES.slice(
-        (currentPage - 1) * ITEMS_ER_PAGE,
-        currentPage * ITEMS_ER_PAGE
-    );
+    useEffect(() => {
+        fetchCompanies(currentPage);
+    }, [currentPage]);
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
@@ -39,20 +55,26 @@ const CompanyGrid = () => {
                 <h2>Top Companies Hiring</h2>
             </div>
 
-            <div className="company-grid">
-                {currentCompanies.map(company => (
-                    <div key={company.id} className="company-card">
-                        <div className="company-grid-logo-wrapper">
-                            <div className="company-grid-logo">
-                                {company.name.charAt(0)}
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>Loading...</div>
+            ) : (
+                <div className="company-grid">
+                    {companies.length > 0 ? companies.map(company => (
+                        <div key={company.id} className="company-card">
+                            <div className="company-grid-logo-wrapper">
+                                <div className="company-grid-logo">
+                                    {company.name ? company.name.charAt(0).toUpperCase() : 'C'}
+                                </div>
                             </div>
+                            <h3 className="company-name">{company.name}</h3>
+                            <p className="company-desc">{company.description || "No description available."}</p>
+                            <span className="company-jobs-count">{company.jobCount || 0} Open Jobs</span>
                         </div>
-                        <h3 className="company-name">{company.name}</h3>
-                        <p className="company-desc">{company.description}</p>
-                        <span className="company-jobs-count">{company.jobs} Open Jobs</span>
-                    </div>
-                ))}
-            </div>
+                    )) : (
+                        <p>No companies found.</p>
+                    )}
+                </div>
+            )}
 
             {totalPages > 1 && (
                 <div className="pagination">

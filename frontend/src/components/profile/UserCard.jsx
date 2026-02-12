@@ -43,7 +43,12 @@ export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork }) => {
                 </div>
 
                 <h2 className="user-name-title">{user?.name || 'Nguyễn Văn A'}</h2>
-                <p className="user-role-subtitle">Java Developer</p>
+                <p className="user-role-subtitle">
+                    {user?.role === 'CANDIDATE' ? 'Ứng viên' :
+                        user?.role === 'RECRUITER' ? 'Nhà tuyển dụng' :
+                            user?.role === 'ADMIN' ? 'Quản trị viên' :
+                                user?.role || 'Người dùng'}
+                </p>
             </div>
 
             <div className="open-to-work-section">

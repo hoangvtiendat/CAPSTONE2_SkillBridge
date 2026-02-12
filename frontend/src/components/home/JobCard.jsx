@@ -8,9 +8,15 @@ const JobCard = ({ job, featured = false }) => {
   return (
     <div className={`job-card ${featured ? 'featured' : ''}`}>
       {featured && <div className="featured-badge">Featured</div>}
-      
+
       <div className="job-card-header">
-        <div className="company-logo">{logo}</div>
+        <div className="company-logo">
+          {typeof logo === 'string' && (logo.startsWith('http') || logo.startsWith('/')) ? (
+            <img src={logo} alt={company} className="object-contain w-full h-full rounded" />
+          ) : (
+            logo
+          )}
+        </div>
         <div className="job-info">
           <h3 className="job-position">{position}</h3>
           <p className="job-company">{company}</p>

@@ -1,41 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Wand2, CheckCircle, Upload, Plus, X, ArrowRight, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileText, Wand2, Upload, Plus, X, ArrowRight, Save, Trash2 } from 'lucide-react';
+import candidateService from '../../services/api/candidateService';
+import { toast } from 'sonner';
 import './CVParser.css';
-
-/* ================= MOCK AI DATA ================= */
-const MOCK_AI_RESULT = {
-    personalInfo: {
-        fullName: 'Nguyễn Văn A',
-        email: 'nguyenvana@email.com',
-        phone: '0901234567',
-        address: 'Hà Nội, Việt Nam',
-        summary: 'Lập trình viên Frontend với 3 năm kinh nghiệm chuyên về ReactJS và hệ sinh thái JavaScript.'
-    },
-    position: 'Frontend Developer',
-    experience: [
-        {
-            company: 'Tech Solutions Inc.',
-            position: 'Senior Frontend Developer',
-            duration: '01/2022 - Hiện tại',
-            description: 'Phát triển giao diện người dùng cho hệ thống CRM, tối ưu hóa hiệu suất ứng dụng.'
-        },
-        {
-            company: 'Creative Web Agency',
-            position: 'Junior Web Developer',
-            duration: '06/2020 - 12/2021',
-            description: 'Xây dựng website responsive cho khách hàng sử dụng HTML, CSS, JavaScript.'
-        }
-    ],
-    education: [
-        {
-            school: 'Đại học Bách Khoa Hà Nội',
-            degree: 'Kỹ sư Công nghệ phần mềm',
-            duration: '2016 - 2021',
-            description: 'Tốt nghiệp loại Giỏi. GPA: 3.6/4.0'
-        }
-    ],
-    skills: ['React', 'JavaScript', 'TypeScript', 'Redux', 'Tailwind CSS', 'NodeJS', 'Git']
-};
 
 export const CVParser = () => {
     // State for AI Parser
@@ -46,103 +13,163 @@ export const CVParser = () => {
     // State for Selection (tracking which AI items are selected)
     const [selectedItems, setSelectedItems] = useState({
         personalInfo: true,
-        position: true,
         experience: {}, // { index: true/false }
-        education: {},  // { index: true/false }
+        degrees: {},  // { index: true/false }
+        certificates: {}, // { index: true/false }
         skills: true
     });
 
     // State for CV Form (Right Column)
     const [cvData, setCvData] = useState({
-        personalInfo: {
-            fullName: '',
-            email: '',
-            phone: '',
-            address: '',
-            summary: ''
-        },
-        position: '',
-        experience: [
-            { id: 1, company: '', position: '', duration: '', description: '' }
-        ],
-        education: [
-            { id: 1, school: '', degree: '', duration: '', description: '' }
-        ],
-        skills: []
+        name: '',
+        description: '',
+        address: '',
+        categoryId: '', // Hidden ID
+        category: '', // Visible Name
+        degrees: [],
+        skills: [], // { skillId, skillName, experienceYears }
+        experience: [] // { startDate, endDate, description }
     });
 
-    // State for new skill input
-    const [newSkill, setNewSkill] = useState('');
+    // Temp state for new skill
+    const [newSkillName, setNewSkillName] = useState('');
+    const [newSkillExp, setNewSkillExp] = useState(1);
+
+    /* ================= APIs ================= */
+    useEffect(() => {
+        const fetchCvData = async () => {
+            try {
+                const response = await candidateService.getCv();
+                if (response && response.result) {
+                    const res = response.result;
+                    setCvData(prev => ({
+                        ...prev,
+                        ...res,
+                        categoryId: res.categoryId || '',
+                        category: res.category || '',
+                        skills: Array.isArray(res.skills) ? res.skills.map(s => ({
+                            skillId: s.skillId || null,
+                            skillName: s.skillName || s.name || s.skillId || 'Unknown Skill', // Fallback to ID if name missing
+                            experienceYears: s.experienceYears || 1
+                        })) : [],
+                        degrees: res.degrees || [],
+                        experience: res.experience || []
+                    }));
+                }
+            } catch (error) {
+                console.log("No existing CV data or failed to fetch.");
+            }
+        };
+        fetchCvData();
+    }, []);
 
     /* ================= SCANNING LOGIC ================= */
-    const handleFileUpload = (e) => {
+    const handleFileUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         setParsingState('scanning');
-        setScanProgress(0);
+        setScanProgress(30);
 
-        // Simulate 5s scanning process
-        const duration = 5000;
-        const intervalTime = 50;
-        const steps = duration / intervalTime;
-        let currentStep = 0;
+        try {
+            const response = await candidateService.parseCv(file);
+            setScanProgress(100);
 
-        const timer = setInterval(() => {
-            currentStep++;
-            const progress = Math.min(Math.round((currentStep / steps) * 100), 100);
-            setScanProgress(progress);
-
-            if (currentStep >= steps) {
-                clearInterval(timer);
+            setTimeout(() => {
                 setParsingState('done');
-                setParsedData(MOCK_AI_RESULT);
-                // Initialize selected items for arrays
-                setSelectedItems(prev => ({
-                    ...prev,
-                    experience: MOCK_AI_RESULT.experience.reduce((acc, _, idx) => ({ ...acc, [idx]: true }), {}),
-                    education: MOCK_AI_RESULT.education.reduce((acc, _, idx) => ({ ...acc, [idx]: true }), {})
-                }));
-            }
-        }, intervalTime);
+                if (response && response.result) {
+                    const result = response.result;
+                    setParsedData(result);
+
+                    // Initialize selected items
+                    setSelectedItems({
+                        personalInfo: true,
+                        experience: result.experience ? result.experience.reduce((acc, _, idx) => ({ ...acc, [idx]: true }), {}) : {},
+                        degrees: result.degrees ? result.degrees.filter(d => d.type === 'DEGREE').reduce((acc, _, idx) => ({ ...acc, [idx]: true }), {}) : {},
+                        certificates: result.degrees ? result.degrees.filter(d => d.type === 'CERTIFICATE').reduce((acc, _, idx) => ({ ...acc, [idx]: true }), {}) : {},
+                        skills: true
+                    });
+                }
+            }, 500);
+
+        } catch (error) {
+            console.error("CV Parsing Failed:", error);
+            toast.error("Phân tích CV thất bại. Vui lòng thử lại.");
+            setParsingState('idle');
+        }
     };
 
     /* ================= DATA TRANSFER LOGIC ================= */
     const applySelectedData = () => {
         if (!parsedData) return;
 
-        setCvData(prevItems => {
-            const newData = { ...prevItems };
+        setCvData(prev => {
+            const newData = { ...prev };
 
             // Apply Personal Info
             if (selectedItems.personalInfo) {
-                newData.personalInfo = { ...parsedData.personalInfo };
-            }
-
-            // Apply Position
-            if (selectedItems.position) {
-                newData.position = parsedData.position;
+                if (parsedData.name) newData.name = parsedData.name;
+                if (parsedData.description) newData.description = parsedData.description;
+                if (parsedData.address) newData.address = parsedData.address;
+                if (parsedData.categoryId) newData.categoryId = parsedData.categoryId;
+                if (parsedData.category) newData.category = parsedData.category;
             }
 
             // Apply Experience
-            const selectedExp = parsedData.experience.filter((_, idx) => selectedItems.experience[idx]);
-            if (selectedExp.length > 0) {
-                const formattedExp = selectedExp.map((item, idx) => ({ ...item, id: Date.now() + idx }));
-                newData.experience = [...prevItems.experience, ...formattedExp];
+            if (parsedData.experience) {
+                const selectedExp = parsedData.experience.filter((_, idx) => selectedItems.experience[idx]);
+                const formattedExp = selectedExp.map(item => ({
+                    startDate: item.startDate,
+                    endDate: item.endDate,
+                    description: item.description,
+                    id: Date.now() + Math.random() // Temp ID for UI key
+                }));
+                newData.experience = [...prev.experience, ...formattedExp];
             }
 
-            // Apply Education
-            const selectedEdu = parsedData.education.filter((_, idx) => selectedItems.education[idx]);
-            if (selectedEdu.length > 0) {
-                const formattedEdu = selectedEdu.map((item, idx) => ({ ...item, id: Date.now() + 100 + idx }));
-                newData.education = [...prevItems.education, ...formattedEdu];
+            // Apply Degrees & Certificates
+            if (parsedData.degrees) {
+                const degreesToAdd = [];
+
+                // Handle DEGREES
+                const parsedDegrees = parsedData.degrees.filter(d => d.type === 'DEGREE');
+                parsedDegrees.forEach((deg, idx) => {
+                    if (selectedItems.degrees[idx]) {
+                        degreesToAdd.push({ ...deg, id: Date.now() + Math.random() });
+                    }
+                });
+
+                // Handle CERTIFICATES
+                const parsedCerts = parsedData.degrees.filter(d => d.type === 'CERTIFICATE');
+                parsedCerts.forEach((cert, idx) => {
+                    if (selectedItems.certificates[idx]) {
+                        degreesToAdd.push({ ...cert, id: Date.now() + Math.random() });
+                    }
+                });
+
+                newData.degrees = [...prev.degrees, ...degreesToAdd];
             }
 
             // Apply Skills
-            if (selectedItems.skills) {
-                // Merge unique skills
-                const combinedSkills = new Set([...prevItems.skills, ...parsedData.skills]);
-                newData.skills = Array.from(combinedSkills);
+            if (selectedItems.skills && parsedData.skills) {
+                const newSkills = parsedData.skills.map(s => {
+                    const isObj = typeof s === 'object';
+                    const id = isObj ? s.skillId : null;
+                    // If name is NOT present, but ID is, use ID as name fallback so user sees SOMETHING
+                    const name = isObj ? (s.skillName || s.name || s.skillId) : s;
+                    const exp = isObj && s.experienceYears ? s.experienceYears : 1;
+
+                    return {
+                        skillName: name,
+                        skillId: id,
+                        experienceYears: exp
+                    };
+                });
+
+                const existingNames = new Set(prev.skills.map(s => s.skillName?.toLowerCase()));
+                const uniqueNewSkills = newSkills.filter(s => !existingNames.has(s.skillName?.toLowerCase()));
+
+                newData.skills = [...prev.skills, ...uniqueNewSkills];
             }
 
             return newData;
@@ -150,102 +177,135 @@ export const CVParser = () => {
     };
 
     /* ================= FORM HANDLERS ================= */
-    const handlePersonalInfoChange = (field, value) => {
-        setCvData(prev => ({
-            ...prev,
-            personalInfo: { ...prev.personalInfo, [field]: value }
-        }));
+    const updateField = (field, value) => {
+        setCvData(prev => ({ ...prev, [field]: value }));
     };
 
-    // Experience Handlers
     const addExperience = () => {
         setCvData(prev => ({
             ...prev,
-            experience: [
-                ...prev.experience,
-                { id: Date.now(), company: '', position: '', duration: '', description: '' }
-            ]
+            experience: [...prev.experience, { id: Date.now(), startDate: '', endDate: '', description: '' }]
         }));
     };
-
-    const removeExperience = (id) => {
-        setCvData(prev => ({
-            ...prev,
-            experience: prev.experience.filter(item => item.id !== id)
-        }));
-    };
-
     const updateExperience = (id, field, value) => {
         setCvData(prev => ({
             ...prev,
-            experience: prev.experience.map(item =>
-                item.id === id ? { ...item, [field]: value } : item
-            )
+            experience: prev.experience.map(item => item.id === id ? { ...item, [field]: value } : item)
         }));
     };
+    const removeExperience = (id) => {
+        setCvData(prev => ({ ...prev, experience: prev.experience.filter(item => item.id !== id) }));
+    };
 
-    // Education Handlers
-    const addEducation = () => {
+    const addDegree = (type) => {
+        const newItem = type === 'DEGREE'
+            ? { id: Date.now(), type, degree: '', major: '', institution: '', graduationYear: '' }
+            : { id: Date.now(), type, name: '', year: '' };
+
         setCvData(prev => ({
             ...prev,
-            education: [
-                ...prev.education,
-                { id: Date.now(), school: '', degree: '', duration: '', description: '' }
-            ]
+            degrees: [...prev.degrees, newItem]
         }));
     };
-
-    const removeEducation = (id) => {
+    const updateDegreeItem = (id, field, value) => {
         setCvData(prev => ({
             ...prev,
-            education: prev.education.filter(item => item.id !== id)
+            degrees: prev.degrees.map(item => item.id === id ? { ...item, [field]: value } : item)
         }));
     };
-
-    const updateEducation = (id, field, value) => {
-        setCvData(prev => ({
-            ...prev,
-            education: prev.education.map(item =>
-                item.id === id ? { ...item, [field]: value } : item
-            )
-        }));
+    const removeDegreeItem = (id) => {
+        setCvData(prev => ({ ...prev, degrees: prev.degrees.filter(item => item.id !== id) }));
     };
 
-    // Skills Handlers
     const addSkill = (e) => {
-        if (e.key === 'Enter' && newSkill.trim()) {
+        if (e.key === 'Enter' && newSkillName.trim()) {
             e.preventDefault();
-            if (!cvData.skills.includes(newSkill.trim())) {
+            const normalizedName = newSkillName.trim();
+            if (!cvData.skills.some(s => s.skillName?.toLowerCase() === normalizedName.toLowerCase())) {
                 setCvData(prev => ({
                     ...prev,
-                    skills: [...prev.skills, newSkill.trim()]
+                    skills: [...prev.skills, { skillName: normalizedName, skillId: null, experienceYears: newSkillExp }]
                 }));
             }
-            setNewSkill('');
+            setNewSkillName('');
+            setNewSkillExp(1);
         }
     };
-
-    const removeSkill = (skillToRemove) => {
+    const removeSkill = (index) => {
         setCvData(prev => ({
             ...prev,
-            skills: prev.skills.filter(skill => skill !== skillToRemove)
+            skills: prev.skills.filter((_, i) => i !== index)
         }));
+    };
+
+    // Save
+    const handleSave = async () => {
+        try {
+            // STRICT PAYLOAD CONSTRUCTION
+            const payload = {
+                name: cvData.name,
+                description: cvData.description,
+                address: cvData.address,
+                categoryId: cvData.categoryId || null, // FIX: Send null if empty
+                degrees: cvData.degrees.map(d => {
+                    // Type-cast years to numbers
+                    const yearVal = d.type === 'DEGREE' ? parseInt(d.graduationYear) : parseInt(d.year);
+
+                    if (d.type === 'DEGREE') {
+                        return {
+                            type: 'DEGREE',
+                            degree: d.degree,
+                            major: d.major,
+                            institution: d.institution,
+                            graduationYear: isNaN(yearVal) ? 0 : yearVal
+                        };
+                    } else {
+                        return {
+                            type: 'CERTIFICATE',
+                            name: d.name,
+                            year: isNaN(yearVal) ? 0 : yearVal
+                        };
+                    }
+                }),
+                experience: cvData.experience.map(e => ({
+                    startDate: e.startDate,
+                    endDate: e.endDate,
+                    description: e.description
+                })),
+                skills: cvData.skills.map(s => ({
+                    skillId: s.skillId || null,
+                    experienceYears: parseInt(s.experienceYears) || 1
+                })).filter(s => s.skillId) // Filter out skills without IDs as per strict backend requirement
+            };
+
+            if (!payload.categoryId) {
+                toast.error("Thiếu Category ID (Chưa có ID danh mục từ hệ thống)");
+                // return; // Let it try?
+            }
+
+            console.log("Saving Payload:", payload);
+            await candidateService.updateCv(payload);
+            toast.success("Đã lưu hồ sơ thành công!");
+        } catch (error) {
+            console.error("Save CV failed:", error);
+            const msg = error.response?.data?.message || "Lỗi hệ thống";
+            toast.error(`Lưu thất bại: ${msg}`);
+        }
     };
 
     return (
         <div className="cv-page">
             <div className="cv-layout">
-
-                {/* ================= LEFT COLUMN: AI PARSER ================= */}
+                {/* LEFT - AI PARSER */}
                 <div className="cv-left">
                     <h2><Wand2 className="text-blue-500" /> AI CV Parser</h2>
 
                     {parsingState === 'idle' && (
                         <label className="upload-box">
-                            <input type="file" accept=".pdf,.docx,.doc,.jpg,.png" hidden onChange={handleFileUpload} />
+                            <input type="file" accept=".pdf,.doc,.docx" hidden onChange={handleFileUpload} />
                             <Upload size={48} className="text-blue-500 mb-3 mx-auto" />
-                            <h3>Tải lên CV của bạn</h3>
-                            <p>Hỗ trợ PDF, DOCX, JPG, PNG</p>
+                            <h3>Tải lên CV (PDF)</h3>
+                            <p>Hệ thống sẽ tự động quét thông tin</p>
                         </label>
                     )}
 
@@ -254,7 +314,7 @@ export const CVParser = () => {
                             <div className="scan-line"></div>
                             <div className="scan-content">
                                 <FileText size={64} className="pdf-icon" />
-                                <h3>Đang phân tích CV...</h3>
+                                <h3>Đang phân tích...</h3>
                                 <div className="processing-text">{scanProgress}%</div>
                             </div>
                         </div>
@@ -262,99 +322,79 @@ export const CVParser = () => {
 
                     {parsingState === 'done' && parsedData && (
                         <div className="ai-results-container">
+                            {/* Personal Info */}
                             <div className="ai-section">
                                 <div className="ai-section-header">
-                                    <span>Thông tin cá nhân</span>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedItems.personalInfo}
-                                        onChange={(e) => setSelectedItems({ ...selectedItems, personalInfo: e.target.checked })}
-                                    />
+                                    <span>Thông tin chung</span>
+                                    <input type="checkbox" checked={selectedItems.personalInfo} onChange={(e) => setSelectedItems({ ...selectedItems, personalInfo: e.target.checked })} />
                                 </div>
                                 <div className="ai-item-row">
                                     <div className="ai-item-content">
-                                        <strong>{parsedData.personalInfo.fullName}</strong>
-                                        <p>{parsedData.personalInfo.email} • {parsedData.personalInfo.phone}</p>
+                                        <strong>{parsedData.name}</strong>
+                                        <p>{parsedData.address}</p>
+                                        <p className="text-sm text-gray-500">{parsedData.description}</p>
+                                        {/* Display ID if Name is missing, assuming parser returns ID for now based on user feedback */}
+                                        {parsedData.categoryId && <p className="text-xs text-blue-600">Category ID: {parsedData.categoryId}</p>}
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Degrees */}
                             <div className="ai-section">
-                                <div className="ai-section-header">
-                                    <span>Vị trí</span>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedItems.position}
-                                        onChange={(e) => setSelectedItems({ ...selectedItems, position: e.target.checked })}
-                                    />
-                                </div>
-                                <div className="ai-item-row">
-                                    <div className="ai-item-content">
-                                        <strong>{parsedData.position}</strong>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="ai-section">
-                                <div className="ai-section-header">Kinh nghiệm làm việc</div>
-                                {parsedData.experience.map((exp, idx) => (
+                                <div className="ai-section-header">Bằng cấp</div>
+                                {parsedData.degrees?.filter(d => d.type === 'DEGREE').map((d, idx) => (
                                     <label key={idx} className="ai-item-row">
-                                        <input
-                                            type="checkbox"
-                                            checked={!!selectedItems.experience[idx]}
-                                            onChange={() => setSelectedItems(prev => ({
-                                                ...prev,
-                                                experience: {
-                                                    ...prev.experience,
-                                                    [idx]: !prev.experience[idx]
-                                                }
-                                            }))}
-                                        />
+                                        <input type="checkbox" checked={!!selectedItems.degrees[idx]}
+                                            onChange={() => setSelectedItems(prev => ({ ...prev, degrees: { ...prev.degrees, [idx]: !prev.degrees[idx] } }))} />
                                         <div className="ai-item-content">
-                                            <strong>{exp.position}</strong>
-                                            <p>{exp.company} • {exp.duration}</p>
+                                            <strong>{d.degree} - {d.major}</strong>
+                                            <p>{d.institution} ({d.graduationYear})</p>
                                         </div>
                                     </label>
                                 ))}
                             </div>
 
+                            {/* Certificates */}
                             <div className="ai-section">
-                                <div className="ai-section-header">Học vấn</div>
-                                {parsedData.education.map((edu, idx) => (
+                                <div className="ai-section-header">Chứng chỉ</div>
+                                {parsedData.degrees?.filter(d => d.type === 'CERTIFICATE').map((c, idx) => (
                                     <label key={idx} className="ai-item-row">
-                                        <input
-                                            type="checkbox"
-                                            checked={!!selectedItems.education[idx]}
-                                            onChange={() => setSelectedItems(prev => ({
-                                                ...prev,
-                                                education: {
-                                                    ...prev.education,
-                                                    [idx]: !prev.education[idx]
-                                                }
-                                            }))}
-                                        />
+                                        <input type="checkbox" checked={!!selectedItems.certificates[idx]}
+                                            onChange={() => setSelectedItems(prev => ({ ...prev, certificates: { ...prev.certificates, [idx]: !prev.certificates[idx] } }))} />
                                         <div className="ai-item-content">
-                                            <strong>{edu.school}</strong>
-                                            <p>{edu.degree} • {edu.duration}</p>
+                                            <strong>{c.name}</strong>
+                                            <p>{c.year}</p>
                                         </div>
                                     </label>
                                 ))}
                             </div>
 
+                            {/* Skills */}
                             <div className="ai-section">
                                 <div className="ai-section-header">
-                                    <span>Kỹ năng ({parsedData.skills.length})</span>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedItems.skills}
-                                        onChange={(e) => setSelectedItems({ ...selectedItems, skills: e.target.checked })}
-                                    />
+                                    <span>Kỹ năng</span>
+                                    <input type="checkbox" checked={selectedItems.skills} onChange={(e) => setSelectedItems({ ...selectedItems, skills: e.target.checked })} />
                                 </div>
                                 <div className="ai-item-row">
                                     <div className="ai-item-content">
-                                        <p>{parsedData.skills.join(', ')}</p>
+                                        <p>{parsedData.skills?.map(s => (typeof s === 'string' ? s : (s.skillName || s.name || s.skillId))).join(', ')}</p>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Experience */}
+                            <div className="ai-section">
+                                <div className="ai-section-header">Kinh nghiệm</div>
+                                {parsedData.experience?.map((exp, idx) => (
+                                    <label key={idx} className="ai-item-row">
+                                        <input type="checkbox" checked={!!selectedItems.experience[idx]}
+                                            onChange={() => setSelectedItems(prev => ({ ...prev, experience: { ...prev.experience, [idx]: !prev.experience[idx] } }))} />
+                                        <div className="ai-item-content">
+                                            <strong>{exp.startDate} - {exp.endDate || 'Hiện tại'}</strong>
+                                            <p className="text-sm">{exp.description}</p>
+                                        </div>
+                                    </label>
+                                ))}
                             </div>
 
                             <div className="transfer-actions">
@@ -366,186 +406,141 @@ export const CVParser = () => {
                     )}
                 </div>
 
-                {/* ================= RIGHT COLUMN: CV FORM ================= */}
-                <div className="cv-right">
-                    <div className="form-section">
-                        <h3>Thông tin cá nhân</h3>
-                        <div className="form-row">
+                {/* RIGHT - FORM */}
+                <div className="cv-right flex flex-col h-full">
+
+                    <div className="flex-1 overflow-y-auto pr-2 pb-20">
+                        {/* General Info */}
+                        <div className="form-section">
+                            <h3>Thông tin chung</h3>
                             <div className="form-group">
                                 <label>Họ và tên</label>
-                                <input
-                                    value={cvData.personalInfo.fullName}
-                                    onChange={(e) => handlePersonalInfoChange('fullName', e.target.value)}
-                                    placeholder="Nguyễn Văn A"
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Email</label>
-                                <input
-                                    value={cvData.personalInfo.email}
-                                    onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
-                                    placeholder="email@example.com"
-                                />
-                            </div>
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Số điện thoại</label>
-                                <input
-                                    value={cvData.personalInfo.phone}
-                                    onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
-                                    placeholder="0901234567"
-                                />
+                                <input value={cvData.name} onChange={(e) => updateField('name', e.target.value)} placeholder="Nhập họ tên" />
                             </div>
                             <div className="form-group">
                                 <label>Địa chỉ</label>
-                                <input
-                                    value={cvData.personalInfo.address}
-                                    onChange={(e) => handlePersonalInfoChange('address', e.target.value)}
-                                    placeholder="Hà Nội, Việt Nam"
-                                />
+                                <input value={cvData.address} onChange={(e) => updateField('address', e.target.value)} placeholder="Nhập địa chỉ" />
+                            </div>
+                            <div className="form-group">
+                                <label>Mô tả bản thân</label>
+                                <textarea rows={3} value={cvData.description} onChange={(e) => updateField('description', e.target.value)} placeholder="Giới thiệu ngắn gọn..." />
+                            </div>
+                            <div className="form-group">
+                                <label>Lĩnh vực (Category)</label>
+                                <input value={cvData.category} onChange={(e) => updateField('category', e.target.value)} placeholder="VD: IT Software..." />
+                                {/* Hidden input to track ID if present */}
+                                <input type="hidden" value={cvData.categoryId || ''} />
                             </div>
                         </div>
-                        <div className="form-group">
-                            <label>Giới thiệu bản thân</label>
-                            <textarea
-                                rows={3}
-                                value={cvData.personalInfo.summary}
-                                onChange={(e) => handlePersonalInfoChange('summary', e.target.value)}
-                                placeholder="Mô tả ngắn gọn về bản thân và mục tiêu nghề nghiệp..."
-                            />
-                        </div>
-                    </div>
 
-                    <div className="form-section">
-                        <h3>Vị trí</h3>
-                        <div className="form-group">
-                            <input
-                                value={cvData.position}
-                                onChange={(e) => setCvData({ ...cvData, position: e.target.value })}
-                                placeholder="VD: Frontend Developer"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-section">
-                        <h3>Kinh nghiệm làm việc</h3>
-                        {cvData.experience.map((item, index) => (
-                            <div key={item.id} className="dynamic-item">
-                                <button className="remove-btn" onClick={() => removeExperience(item.id)}>Xóa</button>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Công ty</label>
-                                        <input
-                                            value={item.company}
-                                            onChange={(e) => updateExperience(item.id, 'company', e.target.value)}
-                                            placeholder="Tên công ty"
-                                        />
+                        {/* Degrees */}
+                        <div className="form-section">
+                            <h3>Bằng cấp (Degrees)</h3>
+                            {cvData.degrees.filter(d => d.type === 'DEGREE').map(item => (
+                                <div key={item.id} className="dynamic-item">
+                                    <button className="remove-btn" onClick={() => removeDegreeItem(item.id)}><Trash2 size={14} /></button>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Trường / Tổ chức</label>
+                                            <input value={item.institution} onChange={(e) => updateDegreeItem(item.id, 'institution', e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Chuyên ngành</label>
+                                            <input value={item.major} onChange={(e) => updateDegreeItem(item.id, 'major', e.target.value)} />
+                                        </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Vị trí</label>
-                                        <input
-                                            value={item.position}
-                                            onChange={(e) => updateExperience(item.id, 'position', e.target.value)}
-                                            placeholder="Chức danh"
-                                        />
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Bằng cấp</label>
+                                            <input value={item.degree} onChange={(e) => updateDegreeItem(item.id, 'degree', e.target.value)} placeholder="Cử nhân, Kỹ sư..." />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Năm tốt nghiệp</label>
+                                            <input type="number" value={item.graduationYear} onChange={(e) => updateDegreeItem(item.id, 'graduationYear', e.target.value)} />
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="form-group">
-                                    <label>Thời gian</label>
-                                    <input
-                                        value={item.duration}
-                                        onChange={(e) => updateExperience(item.id, 'duration', e.target.value)}
-                                        placeholder="VD: 01/2022 - Hiện tại"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Mô tả</label>
-                                    <textarea
-                                        rows={3}
-                                        value={item.description}
-                                        onChange={(e) => updateExperience(item.id, 'description', e.target.value)}
-                                        placeholder="Mô tả chi tiết công việc..."
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                        <button className="add-btn" onClick={addExperience}>
-                            <Plus size={18} /> Thêm kinh nghiệm
-                        </button>
-                    </div>
-
-                    <div className="form-section">
-                        <h3>Học vấn</h3>
-                        {cvData.education.map((item, index) => (
-                            <div key={item.id} className="dynamic-item">
-                                <button className="remove-btn" onClick={() => removeEducation(item.id)}>Xóa</button>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Trường học</label>
-                                        <input
-                                            value={item.school}
-                                            onChange={(e) => updateEducation(item.id, 'school', e.target.value)}
-                                            placeholder="Tên trường / Tổ chức"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Chuyên ngành / Bằng cấp</label>
-                                        <input
-                                            value={item.degree}
-                                            onChange={(e) => updateEducation(item.id, 'degree', e.target.value)}
-                                            placeholder="VD: Kỹ sư phần mềm"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label>Thời gian</label>
-                                    <input
-                                        value={item.duration}
-                                        onChange={(e) => updateEducation(item.id, 'duration', e.target.value)}
-                                        placeholder="VD: 2018 - 2022"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Mô tả</label>
-                                    <textarea
-                                        rows={2}
-                                        value={item.description}
-                                        onChange={(e) => updateEducation(item.id, 'description', e.target.value)}
-                                        placeholder="Thành tích, GPA..."
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                        <button className="add-btn" onClick={addEducation}>
-                            <Plus size={18} /> Thêm học vấn
-                        </button>
-                    </div>
-
-                    <div className="form-section">
-                        <h3>Kỹ năng</h3>
-                        <div className="skills-container">
-                            {cvData.skills.map((skill, index) => (
-                                <div key={index} className="skill-tag">
-                                    {skill}
-                                    <button onClick={() => removeSkill(skill)}><X size={14} /></button>
                                 </div>
                             ))}
+                            <button className="add-btn" onClick={() => addDegree('DEGREE')}><Plus size={18} /> Thêm bằng cấp</button>
                         </div>
-                        <div className="form-group">
-                            <input
-                                value={newSkill}
-                                onChange={(e) => setNewSkill(e.target.value)}
-                                onKeyDown={addSkill}
-                                placeholder="Nhập kỹ năng và nhấn Enter..."
-                            />
+
+                        {/* Certificates */}
+                        <div className="form-section">
+                            <h3>Chứng chỉ (Certificates)</h3>
+                            {cvData.degrees.filter(d => d.type === 'CERTIFICATE').map(item => (
+                                <div key={item.id} className="dynamic-item">
+                                    <button className="remove-btn" onClick={() => removeDegreeItem(item.id)}><Trash2 size={14} /></button>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Tên chứng chỉ</label>
+                                            <input value={item.name} onChange={(e) => updateDegreeItem(item.id, 'name', e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Năm</label>
+                                            <input type="number" value={item.year} onChange={(e) => updateDegreeItem(item.id, 'year', e.target.value)} />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            <button className="add-btn" onClick={() => addDegree('CERTIFICATE')}><Plus size={18} /> Thêm chứng chỉ</button>
+                        </div>
+
+                        {/* Experience - REVERTED */}
+                        <div className="form-section">
+                            <h3>Kinh nghiệm làm việc</h3>
+                            {cvData.experience.map(item => (
+                                <div key={item.id} className="dynamic-item">
+                                    <button className="remove-btn" onClick={() => removeExperience(item.id)}><Trash2 size={14} /></button>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Ngày bắt đầu</label>
+                                            <input type="date" value={item.startDate} onChange={(e) => updateExperience(item.id, 'startDate', e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Ngày kết thúc</label>
+                                            <input type="date" value={item.endDate || ''} onChange={(e) => updateExperience(item.id, 'endDate', e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Mô tả công việc</label>
+                                        <textarea rows={2} value={item.description} onChange={(e) => updateExperience(item.id, 'description', e.target.value)} />
+                                    </div>
+                                </div>
+                            ))}
+                            <button className="add-btn" onClick={addExperience}><Plus size={18} /> Thêm kinh nghiệm</button>
+                        </div>
+
+                        {/* Skills */}
+                        <div className="form-section">
+                            <h3>Kỹ năng</h3>
+                            <div className="skills-container">
+                                {cvData.skills.map((skill, index) => (
+                                    <div key={index} className="skill-tag">
+                                        <span>{skill.skillName} ({skill.experienceYears} năm)</span>
+                                        <button onClick={() => removeSkill(index)}><X size={14} /></button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="form-row items-end">
+                                <div className="form-group flex-1">
+                                    <label>Tên kỹ năng</label>
+                                    <input value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} onKeyDown={addSkill} placeholder="Nhập và Enter" />
+                                </div>
+                                <div className="form-group w-24">
+                                    <label>Số năm</label>
+                                    <input type="number" min="0" value={newSkillExp} onChange={(e) => setNewSkillExp(e.target.value)} />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-4 mt-8">
-                        <button className="btn-secondary">Hủy</button>
-                        <button className="btn-primary">Lưu Hồ Sơ</button>
+                    {/* MOVED Save Button to Bottom Center */}
+                    <div className="p-4 border-t border-gray-100 flex justify-center bg-white sticky bottom-0">
+                        <button className="btn-primary flex items-center gap-2 px-8 py-3 text-lg" onClick={handleSave}>
+                            <Save size={20} /> Lưu Hồ Sơ
+                        </button>
                     </div>
+
                 </div>
             </div>
         </div>

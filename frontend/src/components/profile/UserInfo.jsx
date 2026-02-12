@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Camera, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 import './UserInfo.css';
 
 export const UserInfo = ({ user }) => {
+    const { updateUser } = useAuth();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        phone: '',
-        area: '',
+        phoneNumber: '',
+        address: '',
         bio: '',
         isOpenToWork: false
     });
@@ -19,10 +21,10 @@ export const UserInfo = ({ user }) => {
             setFormData({
                 name: user.name || '',
                 email: user.email || '',
-                phone: user.phone || '0901234567', // Mock phone
-                area: user.area || 'Hà Nội',
-                bio: user.bio || 'Lập trình viên...',
-                isOpenToWork: user.is_open_to_work || true
+                phoneNumber: user.phoneNumber || '',
+                address: user.address || '',
+                bio: user.bio || '', // Assuming bio is added to backend later, or just placeholder
+                isOpenToWork: user.is_open_to_work || false
             });
         }
     }, [user]);
@@ -32,15 +34,17 @@ export const UserInfo = ({ user }) => {
         setIsDirty(true);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!isDirty) return;
 
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            await updateUser(formData);
             toast.success('Cập nhật hồ sơ thành công');
             setIsDirty(false);
-        }, 800);
+        } catch (error) {
+            toast.error('Cập nhật thất bại. Vui lòng thử lại.');
+        }
     };
 
     return (
@@ -74,22 +78,25 @@ export const UserInfo = ({ user }) => {
                         <label className="form-label-compact">Số điện thoại</label>
                         <input
                             type="tel"
-                            value={formData.phone}
-                            onChange={(e) => handleChange('phone', e.target.value)}
+                            value={formData.phoneNumber}
+                            onChange={(e) => handleChange('phoneNumber', e.target.value)}
                             className="form-input-compact"
                         />
                     </div>
                     <div className="form-group-compact">
-                        <label className="form-label-compact">Khu vực</label>
+                        <label className="form-label-compact">Địa chỉ</label>
                         <input
                             type="text"
-                            value={formData.area}
-                            onChange={(e) => handleChange('area', e.target.value)}
+                            value={formData.address}
+                            onChange={(e) => handleChange('address', e.target.value)}
                             className="form-input-compact"
                         />
                     </div>
                 </div>
 
+                {/* Bio field - kept as UI element even if not in current backend response yet, 
+                    can be mapped if backend adds it or removed if strictly following API result */}
+                {/* 
                 <div className="form-group-compact full-width">
                     <label className="form-label-compact">Giới thiệu bản thân</label>
                     <textarea
@@ -100,6 +107,7 @@ export const UserInfo = ({ user }) => {
                         placeholder="Mô tả kinh nghiệm và kỹ năng của bạn..."
                     />
                 </div>
+                */}
 
                 <div className="full-width flex justify-end mt-4">
                     <button
