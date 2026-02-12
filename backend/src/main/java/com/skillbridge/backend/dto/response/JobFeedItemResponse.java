@@ -9,7 +9,6 @@ public class JobFeedItemResponse {
     private String companyName;
     private String companyImageUrl;
     private Object subscriptionPlanName;
-    private String position;
     private String location;
     private String categoryName;
     private String salaryMin;
@@ -17,12 +16,11 @@ public class JobFeedItemResponse {
     List<String> skills;
     private LocalDateTime createdAt;
 
-    public JobFeedItemResponse(String jobId, Object title, String position, String location,
+    public JobFeedItemResponse(String jobId, Object title, String location,
                                String salaryMin, String salaryMax, LocalDateTime createdAt,
                                String companyName,String companyImageUrl, Object subscriptionPlanName, String categoryName) {
         this.jobId = jobId;
         this.title = title;
-        this.position = position;
         this.location = location;
         this.salaryMin = salaryMin;
         this.salaryMax = salaryMax;
@@ -72,13 +70,6 @@ public class JobFeedItemResponse {
 
     public void setSubscriptionPlanName(Object subscriptionPlanName) {
         this.subscriptionPlanName = subscriptionPlanName;
-    }
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
     }
 
     public String getLocation() {

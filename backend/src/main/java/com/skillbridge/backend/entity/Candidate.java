@@ -1,18 +1,24 @@
 package com.skillbridge.backend.entity;
-
 import jakarta.persistence.*;
-/// Done
+
 @Entity
 @Table(name = "candidates")
-public class Candidate extends BaseEntity{
+public class Candidate extends BaseEntity {
 
     @Id
     private String id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
-    @JoinColumn (name = "user_id")
-    private User user; // dùng chung id với user
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    private String name;
+
+    @Column(columnDefinition = "text")
+    private String description;
+
+    private String address;
 
     private String cvUrl;
 
@@ -24,10 +30,11 @@ public class Candidate extends BaseEntity{
 
     private Boolean isOpenToWork;
 
-    private Integer yearsOfExperience;
+    @Convert(converter = JsonConverter.class)
+    @Column(columnDefinition = "json")
+    private Object experience;
 
-    private Double expectedSalary;
-
+    @Convert(converter = JsonConverter.class)
     @Column(columnDefinition = "json")
     private Object degree;
 
@@ -35,12 +42,44 @@ public class Candidate extends BaseEntity{
     @JoinColumn(name = "category_id")
     private Category category;
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public User getUser() {
         return user;
     }
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getCvUrl() {
@@ -72,23 +111,15 @@ public class Candidate extends BaseEntity{
     }
 
     public void setOpenToWork(Boolean openToWork) {
-        isOpenToWork = openToWork;
+        this.isOpenToWork = openToWork;
     }
 
-    public Integer getYearsOfExperience() {
-        return yearsOfExperience;
+    public Object getExperience() {
+        return experience;
     }
 
-    public void setYearsOfExperience(Integer yearsOfExperience) {
-        this.yearsOfExperience = yearsOfExperience;
-    }
-
-    public Double getExpectedSalary() {
-        return expectedSalary;
-    }
-
-    public void setExpectedSalary(Double expectedSalary) {
-        this.expectedSalary = expectedSalary;
+    public void setExperience(Object experience) {
+        this.experience = experience;
     }
 
     public Object getDegree() {

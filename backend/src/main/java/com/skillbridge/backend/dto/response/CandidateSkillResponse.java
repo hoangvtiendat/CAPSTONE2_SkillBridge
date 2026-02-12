@@ -1,6 +1,5 @@
 package com.skillbridge.backend.dto.response;
 
-import com.skillbridge.backend.enums.SkillLevel;
 import lombok.*;
 
 @Data
@@ -10,13 +9,11 @@ public class CandidateSkillResponse {
     private String skillId;
     private String skillName;
     private Integer experienceYears;
-    private SkillLevel level;
 
-    public CandidateSkillResponse(String skillId, String skillName, Integer experienceYears, SkillLevel level) {
+    public CandidateSkillResponse(String skillId,String skillName, Integer experienceYears) {
         this.skillId = skillId;
         this.skillName = skillName;
         this.experienceYears = experienceYears;
-        this.level = level;
     }
 
     public String getSkillId() {
@@ -41,13 +38,5 @@ public class CandidateSkillResponse {
 
     public void setExperienceYears(Integer experienceYears) {
         this.experienceYears = experienceYears;
-    }
-
-    public SkillLevel getLevel() {
-        return level;
-    }
-
-    public void setLevel(SkillLevel level) {
-        this.level = level;
     }
 }

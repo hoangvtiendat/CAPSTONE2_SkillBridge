@@ -1,26 +1,28 @@
 package com.skillbridge.backend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skillbridge.backend.config.KeywordConfig;
 import com.skillbridge.backend.dto.request.CandidateSkillRequest;
 import com.skillbridge.backend.dto.request.DegreeRequest;
+import com.skillbridge.backend.dto.request.ExperienceDetail;
 import com.skillbridge.backend.dto.request.UpdateCandidateCvRequest;
 import com.skillbridge.backend.dto.response.CandidateSkillResponse;
 import com.skillbridge.backend.dto.response.DegreeResponse;
 import com.skillbridge.backend.dto.response.UpdateCandidateCvResponse;
 import com.skillbridge.backend.entity.*;
-import com.skillbridge.backend.enums.SkillLevel;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
-import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -34,55 +36,106 @@ public class CandidateService {
     private final UserRepository userRepository;
     private final SkillRepository skillRepository;
     private final CandidateSkillRepository candidateSkillRepository;
+    private OcrService ocrService;
+    private GeminiService geminiService;
+    @Value("${gemini.api.key}")
+    private String apiKey;
+
+    private static class LLMResumeResponse {
+        public String name;
+        public String description;
+        public String address;
+        public List<DegreeRequest> degrees;
+        public List<ExperienceDetail> experience;
+        public List<CandidateSkillResponse> skills;
+    }
 
     public CandidateService(CandidateRepository candidateRepository,
                             CategoryRepository categoryRepository,
                             UserRepository userRepository,
                             SkillRepository skillRepository,
                             CandidateSkillRepository candidateSkillRepository,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            OcrService ocrService,
+                            GeminiService geminiService) {
         this.candidateRepository = candidateRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.skillRepository = skillRepository;
         this.candidateSkillRepository = candidateSkillRepository;
         this.objectMapper = objectMapper;
+        this.ocrService = ocrService;
+        this.geminiService = geminiService;
+    }
+
+    private List<DegreeResponse> deserializeDegrees(Object degreeObj) {
+        if (degreeObj == null) return new ArrayList<>();
+        try {
+            String json = degreeObj instanceof String ? (String) degreeObj : objectMapper.writeValueAsString(degreeObj);
+            List<DegreeRequest> list = objectMapper.readValue(json, new TypeReference<List<DegreeRequest>>() {
+            });
+            return list.stream().map(this::toDegreeResponse).toList();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private List<ExperienceDetail> deserializeExperience(Object expObj) {
+        if (expObj == null) return new ArrayList<>();
+        try {
+            if (expObj instanceof List) {
+                return objectMapper.convertValue(expObj, new TypeReference<List<ExperienceDetail>>() {
+                });
+            }
+            String json = expObj.toString();
+            return objectMapper.readValue(json, new TypeReference<List<ExperienceDetail>>() {
+            });
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private DegreeResponse toDegreeResponse(DegreeRequest req) {
+        DegreeResponse res = new DegreeResponse();
+        res.setType(req.getType());
+        res.setDegree(req.getDegree());
+        res.setMajor(req.getMajor());
+        res.setInstitution(req.getInstitution());
+        res.setGraduationYear(req.getGraduationYear() != null ? String.valueOf(req.getGraduationYear()) : null);
+        res.setName(req.getName());
+        res.setYear(req.getYear() != null ? String.valueOf(req.getYear()) : null);
+        return res;
+    }
+
+    private ExperienceDetail toExperienceDetail(ExperienceDetail req) {
+        ExperienceDetail res = new ExperienceDetail();
+        res.setStartDate(req.getStartDate());
+        res.setEndDate(req.getEndDate());
+        res.setDescription(req.getDescription());
+        return res;
     }
 
     public UpdateCandidateCvResponse getCv(String userId) {
         Candidate candidate = candidateRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        List<DegreeResponse> degreeResponses = null;
-        List<CandidateSkillResponse> skillResponses = null;
-        if (candidate.getDegree() != null) {
-            try {
-                String degreeJson = String.valueOf(candidate.getDegree());
-                List<DegreeRequest> degreesList = objectMapper.readValue(
-                        degreeJson,
-                        new com.fasterxml.jackson.core.type.TypeReference<List<DegreeRequest>>() {}
-                );
-                degreeResponses = degreesList.stream().map(this::toDegreeResponse).toList();
-            } catch (JsonProcessingException e) {
-                System.out.println("Failed to deserialize degrees: " + e.getMessage());
-            }
-        }
+        List<DegreeResponse> degreeResponses = deserializeDegrees(candidate.getDegree());
+        List<ExperienceDetail> experienceDetails = deserializeExperience(candidate.getExperience());
+
         List<CandidateSkill> currentSkills = candidateSkillRepository.findByCandidate(candidate);
-        skillResponses = currentSkills.stream().map(s -> new CandidateSkillResponse(
-                s.getSkill().getId(),
-                s.getSkill().getName(),
-                s.getExperienceYears(),
-                s.getLevel()
-        )).toList();
+        List<CandidateSkillResponse> skillResponses = currentSkills.stream().map(s -> {
+            CandidateSkillResponse res = new CandidateSkillResponse(s.getSkill().getId(), s.getSkill().getName(), s.getExperienceYears());
+            return res;
+        }).toList();
+
         return new UpdateCandidateCvResponse(
-                candidate.getUser().getId(),
-                candidate.getOpenToWork(),
-                candidate.getYearsOfExperience(),
-                candidate.getExpectedSalary(),
-                candidate.getCategory() != null ? candidate.getCategory().getId() : null,
+                candidate.getName(),
+                candidate.getDescription(),
+                candidate.getAddress(),
                 candidate.getCategory() != null ? candidate.getCategory().getName() : null,
                 degreeResponses,
-                skillResponses
+                skillResponses,
+                experienceDetails
         );
     }
 
@@ -93,222 +146,173 @@ public class CandidateService {
                     .orElseGet(() -> {
                         User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
                         Candidate newCandidate = new Candidate();
                         newCandidate.setUser(user);
-                        System.out.println("Creating new candidate profile for userId: " + userId);
                         return newCandidate;
                     });
-            if (request.getOpenToWork() != null) candidate.setOpenToWork(request.getOpenToWork());
-            if (request.getYearsOfExperience() != null) candidate.setYearsOfExperience(request.getYearsOfExperience());
-            if (request.getExpectedSalary() != null) candidate.setExpectedSalary(request.getExpectedSalary());
+
+            if (request.getName() != null) candidate.setName(request.getName());
+            if (request.getDescription() != null) candidate.setDescription(request.getDescription());
+            if (request.getAddress() != null) candidate.setAddress(request.getAddress());
             if (request.getCategoryId() != null) {
                 Category category = categoryRepository.findById(request.getCategoryId())
                         .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
                 candidate.setCategory(category);
             }
+            if (request.getExperience() != null) {
+                candidate.setExperience(request.getExperience());
+            }
             if (request.getDegrees() != null) {
                 validateDegrees(request.getDegrees());
-                candidate.setDegree(objectMapper.writeValueAsString(request.getDegrees()));
+                candidate.setDegree(request.getDegrees());
             }
+            candidate = candidateRepository.saveAndFlush(candidate);
             if (request.getSkills() != null) {
-                candidateSkillRepository.deleteByCandidate(candidate);
+                candidateSkillRepository.deleteByCandidateId(userId);
                 candidateSkillRepository.flush();
 
-                List<CandidateSkill> newSkills = request.getSkills().stream().map(sReq -> {
-                    Skill skillEntity = skillRepository.findById(sReq.getSkillId())
-                            .orElseThrow(() -> new AppException(ErrorCode.INVALID_KEY));
+                List<CandidateSkill> newSkills = new ArrayList<>();
+
+                for (CandidateSkillRequest sReq : request.getSkills()) {
+                    Skill skillEntity = skillRepository.getReferenceById(sReq.getSkillId());
+
                     CandidateSkill cs = new CandidateSkill();
                     cs.setCandidate(candidate);
                     cs.setSkill(skillEntity);
-                    cs.setExperienceYears(sReq.getExperienceYears());
-                    cs.setLevel(sReq.getLevel());
-                    return cs;
-                }).toList();
-                List<CandidateSkill> savedSkills = candidateSkillRepository.saveAll(newSkills);
-                candidateSkillRepository.flush();
-            }
-            List<DegreeResponse> degreeResponses = null;
-            List<CandidateSkillResponse> skillResponses = null;
-            if (candidate.getDegree() != null) {
-                try {
-                    String degreeJson = String.valueOf(candidate.getDegree());
-                    List<DegreeRequest> degreesList = objectMapper.readValue(
-                            degreeJson,
-                            new com.fasterxml.jackson.core.type.TypeReference<List<DegreeRequest>>() {}
-                    );
-                    degreeResponses = degreesList.stream().map(this::toDegreeResponse).toList();
-                } catch (JsonProcessingException e) {
-                    System.out.println("Failed to deserialize degrees: " + e.getMessage());
+                    cs.setExperienceYears(sReq.getExperienceYears() != null ? sReq.getExperienceYears() : 0);
+                    newSkills.add(cs);
+                }
+
+                if (!newSkills.isEmpty()) {
+                    candidateSkillRepository.saveAll(newSkills);
+                    candidateSkillRepository.flush();
                 }
             }
-            List<CandidateSkill> currentSkills = candidateSkillRepository.findByCandidate(candidate);
-            skillResponses = currentSkills.stream().map(s -> new CandidateSkillResponse(
-                    s.getSkill().getId(),
-                    s.getSkill().getName(),
-                    s.getExperienceYears(),
-                    s.getLevel()
-            )).toList();
-            return new UpdateCandidateCvResponse(
-                    candidate.getUser().getId(),
-                    candidate.getOpenToWork(),
-                    candidate.getYearsOfExperience(),
-                    candidate.getExpectedSalary(),
-                    candidate.getCategory() != null ? candidate.getCategory().getId() : null,
-                    candidate.getCategory() != null ? candidate.getCategory().getName() : null,
-                    degreeResponses,
-                    skillResponses
-            );
-        } catch (JsonProcessingException e) {
-           System.out.println("Failed to serialize degrees JSON"+ e);
+            candidateRepository.save(candidate);
+            return getCv(userId);
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
         }
     }
 
-    private DegreeResponse toDegreeResponse(DegreeRequest req) {
-        DegreeResponse res = new DegreeResponse();
-        res.setType(req.getType());
-        res.setDegree(req.getDegree());
-        res.setMajor(req.getMajor());
-        res.setInstitution(req.getInstitution());
-        res.setGraduationYear(req.getGraduationYear());
-        res.setName(req.getName());
-        res.setYear(req.getYear());
-        return res;
-    }
-
     private void validateDegrees(List<DegreeRequest> degrees) {
         for (DegreeRequest d : degrees) {
-            if (d.getType() == null) {
-                throw new AppException(ErrorCode.DEGREE_TYPE_REQUIRED);
-            }
-            switch (d.getType()) {
-                case "DEGREE" -> {
-                    if (d.getDegree() == null ||
-                            d.getInstitution() == null ||
-                            d.getGraduationYear() == null) {
-                        throw new AppException(ErrorCode.INVALID_DEGREE);
-                    }
-                }
-                case "CERTIFICATE" -> {
-                    if (d.getName() == null || d.getYear() == null) {
-                        throw new AppException(ErrorCode.INVALID_CERTIFICATE);
-                    }
-                }
-                default -> throw new AppException(ErrorCode.INVALID_DEGREE_TYPE);
+            if (d.getType() == null) throw new AppException(ErrorCode.DEGREE_TYPE_REQUIRED);
+            if ("DEGREE".equals(d.getType())) {
+                if (d.getDegree() == null || d.getInstitution() == null)
+                    throw new AppException(ErrorCode.INVALID_DEGREE);
+            } else if ("CERTIFICATE".equals(d.getType())) {
+                if (d.getName() == null) throw new AppException(ErrorCode.INVALID_CERTIFICATE);
             }
         }
     }
 
-    public UpdateCandidateCvRequest parseRawText(String rawText) {
+    private List<CandidateSkillRequest> mapLLMSkillsToRequests(List<CandidateSkillResponse> llmSkills) {
+        if (llmSkills == null) return new ArrayList<>();
+        List<CandidateSkillRequest> requests = new ArrayList<>();
+
+        for (CandidateSkillResponse s : llmSkills) {
+            if (s.getSkillName() == null) continue;
+            skillRepository.findByNameContainingIgnoreCase(s.getSkillName().trim())
+                    .stream().findFirst().ifPresent(skillEntity -> {
+                        CandidateSkillRequest req = new CandidateSkillRequest();
+                        req.setSkillId(skillEntity.getId());
+                        req.setExperienceYears(s.getExperienceYears() != null ? s.getExperienceYears() : 1);
+                        requests.add(req);
+                    });
+        }
+        return requests;
+    }
+
+    private static final String PROMPT = """
+    Bạn là chuyên gia phân tích dữ liệu nhân sự cao cấp. 
+    Nhiệm vụ: Trình bày thông tin từ văn bản CV được cung cấp bên dưới thành cấu trúc JSON chuẩn xác.
+    
+    Cấu trúc JSON yêu cầu:
+    {
+      "name": "Họ và tên",
+      "address": "Địa chỉ liên lạc",
+      "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+      "degrees": [
+        {
+          "type": "DEGREE",
+          "degree": "Tên bằng cấp (nếu là DEGREE)",
+          "major": "Ngành học",
+          "institution": "Tên trường/tổ chức cấp",
+          "graduationYear": 2023
+        },
+        {
+          "type": "CERTIFICATE",
+          "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+          "year" 2025
+        }
+      ],
+      "experience": [
+        {
+          "startDate": "yyyy-MM-dd",
+          "endDate": "yyyy-MM-dd hoặc null",
+          "description": "Chi tiết công việc"
+        }
+      ],
+      "skills": [
+        {
+          "skillName": "Tên kỹ năng",
+          "experienceYears": 3
+        }
+      ]
+    }
+    
+    Quy tắc:
+    1. Trả về DUY NHẤT JSON.
+    2. Định dạng ngày: yyyy-MM-dd.
+    3. Tách kỹ năng rõ rệt để mapping ID.
+    
+    DỮ LIỆU CV CẦN PHÂN TÍCH:
+    ---
+    %s
+    ---
+    """;
+
+    private String buildPrompt(String rawText) {
+        return String.format(PROMPT, rawText);
+    }
+
+    public UpdateCandidateCvRequest parsingCV(MultipartFile file) {
+        String rawText = ocrService.scanFile(file);
+        System.out.println(rawText);
+        LLMResumeResponse llmRes = geminiService.callGemini(buildPrompt(rawText), LLMResumeResponse.class);
+        System.out.println(llmRes);
+        return convertLLMToRequest(llmRes);
+    }
+
+    private UpdateCandidateCvRequest convertLLMToRequest(LLMResumeResponse res) {
         UpdateCandidateCvRequest request = new UpdateCandidateCvRequest();
-        String cleanText = rawText.replaceAll("[|⁄\\\\@==]", " ").replaceAll("\\s+", " ");
-        String lowerText = cleanText.toLowerCase();
-
-        request.setOpenToWork(true);
-        request.setYearsOfExperience(extractTotalExperience(lowerText));
-        request.setExpectedSalary(extractSalary(lowerText));
-        request.setDegrees(extractDegreesAndCertificates(rawText));
-        request.setSkills(extractSkills(cleanText));
-
+        request.setName(res.name);
+        request.setAddress(res.address);
+        request.setDescription(res.description);
+        request.setDegrees(res.degrees);
+        request.setExperience(res.experience);
+        if (res.skills != null && !res.skills.isEmpty()) {
+            List<CandidateSkillRequest> skillRequests = new ArrayList<>();
+            for (CandidateSkillResponse llmSkill : res.skills) {
+                if (llmSkill.getSkillName() == null) continue;
+                String skillNameFromAI = llmSkill.getSkillName().trim();
+                skillRepository.findByNameContainingIgnoreCase(skillNameFromAI)
+                        .stream()
+                        .findFirst()
+                        .ifPresent(skillEntity -> {
+                            CandidateSkillRequest sr = new CandidateSkillRequest();
+                            sr.setSkillId(skillEntity.getId());
+                            Integer years = llmSkill.getExperienceYears();
+                            sr.setExperienceYears(years != null ? years : 1);
+                            skillRequests.add(sr);
+                        });
+            }
+            request.setSkills(skillRequests);
+        }
         return request;
-    }
-
-    private Integer extractTotalExperience(String text) {
-        Pattern pattern = Pattern.compile("(\\d+)\\s*(year|năm|exp|yoe)");
-        Matcher matcher = pattern.matcher(text);
-        if (matcher.find()) return Integer.parseInt(matcher.group(1));
-
-        Pattern yearRange = Pattern.compile("(19|20)\\d{2}\\s*[-–]\\s*((19|20)\\d{2}|present|nay|hiện tại)");
-        Matcher rangeMatcher = yearRange.matcher(text);
-        int maxDiff = 0;
-        while (rangeMatcher.find()) {
-            int start = Integer.parseInt(rangeMatcher.group(1));
-            String endStr = rangeMatcher.group(2);
-            int end = endStr.matches("\\d+") ? Integer.parseInt(endStr) : 2026;
-            maxDiff = Math.max(maxDiff, end - start);
-        }
-        return maxDiff;
-    }
-
-    private List<DegreeRequest> extractDegreesAndCertificates(String rawText) {
-        List<DegreeRequest> results = new ArrayList<>();
-        String[] lines = rawText.split("\\r?\\n");
-
-        String[] degreeKeywords = {"bachelor", "cử nhân", "engineer", "kỹ sư", "master", "thạc sĩ", "university", "đại học", "college", "cao đẳng"};
-        String[] certKeywords = {"certificate", "chứng chỉ", "certified", "award", "prize", "ielts", "toeic", "jlpt", "oracle"};
-
-        for (String line : lines) {
-            String l = line.toLowerCase().trim();
-            if (l.isEmpty()) continue;
-
-            if (Arrays.stream(degreeKeywords).anyMatch(l::contains)) {
-                DegreeRequest d = new DegreeRequest();
-                d.setType("DEGREE");
-                d.setInstitution(line.replaceAll("^[-•@*\\s]+", "").trim());
-                d.setDegree(l.contains("bachelor") || l.contains("cử nhân") ? "Bachelor" : "Engineer");
-                d.setMajor(l.contains("information technology") ? "Information Technology" : null);
-                String year = extractYear(l);
-                if (year != null) d.setGraduationYear(Integer.parseInt(year));
-                results.add(d);
-            } else if (Arrays.stream(certKeywords).anyMatch(l::contains)) {
-                DegreeRequest c = new DegreeRequest();
-                c.setType("CERTIFICATE");
-                c.setName(line.replaceAll("^[-•@*\\s]+", "").trim());
-                String year = extractYear(l);
-                if (year != null) c.setYear(Integer.parseInt(year));
-                results.add(c);
-            }
-        }
-        return results;
-    }
-
-    private List<CandidateSkillRequest> extractSkills(String cleanText) {
-        List<CandidateSkillRequest> skillRequests = new ArrayList<>();
-        List<Skill> allSkills = skillRepository.findAll();
-        String normalizedText = " " + cleanText.toLowerCase() + " ";
-
-        for (Skill skill : allSkills) {
-            String sName = skill.getName().toLowerCase();
-            String regex = "\\b" + Pattern.quote(sName) + "\\b";
-            if (Pattern.compile(regex).matcher(normalizedText).find()) {
-                CandidateSkillRequest sReq = new CandidateSkillRequest();
-                sReq.setSkillId(skill.getId());
-                sReq.setLevel(determineSkillLevel(cleanText, sName));
-                sReq.setExperienceYears(1);
-                skillRequests.add(sReq);
-            }
-        }
-        return skillRequests;
-    }
-
-    private SkillLevel determineSkillLevel(String text, String skillName) {
-        String lowerText = text.toLowerCase();
-        // Expert keywords
-        if (lowerText.contains("expert") || lowerText.contains("architect") || lowerText.contains("lead") || lowerText.contains("master")) {
-            return SkillLevel.EXPERT;
-        }
-        // Senior keywords
-        if (lowerText.contains("senior") || lowerText.contains("advanced") || lowerText.contains("professional")) {
-            return SkillLevel.SENIOR;
-        }
-        // Default
-        return SkillLevel.JUNIOR;
-    }
-
-    private String extractYear(String text) {
-        Matcher m = Pattern.compile("(19|20)\\d{2}").matcher(text);
-        return m.find() ? m.group() : null;
-    }
-
-    private Double extractSalary(String text) {
-        Pattern p = Pattern.compile("(salary|lương|expected)[:\\s]*\\$?(\\d+[.,]?\\d*)");
-        Matcher m = p.matcher(text);
-        if (m.find()) {
-            try {
-                return Double.parseDouble(m.group(2).replace(",", ""));
-            } catch (Exception e) { return 0.0; }
-        }
-        return 0.0;
     }
 }

@@ -1,6 +1,5 @@
 package com.skillbridge.backend.entity;
 
-import com.skillbridge.backend.enums.SkillLevel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,9 +25,6 @@ public class CandidateSkill extends BaseEntity{
     private Skill skill;
 
     private Integer experienceYears;
-
-    @Enumerated(EnumType.STRING)
-    private SkillLevel level;
 
     public String getId() {
         return id;
@@ -60,14 +56,6 @@ public class CandidateSkill extends BaseEntity{
 
     public void setExperienceYears(Integer experienceYears) {
         this.experienceYears = experienceYears;
-    }
-
-    public SkillLevel getLevel() {
-        return level;
-    }
-
-    public void setLevel(SkillLevel level) {
-        this.level = level;
     }
 }
 
