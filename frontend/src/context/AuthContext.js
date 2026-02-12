@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import userService from '../services/api/userService';
 
 const AuthContext = createContext();
 
@@ -9,24 +10,70 @@ export const AuthProvider = ({ children }) => {
         return savedUser ? JSON.parse(savedUser) : null;
     });
 
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const fetchProfile = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        setLoading(true);
+        try {
+            const response = await userService.getProfile();
+            if (response && response.result) {
+                setUser(response.result);
+                localStorage.setItem('user', JSON.stringify(response.result));
+            }
+        } catch (err) {
+            console.error('Failed to fetch profile:', err);
+            setError(err);
+            // Optional: logout if fetch fails with 401?
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
     const login = (userData) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
+        if (userData.token) {
+            localStorage.setItem('token', userData.token); // Ensure token is saved if passed in userData
+            fetchProfile();
+        }
+        // If token is not in userData but expected to be in localStorage already or handled otherwise
     };
 
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
     };
 
-    const updateUser = (newData) => {
-        const updatedUser = { ...user, ...newData };
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+    const updateUser = async (newData) => {
+        setLoading(true);
+        try {
+            const response = await userService.updateProfile(newData);
+            if (response && response.result) {
+                const updatedUser = response.result;
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser)); // Update local storage with new profile
+                return updatedUser;
+            }
+        } catch (err) {
+            console.error('Failed to update profile:', err);
+            setError(err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+        <AuthContext.Provider value={{ user, login, logout, updateUser, fetchProfile, loading, error }}>
             {children}
         </AuthContext.Provider>
     );

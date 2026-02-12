@@ -2,25 +2,42 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // Fixed import
 import { useAuth } from "../../context/AuthContext";
 import { toast, Toaster } from "sonner";
+import authService from "../../services/api/authService";
 
 export function OTPVerification() {
-    const { login } = useAuth();
+    const { login, fetchProfile } = useAuth();
     const [otp, setOtp] = useState("");
     const navigate = useNavigate();
     const location = useLocation();
     const { email, userData } = location.state || {};
 
-    const handleVerify = (e) => {
+    const handleVerify = async (e) => {
         e.preventDefault();
-        if (otp === "123456") {
-            if (userData) login(userData);
-            toast.success("Xác thực thành công", { description: "Đang chuyển hướng..." });
-            // Simulate login success
-            setTimeout(() => {
-                navigate("/");
-            }, 1000);
-        } else {
-            toast.error("Mã OTP không đúng", { description: "Vui lòng thử lại (Mã mặc định: 123456)" });
+        try {
+            const response = await authService.verifyOtp(email, otp);
+            if (response && response.result) {
+                // Check for accessToken or token in the result
+                const { accessToken, token } = response.result;
+                const finalToken = accessToken || token;
+
+                if (finalToken) {
+                    localStorage.setItem('token', finalToken);
+                    if (typeof fetchProfile === 'function') {
+                        await fetchProfile();
+                    }
+                    toast.success("Xác thực thành công", { description: "Đang chuyển hướng..." });
+                    setTimeout(() => {
+                        navigate("/");
+                    }, 1000);
+                } else {
+                    // Fallback if no token found but success (unlikely for auth endpoint)
+                    toast.error("Lỗi xác thực", { description: "Không nhận được token đăng nhập" });
+                }
+            }
+        } catch (error) {
+            console.error("OTP Verification failed", error);
+            const errorMsg = error.response?.data?.message || "Mã OTP không đúng hoặc đã hết hạn";
+            toast.error("Xác thực thất bại", { description: errorMsg });
         }
     };
 

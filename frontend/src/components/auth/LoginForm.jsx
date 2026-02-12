@@ -3,11 +3,11 @@ import { toast, Toaster } from "sonner";
 import { useNavigate } from "react-router";
 import "./LoginForm.css";
 import { useAuth } from "../../context/AuthContext";
+import authService from "../../services/api/authService";
+
 export function LoginForm() {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const mock_email = "quctonnn@gmail.com";
-  const mock_password = "12345678";
+  const { login, fetchProfile } = useAuth(); // Destructure fetchProfile
 
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
@@ -29,32 +29,48 @@ export function LoginForm() {
 
     if (mode === "login") {
       try {
-        const response = await fetch(`http://localhost:3001/Users?email=${email}&password=${password}`);
-        const users = await response.json();
+        const response = await authService.login(email, password);
 
-        if (users.length > 0) {
-          const user = users[0];
-          if (user.two_fa_enabled) {
+        if (response && response.result) {
+          const { is2faEnabled, accessToken } = response.result;
+
+          if (String(is2faEnabled) === "1" || is2faEnabled === true) { // Handle both string "1" or boolean from backend if it changes
             toast.info("Yêu cầu xác thực 2FA", { description: "Vui lòng nhập mã OTP" });
-            navigate("/otp-verification", { state: { email: user.email, userData: user } }); // Pass userData
+            // Pass email to OTP page. userData might not be fully available yet if 2FA is on depending on backend flow, 
+            // but we need email for verify-otp endpoint.
+            navigate("/otp-verification", { state: { email: email } });
           } else {
-            login(user); // Use context login
-            toast.success("Đăng nhập thành công", { style: toastStyles.success });
-            navigate("/");
+            // Standard Login
+            if (accessToken) {
+              localStorage.setItem('token', accessToken);
+              // Retrieve full profile
+              await fetchProfile();
+              toast.success("Đăng nhập thành công", { style: toastStyles.success });
+              navigate("/");
+            } else {
+              toast.error("Lỗi đăng nhập", { description: "Không nhận được token" });
+            }
           }
-        } else {
-          toast.error("Đăng nhập thất bại", { description: "Email hoặc mật khẩu không đúng", style: toastStyles.error });
         }
       } catch (error) {
         console.error("Login error:", error);
-        toast.error("Lỗi kết nối", { description: "Không thể kết nối đến server" });
+        // Handle specific error codes if available in error object (e.g. error.response.data.code)
+        toast.error("Đăng nhập thất bại", { description: error.response?.data?.message || "Email hoặc mật khẩu không đúng", style: toastStyles.error });
       }
     } else {
+      // REGISTER
       if (password !== confirmPassword) {
         toast.error("Đăng ký thất bại", { description: "Mật khẩu không khớp", style: toastStyles.error });
         return;
       }
-      toast.success("Đăng ký thành công", { style: toastStyles.success });
+      try {
+        await authService.register({ email, password, name: email.split('@')[0], role: "CANDIDATE" }); // Simple default mapping
+        toast.success("Đăng ký thành công", { description: "Vui lòng kiểm tra email để xác thực", style: toastStyles.success });
+        setMode("login");
+      } catch (error) {
+        console.error("Register error:", error);
+        toast.error("Đăng ký thất bại", { description: error.response?.data?.message || "Lỗi hệ thống" });
+      }
     }
   };
 
