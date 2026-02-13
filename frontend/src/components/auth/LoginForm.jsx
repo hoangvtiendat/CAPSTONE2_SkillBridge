@@ -1,82 +1,131 @@
 import React, { useState } from "react";
 import { toast, Toaster } from "sonner";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
 import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/api/authService";
 
 export function LoginForm() {
   const navigate = useNavigate();
-  const { login, fetchProfile } = useAuth(); // Destructure fetchProfile
+  const { login } = useAuth();
 
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const toastStyles = {
-    warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
-    success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
-    error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
-  };
+  const register_Google = () => {
+  window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
+  }
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim() || (mode === "register" && !confirmPassword.trim())) {
-      toast.warning("Thiếu thông tin", { description: "Vui lòng điền đầy đủ thông tin", style: toastStyles.warning });
+  const handleRegister = async () => {
+  if (!email.trim()) {
+    toast.warning("Thiếu thông tin");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "http://localhost:8081/identity/auth/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+
+      toast.error(data.message || "Đăng ký thất bại");
+
+      if (data.code === 2004) {
+         console.log("Xử lý riêng cho lỗi trùng email ở đây");
+      }
       return;
     }
+    toast.success(data.message || "Vui lòng xác thực OTP");
 
-    if (mode === "login") {
-      try {
-        const response = await authService.login(email, password);
-
-        if (response && response.result) {
-          const { is2faEnabled, accessToken } = response.result;
-
-          if (String(is2faEnabled) === "1" || is2faEnabled === true) { // Handle both string "1" or boolean from backend if it changes
-            toast.info("Yêu cầu xác thực 2FA", { description: "Vui lòng nhập mã OTP" });
-            // Pass email to OTP page. userData might not be fully available yet if 2FA is on depending on backend flow, 
-            // but we need email for verify-otp endpoint.
-            navigate("/otp-verification", { state: { email: email } });
-          } else {
-            // Standard Login
-            if (accessToken) {
-              localStorage.setItem('token', accessToken);
-              // Retrieve full profile
-              await fetchProfile();
-              toast.success("Đăng nhập thành công", { style: toastStyles.success });
-              navigate("/");
-            } else {
-              toast.error("Lỗi đăng nhập", { description: "Không nhận được token" });
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Login error:", error);
-        // Handle specific error codes if available in error object (e.g. error.response.data.code)
-        toast.error("Đăng nhập thất bại", { description: error.response?.data?.message || "Email hoặc mật khẩu không đúng", style: toastStyles.error });
+    navigate("/otp-verification", {
+      state: {
+        flow: "register",
+        email,
       }
-    } else {
-      // REGISTER
-      if (password !== confirmPassword) {
-        toast.error("Đăng ký thất bại", { description: "Mật khẩu không khớp", style: toastStyles.error });
+    });
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Không thể kết nối backend");
+  }
+};
+
+const login_Google = () => {
+    window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
+
+}
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+        toast.warning("Thiếu thông tin", { description: "Vui lòng điền email và mật khẩu" });
         return;
-      }
-      try {
-        await authService.register({ email, password, name: email.split('@')[0], role: "CANDIDATE" }); // Simple default mapping
-        toast.success("Đăng ký thành công", { description: "Vui lòng kiểm tra email để xác thực", style: toastStyles.success });
-        setMode("login");
-      } catch (error) {
-        console.error("Register error:", error);
-        toast.error("Đăng ký thất bại", { description: error.response?.data?.message || "Lỗi hệ thống" });
-      }
+    }
+
+    try {
+        const response = await fetch("http://localhost:8081/identity/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        console.log("Login Response:", data);
+
+        if (response.ok && data.result) {
+            const userData = data.result;
+
+            if (userData.is2faEnabled === "1") {
+                toast.success("Yêu cầu xác thực 2 bước", { description: "Chuyển đến trang xác thực OTP" });
+                setTimeout(() => {
+                    navigate("/otp-verification", {
+                        state: {
+                            email: email,
+                            flow: "login",
+                            userData: userData
+                        }
+                    });
+                }, 1000);
+            } else {
+                login(userData);
+                toast.success("Đăng nhập thành công");
+                setTimeout(() => { navigate("/"); }, 1000);
+            }
+
+        } else {
+            throw new Error(data.message || "Email hoặc mật khẩu không đúng");
+        }
+
+    } catch (err) {
+        console.error("Login error:", err);
+        toast.error("Đăng nhập thất bại", { description: err.message });
+    }
+};
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (mode === "login") {
+      handleLogin();
+    } else {
+      handleRegister();
     }
   };
 
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
-    setEmail(""); setPassword(""); setConfirmPassword("");
+    setEmail("");
+    setPassword("");
   };
 
   return (
@@ -87,7 +136,7 @@ export function LoginForm() {
           {mode === "login" ? "Đăng nhập hệ thống" : "Đăng ký tài khoản"}
         </h1>
 
-        <button className="google-btn">
+        <button className="google-btn" type="button" onClick={mode === "login" ? login_Google : register_Google}>
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
           {mode === "login" ? "Đăng nhập với Google" : "Đăng ký với Google"}
         </button>
@@ -96,7 +145,7 @@ export function LoginForm() {
           <span>HOẶC</span>
         </div>
 
-        <form onSubmit={handleAuth} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label>Email</label>
             <input
@@ -106,26 +155,19 @@ export function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-
-          <div className="form-group">
+          {mode === "login" && (
+             <div className="form-group">
             <label>Mật khẩu</label>
             <input
               type="password"
+              placeholder={mode === "register" ? "Tạo mật khẩu" : "Nhập mật khẩu"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          {mode === "register" && (
-            <div className="form-group">
-              <label>Xác nhận mật khẩu</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
           )}
+
 
           {mode === "login" && (
             <div className="forgot-link">
@@ -136,12 +178,12 @@ export function LoginForm() {
           )}
 
           <button type="submit" className="submit-btn">
-            {mode === "login" ? "Đăng Nhập" : "Tạo tài khoản"}
+            {mode === "login" ? "Đăng Nhập" : "Đăng ký tài khoản"}
           </button>
         </form>
 
         <button onClick={toggleMode} className="toggle-btn">
-          {mode === "login" ? "Đăng ký tài khoản mới" : "Đã có tài khoản? Đăng nhập"}
+          {mode === "login" ? "Chưa có tài khoản? Đăng ký ngay" : "Đã có tài khoản? Đăng nhập"}
         </button>
       </div>
     </main>

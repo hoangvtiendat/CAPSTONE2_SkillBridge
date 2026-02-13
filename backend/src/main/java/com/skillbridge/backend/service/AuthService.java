@@ -119,7 +119,7 @@ public class AuthService {
         return user;
     }
 
-    public RegisterResponse registerGoogle(String name, String email) {
+    public RegisterResponse registerGoogle(String email, String name) {
         User user = userRepository.findByEmail(email)
                 .orElseGet(() ->
                         createUserCommon(email, name, "GOOGLE")

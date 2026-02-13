@@ -1,13 +1,18 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import userService from '../services/api/userService';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     // Initialize user from localStorage if available
     const [user, setUser] = useState(() => {
+        // Đọc từ key 'user' vì đây là object chứa cả token và info
         const savedUser = localStorage.getItem('user');
-        return savedUser ? JSON.parse(savedUser) : null;
+        try {
+            return savedUser ? JSON.parse(savedUser) : null;
+        } catch (error) {
+            return null;
+        }
     });
 
     const [loading, setLoading] = useState(false);
@@ -40,6 +45,10 @@ export const AuthProvider = ({ children }) => {
     const login = (userData) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
+
+        if (userData.accessToken) {
+            localStorage.setItem('accessToken', userData.accessToken);
+        }
         if (userData.token) {
             localStorage.setItem('token', userData.token); // Ensure token is saved if passed in userData
             fetchProfile();
@@ -50,6 +59,8 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('token');
     };
 

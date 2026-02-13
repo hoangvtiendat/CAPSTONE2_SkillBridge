@@ -1,23 +1,17 @@
-import React from "react";
-import { ForgotPasswordForm } from "../../components/auth/ForgotPasswordForm";
 import Header from '../../components/home/Header';
-
-
+import { UpdateDetail } from "../../components/auth/update_detail";
 import './authForm.css';
-const ForgotPasswordPage = () => {
+const UpdateProfileDetail = () => {
     return(
     <div className="home-page">
         <Header />
         <div className="home-container">
         <main className="card-main">
-            <ForgotPasswordForm />
+            <UpdateDetail />
         </main>
         </div>
     </div>
-
-       
     );
 }
 
-
-export default ForgotPasswordPage;
+export default UpdateProfileDetail;

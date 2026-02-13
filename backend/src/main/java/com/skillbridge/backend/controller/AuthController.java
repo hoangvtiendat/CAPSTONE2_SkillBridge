@@ -56,6 +56,7 @@ public class AuthController {
             String name = oauthUser.getAttribute("name");
 
             RegisterResponse rs = authService.registerGoogle(email, name);
+
             ApiResponse<RegisterResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Đăng ký tài khoản thành công", rs
             );
