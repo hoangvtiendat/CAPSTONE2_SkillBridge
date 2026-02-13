@@ -62,6 +62,7 @@ public class SecurityConfig {
                 //Phân quyền
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/jobs/feed",
                                 "/auth/**",
                                 "/users/**",
                                 "/identity/users/**",
