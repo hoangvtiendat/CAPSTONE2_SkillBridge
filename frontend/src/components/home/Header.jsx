@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 
 import { useAuth } from '../../context/AuthContext';
@@ -8,6 +8,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, logout } = useAuth(); // Get user and logout from AuthContext
+  const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -26,6 +27,7 @@ const Header = () => {
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
+    navigate('/');
   };
 
   return (
