@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
 
     const fetchProfile = async () => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('accessToken');
         if (!token) return;
 
         setLoading(true);
@@ -48,9 +48,9 @@ export const AuthProvider = ({ children }) => {
 
         if (userData.accessToken) {
             localStorage.setItem('accessToken', userData.accessToken);
-        }
-        if (userData.token) {
-            localStorage.setItem('token', userData.token); // Ensure token is saved if passed in userData
+            fetchProfile();
+        } else if (userData.token) {
+            localStorage.setItem('accessToken', userData.token);
             fetchProfile();
         }
         // If token is not in userData but expected to be in localStorage already or handled otherwise

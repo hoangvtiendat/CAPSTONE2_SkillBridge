@@ -4,17 +4,17 @@ import Header from '../../components/home/Header';
 
 import './authForm.css';
 const LoginPage = () => {
-    return(
-    <div className="home-page">
-        <Header />
-        <div className="home-container">
-        <main className="card-main">
-            <LoginForm />
-        </main>
-        </div>
-    </div>
+    return (
+        <div className="home-page">
 
-       
+            <div className="home-container">
+                <main className="card-main">
+                    <LoginForm />
+                </main>
+            </div>
+        </div>
+
+
     );
 }
 
