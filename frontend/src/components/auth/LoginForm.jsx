@@ -3,12 +3,11 @@ import { toast, Toaster } from "sonner";
 import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
 import { useAuth } from "../../context/AuthContext";
-import authService from "../../services/api/authService";
 
 export function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
+  const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +16,8 @@ export function LoginForm() {
   window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
   }
 
-  const handleRegister = async () => {
+  const handleRegister = async (e) => {
+  setIsLoading(true);
   if (!email.trim()) {
     toast.warning("Thiếu thông tin");
     return;
@@ -48,19 +48,24 @@ export function LoginForm() {
       }
       return;
     }
-    toast.success(data.message || "Vui lòng xác thực OTP");
-
-    navigate("/otp-verification", {
-      state: {
-        flow: "register",
-        email,
-      }
-    });
+    console.log("Register Response:", data);
+    toast.success(data.result); 
+    setTimeout(() => {
+      navigate("/otp-verification", {
+        state: {
+          flow: "register",
+          email: email, 
+        }
+      });
+    }, 3000);
 
   } catch (err) {
     console.error(err);
     toast.error("Không thể kết nối backend");
   }
+    finally {
+    setIsLoading(false);
+    }
 };
 
 const login_Google = () => {
@@ -68,8 +73,11 @@ const login_Google = () => {
 
 }
   const handleLogin = async () => {
+    setIsLoading(true); // Set loading state to true
+
     if (!email.trim() || !password.trim()) {
         toast.warning("Thiếu thông tin", { description: "Vui lòng điền email và mật khẩu" });
+        setIsLoading(false); // Reset loading state
         return;
     }
 
@@ -83,7 +91,6 @@ const login_Google = () => {
         const data = await response.json();
 
         console.log("Login Response:", data);
-
         if (response.ok && data.result) {
             const userData = data.result;
 
@@ -111,6 +118,8 @@ const login_Google = () => {
     } catch (err) {
         console.error("Login error:", err);
         toast.error("Đăng nhập thất bại", { description: err.message });
+    } finally {
+        setIsLoading(false); // Reset loading state
     }
 };
   const handleSubmit = (e) => {
@@ -177,8 +186,8 @@ const login_Google = () => {
             </div>
           )}
 
-          <button type="submit" className="submit-btn">
-            {mode === "login" ? "Đăng Nhập" : "Đăng ký tài khoản"}
+          <button type="submit" className="submit-btn" disabled={isLoading}>
+            {isLoading ? "Đang xử lý..." : mode === "login" ? "Đăng nhập" : "Đăng ký"}
           </button>
         </form>
 

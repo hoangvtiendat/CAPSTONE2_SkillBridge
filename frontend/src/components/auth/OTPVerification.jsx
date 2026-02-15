@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast, Toaster } from "sonner";
-import authService from "../../services/api/authService";
-
 export function OTPVerification() {
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -171,7 +169,13 @@ export function OTPVerification() {
                             </div>
                             <div className="form-group">
                                 <label>Số điện thoại</label>
-                                <input type="tel" placeholder="09xxx" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+                                <input 
+                                    type="tel" 
+                                    placeholder="09xxx" 
+                                    pattern="[0-9]*" 
+                                    value={phoneNumber} 
+                                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))} 
+                                />
                             </div>
                             <div className="form-group">
                                 <label>Địa chỉ</label>
@@ -191,9 +195,10 @@ export function OTPVerification() {
                                 <label>Xác nhận mật khẩu</label>
                                 <input type="password" placeholder="Xác nhận mật khẩu" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
                             </div>
-                            <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                                <button type="button" onClick={handlePrevStep} className="toggle-btn" style={{ flex: 1 }}>&larr; Quay lại</button>
-                                <button type="button" onClick={handleNextStep} className="submit-btn" style={{ flex: 1 }}>Tiếp tục &rarr;</button>
+                            <div className="navigation-form"></div>
+                            <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexDirection: "row", justifyContent: "center", alignItems: "center", width: "100%" }}>
+                                <button type="button" onClick={handlePrevStep} className="toggle-btn1" style={{ flex: 1, height: "50px", backgroundColor: "white", color: "black", border: "1px solid #ccc", fontSize: "14px", borderRadius: "12px"}}>&larr; Quay lại</button>
+                                <button type="button" onClick={handleNextStep} className="submit-btn1" style={{ flex: 1, height: "50px", backgroundColor: "#001f3f", color: "white", fontSize: "14px", border: "1px solid #ccc",borderRadius: "12px" }}>Tiếp tục &rarr;</button>
                             </div>
                         </div>
                     )}
@@ -248,17 +253,44 @@ export function OTPVerification() {
                                     }}
                                 />
                             </div>
-
-                            <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexDirection: isRegisterFlow ? "row" : "column" }}>
-                                {isRegisterFlow && (
-                                    <button type="button" onClick={handlePrevStep} className="toggle-btn" style={{ flex: 1 }}>
-                                        &larr; Quay lại
+                            <div className="action-form">    
+                                <div style={{ marginTop: "20px", flexDirection: "row", justifyContent: "space-evenly", alignItems: "center", width: "100%" }}>
+                                    {isRegisterFlow && (
+                                        <button 
+                                            type="button" 
+                                            onClick={handlePrevStep} 
+                                            className="toggle-btn" 
+                                            style={{
+                                                width: "25%", 
+                                                height: "50px", 
+                                                backgroundColor: "white", 
+                                                color: "black", 
+                                                border: "1px solid #ccc", 
+                                                fontSize: "14px", 
+                                                borderRadius: "12px",
+                                                textAlign: "center"
+                                            }}>
+                                            &larr; Quay lại
+                                        </button>
+                                    )}
+                                    <button 
+                                        type="submit" 
+                                        className="submit-btn" 
+                                        style={{ 
+                                            width: "100%", 
+                                            height: "50px", 
+                                            backgroundColor: "#001f3f", 
+                                            color: "white", 
+                                            fontSize: "14px", 
+                                            border: "1px solid #ccc",
+                                            borderRadius: "12px",
+                                            textAlign: "center"
+                                        }}>
+                                        {isRegisterFlow ? "Hoàn tất Đăng ký" : isForgotPasswordFlow ? "Đổi mật khẩu" : "Xác nhận OTP"}
                                     </button>
-                                )}
-                                <button type="submit" className="submit-btn" style={{ flex: 1 }}>
-                                    {isRegisterFlow ? "Hoàn tất Đăng ký" : isForgotPasswordFlow ? "Đổi mật khẩu" : "Xác nhận OTP"}
-                                </button>
+                                </div>
                             </div>
+                                 
                         </div>
                     )}
 

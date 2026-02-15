@@ -71,8 +71,11 @@ export function UpdateDetail() {
                     <div className="form-group">
                         <label>Số điện thoại</label>
                         <input
+                            type="tel"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
+                            onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                            pattern="[0-9]*"
+                            placeholder="Nhập số điện thoại"
                         />
                     </div>
 
