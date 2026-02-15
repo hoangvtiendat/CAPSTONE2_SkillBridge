@@ -10,6 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -51,17 +53,26 @@ public class OAuth2LoginSuccessHandler
                         newUser.setName(name);
                         newUser.setRole("USER");
                         newUser.setProvider("GOOGLE");
-                        // newUser.setAvatar(picture); // nếu sau này có field
                         return newUser;
                     });
 
             // Email đã tồn tại nhưng không phải Google
             if (!"GOOGLE".equals(user.getProvider())) {
-                throw new AppException(
-                        ErrorCode.EMAIL_ALREADY_REGISTERED_BY_PASSWORD
-                );
-            }
+                try {
+                    String message = "Email này đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập thủ công!";
 
+                    String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
+
+
+                    String targetUrl = "http://localhost:3000/login?error=true&message=" + encodedMessage;
+
+                    response.sendRedirect(targetUrl);
+
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             // Sinh JWT
             String accessToken = jwtService.generateAccesToken(
                     user.getId(),
@@ -75,7 +86,6 @@ public class OAuth2LoginSuccessHandler
             user.setRefreshToken(refreshToken);
             userRepository.save(user);
 
-            // Redirect về frontend
             String redirectUrl =
                     "http://localhost:3000/oauth-success" +
                             "?accessToken=" + accessToken +
