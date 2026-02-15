@@ -12,9 +12,12 @@ import { OTPVerification } from './components/auth/OTPVerification';
 import { SetPass } from './components/auth/SetPass';
 import UpdateProfileDetail from './pages/auth/Update_profile_of_register';
 import OAuthSuccess from './pages/auth/OAuthSuccess';
+import { Toaster } from 'sonner';
+
 function App() {
   return (
     <>
+      <Toaster position="top-right" richColors />
       <Header />
       <div className="pt-[72px]"> {/* Add padding for fixed header */}
         <Routes>
