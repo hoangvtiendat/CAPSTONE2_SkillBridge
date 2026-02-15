@@ -14,6 +14,7 @@ const ProfilePage = () => {
     const navigate = useNavigate();
     const [viewMode, setViewMode] = useState('profile');
     const [isOpenToWork, setIsOpenToWork] = useState(true);
+    const [isToggling2FA, setIsToggling2FA] = useState(false);
 
     useEffect(() => {
         if (!user) {
@@ -60,12 +61,15 @@ const ProfilePage = () => {
                                             </span>
                                         </div>
 
-                                        <label className="toggle-switch">
+                                        <label className={`toggle-switch ${isToggling2FA ? 'opacity-50 cursor-wait' : ''}`}>
                                             <input
                                                 type="checkbox"
                                                 checked={user?.is2faEnabled || false}
+                                                disabled={isToggling2FA}
                                                 onChange={async (e) => {
+                                                    if (isToggling2FA) return;
                                                     const newValue = e.target.checked;
+                                                    setIsToggling2FA(true);
                                                     try {
                                                         await authService.toggleTwoFactor(newValue);
                                                         toast.success(newValue ? "Đã bật xác thực 2 bước" : "Đã tắt xác thực 2 bước");
@@ -76,6 +80,8 @@ const ProfilePage = () => {
                                                         console.error("Toggle 2FA failed", error);
                                                         toast.error("Không thể thay đổi trạng thái 2FA");
                                                         // State will revert automatically since it depends on user.is2faEnabled which didn't change in context if failed
+                                                    } finally {
+                                                        setIsToggling2FA(false);
                                                     }
                                                 }}
                                             />

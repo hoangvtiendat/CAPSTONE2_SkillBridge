@@ -9,6 +9,7 @@ export const CVParser = () => {
     const [parsingState, setParsingState] = useState('idle'); // idle | uploading | scanning | done
     const [scanProgress, setScanProgress] = useState(0);
     const [parsedData, setParsedData] = useState(null);
+    const [isFilled, setIsFilled] = useState(false); // Track if form is already filled
 
     // State for Selection (tracking which AI items are selected)
     const [selectedItems, setSelectedItems] = useState({
@@ -100,8 +101,20 @@ export const CVParser = () => {
     };
 
     /* ================= DATA TRANSFER LOGIC ================= */
+    const handleCancel = () => {
+        setParsingState('idle');
+        setParsedData(null);
+        setIsFilled(false);
+        setScanProgress(0);
+        // Reset file input if possible. 
+        // Note: Since we don't have a ref to the file input easily accessible in this scope layout without refactoring, 
+        // the user will just need to click the label to trigger file dialog again which replaces the file.
+        toast.info("Đã hủy kết quả quét và làm mới trạng thái.");
+    };
+
     const applySelectedData = () => {
         if (!parsedData) return;
+        if (isFilled) return; // Prevent double fill
 
         setCvData(prev => {
             const newData = { ...prev };
@@ -174,6 +187,9 @@ export const CVParser = () => {
 
             return newData;
         });
+
+        setIsFilled(true);
+        toast.success("Đã điền thông tin vào mẫu thành công!");
     };
 
     /* ================= FORM HANDLERS ================= */
@@ -277,11 +293,11 @@ export const CVParser = () => {
                     experienceYears: parseInt(s.experienceYears) || 1
                 })).filter(s => s.skillId) // Filter out skills without IDs as per strict backend requirement
             };
-
-            if (!payload.categoryId) {
-                toast.error("Thiếu Category ID (Chưa có ID danh mục từ hệ thống)");
-                // return; // Let it try?
-            }
+            // xử lí phần categoryId
+            // if (!payload.categoryId) {
+            //     toast.error("Thiếu Category ID (Chưa có ID danh mục từ hệ thống)");
+            //     // return; // Let it try?
+            // }
 
             console.log("Saving Payload:", payload);
             await candidateService.updateCv(payload);
@@ -397,9 +413,19 @@ export const CVParser = () => {
                                 ))}
                             </div>
 
-                            <div className="transfer-actions">
-                                <button className="btn-primary w-full flex items-center justify-center gap-2" onClick={applySelectedData}>
-                                    <ArrowRight size={18} /> Điền vào mẫu
+                            <div className="transfer-actions flex gap-2">
+                                <button
+                                    className={`btn-primary flex-1 flex items-center justify-center gap-2 ${isFilled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    onClick={applySelectedData}
+                                    disabled={isFilled}
+                                >
+                                    <ArrowRight size={18} /> {isFilled ? 'Đã điền' : 'Điền vào mẫu'}
+                                </button>
+                                <button
+                                    className="btn-secondary flex items-center justify-center gap-2 px-4 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md transition-colors"
+                                    onClick={handleCancel}
+                                >
+                                    <X size={18} /> Hủy kết quả
                                 </button>
                             </div>
                         </div>

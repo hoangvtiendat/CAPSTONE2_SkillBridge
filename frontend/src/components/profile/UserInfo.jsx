@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Camera, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import './UserInfo.css';
@@ -14,8 +13,8 @@ export const UserInfo = ({ user }) => {
         bio: '',
         isOpenToWork: false
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
-
     useEffect(() => {
         if (user) {
             setFormData({
@@ -36,14 +35,17 @@ export const UserInfo = ({ user }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!isDirty) return;
+        if (!isDirty || isSubmitting) return;
 
+        setIsSubmitting(true);
         try {
             await updateUser(formData);
             toast.success('Cập nhật hồ sơ thành công');
             setIsDirty(false);
         } catch (error) {
             toast.error('Cập nhật thất bại. Vui lòng thử lại.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -112,10 +114,10 @@ export const UserInfo = ({ user }) => {
                 <div className="full-width flex justify-end mt-4">
                     <button
                         type="submit"
-                        disabled={!isDirty}
-                        className={`save-btn-compact ${isDirty ? 'active' : ''}`}
+                        disabled={!isDirty || isSubmitting}
+                        className={`save-btn-compact ${isDirty ? 'active' : ''} ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
                     >
-                        {isDirty ? 'Lưu thay đổi' : 'Đã lưu'}
+                        {isSubmitting ? 'Đang lưu...' : (isDirty ? 'Lưu thay đổi' : 'Đã lưu')}
                     </button>
                 </div>
             </form>
