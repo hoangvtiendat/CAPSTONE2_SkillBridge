@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast, Toaster } from "sonner";
 import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
@@ -12,60 +12,78 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    const message = params.get("message");
+
+    if (error && message) {
+      const errorMessage = decodeURIComponent(message);
+      console.log("Error from URL:", errorMessage);
+      toast.error("Lỗi đăng nhập", {
+        description: errorMessage,
+      });
+
+      const newUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
   const register_Google = () => {
-  window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
-  }
+    const googleAuthUrl = "http://localhost:8081/identity/oauth2/authorization/google";
+    window.location.href = googleAuthUrl;
+  };
 
   const handleRegister = async (e) => {
-  setIsLoading(true);
-  if (!email.trim()) {
-    toast.warning("Thiếu thông tin");
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      "http://localhost:8081/identity/auth/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
-      }
-    );
-    const data = await response.json();
-
-    if (!response.ok) {
-
-      toast.error(data.message || "Đăng ký thất bại");
-
-      if (data.code === 2004) {
-         console.log("Xử lý riêng cho lỗi trùng email ở đây");
-      }
+    setIsLoading(true);
+    if (!email.trim()) {
+      toast.warning("Thiếu thông tin");
       return;
     }
-    console.log("Register Response:", data);
-    toast.success(data.result); 
-    setTimeout(() => {
-      navigate("/otp-verification", {
-        state: {
-          flow: "register",
-          email: email, 
-        }
-      });
-    }, 3000);
 
-  } catch (err) {
-    console.error(err);
-    toast.error("Không thể kết nối backend");
-  }
-    finally {
-    setIsLoading(false);
+    try {
+      const response = await fetch(
+        "http://localhost:8081/identity/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email,
+            password
+          })
+        }
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+
+        toast.error(data.message || "Đăng ký thất bại");
+
+        if (data.code === 2004) {
+           console.log("Xử lý riêng cho lỗi trùng email ở đây");
+        }
+        return;
+      }
+      console.log("Register Response:", data);
+      toast.success(data.result); 
+      setTimeout(() => {
+        navigate("/otp-verification", {
+          state: {
+            flow: "register",
+            email: email, 
+          }
+        });
+      }, 3000);
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể kết nối backend");
     }
+      finally {
+      setIsLoading(false);
+      }
 };
 
 const login_Google = () => {
