@@ -1,66 +1,89 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast, Toaster } from "sonner";
 import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
 import { useAuth } from "../../context/AuthContext";
-import authService from "../../services/api/authService";
 
 export function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
+  const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    const message = params.get("message");
+
+    if (error && message) {
+      const errorMessage = decodeURIComponent(message);
+      console.log("Error from URL:", errorMessage);
+      toast.error("Lỗi đăng nhập", {
+        description: errorMessage,
+      });
+
+      const newUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
   const register_Google = () => {
-  window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
-  }
+    const googleAuthUrl = "http://localhost:8081/identity/oauth2/authorization/google";
+    window.location.href = googleAuthUrl;
+  };
 
-  const handleRegister = async () => {
-  if (!email.trim()) {
-    toast.warning("Thiếu thông tin");
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      "http://localhost:8081/identity/auth/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
-      }
-    );
-    const data = await response.json();
-
-    if (!response.ok) {
-
-      toast.error(data.message || "Đăng ký thất bại");
-
-      if (data.code === 2004) {
-         console.log("Xử lý riêng cho lỗi trùng email ở đây");
-      }
+  const handleRegister = async (e) => {
+    setIsLoading(true);
+    if (!email.trim()) {
+      toast.warning("Thiếu thông tin");
       return;
     }
-    toast.success(data.message || "Vui lòng xác thực OTP");
 
-    navigate("/otp-verification", {
-      state: {
-        flow: "register",
-        email,
+    try {
+      const response = await fetch(
+        "http://localhost:8081/identity/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email,
+            password
+          })
+        }
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+
+        toast.error(data.message || "Đăng ký thất bại");
+
+        if (data.code === 2004) {
+           console.log("Xử lý riêng cho lỗi trùng email ở đây");
+        }
+        return;
       }
-    });
+      console.log("Register Response:", data);
+      toast.success(data.result); 
+      setTimeout(() => {
+        navigate("/otp-verification", {
+          state: {
+            flow: "register",
+            email: email, 
+          }
+        });
+      }, 3000);
 
-  } catch (err) {
-    console.error(err);
-    toast.error("Không thể kết nối backend");
-  }
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể kết nối backend");
+    }
+      finally {
+      setIsLoading(false);
+      }
 };
 
 const login_Google = () => {
@@ -68,8 +91,11 @@ const login_Google = () => {
 
 }
   const handleLogin = async () => {
+    setIsLoading(true); // Set loading state to true
+
     if (!email.trim() || !password.trim()) {
         toast.warning("Thiếu thông tin", { description: "Vui lòng điền email và mật khẩu" });
+        setIsLoading(false); // Reset loading state
         return;
     }
 
@@ -83,7 +109,6 @@ const login_Google = () => {
         const data = await response.json();
 
         console.log("Login Response:", data);
-
         if (response.ok && data.result) {
             const userData = data.result;
 
@@ -111,6 +136,8 @@ const login_Google = () => {
     } catch (err) {
         console.error("Login error:", err);
         toast.error("Đăng nhập thất bại", { description: err.message });
+    } finally {
+        setIsLoading(false); // Reset loading state
     }
 };
   const handleSubmit = (e) => {
@@ -177,8 +204,8 @@ const login_Google = () => {
             </div>
           )}
 
-          <button type="submit" className="submit-btn">
-            {mode === "login" ? "Đăng Nhập" : "Đăng ký tài khoản"}
+          <button type="submit" className="submit-btn" disabled={isLoading}>
+            {isLoading ? "Đang xử lý..." : mode === "login" ? "Đăng nhập" : "Đăng ký"}
           </button>
         </form>
 
