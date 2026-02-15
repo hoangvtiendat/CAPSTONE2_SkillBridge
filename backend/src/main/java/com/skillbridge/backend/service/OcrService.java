@@ -15,8 +15,6 @@ import java.nio.file.Path;
 
 @Service
 public class OcrService {
-
-    // Đọc giá trị từ file .env/properties. Nếu không có sẽ lấy giá trị mặc định sau dấu hai chấm
     @Value("${TESSERACT_DATAPATH:C:/Program Files/Tesseract-OCR/tessdata}")
     private String dataPath;
 
@@ -28,7 +26,6 @@ public class OcrService {
             throw new AppException(ErrorCode.INVALID_FILE_FORMAT);
         }
 
-        // Thiết lập thư viện bằng biến từ file env
         System.setProperty("jna.library.path", libraryPath);
 
         File convFile = null;

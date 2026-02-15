@@ -25,6 +25,7 @@ public class GeminiService {
 
     public GeminiService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        this.objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public <T> T callGemini(String prompt, Class<T> responseType) {
@@ -33,41 +34,51 @@ public class GeminiService {
 
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(Map.of(
                         "parts", List.of(Map.of("text", prompt))
-                ))
+                )),
+                "generationConfig", Map.of(
+                        "temperature", 0.1,      // Thấp để trả về kết quả chính xác, ít sáng tạo lỗi
+                        "maxOutputTokens", 4096  // Tăng giới hạn để không bị cắt ngang JSON giữa chừng
+                )
         );
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
-            System.out.println("Connecting to Gemini API: " + url);
-            org.springframework.http.ResponseEntity<String> responseEntity =
-                    restTemplate.postForEntity(url, entity, String.class);
-
-            String responseBody = restTemplate.postForObject(url, requestBody, String.class);
+            String responseBody = restTemplate.postForObject(url, entity, String.class);
             JsonNode root = objectMapper.readTree(responseBody);
 
             String aiRawResponse = root.path("candidates").get(0)
                     .path("content").path("parts").get(0)
                     .path("text").asText();
-
+            System.out.println("ai raw res: " + aiRawResponse);
             String jsonStr = cleanJson(aiRawResponse);
+
+            // Cấu hình Jackson để không lỗi khi AI trả về các trường lạ
+            objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
             return objectMapper.readValue(jsonStr, responseType);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
         }
     }
 
     private String cleanJson(String raw) {
         if (raw == null || raw.isEmpty()) return "{}";
-        Pattern pattern = Pattern.compile("\\{.*\\}", Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(raw);
 
-        if (matcher.find()) {
-            return matcher.group();
+        // Xóa các ký tự thừa như ```json ... ``` nếu AI trả về Markdown
+        String cleaned = raw.replaceAll("(?s)```json(.*?)```", "$1").trim();
+
+        int firstBrace = cleaned.indexOf("{");
+        int lastBrace = cleaned.lastIndexOf("}");
+
+        if (firstBrace >= 0 && lastBrace >= 0 && lastBrace > firstBrace) {
+            return cleaned.substring(firstBrace, lastBrace + 1);
         }
-        return raw.trim();
+        return cleaned;
     }
 }

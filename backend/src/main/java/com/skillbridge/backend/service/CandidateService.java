@@ -1,7 +1,6 @@
 package com.skillbridge.backend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.dto.request.CandidateSkillRequest;
 import com.skillbridge.backend.dto.request.DegreeRequest;
@@ -9,6 +8,7 @@ import com.skillbridge.backend.dto.request.ExperienceDetail;
 import com.skillbridge.backend.dto.request.UpdateCandidateCvRequest;
 import com.skillbridge.backend.dto.response.CandidateSkillResponse;
 import com.skillbridge.backend.dto.response.DegreeResponse;
+import com.skillbridge.backend.dto.response.LLMResumeResponse;
 import com.skillbridge.backend.dto.response.UpdateCandidateCvResponse;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.exception.AppException;
@@ -16,17 +16,11 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class CandidateService {
@@ -40,15 +34,6 @@ public class CandidateService {
     private GeminiService geminiService;
     @Value("${gemini.api.key}")
     private String apiKey;
-
-    private static class LLMResumeResponse {
-        public String name;
-        public String description;
-        public String address;
-        public List<DegreeRequest> degrees;
-        public List<ExperienceDetail> experience;
-        public List<CandidateSkillResponse> skills;
-    }
 
     public CandidateService(CandidateRepository candidateRepository,
                             CategoryRepository categoryRepository,
@@ -226,55 +211,51 @@ public class CandidateService {
         }
         return requests;
     }
-
     private static final String PROMPT = """
-    Bạn là chuyên gia phân tích dữ liệu nhân sự cao cấp. 
-    Nhiệm vụ: Trình bày thông tin từ văn bản CV được cung cấp bên dưới thành cấu trúc JSON chuẩn xác.
-    
-    Cấu trúc JSON yêu cầu:
-    {
-      "name": "Họ và tên",
-      "address": "Địa chỉ liên lạc",
-      "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
-      "degrees": [
-        {
-          "type": "DEGREE",
-          "degree": "Tên bằng cấp (nếu là DEGREE)",
-          "major": "Ngành học",
-          "institution": "Tên trường/tổ chức cấp",
-          "graduationYear": 2023
-        },
-        {
-          "type": "CERTIFICATE",
-          "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
-          "year" 2025
-        }
-      ],
-      "experience": [
-        {
-          "startDate": "yyyy-MM-dd",
-          "endDate": "yyyy-MM-dd hoặc null",
-          "description": "Chi tiết công việc"
-        }
-      ],
-      "skills": [
-        {
-          "skillName": "Tên kỹ năng",
-          "experienceYears": 3
-        }
-      ]
-    }
-    
-    Quy tắc:
-    1. Trả về DUY NHẤT JSON.
-    2. Định dạng ngày: yyyy-MM-dd.
-    3. Tách kỹ năng rõ rệt để mapping ID.
-    
-    DỮ LIỆU CV CẦN PHÂN TÍCH:
-    ---
-    %s
-    ---
-    """;
+            Phân tích CV sau và trả về JSON chuẩn. 
+            YÊU CẦU NGHIÊM NGẶT: 
+            1. Chỉ trả về JSON, không giải thích.
+            2. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
+            3. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
+            4. Nếu endDate là hiện tại thì trả  ngày hiện tại theo định dạng yyyy-MM-dd
+            
+             Cấu trúc JSON yêu cầu:
+                 {
+                   "name": "Họ và tên",
+                   "address": "Địa chỉ liên lạc",
+                   "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+                   "degrees": [
+                     {
+                       "type": "DEGREE",
+                       "degree": "Tên bằng cấp (nếu là DEGREE)",
+                       "major": "Ngành học",
+                       "institution": "Tên trường/tổ chức cấp",
+                       "graduationYear": 2023
+                     },
+                     {
+                       "type": "CERTIFICATE",
+                       "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+                       "year" 2025
+                     }
+                   ],
+                   "experience": [
+                     {
+                       "startDate": "yyyy-MM-dd",
+                       "endDate": "yyyy-MM-dd hoặc null",
+                       "description": "Chi tiết công việc"
+                     }
+                   ],
+                   "skills": [
+                     {
+                       "skillName": "Tên kỹ năng",
+                       "experienceYears": 3
+                     }
+                   ]
+                 }
+            
+            VĂN BẢN CV:
+            %s
+            """;
 
     private String buildPrompt(String rawText) {
         return String.format(PROMPT, rawText);
@@ -282,9 +263,9 @@ public class CandidateService {
 
     public UpdateCandidateCvRequest parsingCV(MultipartFile file) {
         String rawText = ocrService.scanFile(file);
-        System.out.println(rawText);
+        System.out.println("RAW TEXT: \n" + rawText);
         LLMResumeResponse llmRes = geminiService.callGemini(buildPrompt(rawText), LLMResumeResponse.class);
-        System.out.println(llmRes);
+        System.out.println("LLM RES: \n" + llmRes);
         return convertLLMToRequest(llmRes);
     }
 
@@ -300,7 +281,8 @@ public class CandidateService {
             for (CandidateSkillResponse llmSkill : res.skills) {
                 if (llmSkill.getSkillName() == null) continue;
                 String skillNameFromAI = llmSkill.getSkillName().trim();
-                skillRepository.findByNameContainingIgnoreCase(skillNameFromAI)
+//                skillRepository.findByNameContainingIgnoreCase(skillNameFromAI)
+                skillRepository.findByName(skillNameFromAI)
                         .stream()
                         .findFirst()
                         .ifPresent(skillEntity -> {

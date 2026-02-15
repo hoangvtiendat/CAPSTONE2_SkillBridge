@@ -16,6 +16,19 @@ public class DegreeRequest {
     private String name;
     private Integer year;
 
+    public DegreeRequest() {
+    }
+
+    public DegreeRequest(String type, String degree, String major, String institution, Integer graduationYear, String name, Integer year) {
+        this.type = type;
+        this.degree = degree;
+        this.major = major;
+        this.institution = institution;
+        this.graduationYear = graduationYear;
+        this.name = name;
+        this.year = year;
+    }
+
     public String getType() {
         return type;
     }

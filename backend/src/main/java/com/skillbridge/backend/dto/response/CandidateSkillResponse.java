@@ -15,6 +15,7 @@ public class CandidateSkillResponse {
         this.skillName = skillName;
         this.experienceYears = experienceYears;
     }
+    public  CandidateSkillResponse(){}
 
     public String getSkillId() {
         return skillId;

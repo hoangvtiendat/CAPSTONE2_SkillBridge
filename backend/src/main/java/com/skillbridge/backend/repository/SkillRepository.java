@@ -15,4 +15,6 @@ public interface SkillRepository extends JpaRepository<Skill, String> {
     Optional<Skill> findById(@Param("id") String id);
 
     List<Skill> findByNameContainingIgnoreCase(String name);
+    List<Skill> findByName(String name);
+
 }
