@@ -42,8 +42,6 @@ function OAuthSuccess() {
       };
 
       login(userData); 
-      toast.success("Đăng nhập thành công!");
-      
       setTimeout(() => {
           navigate("/");
       }, 100);

@@ -34,12 +34,12 @@ export function ForgotPasswordForm() {
                 body: JSON.stringify({ email }),
             });
 
-            if (response.ok || true) { 
+                        if (response.ok) { 
                 toast.success("Đã gửi mã OTP", { 
                     description: `Mã xác thực đã gửi tới ${email}`, 
                     style: toastStyles.success 
                 });
-
+            
                 setTimeout(() => {
                     navigate("/otp-verification", { 
                         state: { 
@@ -48,7 +48,13 @@ export function ForgotPasswordForm() {
                         } 
                     });
                 }, 1500);
-            } 
+            } else {
+                const errorData = await response.json();
+                toast.error("Không tìm thấy người dùng", { 
+                    description: errorData.message || "Đã xảy ra lỗi", 
+                    style: toastStyles.error 
+                });
+            }
 
         } catch (err) {
             console.log("Mocking success for testing...");
@@ -94,10 +100,10 @@ export function ForgotPasswordForm() {
                     <button 
                         type="submit" 
                         className="submit-btn"
-                        disabled={isLoading}
-                        style={{ opacity: isLoading ? 0.7 : 1 }}
+                        disabled={isLoading} // Disable button when loading
+                        style={{ opacity: isLoading ? 0.7 : 1 }} // Change opacity when loading
                     >
-                        {isLoading ? "Đang gửi..." : "Gửi mã OTP"}
+                        {isLoading ? "Đang gửi..." : "Gửi mã OTP"} 
                     </button>
                 </form>
 
