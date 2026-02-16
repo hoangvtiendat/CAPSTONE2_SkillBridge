@@ -1,4 +1,5 @@
 import userService from '../services/api/userService';
+import authService from '../services/api/authService';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
@@ -56,12 +57,21 @@ export const AuthProvider = ({ children }) => {
         // If token is not in userData but expected to be in localStorage already or handled otherwise
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('token');
+    const logout = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                await authService.logout(token);
+            }
+        } catch (error) {
+            console.error("Logout API failed", error);
+        } finally {
+            setUser(null);
+            localStorage.removeItem('user');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('token');
+        }
     };
 
     const updateUser = async (newData) => {

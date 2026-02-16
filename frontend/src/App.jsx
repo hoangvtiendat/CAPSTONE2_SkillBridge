@@ -17,7 +17,7 @@ import { Toaster } from 'sonner';
 function App() {
   return (
     <>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors closeButton />
       <Header />
       <div className="pt-[72px]"> {/* Add padding for fixed header */}
         <Routes>

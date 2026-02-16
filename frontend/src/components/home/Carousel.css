@@ -8,7 +8,8 @@
 .carousel-slides {
   position: relative;
   width: 100%;
-  padding-bottom: 30%; /* Chiếm 30% màn hình */
+  padding-bottom: 30%;
+  /* Chiếm 30% màn hình */
   height: 0;
 }
 
@@ -19,10 +20,16 @@
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 4s ease-in-out;
+  /* Auto transition: 3s */
+  transition: opacity 3s ease-in-out;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Manual transition: Instant */
+.carousel.manual-transition .carousel-slide {
+  transition: none !important;
 }
 
 .carousel-slide.active {

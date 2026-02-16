@@ -79,7 +79,6 @@ const ProfilePage = () => {
                                                     } catch (error) {
                                                         console.error("Toggle 2FA failed", error);
                                                         toast.error("Không thể thay đổi trạng thái 2FA");
-                                                        // State will revert automatically since it depends on user.is2faEnabled which didn't change in context if failed
                                                     } finally {
                                                         setIsToggling2FA(false);
                                                     }
@@ -101,28 +100,34 @@ const ProfilePage = () => {
                                 <UserInfo user={user} />
                             </main>
                         </div>
-
-                        <div className="profile-footer-nav">
-                            <button
-                                className="profile-cv-btn"
-                                onClick={() => setViewMode('cv')}
-                            >
-                                CV của bạn
-                                <ChevronRight size={16} />
-                            </button>
-                        </div>
                     </div>
                 ) : (
                     <div className="profile-view profile-animate-right">
-                        <button
-                            className="back-to-profile-btn"
-                            onClick={() => setViewMode('profile')}
-                        >
-                            <ArrowLeft size={16} />
-                            Quay lại Hồ sơ cá nhân
-                        </button>
-
                         <CVParser />
+                    </div>
+                )}
+
+                {/* Fixed Back Button for CV Mode */}
+                {viewMode === 'cv' && (
+                    <button
+                        className="back-to-profile-btn"
+                        onClick={() => setViewMode('profile')}
+                    >
+                        <ArrowLeft size={16} />
+                        Quay lại Hồ sơ cá nhân
+                    </button>
+                )}
+
+                {/* MOVED OUTSIDE of .profile-view to ensure position:fixed works relative to viewport, not transformed container */}
+                {viewMode === 'profile' && (
+                    <div className="profile-footer-nav">
+                        <button
+                            className="profile-cv-btn"
+                            onClick={() => setViewMode('cv')}
+                        >
+                            CV của bạn
+                            <ChevronRight size={16} />
+                        </button>
                     </div>
                 )}
 
