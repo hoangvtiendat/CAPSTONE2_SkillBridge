@@ -3,6 +3,7 @@ package com.skillbridge.backend.repository;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.JobStatus;
+import com.skillbridge.backend.enums.ModerationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -73,4 +74,27 @@ public interface JobRepository extends JpaRepository<Job, String> {
             "LEFT JOIN js.skill s " +
             "WHERE js.job.id IN :jobIds")
     List<Object[]> findSkillNamesByJobIds(@Param("jobIds") List<String> jobIds);
+
+    @Query("""
+        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
+            j.id, j.title, j.location, 
+            j.salaryMin, j.salaryMax, j.createdAt, 
+            c.name, c.imageUrl, sp.name, cat.name
+        )
+        FROM Job j
+        LEFT JOIN j.company c
+        LEFT JOIN j.category cat
+        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
+        WHERE (:status IS NULL OR j.status = :status)
+        AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
+        AND (:cursor IS NULL OR j.id < :cursor)
+        ORDER BY j.createdAt DESC
+    """)
+    List<JobFeedItemResponse> adminGetJobs(
+            @Param("cursor") String cursor,
+            @Param("status") JobStatus status,
+            @Param("modStatus") ModerationStatus modStatus,
+            Pageable pageable
+    );
 }

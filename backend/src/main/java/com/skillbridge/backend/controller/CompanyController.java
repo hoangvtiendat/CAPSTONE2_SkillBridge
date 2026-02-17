@@ -1,20 +1,21 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
 import com.skillbridge.backend.dto.response.JobFeedResponse;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.service.CompanyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/companies")
 public class CompanyController {
+
+    @Autowired
     private final CompanyService companyService;
 
     public CompanyController(CompanyService companyService) {
@@ -34,6 +35,18 @@ public class CompanyController {
                 "Company Feed",
                 rs
         );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{mst}")
+    public ResponseEntity<ApiResponse<CompanyDTO>> getInfo(@PathVariable String mst) {
+        CompanyDTO result = companyService.lookupByTaxCode(mst);
+
+        ApiResponse<CompanyDTO> response = new ApiResponse<>();
+        response.setCode(HttpStatus.OK.value());
+        response.setResult(result);
+        response.setMessage(result != null ? "Tra cứu thành công" : "Không tìm thấy thông tin");
+
         return ResponseEntity.ok(response);
     }
 }

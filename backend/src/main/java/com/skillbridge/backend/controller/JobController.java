@@ -1,12 +1,16 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.JobFeedResponse;
+import com.skillbridge.backend.enums.JobStatus;
+import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.service.JobService;
 import org.aspectj.apache.bcel.util.Repository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,6 +40,51 @@ public class JobController {
                 "Job Feed",
                 rs
         );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/ADMIN")
+    public ResponseEntity<ApiResponse<JobFeedResponse>> getAllJobsForAdmin(
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) JobStatus status,
+            @RequestParam(required = false) ModerationStatus modStatus) {
+
+        JobFeedResponse result = jobService.adminGetJob(cursor, limit, status, modStatus);
+        ApiResponse<JobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/ADMIN/{jobId}")
+    public ResponseEntity<ApiResponse<Void>> deleteJob(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable String jobId
+    ) {
+        System.out.println("Admin yêu cầu xóa Job ID: " + jobId);
+        jobService.deleteJob(user,jobId);
+        ApiResponse<Void> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Đã xóa bài đăng tuyển dụng thành công",
+                null
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/ADMIN/{jobId}/moderation")
+    public ResponseEntity<ApiResponse<Void>> changeModerationStatus(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable String jobId,
+            @RequestParam ModerationStatus status
+    ) {
+        jobService.changeModerationStatus(user, jobId, status);
+        ApiResponse<Void> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Đã cập nhật trạng thái kiểm duyệt thành " + status,
+                null
+        );
+
         return ResponseEntity.ok(response);
     }
 }
