@@ -3,7 +3,6 @@ package com.skillbridge.backend.dto.response;
 import lombok.*;
 
 @Data
-@NoArgsConstructor
 @Builder
 public class CandidateSkillResponse {
     private String skillId;

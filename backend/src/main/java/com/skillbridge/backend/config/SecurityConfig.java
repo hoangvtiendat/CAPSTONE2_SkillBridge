@@ -76,6 +76,11 @@ public class SecurityConfig {
                                 "/identity/v3/api-docs/**",
                                 "/jobs/feed/**"
                         ).permitAll()
+                        .requestMatchers(
+                                "/CategoryProfession/Create",
+                                "/CategoryProfession/Delete/**",
+                                "/CategoryProfession/Update/**"
+                                ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 

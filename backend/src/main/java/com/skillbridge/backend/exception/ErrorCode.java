@@ -23,13 +23,17 @@ public enum ErrorCode {
     FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),
     USER_STATUS(3003,"Tài khoản đã bị khóa"),
     USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),
-    CATEGORY_NOT_FOUND(3005, "Không tìm thấy danh mục công việc"),
+    CATEGORY_NOT_FOUND(3005, "Không tìm thấy danh mục lĩnh vực"),
     CANDIDATE_NOT_FOUND(3006, "Không tìm thấy thông tin ứng viên"),
     // ===== AUTH / SECURITY =====
     TOKEN_EXPIRED(402,"Token đã hết hạn, vui lòng đăng nhập lại"),
     UNAUTHORIZED(401, "Bạn chưa đăng nhập"),
+    // ===== Category/ SKilll ====
+    CATEGORY_PROFESSION(501, "Tên lĩnh vữc bị trùng vui lòng đổi tên khác"),
 
-
+    SKILL_EXITS_NAME(502, "Tên kỹ năng đã tồn tại trước đó"),
+    SKILL_EXITS(503,"Không tìm thấy kĩ năng"),
+    ///  ===== Other ======
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
     INVALID_CERTIFICATE(5003, "Chứng chỉ không hợp lệ hoặc đã hết hạn"),
