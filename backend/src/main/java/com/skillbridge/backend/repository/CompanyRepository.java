@@ -31,4 +31,6 @@ public interface CompanyRepository extends JpaRepository<Company, String> {
             @Param("status") CompanyStatus status,
             Pageable pageable
     );
+
+
 }

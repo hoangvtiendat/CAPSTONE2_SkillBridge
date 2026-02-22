@@ -33,7 +33,11 @@ public enum ErrorCode {
 
     SKILL_EXITS_NAME(502, "Tên kỹ năng đã tồn tại trước đó"),
     SKILL_EXITS(503,"Không tìm thấy kĩ năng"),
-    ///  ===== Other ======
+    /// Company
+    COMPANY_NOT_FOUND(601,"Không tìm thấy công ty"),
+    /// Comapany_member
+    MEMBER_NOT_FOUND(701,"Bạn chưa là nhân viên của công ty nào cả"),
+        ///  ===== Other ======
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
     INVALID_CERTIFICATE(5003, "Chứng chỉ không hợp lệ hoặc đã hết hạn"),

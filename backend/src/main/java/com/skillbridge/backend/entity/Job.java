@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.List;
 import java.util.Map;
 
 /// Done
@@ -36,8 +37,9 @@ public class Job extends BaseEntity{
 
     private Float moderationScore;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
-    private String vectorEmbedding;
+    private float[] vectorEmbedding;
 
     private Integer viewCount;
 
@@ -112,11 +114,11 @@ public class Job extends BaseEntity{
         this.moderationScore = moderationScore;
     }
 
-    public String getVectorEmbedding() {
+    public float[] getVectorEmbedding() {
         return vectorEmbedding;
     }
 
-    public void setVectorEmbedding(String vectorEmbedding) {
+    public void setVectorEmbedding(float[] vectorEmbedding) {
         this.vectorEmbedding = vectorEmbedding;
     }
 

@@ -1,16 +1,15 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
 import com.skillbridge.backend.dto.response.JobFeedResponse;
+import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.service.CompanyService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/companies")
@@ -36,4 +35,5 @@ public class CompanyController {
         );
         return ResponseEntity.ok(response);
     }
+
 }

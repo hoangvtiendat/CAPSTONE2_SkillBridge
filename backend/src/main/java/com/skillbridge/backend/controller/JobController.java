@@ -1,9 +1,12 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.JobFeedResponse;
+import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.service.JobService;
+import jakarta.validation.Valid;
 import org.aspectj.apache.bcel.util.Repository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,5 +40,11 @@ public class JobController {
                 rs
         );
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/postJD")
+    public ResponseEntity<Job> createJob(@Valid @RequestBody CreateJobRequest request) {
+      Job createdJob = jobService.createJD(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdJob);
     }
 }
