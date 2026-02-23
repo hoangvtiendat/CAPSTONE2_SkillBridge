@@ -13,18 +13,15 @@ import org.jsoup.select.Elements;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 
 @Service
 public class CompanyService {
     private final CompanyRepository companyRepository;
-    private final WebClient webClient;
 
-    public CompanyService(CompanyRepository companyRepository,WebClient.Builder webClientBuilder) {
+    public CompanyService(CompanyRepository companyRepository) {
         this.companyRepository = companyRepository;
-        this.webClient = webClientBuilder.baseUrl("https://api.vietqr.io/v2").build();
     }
 
     public CompanyFeedResponse getCompanies(String cursor, CompanyStatus status, int limit) {
@@ -39,7 +36,7 @@ public class CompanyService {
         }
         return new CompanyFeedResponse(companies, nextCursor, hasMore);
     }
-    public CompanyDTO lookupByTaxCode(String mst) {
+        public CompanyDTO lookupByTaxCode(String mst) {
         try {
 //            String searchUrl = "https://masothue.com/Search/?q=" + mst + "+&type=auto";
 //            System.out.println("URL truy vấn: " + searchUrl);
