@@ -1,40 +1,25 @@
-package com.skillbridge.backend.dto.response;
+package com.skillbridge.backend.dto.request;
 
-import com.skillbridge.backend.enums.CompanyStatus;
-
-public class CompanyFeedItemResponse {
-    private String id;
+public class CompanyIdentificationRequest {
     private String name;
-    private String taxId;
+    private String taxcode;
     private String businessLicenseUrl;
     private String imageUrl;
     private String description;
     private String address;
     private String websiteUrl;
-    private CompanyStatus status;
-    private String subscriptionPlanName;
 
-    public CompanyFeedItemResponse(String id, String name, String taxId, String businessLicenseUrl,
-                                   String imageUrl, String description, String address,
-                                   String websiteUrl, CompanyStatus status, String subscriptionPlanName) {
-        this.id = id;
+    public CompanyIdentificationRequest(String name, String taxcode, String businessLicenseUrl, String imageUrl, String description, String address, String websiteUrl) {
         this.name = name;
-        this.taxId = taxId;
+        this.taxcode = taxcode;
         this.businessLicenseUrl = businessLicenseUrl;
         this.imageUrl = imageUrl;
         this.description = description;
         this.address = address;
         this.websiteUrl = websiteUrl;
-        this.status = status;
-        this.subscriptionPlanName = subscriptionPlanName;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+    public CompanyIdentificationRequest() {
     }
 
     public String getName() {
@@ -45,12 +30,12 @@ public class CompanyFeedItemResponse {
         this.name = name;
     }
 
-    public String getTaxId() {
-        return taxId;
+    public String getTaxcode() {
+        return taxcode;
     }
 
-    public void setTaxId(String taxId) {
-        this.taxId = taxId;
+    public void setTaxcode(String taxcode) {
+        this.taxcode = taxcode;
     }
 
     public String getBusinessLicenseUrl() {
@@ -91,21 +76,5 @@ public class CompanyFeedItemResponse {
 
     public void setWebsiteUrl(String websiteUrl) {
         this.websiteUrl = websiteUrl;
-    }
-
-    public CompanyStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(CompanyStatus status) {
-        this.status = status;
-    }
-
-    public String getSubscriptionPlanName() {
-        return subscriptionPlanName;
-    }
-
-    public void setSubscriptionPlanName(String subscriptionPlanName) {
-        this.subscriptionPlanName = subscriptionPlanName;
     }
 }

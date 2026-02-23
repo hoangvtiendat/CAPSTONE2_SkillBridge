@@ -41,7 +41,6 @@ public class AuthService {
             System.out.println("email exist");
             throw new AppException(ErrorCode.EMAIL_EXIST);
         }
-        System.out.println(111);
 
         String subject = "[SkillBridge] Mã xác thực đăng ký tài khoản";
         String otp = otpService.generateOtp(request.getEmail());
@@ -64,9 +63,7 @@ public class AuthService {
                         "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br>Đội ngũ SkillBridge</p>" +
                         "    </div>" +
                         "</div>";
-        System.out.println(request.getEmail());
         otpService.sendOtpEmail(request.getEmail(), subject, content);
-        System.out.println(2222);
         return "Mã xác thực đăng ký tài khoản đã được gửi về mail";
     }
 
@@ -125,12 +122,9 @@ public class AuthService {
                         createUserCommon(email, name, "GOOGLE")
                 );
 
-        // Nếu email tồn tại nhưng không phải Google
         if (!"GOOGLE".equals(user.getProvider())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_REGISTERED_BY_PASSWORD);
         }
-
-        // ✅ SAVE TRƯỚC (đảm bảo có ID)
         user = userRepository.save(user);
 
         String accessToken = jwtService.generateAccesToken(
@@ -142,7 +136,7 @@ public class AuthService {
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
         user.setRefreshToken(refreshToken);
-        userRepository.save(user); // OK: update refresh token
+        userRepository.save(user);
 
         return new RegisterResponse(
                 user.getEmail(),

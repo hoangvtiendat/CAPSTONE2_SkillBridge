@@ -30,10 +30,18 @@ public enum ErrorCode {
     UNAUTHORIZED(401, "Bạn chưa đăng nhập"),
 
 
+
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
     INVALID_CERTIFICATE(5003, "Chứng chỉ không hợp lệ hoặc đã hết hạn"),
     INVALID_DEGREE_TYPE(5004, "Loại bằng cấp không hỗ trợ"),
+
+    //COMPANIES
+    COMPANY_EXIST(6001,"Công ty đã được đăng ký"),
+    COMPANY_NOT_FOUND(6002, "Không tìm thấy công ty"),
+    YOU_ARE_ADMIN(6003, "Bạn đã là ADMIN của công ty này"),
+    YOU_ARE_MEMBER(6004, "Bạn đã là thành viên của công ty này"),
+    HAS_NO_ADMIN(6005, "Công ty không có ADMIN nào")
     ;
 
     private int code;
