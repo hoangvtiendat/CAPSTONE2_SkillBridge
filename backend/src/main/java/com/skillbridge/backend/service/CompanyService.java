@@ -5,7 +5,6 @@ import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.repository.CompanyRepository;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -36,108 +35,120 @@ public class CompanyService {
         }
         return new CompanyFeedResponse(companies, nextCursor, hasMore);
     }
-        public CompanyDTO lookupByTaxCode(String mst) {
+
+    public CompanyDTO lookupByTaxCode(String mst) {
+        String cleanMst = mst.trim();
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("BẮT ĐẦU KIỂM TRA MST: [" + cleanMst + "]");
+        System.out.println("===========================================");
+
         try {
-//            String searchUrl = "https://masothue.com/Search/?q=" + mst + "+&type=auto";
-//            System.out.println("URL truy vấn: " + searchUrl);
-////            String directUrl = "https://masothue.com/" + mst + "-";
-////            System.out.println("Truy cập URL trực tiếp: " + directUrl);
-//
-//            Connection.Response response = Jsoup.connect(searchUrl)
-//                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-//                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
-//                    .header("Accept-Language", "vi-VN,vi;q=0.9,en;q=0.8")
-//                    .header("Sec-Ch-Ua", "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Google Chrome\";v=\"122\"")
-//                    .header("Sec-Ch-Ua-Mobile", "?0")
-//                    .header("Sec-Ch-Ua-Platform", "\"Windows\"")
-//                    .header("Sec-Fetch-Dest", "document")
-//                    .header("Sec-Fetch-Mode", "navigate")
-//                    .header("Sec-Fetch-Site", "none")
-//                    .header("Sec-Fetch-User", "?1")
-//                    .header("Upgrade-Insecure-Requests", "1")
-//                    .header("Cookie", "tax_history=" + mst)
-//                    .header("Referer", "https://masothue.com/")
-//                    .followRedirects(true)
-//                    .timeout(20000)
-//                    .method(Connection.Method.GET)
-//                    .execute();
-            Connection.Response homeResponse = Jsoup.connect("https://masothue.com/")
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-                    .header("Accept-Language", "vi-VN,vi;q=0.9")
-                    .method(Connection.Method.GET)
-                    .timeout(10000)
-                    .execute();
+            String searchUrl = "https://www.tratencongty.com/search/"+ cleanMst;
+            System.out.println("-> Đang gửi POST request tới: " + searchUrl);
 
-            // Lấy bộ Cookie vừa được cấp
-            java.util.Map<String, String> cookies = homeResponse.cookies();
+            Document searchDoc = Jsoup.connect(searchUrl)
+                    .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .data("q", cleanMst) // 'q' là name của input trong image_342b92.png
+                    .method(org.jsoup.Connection.Method.POST)
+                    .timeout(15000)
+                    .followRedirects(true)
+                    .post();
 
-            // 2. GỌI URL SEARCH VỚI BỘ COOKIE MỚI
-            // Tôi thêm dấu '+' sau MST như bạn mong muốn để ép server tìm kiếm mới
-            String searchUrl = "https://masothue.com/Search/?q=" + mst + "+&type=auto";
-            System.out.println("URL truy vấn: " + searchUrl);
+            System.out.println("-> Tiêu đề trang sau POST: " + searchDoc.title());
+            System.out.println("-> URL thực tế: " + searchDoc.location());
 
-            Connection.Response response = Jsoup.connect(searchUrl)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-                    .cookies(cookies) // Gửi kèm bộ cookie vừa nhận từ trang chủ
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
-                    .header("Referer", "https://masothue.com/")
-                    .header("Upgrade-Insecure-Requests", "1")
-                    .followRedirects(false)
-                    .timeout(20000)
-                    .method(Connection.Method.GET)
-                    .execute();
-            Document doc = response.parse();
-            String finalUrl = doc.location();
-            System.out.println("Đã nhảy tới URL: " + finalUrl);
-
-            if (!finalUrl.contains(mst)) {
-                System.err.println("Cảnh báo: Masothue tự động điều hướng sang công ty khác! (MST nhập: " + mst + ")");
-                return null;
+            if (searchDoc.location().contains("/company/")) {
+                System.out.println("=> TRÌNH DUYỆT TỰ REDIRECT THẲNG VÀO TRANG CHI TIẾT.");
+                return parseTraTenCongTy(searchDoc, cleanMst);
             }
 
-            Element table = doc.selectFirst("table.table-taxinfo");
-            if (table == null) {
-                System.err.println("Không tìm thấy bảng thông tin chi tiết.");
+            Element searchResults = searchDoc.selectFirst(".search-results");
+            if (searchResults == null) {
+                System.out.println("!!! KHÔNG THẤY KHỐI .search-results");
+                String bodyText = searchDoc.body().text();
+                System.out.println("-> Nội dung Body (snippet): " + (bodyText.length() > 300 ? bodyText.substring(0, 300) : bodyText));
                 return null;
             }
+            Element firstLink = searchDoc.selectFirst(".search-results a[href*='/company/']");
 
-            if (!table.text().contains(mst)) {
-                System.err.println("Nội dung bảng không khớp với MST: " + mst);
-                return null;
+            if (firstLink != null) {
+                String detailUrl = firstLink.absUrl("href");
+                System.out.println("=> LẤY KẾT QUẢ ĐẦU TIÊN: " + detailUrl);
+
+                Document detailDoc = Jsoup.connect(detailUrl)
+                        .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+                        .get();
+                return parseTraTenCongTy(detailDoc, cleanMst);
+            } else {
+                System.out.println("!!! KHÔNG TÌM THẤY BẤT KỲ KẾT QUẢ NÀO TRÊN TRANG.");
+                String bodySnippet = searchDoc.body().text();
+                System.out.println("-> Nội dung hiển thị: " + (bodySnippet.length() > 200 ? bodySnippet.substring(0, 200) : bodySnippet));
+            }
+        } catch (Exception e) {
+            System.err.println("!!! LỖI TRONG QUÁ TRÌNH TRA CỨU: " + e.getMessage());
+        }
+        System.out.println("=".repeat(50) + "\n");
+        return null;
+    }
+
+    private CompanyDTO parseTraTenCongTy(Document doc, String mst) {
+        System.out.println("-> Bắt đầu bóc tách dữ liệu chính xác...");
+        CompanyDTO dto = new CompanyDTO();
+
+        Element jumbotron = doc.selectFirst(".jumbotron");
+        if (jumbotron != null) {
+            Element mainTitle = doc.selectFirst("h4, h1");
+            if (mainTitle != null) {
+                dto.setName(mainTitle.text().trim().toUpperCase());
+            }
+            Elements allBase64Imgs = jumbotron.select("img[src^=data:image]");
+            Element mstLabel = jumbotron.getElementsContainingOwnText("Mã số thuế:").first();
+            if (mstLabel != null && !allBase64Imgs.isEmpty()) {
+                String src = allBase64Imgs.get(0).attr("src");
+                dto.setTaxCodeImg(src);
+                System.out.println("✅ Đã trích xuất ảnh MST");
             }
 
-            CompanyDTO dto = new CompanyDTO();
-            dto.setTaxCode(mst);
+            Element phoneLabel = jumbotron.getElementsContainingOwnText("Điện thoại").first();
+            if (phoneLabel != null && allBase64Imgs.size() >= 2) {
+                String phoneSrc = allBase64Imgs.get(1).attr("src");
+                dto.setPhoneImg(phoneSrc);
+                System.out.println("✅ Đã trích xuất ảnh SĐT");
+            }
 
-            Element h1 = table.selectFirst("thead th h1");
-            if (h1 != null) dto.setName(h1.text().toUpperCase());
+            String rawHtml = jumbotron.html();
+            String textLines = Jsoup.clean(rawHtml, "", org.jsoup.safety.Safelist.none()
+                    .addTags("br")).replace("<br>", "\n");
 
-            Elements rows = table.select("tbody tr");
-            for (Element row : rows) {
-                Elements cols = row.select("td");
-                if (cols.size() < 2) continue;
+            for (String line : textLines.split("\n")) {
+                String cleanLine = line.trim();
+                String lowerLine = cleanLine.toLowerCase();
 
-                String label = cols.get(0).text().toLowerCase();
-                Element valueCell = cols.get(1);
-
-                if (label.contains("người đại diện")) {
-                    Element rep = valueCell.selectFirst("a, span");
-                    dto.setRepresentative(rep != null ? rep.text() : valueCell.text());
-                } else if (label.contains("địa chỉ")) {
-                    dto.setAddress(valueCell.text());
-                } else if (label.contains("điện thoại")) {
-                    dto.setPhone(valueCell.text().replace("Ẩn số điện thoại", "").trim());
-                } else if (label.contains("ngày hoạt động")) {
-                    dto.setStartDate(valueCell.text());
-                } else if (label.contains("quản lý bởi")) {
-                    dto.setManagedBy(valueCell.text());
+                if (lowerLine.contains("tên giao dịch:")) {
+                    String val = cleanLine.split(":", 2)[1].trim();
+                    if (dto.getName() == null) dto.setName(val.toUpperCase());
+                } else if (lowerLine.contains("địa chỉ:")) {
+                    dto.setAddress(cleanLine.split(":", 2)[1].trim());
+                } else if (lowerLine.contains("đại diện pháp luật:")) {
+                    dto.setRepresentative(cleanLine.split(":", 2)[1].trim());
+                } else if (lowerLine.contains("ngày cấp giấy phép:")) {
+                    dto.setLicenseDate(cleanLine.split(":", 2)[1].trim());
+                } else if (lowerLine.contains("ngày hoạt động:")) {
+                    dto.setStartDate(cleanLine.split(":", 2)[1].trim());
+                } else if (lowerLine.contains("trạng thái:")) {
+                    dto.setStatus(cleanLine.split(":", 2)[1].trim());
                 }
             }
-            return dto;
-
-        } catch (Exception e) {
-            System.err.println("Lỗi cào dữ liệu: " + e.getMessage());
-            return null;
         }
+        System.out.println("\n--- THÔNG TIN TRÍCH XUẤT ĐƯỢC ---");
+        System.out.println("Tên Công ty: " + dto.getName());
+        System.out.println("Địa chỉ: " + dto.getAddress());
+        System.out.println("Đại diện: " + dto.getRepresentative());
+        System.out.println("Ngày hoạt động: " + dto.getStartDate());
+        System.out.println("Trạng thái: " + dto.getStatus());
+        System.out.println("---------------------------------\n");
+
+        return dto;
     }
 }

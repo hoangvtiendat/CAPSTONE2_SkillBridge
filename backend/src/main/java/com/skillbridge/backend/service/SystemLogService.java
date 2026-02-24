@@ -28,9 +28,30 @@ public class SystemLogService {
         this.userRepository = userRepository;
     }
 
-    public List<SystemLog> getAllLogs(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return systemLogRepository.findAllByOrderByCreatedAtDesc(pageable);
+    public List<SystemLog> getLogs(String cursor, int limit, String level) {
+        try {
+            Pageable pageable = PageRequest.of(0, limit + 1);
+
+            List<SystemLog> logs = systemLogRepository.getLogs(level, cursor, pageable);
+
+            System.out.println("Truy vấn thành công. Số lượng bản ghi lấy được: " + logs.size());
+
+            if (logs.isEmpty()) {
+                System.out.println("Không tìm thấy log nào phù hợp.");
+            } else {
+                System.out.println("ID bản ghi đầu tiên: " + logs.get(0).getId());
+                System.out.println("ID bản ghi cuối cùng: " + logs.get(logs.size() - 1).getId());
+            }
+
+            return logs;
+
+        } catch (Exception e) {
+            System.err.println("LỖI" + e.getMessage());
+            e.printStackTrace();
+            return List.of();
+        } finally {
+            System.out.println("=".repeat(50) + "\n");
+        }
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

@@ -2,15 +2,30 @@ package com.skillbridge.backend.dto;
 
 public class CompanyDTO {
     private String name;
-    private String taxCode;
     private String address;
     private String status;
-    private String internationalName;
     private String representative;
-    private String phone;
     private String startDate;
-    private String managedBy;
-    private String type;
+    private String licenseDate;
+
+    private String taxCodeImg;
+    private String phoneImg;
+
+    public String getTaxCodeImg() {
+        return taxCodeImg;
+    }
+
+    public void setTaxCodeImg(String taxCodeImg) {
+        this.taxCodeImg = taxCodeImg;
+    }
+
+    public String getPhoneImg() {
+        return phoneImg;
+    }
+
+    public void setPhoneImg(String phoneImg) {
+        this.phoneImg = phoneImg;
+    }
 
     public String getName() {
         return name;
@@ -18,14 +33,6 @@ public class CompanyDTO {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getTaxCode() {
-        return taxCode;
-    }
-
-    public void setTaxCode(String taxCode) {
-        this.taxCode = taxCode;
     }
 
     public String getAddress() {
@@ -44,28 +51,12 @@ public class CompanyDTO {
         this.status = status;
     }
 
-    public String getInternationalName() {
-        return internationalName;
-    }
-
-    public void setInternationalName(String internationalName) {
-        this.internationalName = internationalName;
-    }
-
     public String getRepresentative() {
         return representative;
     }
 
     public void setRepresentative(String representative) {
         this.representative = representative;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
     }
 
     public String getStartDate() {
@@ -76,19 +67,11 @@ public class CompanyDTO {
         this.startDate = startDate;
     }
 
-    public String getManagedBy() {
-        return managedBy;
+    public String getLicenseDate() {
+        return licenseDate;
     }
 
-    public void setManagedBy(String managedBy) {
-        this.managedBy = managedBy;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
+    public void setLicenseDate(String licenseDate) {
+        this.licenseDate = licenseDate;
     }
 }

@@ -38,8 +38,9 @@ public class CompanyController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{mst}")
-    public ResponseEntity<ApiResponse<CompanyDTO>> getInfo(@PathVariable String mst) {
+    @GetMapping("/taxLook")
+    public ResponseEntity<ApiResponse<CompanyDTO>> getInfo(@RequestParam(value = "taxCode", required = false) String mst) {
+        System.out.println("mst: " + mst);
         CompanyDTO result = companyService.lookupByTaxCode(mst);
 
         ApiResponse<CompanyDTO> response = new ApiResponse<>();
