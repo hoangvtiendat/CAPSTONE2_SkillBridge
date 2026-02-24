@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route,Link } from 'react-router-dom';
 import './App.css';
 import Header from './components/home/Header';
 
@@ -12,6 +12,8 @@ import { OTPVerification } from './components/auth/OTPVerification';
 import { SetPass } from './components/auth/SetPass';
 import UpdateProfileDetail from './pages/auth/Update_profile_of_register';
 import OAuthSuccess from './pages/auth/OAuthSuccess';
+import SystemLogs from './pages/SystemLogs/SystemLogs';
+
 function App() {
   return (
     <>
@@ -26,7 +28,7 @@ function App() {
           <Route path="/oauth-success" element={<OAuthSuccess />} />
           <Route path='/set-password' element={<SetPass />} />
           <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
-
+          <Route path="/admin/logs" element={<SystemLogs />} />
           {/* Thêm routes khác ở đây */}
         </Routes>
       </div>

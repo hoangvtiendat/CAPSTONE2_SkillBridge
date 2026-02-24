@@ -8,6 +8,7 @@ import com.skillbridge.backend.repository.SystemLogRepository;
 import com.skillbridge.backend.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,13 +20,16 @@ public class SystemLogService {
 
     private final SystemLogRepository systemLogRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public SystemLogService(
             SystemLogRepository systemLogRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            SimpMessagingTemplate messagingTemplate
     ) {
         this.systemLogRepository = systemLogRepository;
         this.userRepository = userRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public List<SystemLog> getLogs(String cursor, int limit, String level) {
@@ -66,7 +70,10 @@ public class SystemLogService {
 
             log.setAction(action);
             log.setLogLevel(level);
-            systemLogRepository.save(log);
+
+            SystemLog savedLog = systemLogRepository.save(log);
+
+            messagingTemplate.convertAndSend("/topic/logs", savedLog);
 
             String operator = (userDetails != null) ? userDetails.getUsername() : "System";
             System.out.println("LOG: " + action + " | Thực hiện bởi: " + operator);

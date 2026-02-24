@@ -1,0 +1,140 @@
+/* Container chính */
+.system-logs-container {
+  padding: 24px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+/* --- Console Style (Màn hình đen bên trái) --- */
+.console-wrapper {
+  background: #000;
+  border-radius: 8px;
+  border: 2px solid #1e293b;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.console-header {
+  background: #111;
+  padding: 10px 15px;
+  color: #4ade80;
+  display: flex;
+  justify-content: space-between;
+  font-family: monospace;
+}
+
+.console-body {
+  padding: 15px;
+  height: 600px;
+  overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Từng dòng log */
+.log-line {
+  margin-bottom: 4px;
+  border-bottom: 1px solid #111;
+}
+
+.log-time {
+  color: #64748b;
+  margin-right: 10px;
+}
+
+.log-level {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.log-msg {
+  color: #e2e8f0;
+}
+
+.control-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #0f172a;
+  color: white;
+}
+
+.btn-backup {
+  width: 100%;
+  padding: 12px;
+  background: #0f172a;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 15px;
+  transition: opacity 0.2s ease;
+}
+
+.btn-backup:hover {
+  opacity: 0.9;
+}
+
+.hint {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* --- Backup Item (Danh sách file backup) --- */
+.backup-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.backup-item:last-child {
+  border-bottom: none;
+}
+
+.backup-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.backup-meta {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.btn-restore {
+  color: #3b82f6;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-restore:hover {
+  text-decoration: underline;
+}
