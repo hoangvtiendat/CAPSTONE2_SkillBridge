@@ -32,29 +32,60 @@ public class SystemLogService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public List<SystemLog> getLogs(String cursor, int limit, String level) {
+    public List<SystemLog> getLogs(String cursor, int limit, String level, String date) {
+        System.out.println("\n" + "=".repeat(20) + " NHẬN REQUEST TRUY VẤN LOG " + "=".repeat(20));
+        System.out.println("-> Tham số đầu vào:");
+        System.out.println("   [Cursor]: " + (cursor == null ? "NULL (Lấy mới nhất)" : cursor));
+        System.out.println("   [Limit] : " + limit);
+        System.out.println("   [Level] : " + level);
+        System.out.println("   [Date]  : " + date);
+
         try {
             Pageable pageable = PageRequest.of(0, limit + 1);
 
-            List<SystemLog> logs = systemLogRepository.getLogs(level, cursor, pageable);
+            LogLevel levelEnum = null;
+            if (level != null && !level.trim().isEmpty()) {
+                try {
+                    levelEnum = LogLevel.valueOf(level.toUpperCase().trim());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("!! Cảnh báo: Level '" + level + "' không hợp lệ, chuyển về ALL.");
+                }
+            }
+            String cleanDate = null;
+            if (date != null && !date.trim().isEmpty() &&
+                    !date.equalsIgnoreCase("null") &&
+                    !date.equalsIgnoreCase("undefined")) {
+                cleanDate = date.trim();
+            }
 
-            System.out.println("Truy vấn thành công. Số lượng bản ghi lấy được: " + logs.size());
+            // Gọi Repository
+            List<SystemLog> logs = systemLogRepository.getLogs(levelEnum, cursor, cleanDate, pageable);
 
-            if (logs.isEmpty()) {
-                System.out.println("Không tìm thấy log nào phù hợp.");
+            System.out.println("-> Kết quả truy vấn DB:");
+            System.out.println("   [Số lượng thực tế trả về]: " + logs.size());
+
+            if (!logs.isEmpty()) {
+                System.out.println("   [Bản ghi ĐẦU (Mới nhất)]: ID=" + logs.get(0).getId() + " | Time=" + logs.get(0).getCreatedAt());
+                System.out.println("   [Bản ghi CUỐI (Cũ nhất) ]: ID=" + logs.get(logs.size() - 1).getId());
+
+                // Kiểm tra logic hasMore cho bạn
+                if (logs.size() > limit) {
+                    System.out.println("   [Trạng thái]: CÒN dữ liệu để cuộn (hasMore = true)");
+                } else {
+                    System.out.println("   [Trạng thái]: ĐÃ HẾT dữ liệu (hasMore = false)");
+                }
             } else {
-                System.out.println("ID bản ghi đầu tiên: " + logs.get(0).getId());
-                System.out.println("ID bản ghi cuối cùng: " + logs.get(logs.size() - 1).getId());
+                System.out.println("   [Trạng thái]: Trống rỗng (Không có dữ liệu khớp bộ lọc)");
             }
 
             return logs;
 
         } catch (Exception e) {
-            System.err.println("LỖI" + e.getMessage());
+            System.err.println("!!! LỖI TRUY VẤN: " + e.getMessage());
             e.printStackTrace();
             return List.of();
         } finally {
-            System.out.println("=".repeat(50) + "\n");
+            System.out.println("=".repeat(60) + "\n");
         }
     }
 
@@ -62,7 +93,6 @@ public class SystemLogService {
     public void logAction(CustomUserDetails userDetails, String action, LogLevel level) {
         try {
             SystemLog log = new SystemLog();
-
             if (userDetails != null && userDetails.getUserId() != null) {
                 User userProxy = userRepository.getReferenceById(userDetails.getUserId());
                 log.setUser(userProxy);
@@ -73,13 +103,14 @@ public class SystemLogService {
 
             SystemLog savedLog = systemLogRepository.save(log);
 
+            // Bắn qua WebSocket
             messagingTemplate.convertAndSend("/topic/logs", savedLog);
 
             String operator = (userDetails != null) ? userDetails.getUsername() : "System";
-            System.out.println("LOG: " + action + " | Thực hiện bởi: " + operator);
+            System.out.println(">>> [WS SEND]: " + action + " | Level: " + level + " | By: " + operator);
 
         } catch (Exception e) {
-            System.err.println("Không thể ghi System Log! Chi tiết: " + e.getMessage());
+            System.err.println("!!! LỖI GHI LOG: " + e.getMessage());
         }
     }
 }

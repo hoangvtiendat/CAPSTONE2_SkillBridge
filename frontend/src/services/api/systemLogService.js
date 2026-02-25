@@ -1,13 +1,14 @@
 import api from '../../config/axiosConfig';
 
 const systemLogService = {
-    getLogs: async (cursor = null, limit = 20, level = null) => {
+    getLogs: async (cursor = null, limit = 20, level = null, date = null) => {
         try {
             const response = await api.get('/Logs', {
                 params: {
                     cursor: cursor,
                     limit: limit,
-                    level: level
+                    level: level,
+                    date : date
                 }
             });
             return response.data;

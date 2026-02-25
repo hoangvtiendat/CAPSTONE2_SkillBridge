@@ -1,140 +1,379 @@
-/* Container chính */
+:root {
+  --primary-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --console-bg: #0f172a;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --accent-color: #3b82f6;
+  --border-color: #e2e8f0;
+}
+
 .system-logs-container {
-  padding: 24px;
-  background: #f8fafc;
+  padding: 32px;
+  background-color: var(--primary-bg);
   min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 4px;
 }
 
 .main-layout {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 340px; /* Cân đối tỷ lệ */
   gap: 24px;
-  margin-top: 20px;
+  align-items: start;
 }
 
-/* --- Console Style (Màn hình đen bên trái) --- */
 .console-wrapper {
-  background: #000;
-  border-radius: 8px;
-  border: 2px solid #1e293b;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+    background: #000;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 70vh; /* Quan trọng: Phải giới hạn chiều cao */
+    border: 1px solid #333;
 }
 
+/* Cho phép kéo thay đổi chiều cao */
+.resizable-console {
+  resize: vertical;
+  overflow: auto;
+  min-height: 400px;
+  max-height: 85vh;
+  height: 616px; /* Chiều cao mặc định */
+}
+
+/* Container chứa cả Header */
 .console-header {
-  background: #111;
-  padding: 10px 15px;
-  color: #4ade80;
+  background: #1e293b;
+  padding: 10px 16px;
   display: flex;
-  justify-content: space-between;
-  font-family: monospace;
+  justify-content: space-between; /* Đẩy 2 bên ra xa nhau */
+  align-items: center;
+  border-bottom: 1px solid #334155;
+  position: relative;
 }
 
+/* Nhóm bên trái: Dots và Text */
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+/* Nhóm bên phải: Live Indicator */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.1); /* Nền đỏ nhạt cho chữ LIVE */
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* Chấm đỏ nhấp nháy */
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  animation: blink 1.2s infinite;
+}
+
+/* Chữ LIVE VIEW */
+.live-view {
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Hiệu ứng nhấp nháy */
+@keyframes blink {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+  margin-right: 12px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.red { background: #ff5f56; }
+.yellow { background: #ffbd2e; }
+.green { background: #27c93f; }
+
+.header-text {
+  color: #94a3b8;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  text-transform: lowercase;
+}
+
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+  animation: blink 1.5s infinite;
+}
+
+.live-view {
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
 .console-body {
-  padding: 15px;
-  height: 600px;
-  overflow-y: auto;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
-  line-height: 1.6;
+    flex: 1; /* Chiếm hết phần còn lại của wrapper */
+    overflow-y: auto; /* Kích hoạt thanh cuộn dọc */
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    scroll-behavior: smooth;
 }
 
-/* Từng dòng log */
 .log-line {
-  margin-bottom: 4px;
-  border-bottom: 1px solid #111;
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+    display: flex; /* Giúp thời gian và text nằm trên 1 hàng thẳng */
+    opacity: 0.95;
+    transition: background 0.2s;
+}
+
+log-line {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 4px;
+    display: flex;
 }
 
 .log-time {
-  color: #64748b;
-  margin-right: 10px;
+    margin-right: 12px;
+    white-space: nowrap;
+    opacity: 0.8;
 }
 
-.log-level {
-  font-weight: bold;
-  margin-right: 10px;
+.loading-indicator, .end-msg {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-size: 12px;
+    letter-spacing: 2px;
 }
-
-.log-msg {
-  color: #e2e8f0;
-}
-
+/* Sidebar */
 .control-card {
-  background: white;
+  background: var(--card-bg);
   padding: 20px;
   border-radius: 12px;
+  border: 1px solid var(--border-color);
   margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-title {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.filter-group {
+  margin-bottom: 12px;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
 }
 
 .input-field {
   width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: #0f172a;
-  color: white;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+  color: var(--text-main);
+  background: #f1f5f9;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--accent-color);
 }
 
 .btn-backup {
   width: 100%;
   padding: 12px;
-  background: #0f172a;
+  background: var(--console-bg);
   color: white;
-  border-radius: 8px;
   border: none;
-  cursor: pointer;
+  border-radius: 8px;
   font-weight: 600;
-  margin-top: 15px;
-  transition: opacity 0.2s ease;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.1s;
 }
 
-.btn-backup:hover {
-  opacity: 0.9;
-}
+.btn-backup:active { transform: scale(0.98); }
 
 .hint {
   font-size: 12px;
-  color: #64748b;
-  line-height: 1.4;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
 }
 
-/* --- Backup Item (Danh sách file backup) --- */
 .backup-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.backup-item:last-child {
-  border-bottom: none;
-}
+.backup-item:last-child { border-bottom: none; }
 
 .backup-name {
+  font-size: 13px;
+  font-weight: 500;
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e293b;
 }
 
 .backup-meta {
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .btn-restore {
-  color: #3b82f6;
-  background: none;
+  font-size: 12px;
+  color: var(--accent-color);
+  background: #eff6ff;
   border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.btn-restore:hover {
-  text-decoration: underline;
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* Tùy chỉnh thanh cuộn cho giống Terminal chuyên nghiệp */
+.console-body::-webkit-scrollbar {
+    width: 8px;
+}
+.console-body::-webkit-scrollbar-track {
+    background: #000;
+}
+.console-body::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+.console-body::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+/* --- RESPONSIVE ADJUSTMENTS --- */
+
+/* 1. Màn hình Laptop nhỏ / Tablet lớn (Dưới 1024px) */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr 280px; /* Thu nhỏ sidebar lại một chút */
+    gap: 16px;
+  }
+
+  .system-logs-container {
+    padding: 24px;
+  }
+}
+
+/* 2. Màn hình Tablet (Dưới 768px) */
+@media (max-width: 768px) {
+  .main-layout {
+    grid-template-columns: 1fr; /* Chuyển sang 1 cột dọc */
+  }
+
+  .sidebar-controls {
+    order: -1; /* Đưa các bộ lọc (Sidebar) lên trên Console để dễ thao tác */
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Chia sidebar thành 2 cột ngang cho cân đối */
+    gap: 16px;
+  }
+
+  .control-card {
+    margin-bottom: 0; /* Bỏ margin để dùng gap của grid */
+  }
+
+  /* Thẻ backup chiếm toàn bộ chiều ngang */
+  .control-card:nth-child(2) {
+    grid-column: span 2;
+  }
+
+  .resizable-console {
+    height: 450px; /* Giảm chiều cao mặc định trên tablet */
+  }
+}
+
+/* 3. Màn hình Điện thoại (Dưới 480px) */
+@media (max-width: 480px) {
+  .system-logs-container {
+    padding: 16px;
+  }
+
+  .sidebar-controls {
+    grid-template-columns: 1fr; /* Sidebar quay lại 1 cột dọc */
+  }
+
+  .control-card:nth-child(2) {
+    grid-column: span 1;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .console-header {
+    flex-direction: column; /* Header console xếp dọc */
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .log-line {
+    font-size: 11px; /* Thu nhỏ chữ log để không bị tràn màn hình */
+    flex-direction: column; /* Thời gian và Nội dung xếp chồng lên nhau */
+    gap: 2px;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 4px;
+  }
+
+  .log-time {
+    min-width: auto;
+  }
+
+  .resizable-console {
+    resize: none; /* Tắt tính năng kéo giãn chiều cao trên mobile để tránh vỡ giao diện */
+    height: 400px;
+  }
 }

@@ -28,6 +28,25 @@ public class OcrService {
     @Value("${TESSERACT_LIBPATH}")
     private String libraryPath;
 
+
+    @PostConstruct
+    public void init() {
+        String cleanPath = libraryPath.trim();
+        if (!cleanPath.endsWith(File.separator)) {
+            cleanPath += File.separator;
+        }
+
+        System.setProperty("jna.library.path", cleanPath);
+
+        try {
+            System.load(cleanPath + "libleptonica.dylib");
+            System.load(cleanPath + "libtesseract.dylib");
+
+            System.out.println("✅ Hệ thống OCR đã sẵn sàng (M4 Silicon Optimized)");
+        } catch (UnsatisfiedLinkError e) {
+            System.err.println("Lỗi nạp thư viện Native: " + e.getMessage());
+        }
+    }
     public String scanFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new AppException(ErrorCode.INVALID_FILE_FORMAT);

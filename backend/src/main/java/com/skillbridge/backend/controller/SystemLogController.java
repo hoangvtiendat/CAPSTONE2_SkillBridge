@@ -29,9 +29,10 @@ public class SystemLogController {
     public ResponseEntity<ApiResponse<List<SystemLog>>> getLog(
         @RequestParam(value = "cursor", required = false) String cursor,
         @RequestParam(value = "limit", defaultValue = "20" ) int limit,
-        @RequestParam(value = "level",required = false) String level
+        @RequestParam(value = "level",required = false) String level,
+        @RequestParam(value = "date",required = false) String date
     ){
-        List<SystemLog> logs = systemLogService.getLogs(cursor, limit, level);
+        List<SystemLog> logs = systemLogService.getLogs(cursor, limit, level,date);
         boolean hasMore = logs.size() > limit;
         String nextCursor = null;
         List<SystemLog> resultLogs = new ArrayList<>(logs);
