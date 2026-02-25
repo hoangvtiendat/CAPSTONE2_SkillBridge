@@ -14,6 +14,18 @@ const companyService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    lookupTaxCode: async (taxCode) => {
+        try {
+            const response = await api.get('/companies/taxLook', {
+                params: { taxCode }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi tra cứu MST:", error);
+            throw error;
+        }
     }
 };
 

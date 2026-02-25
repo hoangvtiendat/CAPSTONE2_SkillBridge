@@ -107,14 +107,14 @@ public class CompanyService {
             if (mstLabel != null && !allBase64Imgs.isEmpty()) {
                 String src = allBase64Imgs.get(0).attr("src");
                 dto.setTaxCodeImg(src);
-                System.out.println("✅ Đã trích xuất ảnh MST");
+                System.out.println("Đã trích xuất ảnh MST");
             }
 
             Element phoneLabel = jumbotron.getElementsContainingOwnText("Điện thoại").first();
             if (phoneLabel != null && allBase64Imgs.size() >= 2) {
                 String phoneSrc = allBase64Imgs.get(1).attr("src");
                 dto.setPhoneImg(phoneSrc);
-                System.out.println("✅ Đã trích xuất ảnh SĐT");
+                System.out.println("Đã trích xuất ảnh SĐT");
             }
 
             String rawHtml = jumbotron.html();
@@ -141,13 +141,12 @@ public class CompanyService {
                 }
             }
         }
-        System.out.println("\n--- THÔNG TIN TRÍCH XUẤT ĐƯỢC ---");
         System.out.println("Tên Công ty: " + dto.getName());
         System.out.println("Địa chỉ: " + dto.getAddress());
         System.out.println("Đại diện: " + dto.getRepresentative());
+        System.out.println("Ngày cấp giấy phép: " + dto.getLicenseDate());
         System.out.println("Ngày hoạt động: " + dto.getStartDate());
         System.out.println("Trạng thái: " + dto.getStatus());
-        System.out.println("---------------------------------\n");
 
         return dto;
     }
