@@ -35,7 +35,7 @@ public class SkillService {
     }
     public Skill getSkillById(String id) {
         return skillRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.SKILL_EXITS));
+                .orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_FOUND));
     }
     public Skill UpdateSkill(String id, SkillRequest skillRequest) {
         Skill skill = getSkillById(id);

@@ -3,17 +3,16 @@ package com.skillbridge.backend.controller;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.JobFeedResponse;
+import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
-import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.service.JobService;
 import jakarta.validation.Valid;
-import org.aspectj.apache.bcel.util.Repository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
 
 @RestController
 @RequestMapping("/jobs")
@@ -44,7 +43,32 @@ public class JobController {
 
     @PostMapping("/postJD")
     public ResponseEntity<Job> createJob(@Valid @RequestBody CreateJobRequest request) {
-      Job createdJob = jobService.createJD(request);
+        // Tạm thời vẫn giữ nguyên trả về Job, nếu sau này muốn làm sạch thì map qua DTO tương tự các hàm dưới
+        Job createdJob = jobService.createJD(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJob);
     }
+
+    @GetMapping("/my-company")
+    public ResponseEntity<ApiResponse<List<JobResponse>>> getMyCompany() {
+        List<JobResponse> jobs = jobService.find_JD_of_Company();
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "Lấy danh sách JD thành công", jobs)
+        );
+    }
+
+    @GetMapping("/my-company/{id}")
+    public ResponseEntity<ApiResponse<JobResponse>> getJob(@PathVariable String id) {
+        JobResponse in4_job = jobService.getIn4_of_JD_of_Company(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "Lấy thông tin thành công", in4_job)
+        );
+    }
+    @PutMapping("/my-company/Update/{id}")
+    public ResponseEntity<ApiResponse<Job>> updateJD(@PathVariable String id, @RequestBody CreateJobRequest request) {
+        Job updatedJob = jobService.updateJD(id, request);
+        return ResponseEntity.ok(
+                new ApiResponse<>(200,"Update bài đăng thành công ", updatedJob)
+        );
+    }
+
 }

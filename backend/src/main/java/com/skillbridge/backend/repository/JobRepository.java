@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, String> {
@@ -73,4 +74,15 @@ public interface JobRepository extends JpaRepository<Job, String> {
             "LEFT JOIN js.skill s " +
             "WHERE js.job.id IN :jobIds")
     List<Object[]> findSkillNamesByJobIds(@Param("jobIds") List<String> jobIds);
+    //list JD
+    @Query("""
+    SELECT DISTINCT j
+    FROM Job j
+    LEFT JOIN FETCH j.jobSkills js
+    LEFT JOIN FETCH js.skill
+    WHERE j.company.id = :companyId
+          """)
+    List<Job>findJobsByCompanyId(@Param("companyId") String companyId);
+
+    Optional<Job> findById(String id);
 }

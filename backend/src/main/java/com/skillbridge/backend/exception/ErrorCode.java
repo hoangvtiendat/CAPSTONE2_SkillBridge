@@ -1,7 +1,5 @@
 package com.skillbridge.backend.exception;
 
-import org.springframework.http.HttpStatus;
-
 public enum ErrorCode {
     // ===== SYSTEM =====
     UNCATEGORIZED_EXCEPTION(9999,"Lỗi hệ thống"),
@@ -32,16 +30,21 @@ public enum ErrorCode {
     CATEGORY_PROFESSION(501, "Tên lĩnh vữc bị trùng vui lòng đổi tên khác"),
 
     SKILL_EXITS_NAME(502, "Tên kỹ năng đã tồn tại trước đó"),
-    SKILL_EXITS(503,"Không tìm thấy kĩ năng"),
+    SKILL_NOT_FOUND(503,"Không tìm thấy kĩ năng"),
     /// Company
     COMPANY_NOT_FOUND(601,"Không tìm thấy công ty"),
     /// Comapany_member
     MEMBER_NOT_FOUND(701,"Bạn chưa là nhân viên của công ty nào cả"),
+    // Jobs
+    JD_NOT_FOUND(801, "Không tìm thấy bài đăng"),
+    EXITS_JF_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
         ///  ===== Other ======
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
     INVALID_CERTIFICATE(5003, "Chứng chỉ không hợp lệ hoặc đã hết hạn"),
     INVALID_DEGREE_TYPE(5004, "Loại bằng cấp không hỗ trợ"),
+    JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text")
+
     ;
 
     private int code;

@@ -1,5 +1,6 @@
 package com.skillbridge.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,7 @@ public class JobSkill extends BaseEntity{
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id")
+    @JsonIgnore
     private Job job;
 
     @ManyToOne(fetch = FetchType.LAZY)

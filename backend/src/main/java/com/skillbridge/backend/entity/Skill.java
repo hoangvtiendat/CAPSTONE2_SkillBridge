@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -28,5 +30,7 @@ public class Skill extends BaseEntity {
         return (category != null) ? category.getId() : null;
     }
 
-
+    @OneToMany(mappedBy = "skill")
+    @JsonIgnore
+    private List<JobSkill> jobSkills;
 }

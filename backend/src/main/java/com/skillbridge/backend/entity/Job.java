@@ -46,6 +46,9 @@ public class Job extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private JobStatus status;
 
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    private List<JobSkill> jobSkills;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
@@ -176,5 +179,11 @@ public class Job extends BaseEntity{
 
     public void setLocation(String location) {
         this.location = location;
+    }
+    public List<JobSkill> getJobSkills() {
+        return jobSkills;
+    }
+    public void setJobSkills(List<JobSkill> jobSkills) {
+        this.jobSkills = jobSkills;
     }
 }

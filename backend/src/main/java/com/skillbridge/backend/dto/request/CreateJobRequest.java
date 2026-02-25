@@ -1,6 +1,7 @@
 package com.skillbridge.backend.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,7 @@ public class CreateJobRequest {
     @NotBlank(message = "Vị trí công việc không được để trống")
     private String position;
 
-    @NotNull(message = "Tiêu đề không được để trống")
+    @NotEmpty(message = "Tiêu đề không được để trống")
     private Map<String, Object> title;
 
     @NotBlank(message = "Mô tả không được để trống")
@@ -25,6 +26,7 @@ public class CreateJobRequest {
     private String salaryMin;
     private String salaryMax;
     private String location;
-
+    @NotEmpty(message = "Danh sách kĩ năng không được để trống")
+    private List<JobSkillRequest> skills;
 
 }

@@ -18,5 +18,4 @@ public interface SkillRepository extends JpaRepository<Skill, String> {
     List<Skill> findByName(String name);
     boolean existsByName(String name);
     List<Skill> findByCategory_Id(String categoryId);
-
 }
