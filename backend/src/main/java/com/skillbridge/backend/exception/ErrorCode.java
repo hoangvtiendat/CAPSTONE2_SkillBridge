@@ -25,6 +25,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),
     CATEGORY_NOT_FOUND(3005, "Không tìm thấy danh mục công việc"),
     CANDIDATE_NOT_FOUND(3006, "Không tìm thấy thông tin ứng viên"),
+    COMPANY_NOT_FOUND(3007, "Không tìm thấy thông tin công ty"),
     // ===== AUTH / SECURITY =====
     TOKEN_EXPIRED(402,"Token đã hết hạn, vui lòng đăng nhập lại"),
     UNAUTHORIZED(401, "Bạn chưa đăng nhập"),

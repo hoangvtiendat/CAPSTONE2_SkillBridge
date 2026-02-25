@@ -24,8 +24,8 @@ const Header = () => {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setIsUserMenuOpen(false);
     navigate('/');
   };
@@ -69,6 +69,15 @@ const Header = () => {
                     <span className="user-email">{user.email || ""}</span>
                   </div>
                   <div className="dropdown-divider"></div>
+                  {user.role === 'ADMIN' && (
+                    <Link
+                      to="/admin"
+                      className="user-dropdown-item admin-link"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Trang Quản trị
+                    </Link>
+                  )}
                   <Link
                     to="/profile"
                     className="user-dropdown-item"

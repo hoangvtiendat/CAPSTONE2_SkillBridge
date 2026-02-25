@@ -1,21 +1,21 @@
 package com.skillbridge.backend.dto.response;
 
-import lombok.*;
+import lombok.Data;
 
 @Data
-@NoArgsConstructor
-@Builder
 public class CandidateSkillResponse {
     private String skillId;
     private String skillName;
     private Integer experienceYears;
 
-    public CandidateSkillResponse(String skillId,String skillName, Integer experienceYears) {
+    // Explicit constructors in case Lombok processing isn't active
+    public CandidateSkillResponse() {}
+
+    public CandidateSkillResponse(String skillId, String skillName, Integer experienceYears) {
         this.skillId = skillId;
         this.skillName = skillName;
         this.experienceYears = experienceYears;
     }
-    public  CandidateSkillResponse(){}
 
     public String getSkillId() {
         return skillId;

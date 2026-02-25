@@ -18,13 +18,12 @@ const CompanyGrid = () => {
             // OR { result: [...] } if no pagination metadata
             // Adjust based on actual API response
             if (data && data.result) {
-                if (Array.isArray(data.result)) {
+                if (data.result.companies && Array.isArray(data.result.companies)) {
+                    setCompanies(data.result.companies);
+                    // Handle hasMore if using cursor-based pagination
+                    // For now, keep it simple as the user might be moving towards cursor-based
+                } else if (Array.isArray(data.result)) {
                     setCompanies(data.result);
-                    // If just a list, handle client-side calc if needed, or assume all returned?
-                    // If backend implements pagination but just returns list for that page:
-                    setCompanies(data.result);
-                    // We might miss totalPages info if not provided
-                    setTotalPages(Math.ceil(data.result.length / ITEMS_PER_PAGE) || 1); // Fallback
                 } else if (data.result.content) {
                     setCompanies(data.result.content);
                     setTotalPages(data.result.totalPages || 1);

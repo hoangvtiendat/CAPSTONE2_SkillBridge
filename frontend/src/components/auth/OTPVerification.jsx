@@ -88,10 +88,14 @@ export function OTPVerification() {
                 if (isRegisterFlow || isForgotPasswordFlow) {
                     navigate("/login");
                 } else if (isLoginFlow) {
-                    if (data.result) login(data.result);
-                    else if (userData) login(userData);
+                    const finalUser = data.result || userData;
+                    if (finalUser) login(finalUser);
 
-                    navigate("/");
+                    if (finalUser?.role === 'ADMIN') {
+                        navigate("/admin");
+                    } else {
+                        navigate("/");
+                    }
                 }
             }, 1500);
 
@@ -135,11 +139,11 @@ export function OTPVerification() {
 
     return (
         <main className="welcome-container">
-            <Toaster position="top-right" richColors />
+
             <div className="auth-card">
                 <h1 className="auth-title">
                     {isRegisterFlow ? "Hoàn tất hồ sơ" :
-                     isForgotPasswordFlow ? "Đặt lại mật khẩu" : "Xác thực OTP"}
+                        isForgotPasswordFlow ? "Đặt lại mật khẩu" : "Xác thực OTP"}
                 </h1>
 
                 {isRegisterFlow && (
@@ -169,19 +173,19 @@ export function OTPVerification() {
                             </div>
                             <div className="form-group">
                                 <label>Số điện thoại</label>
-                                <input 
-                                    type="tel" 
-                                    placeholder="09xxx" 
-                                    pattern="[0-9]*" 
-                                    value={phoneNumber} 
-                                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))} 
+                                <input
+                                    type="tel"
+                                    placeholder="09xxx"
+                                    pattern="[0-9]*"
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))}
                                 />
                             </div>
                             <div className="form-group">
                                 <label>Địa chỉ</label>
                                 <input type="text" placeholder="Địa chỉ" value={address} onChange={(e) => setAddress(e.target.value)} />
                             </div>
-                            <button type="button" onClick={handleNextStep} className="submit-btn" style={{marginTop: "10px"}}>Tiếp tục &rarr;</button>
+                            <button type="button" onClick={handleNextStep} className="submit-btn" style={{ marginTop: "10px" }}>Tiếp tục &rarr;</button>
                         </div>
                     )}
 
@@ -197,8 +201,8 @@ export function OTPVerification() {
                             </div>
                             <div className="navigation-form"></div>
                             <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexDirection: "row", justifyContent: "center", alignItems: "center", width: "100%" }}>
-                                <button type="button" onClick={handlePrevStep} className="toggle-btn1" style={{ flex: 1, height: "50px", backgroundColor: "white", color: "black", border: "1px solid #ccc", fontSize: "14px", borderRadius: "12px"}}>&larr; Quay lại</button>
-                                <button type="button" onClick={handleNextStep} className="submit-btn1" style={{ flex: 1, height: "50px", backgroundColor: "#001f3f", color: "white", fontSize: "14px", border: "1px solid #ccc",borderRadius: "12px" }}>Tiếp tục &rarr;</button>
+                                <button type="button" onClick={handlePrevStep} className="toggle-btn1" style={{ flex: 1, height: "50px", backgroundColor: "white", color: "black", border: "1px solid #ccc", fontSize: "14px", borderRadius: "12px" }}>&larr; Quay lại</button>
+                                <button type="button" onClick={handleNextStep} className="submit-btn1" style={{ flex: 1, height: "50px", backgroundColor: "#001f3f", color: "white", fontSize: "14px", border: "1px solid #ccc", borderRadius: "12px" }}>Tiếp tục &rarr;</button>
                             </div>
                         </div>
                     )}
@@ -230,7 +234,7 @@ export function OTPVerification() {
                                             required
                                         />
                                     </div>
-                                    <hr style={{margin: "15px 0", borderTop: "1px dashed #ccc"}}/>
+                                    <hr style={{ margin: "15px 0", borderTop: "1px dashed #ccc" }} />
                                 </>
                             )}
 
@@ -253,35 +257,35 @@ export function OTPVerification() {
                                     }}
                                 />
                             </div>
-                            <div className="action-form">    
+                            <div className="action-form">
                                 <div style={{ marginTop: "20px", flexDirection: "row", justifyContent: "space-evenly", alignItems: "center", width: "100%" }}>
                                     {isRegisterFlow && (
-                                        <button 
-                                            type="button" 
-                                            onClick={handlePrevStep} 
-                                            className="toggle-btn" 
+                                        <button
+                                            type="button"
+                                            onClick={handlePrevStep}
+                                            className="toggle-btn"
                                             style={{
-                                                width: "25%", 
-                                                height: "50px", 
-                                                backgroundColor: "white", 
-                                                color: "black", 
-                                                border: "1px solid #ccc", 
-                                                fontSize: "14px", 
+                                                width: "25%",
+                                                height: "50px",
+                                                backgroundColor: "white",
+                                                color: "black",
+                                                border: "1px solid #ccc",
+                                                fontSize: "14px",
                                                 borderRadius: "12px",
                                                 textAlign: "center"
                                             }}>
                                             &larr; Quay lại
                                         </button>
                                     )}
-                                    <button 
-                                        type="submit" 
-                                        className="submit-btn" 
-                                        style={{ 
-                                            width: "100%", 
-                                            height: "50px", 
-                                            backgroundColor: "#001f3f", 
-                                            color: "white", 
-                                            fontSize: "14px", 
+                                    <button
+                                        type="submit"
+                                        className="submit-btn"
+                                        style={{
+                                            width: "100%",
+                                            height: "50px",
+                                            backgroundColor: "#001f3f",
+                                            color: "white",
+                                            fontSize: "14px",
                                             border: "1px solid #ccc",
                                             borderRadius: "12px",
                                             textAlign: "center"
@@ -290,14 +294,14 @@ export function OTPVerification() {
                                     </button>
                                 </div>
                             </div>
-                                 
+
                         </div>
                     )}
 
                 </form>
 
-                <div style={{marginTop: "15px", textAlign: "center"}}>
-                     <button
+                <div style={{ marginTop: "15px", textAlign: "center" }}>
+                    <button
                         onClick={() => navigate("/login")}
                         className="toggle-btn"
                         style={{ fontSize: "0.9rem", color: "#666" }}

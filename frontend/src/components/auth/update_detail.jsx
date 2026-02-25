@@ -54,7 +54,7 @@ export function UpdateDetail() {
 
     return (
         <main className="welcome-container">
-            <Toaster position="top-right" richColors />
+
 
             <div className="auth-card">
                 <h1 className="auth-title">Hoàn thiện thông tin</h1>

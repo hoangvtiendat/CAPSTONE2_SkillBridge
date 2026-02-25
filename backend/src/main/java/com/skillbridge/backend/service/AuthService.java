@@ -164,7 +164,7 @@ public class AuthService {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
 
-        if (user.getIs2faEnabled()) {
+        if ("1".equals(user.getIs2faEnabled()) || "true".equalsIgnoreCase(user.getIs2faEnabled())) {
             System.out.println("is2faEnabled");
             String subject = "[SkillBridge] Mã xác thực đăng nhập";
             String otp = otpService.generateOtp(user.getEmail());
@@ -259,7 +259,7 @@ public class AuthService {
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new LoginResponse(String.valueOf(user.getIs2faEnabled()), accessToken, refreshToken);
+        return new LoginResponse(user.getIs2faEnabled(), accessToken, refreshToken);
     }
 
     public User toggleTwoFactor(boolean is2faEnabled, String token) {
@@ -275,7 +275,7 @@ public class AuthService {
         }
         System.out.println("is2faEnabled = " + is2faEnabled);
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        user.setIs2faEnabled(is2faEnabled);
+        user.setIs2faEnabled(String.valueOf(is2faEnabled));
         return userRepository.save(user);
 
     }

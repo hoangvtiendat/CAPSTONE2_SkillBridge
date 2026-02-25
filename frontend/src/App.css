@@ -32,7 +32,13 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
+}
+
+.content-with-header {
+  padding-top: 75px;
+  /* Offset for the sticky header */
 }
