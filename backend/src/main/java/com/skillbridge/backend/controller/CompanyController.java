@@ -2,6 +2,7 @@ package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.request.RegisterRequest;
+import com.skillbridge.backend.dto.request.respondToJoinRequestRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
@@ -31,7 +32,7 @@ public class CompanyController {
             @RequestParam(value = "status", required = false) CompanyStatus status,
             @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
-        CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.VERIFIED;
+        CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
         CompanyFeedResponse rs = companyService.getCompanies(cursor, searchStatus, limit);
         ApiResponse<CompanyFeedResponse> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
@@ -89,7 +90,30 @@ public class CompanyController {
 
             ApiResponse<String> response = new ApiResponse<>(
                     HttpStatus.OK.value(),
-                    "Định danh doanh nghiệp",
+                    "Yêu cầu tham gia",
+                    rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[JOIN REQUEST] AppException occurred");
+            System.out.println("[JOIN REQUEST] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
+
+    @PostMapping("/join-request/{requestId}")
+    public ResponseEntity<ApiResponse<?>> joinCompanyByRequestId(@Valid @RequestHeader(value = "Authorization") String token, @PathVariable String requestId, @RequestBody respondToJoinRequestRequest request) {
+        try {
+            System.out.println("token: " + token);
+            if (token == null || !token.startsWith("Bearer ")) {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            String jwt = token.substring(7);
+            String rs = companyService.respondToJoinRequest(requestId, request.getStatus(), jwt);
+
+            ApiResponse<String> response = new ApiResponse<>(
+                    HttpStatus.OK.value(),
+                    "Phản hồi yêu cầu",
                     rs
             );
             return ResponseEntity.ok(response);
