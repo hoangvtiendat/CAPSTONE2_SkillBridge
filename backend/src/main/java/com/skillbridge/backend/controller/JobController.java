@@ -1,7 +1,9 @@
 package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.response.AdminJobFeedResponse;
 import com.skillbridge.backend.dto.response.ApiResponse;
+import com.skillbridge.backend.dto.response.JobDetailResponse;
 import com.skillbridge.backend.dto.response.JobFeedResponse;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
@@ -44,18 +46,26 @@ public class JobController {
     }
 
     @GetMapping("/ADMIN")
-    public ResponseEntity<ApiResponse<JobFeedResponse>> getAllJobsForAdmin(
+    public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getAllJobsForAdmin(
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(required = false) JobStatus status,
-            @RequestParam(required = false) ModerationStatus modStatus) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String modStatus) {
 
-        JobFeedResponse result = jobService.adminGetJob(cursor, limit, status, modStatus);
-        ApiResponse<JobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
+        AdminJobFeedResponse result = jobService.adminGetJob(cursor, limit, status, modStatus);
+        ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
 
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetail(@PathVariable String id) {
+
+        JobDetailResponse result = jobService.getJobDetail(id);
+        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Xem chi tiet jd",result);
+
+        return ResponseEntity.ok(response);
+    }
     @DeleteMapping("/ADMIN/{jobId}")
     public ResponseEntity<ApiResponse<Void>> deleteJob(
             @AuthenticationPrincipal CustomUserDetails user,
@@ -76,7 +86,7 @@ public class JobController {
     public ResponseEntity<ApiResponse<Void>> changeModerationStatus(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable String jobId,
-            @RequestParam ModerationStatus status
+            @RequestParam String status
     ) {
         jobService.changeModerationStatus(user, jobId, status);
         ApiResponse<Void> response = new ApiResponse<>(

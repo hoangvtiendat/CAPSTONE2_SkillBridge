@@ -1,5 +1,6 @@
 package com.skillbridge.backend.repository;
 
+import com.skillbridge.backend.dto.response.AdminJobFeedItemResponse;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.JobStatus;
@@ -76,10 +77,10 @@ public interface JobRepository extends JpaRepository<Job, String> {
     List<Object[]> findSkillNamesByJobIds(@Param("jobIds") List<String> jobIds);
 
     @Query("""
-        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.location, 
-            j.salaryMin, j.salaryMax, j.createdAt, 
-            c.name, c.imageUrl, sp.name, cat.name
+        SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
+            j.id, j.title, j.location, j.salaryMin, 
+            j.salaryMax, j.createdAt, c.name, c.imageUrl, 
+            sp.name, cat.name,j.status, j.moderationStatus
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -91,7 +92,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         AND (:cursor IS NULL OR j.id < :cursor)
         ORDER BY j.createdAt DESC
     """)
-    List<JobFeedItemResponse> adminGetJobs(
+    List<AdminJobFeedItemResponse> adminGetJobs(
             @Param("cursor") String cursor,
             @Param("status") JobStatus status,
             @Param("modStatus") ModerationStatus modStatus,
