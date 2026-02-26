@@ -16,6 +16,7 @@ import SkillPageContainer from './pages/Skill/SkillPage';
 import ListJdOfCompany from './pages/JD/list_jd_of_company';
 import CreateJd from './pages/JD/PostJDPage';
 import DetailJD_Page from './pages/JD/detailJD';
+import SubscriptionManagerPage from './pages/Subscription.jsx/SubscriptionManager';
 import { Toaster } from 'sonner';
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
           <Route path="/company/jd-list" element={<ListJdOfCompany />} />   
           <Route path='/create-jd' element={<CreateJd />} />
           <Route path='/detail-jd/:id' element={<DetailJD_Page />} />
+          <Route path='/subscriptions' element={<SubscriptionManagerPage />} />
         </Routes>
       </div>
     </>
