@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     long countByCreatedAtAfter(LocalDateTime createdAtAfter);
 
     long countByCreatedAtBetween(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
+
+
 }

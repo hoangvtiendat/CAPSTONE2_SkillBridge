@@ -89,4 +89,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
             """)
     List<MonthlyJobDTO> jobGrowthLast6Months(@Param("fromDate") LocalDateTime fromDate);
 
+    long countByCreatedAtAfter(LocalDateTime createdAtAfter);
+
+    long countByCreatedAtBetween(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
 }

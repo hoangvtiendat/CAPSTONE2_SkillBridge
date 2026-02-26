@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,4 +51,8 @@ public interface CompanyRepository extends JpaRepository<Company, String> {
                 ORDER BY COUNT(j) DESC
             """)
     List<TopCompanyDTO> findTop5ByJobCount(Pageable pageable);
+
+    long countByCreatedAtAfter(LocalDateTime createdAtAfter);
+
+    long countByCreatedAtBetween(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
 }

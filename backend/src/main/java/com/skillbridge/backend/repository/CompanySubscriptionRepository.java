@@ -33,4 +33,12 @@ public interface CompanySubscriptionRepository extends JpaRepository<CompanySubs
             """)
     List<MonthlyRevenueDTO> revenueLast6Months(@Param("fromDate") LocalDateTime fromDate);
 
+    @Query("""
+       SELECT SUM(sp.price)
+       FROM CompanySubscription cs
+       JOIN cs.subscriptionPlan sp
+       WHERE cs.startDate BETWEEN :start AND :end
+       """)
+    BigDecimal sumRevenueBetween(LocalDateTime start,
+                                 LocalDateTime end);
 }
