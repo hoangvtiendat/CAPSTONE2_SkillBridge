@@ -39,6 +39,8 @@ public enum ErrorCode {
     JD_NOT_FOUND(801, "Không tìm thấy bài đăng"),
     EXITS_JD_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
     EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền xóa bài đăng này"),
+    ///  ===== SUBSCRIPTTION
+    NOT_FOUND_SUBSCRIPTTION (901, "Không tìm thấy gói đằng ký"),
         ///  ===== Other ======
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
