@@ -15,6 +15,7 @@ import OAuthSuccess from './pages/auth/OAuthSuccess';
 import SystemLogs from './pages/SystemLogs/SystemLogs';
 import TaxLookup from './pages/company/TaxLookup';
 import AdminJobPage from './pages/admin/AdminJobPage';
+import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 
 function App() {
   return (
@@ -39,7 +40,8 @@ function App() {
           <Route path="/admin/logs" element={<SystemLogs />} />
           <Route path="/company/TaxLookup" element={<TaxLookup/>} />
           <Route path="/admin/jobs" element={<AdminJobPage />} />
-{/*           <Route path="/admin/jobs/:id" element={<AdminJobDetailPage />} /> */}
+          <Route path="/admin/jobs/:jobId" element={<AdminJobDetailPage />} />
+
           {/* Thêm routes khác ở đây */}
         </Routes>
       </div>

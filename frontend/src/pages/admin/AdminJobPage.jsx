@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import jobService from '../../services/api/jobService';
 import './AdminJob.css';
 import ReactDOM from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 
 const AdminJobPage = () => {
     const [jobs, setJobs] = useState([]);
@@ -10,6 +11,7 @@ const AdminJobPage = () => {
     const [filters, setFilters] = useState({ status: '', modStatus: '' });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [jobToDelete, setJobToDelete] = useState(null);
+    const navigate = useNavigate()
 
     const observerTarget = useRef(null);
 
@@ -125,8 +127,12 @@ const AdminJobPage = () => {
                     </thead>
                     <tbody>
                         {jobs.map(job => (
-                            <tr key={job.id} className="job-row-card">
-                                <td>
+                            <tr
+                                key={job.id}
+                                className="job-row-card clickable-row"
+                                onClick={() => navigate(`/admin/jobs/${job.id}`)} // Chuyển trang khi nhấn vào dòng
+                            >
+                                <td onClick={(e) => e.stopPropagation()}>
                                     <div className="company-row">
                                         <span className="comp-name">{job.companyName}</span>
                                         {job.subscriptionPlanName && (
@@ -138,6 +144,18 @@ const AdminJobPage = () => {
                                     <div className="job-desc">{job.description}</div>
                                     <div className="loc-tag">{job.location}</div>
                                 </td>
+{/*                                 <td> */}
+{/*                                     <div className="company-row"> */}
+{/*                                         <span className="comp-name">{job.companyName}</span> */}
+{/*                                         {job.subscriptionPlanName && ( */}
+{/*                                             <span className={`plan-badge-mini plan-${job.subscriptionPlanName.toLowerCase()}`}> */}
+{/*                                                 {job.subscriptionPlanName} */}
+{/*                                             </span> */}
+{/*                                         )} */}
+{/*                                     </div> */}
+{/*                                     <div className="job-desc">{job.description}</div> */}
+{/*                                     <div className="loc-tag">{job.location}</div> */}
+{/*                                 </td> */}
 
                                 <td>
                                     <div className="skills-list">

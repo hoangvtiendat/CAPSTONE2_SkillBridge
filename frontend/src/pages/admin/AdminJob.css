@@ -344,6 +344,22 @@ CSS
     from { opacity: 0; transform: scale(0.8); }
     to { opacity: 1; transform: scale(1); }
 }
+
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.clickable-row:hover {
+    background-color: #f8fafc; /* Hiệu ứng highlight khi di chuột qua */
+}
+
+/* Đảm bảo các ô chứa input/select vẫn giữ con trỏ mặc định */
+.clickable-row td:has(select),
+.clickable-row td:has(button) {
+    cursor: default;
+}
+
 @media (max-width: 992px) {
     /* Ép layout table về dạng block để làm Card */
     .admin-table, .admin-table tbody, .admin-table tr, .admin-table td {

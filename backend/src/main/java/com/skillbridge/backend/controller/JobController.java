@@ -58,7 +58,7 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/feedAdmin/{id}")
     public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetail(@PathVariable String id) {
 
         JobDetailResponse result = jobService.getJobDetail(id);

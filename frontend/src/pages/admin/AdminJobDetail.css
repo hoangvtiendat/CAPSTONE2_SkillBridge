@@ -1,0 +1,152 @@
+.admin-job-detail-container {
+    padding: 2rem;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.detail-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+/* Header kết hợp ngang */
+.header-main-content {
+    display: flex;
+    justify-content: space-between; /* Đẩy thông tin sang trái, nút sang phải */
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.company-info-section {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.company-logo-large {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: white;
+}
+
+.job-title-info h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    color: #1a202c;
+}
+
+.job-meta-tags {
+    display: flex;
+    gap: 15px;
+    color: #718096;
+    margin-top: 10px;
+}
+
+/* Skills nằm ngay trong Header */
+.inline-skills {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.inline-skills .skill-tag {
+    font-size: 12px;
+    padding: 4px 12px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+}
+
+/* Admin Control Panel (Cột phải) */
+.admin-action-bar.side-panel {
+    display: flex;
+    flex-direction: column; /* Xếp dọc các bộ chọn để tiết kiệm chiều ngang */
+    gap: 1.2rem;
+    background: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 12px;
+    min-width: 260px;
+}
+
+.control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-item label {
+    font-weight: 700;
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.admin-action-bar select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e0;
+    font-weight: 600;
+    width: 100%;
+}
+
+.btn-delete-job {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 2px solid #fecaca;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.3s;
+    width: 100%;
+    margin-top: 5px;
+}
+
+.btn-delete-job:hover {
+    background: #dc2626;
+    color: white;
+}
+
+/* Nội dung chi tiết */
+.section h3 {
+    border-left: 4px solid #3182ce;
+    padding-left: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.content-text {
+    line-height: 1.8;
+    color: #4a5568;
+    white-space: pre-line;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .header-main-content {
+        flex-direction: column;
+    }
+    .admin-action-bar.side-panel {
+        width: 100%;
+        flex-direction: row;
+        align-items: flex-end;
+    }
+}
+
+@media (max-width: 768px) {
+    .company-info-section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .admin-action-bar.side-panel {
+        flex-direction: column;
+    }
+}
