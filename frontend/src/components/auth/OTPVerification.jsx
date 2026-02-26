@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast, Toaster } from "sonner";
@@ -17,10 +17,18 @@ export function OTPVerification() {
     const [otp, setOtp] = useState("");
 
     const [currentStep, setCurrentStep] = useState(1);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const isRegisterFlow = flow === "register";
     const isLoginFlow = flow === "login";
     const isForgotPasswordFlow = flow === "forgot-password";
+
+    useEffect(() => {
+        if (isLoginFlow && userData) {
+            login(userData);
+            navigate("/");
+        }
+    }, [isLoginFlow, userData, login, navigate]); // Removed success notification for Google login
 
     const handleVerify = async (e) => {
         e.preventDefault();
@@ -66,6 +74,8 @@ export function OTPVerification() {
             };
         }
 
+        setIsProcessing(true);
+
         try {
             console.log("Sending to:", targetEndpoint);
             console.log("Body:", requestBody);
@@ -98,6 +108,7 @@ export function OTPVerification() {
         } catch (err) {
             toast.error(err.message);
         }
+        setIsProcessing(false);
     };
 
     const handleNextStep = () => {
@@ -197,8 +208,8 @@ export function OTPVerification() {
                             </div>
                             <div className="navigation-form"></div>
                             <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexDirection: "row", justifyContent: "center", alignItems: "center", width: "100%" }}>
-                                <button type="button" onClick={handlePrevStep} className="toggle-btn1" style={{ flex: 1, height: "50px", backgroundColor: "white", color: "black", border: "1px solid #ccc", fontSize: "14px", borderRadius: "12px"}}>&larr; Quay lại</button>
-                                <button type="button" onClick={handleNextStep} className="submit-btn1" style={{ flex: 1, height: "50px", backgroundColor: "#001f3f", color: "white", fontSize: "14px", border: "1px solid #ccc",borderRadius: "12px" }}>Tiếp tục &rarr;</button>
+                                <button type="button" onClick={handlePrevStep} className="toggle-btn1" style={{ flex: 1, height: "50px", backgroundColor: "white", color: "black", border: "1px solid #ccc", fontSize: "19px", borderRadius: "12px"}}>&larr; Quay lại</button>
+                                <button type="button" onClick={handleNextStep} className="submit-btn1" style={{ flex: 1, height: "50px", backgroundColor: "#001f3f", color: "white", fontSize: "19px", border: "1px solid #ccc",borderRadius: "12px" }}>Tiếp tục &rarr;</button>
                             </div>
                         </div>
                     )}
@@ -261,14 +272,8 @@ export function OTPVerification() {
                                             onClick={handlePrevStep} 
                                             className="toggle-btn" 
                                             style={{
-                                                width: "25%", 
-                                                height: "50px", 
-                                                backgroundColor: "white", 
-                                                color: "black", 
-                                                border: "1px solid #ccc", 
-                                                fontSize: "14px", 
-                                                borderRadius: "12px",
-                                                textAlign: "center"
+                                                width: "35%", 
+                                                
                                             }}>
                                             &larr; Quay lại
                                         </button>
@@ -277,16 +282,11 @@ export function OTPVerification() {
                                         type="submit" 
                                         className="submit-btn" 
                                         style={{ 
-                                            width: "100%", 
-                                            height: "50px", 
-                                            backgroundColor: "#001f3f", 
-                                            color: "white", 
-                                            fontSize: "14px", 
-                                            border: "1px solid #ccc",
-                                            borderRadius: "12px",
-                                            textAlign: "center"
+                                            width: isForgotPasswordFlow || isLoginFlow ? "100%" : "65%", // Adjust width for forgot-password and login flows
+                                            height: "auto" 
+                                            
                                         }}>
-                                        {isRegisterFlow ? "Hoàn tất Đăng ký" : isForgotPasswordFlow ? "Đổi mật khẩu" : "Xác nhận OTP"}
+                                        {isRegisterFlow ? (isProcessing ? "Đang xử lý..." : "Hoàn tất Đăng ký") : isForgotPasswordFlow ? (isProcessing ? "Đang xử lý..." : "Đổi mật khẩu") : (isProcessing ? "Đang xử lý..." : "Xác nhận OTP")}
                                     </button>
                                 </div>
                             </div>

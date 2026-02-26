@@ -1,0 +1,206 @@
+/* Tổng quan trang */
+.skill-container {
+    padding: 24px;
+    margin: 0 auto;
+    background-color: #f9fafb;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+}
+
+/* Header */
+.skill-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 32px;
+    gap: 16px;
+}
+
+.btn-icon {
+    padding: 8px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: none;
+    cursor: pointer;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.btn-icon:hover {
+    background-color: #f3f4f6;
+}
+
+.skill-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.icon-blue {
+    color: #3b82f6;
+}
+
+/* Card chứa form */
+.skill-card {
+    background-color: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+    border: 1px solid #f3f4f6;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.input-group {
+    display: flex;
+    gap: 16px;
+}
+
+.form-input {
+    flex: 1;
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+.btn-add {
+    background-color: #16a34a;
+}
+
+.btn-add:hover:not(:disabled) {
+    background-color: #15803d;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Bảng dữ liệu */
+.table-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid #f3f4f6;
+    overflow: hidden;
+}
+
+.skill-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+}
+
+.skill-table th {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.skill-table td {
+    padding: 12px 24px;
+    border-bottom: 1px solid #f9fafb;
+}
+
+.skill-table tr:hover td {
+    background-color: #f9fafb;
+}
+
+.skill-table tr:last-child td {
+    border-bottom: none;
+}
+
+.skill-name {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.form-input-edit {
+    width: 100%;
+    padding: 4px 12px;
+    border: 1px solid #60a5fa;
+    border-radius: 4px;
+    outline: none;
+}
+
+/* Thao tác (Actions) */
+.actions-col {
+    width: 192px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.actions-cell {
+    display: flex;
+    justify-content: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-action {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.btn-action.edit { color: #3b82f6; }
+.btn-action.edit:hover { color: #1d4ed8; }
+
+.btn-action.delete { color: #ef4444; }
+.btn-action.delete:hover { color: #b91c1c; }
+
+.btn-action.success { color: #16a34a; }
+.btn-action.success:hover { color: #15803d; }
+
+.btn-action.cancel { color: #6b7280; }
+.btn-action.cancel:hover { color: #374151; }
+
+.empty-state {
+    padding: 32px;
+    color: #6b7280;
+}

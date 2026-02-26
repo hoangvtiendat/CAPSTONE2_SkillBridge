@@ -7,7 +7,7 @@ import Stats from '../../components/home/Stats';
 import CTA from '../../components/home/CTA';
 import Footer from '../../components/home/Footer';
 import './HomePage.css';
-
+ 
 const HomePage = () => {
 
   const handleScrollToSection = (sectionId) => {

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "sonner"; 
 import { useAuth } from "../../context/AuthContext";
 
 function OAuthSuccess() {
@@ -10,7 +10,7 @@ function OAuthSuccess() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     console.log("Dữ liệu nhận được từ URL:", window.location.search);
-
+    
     const error = params.get("error");
     const message = params.get("message");
 
@@ -42,10 +42,8 @@ function OAuthSuccess() {
       };
 
       login(userData);
-      toast.success("Đăng nhập thành công!");
-
       setTimeout(() => {
-        navigate("/");
+          navigate("/");
       }, 100);
     } else {
       navigate("/login");
