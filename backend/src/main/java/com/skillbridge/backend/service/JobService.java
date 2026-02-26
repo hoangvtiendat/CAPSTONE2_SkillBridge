@@ -1,7 +1,4 @@
 package com.skillbridge.backend.service;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
@@ -11,6 +8,7 @@ import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.entity.JobSkill;
 import com.skillbridge.backend.entity.Skill;
+import com.skillbridge.backend.enums.CompanyRole;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.exception.AppException;
@@ -18,8 +16,6 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -28,7 +24,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -260,6 +255,7 @@ public class JobService {
                         : new ArrayList<>())
                 .build();
     }
+    @Transactional
     public Job updateJD(String jobId, CreateJobRequest request) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -285,9 +281,7 @@ public class JobService {
 
         var category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-        if(job.getStatus() == JobStatus.PENDING){
-            throw new AppException(ErrorCode.EXITS_JF_STATUS);
-        }
+
         job.setPosition(request.getPosition());
         job.setDescription(request.getDescription());
         job.setCategory(category);
@@ -295,12 +289,12 @@ public class JobService {
         job.setLocation(request.getLocation());
         job.setSalaryMin(request.getSalaryMin());
         job.setSalaryMax(request.getSalaryMax());
-
+        job.setStatus(JobStatus.PENDING);
         job.setModerationStatus(ModerationStatus.YELLOW);
         job.setModerationScore(0f);
 
 
-        jobSkillRepository.deleteAllByJobId(jobId);
+        jobSkillRepository.deleteByJobId(jobId);
 
         List<JobSkill> jobSkills = new ArrayList<>();
         StringBuilder textBuilder = new StringBuilder();
@@ -357,4 +351,31 @@ public class JobService {
         return jobRepository.save(job);
     }
 
+    public Job deleteJD(String id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String userId = userDetails.getUserId();
+
+        var recruiter = companyMemberRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Job job = jobRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
+
+        if (!job.getCompanyMember().getId().equals(recruiter.getId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        if(recruiter.getRole() != CompanyRole.ADMIN){
+            throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
+        }
+        jobSkillRepository.deleteBySkillId(id);
+        jobRepository.deleteJobById(id);
+        return job;
+    }
 }

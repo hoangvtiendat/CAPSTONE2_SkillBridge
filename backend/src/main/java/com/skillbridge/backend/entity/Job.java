@@ -46,7 +46,7 @@ public class Job extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private JobStatus status;
 
-    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<JobSkill> jobSkills;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -37,7 +37,8 @@ public enum ErrorCode {
     MEMBER_NOT_FOUND(701,"Bạn chưa là nhân viên của công ty nào cả"),
     // Jobs
     JD_NOT_FOUND(801, "Không tìm thấy bài đăng"),
-    EXITS_JF_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
+    EXITS_JD_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
+    EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền xóa bài đăng này"),
         ///  ===== Other ======
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
@@ -46,7 +47,6 @@ public enum ErrorCode {
     JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text")
 
     ;
-
     private int code;
     private String message;
 

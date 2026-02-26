@@ -85,4 +85,6 @@ public interface JobRepository extends JpaRepository<Job, String> {
     List<Job>findJobsByCompanyId(@Param("companyId") String companyId);
 
     Optional<Job> findById(String id);
+    Optional<Job> deleteJobById(String id);
+
 }

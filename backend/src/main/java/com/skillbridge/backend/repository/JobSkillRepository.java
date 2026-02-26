@@ -14,7 +14,10 @@ import java.util.List;
 @Repository
 public interface JobSkillRepository extends JpaRepository<JobSkill, Long> {
     @Modifying
-    @Query("DELETE FROM JobSkill js WHERE js.job.id = :jobId")
-    void deleteAllByJobId(@Param("jobId") String jobId);
+    @Query("DELETE FROM JobSkill js WHERE js.skill.id = :skillId")
+    void deleteBySkillId(@Param("skillId") String skillId);
 
+    @Modifying
+    @Query("DELETE FROM JobSkill js WHERE js.job.id = :jobId")
+    void deleteByJobId(@Param("jobId") String jobId);
 }
