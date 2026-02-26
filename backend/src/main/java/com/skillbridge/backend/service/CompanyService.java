@@ -117,15 +117,15 @@ public class CompanyService {
             throw new AppException(ErrorCode.REQUEST_ALREADY_SENT);
         }
 
-        CompanyJoinRequest joinRequest = CompanyJoinRequest.builder().company(company).user(user).status(JoinRequestStatus.PENDING).build();
-
-        companyJoinRequestRepository.save(joinRequest);
 
         List<CompanyMember> admins = companyMemberRepository.findByCompany_IdAndRole(companyId, CompanyRole.ADMIN);
 
         if (admins.isEmpty()) {
             throw new AppException(ErrorCode.HAS_NO_ADMIN);
         }
+
+        CompanyJoinRequest joinRequest = CompanyJoinRequest.builder().company(company).user(user).status(JoinRequestStatus.PENDING).build();
+        companyJoinRequestRepository.save(joinRequest);
 
         String subject = "[SkillBridge] Yêu cầu tham gia công ty";
 
