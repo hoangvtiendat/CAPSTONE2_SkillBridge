@@ -6,6 +6,7 @@ import java.util.List;
 public class JobFeedItemResponse {
     private String jobId;
     private Object title;
+    private String description;
     private String companyName;
     private String companyImageUrl;
     private Object subscriptionPlanName;
@@ -16,11 +17,12 @@ public class JobFeedItemResponse {
     List<String> skills;
     private LocalDateTime createdAt;
 
-    public JobFeedItemResponse(String jobId, Object title, String location,
+    public JobFeedItemResponse(String jobId, Object title, String description, String location,
                                String salaryMin, String salaryMax, LocalDateTime createdAt,
                                String companyName,String companyImageUrl, Object subscriptionPlanName, String categoryName) {
         this.jobId = jobId;
         this.title = title;
+        this.description = description;
         this.location = location;
         this.salaryMin = salaryMin;
         this.salaryMax = salaryMax;
@@ -45,6 +47,15 @@ public class JobFeedItemResponse {
 
     public void setTitle(Object title) {
         this.title = title;
+    }
+
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getCompanyName() {

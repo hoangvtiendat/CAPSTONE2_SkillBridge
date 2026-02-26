@@ -77,6 +77,11 @@ public class SecurityConfig {
                                 "/jobs/feed/**",
                                 "/ws-log/**"
                         ).permitAll()
+
+                        .requestMatchers(
+                                "/Logs/**"
+                        ).hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
 

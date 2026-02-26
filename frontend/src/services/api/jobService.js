@@ -47,6 +47,61 @@ const jobService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    getAdminJobs: async (params = {}) => {
+        try {
+            const { cursor, limit = 10, status, modStatus } = params;
+            const response = await api.get(`/jobs/feedAdmin`, {
+                params: { cursor, limit, status, modStatus }
+            });
+
+            const result = response.data.result;
+
+            const jobs = (result.adminJobFeedItemResponse || []).map(job => ({
+                id: job.jobId,
+                description: job.description,
+                location: job.location,
+                companyName: job.companyName,
+                subscriptionPlanName: job.subscriptionPlanName || "N/A",
+                categoryName: job.categoryName,
+                skills: job.skills || [],
+                status: job.status,
+                moderationStatus: job.moderationStatus
+            }));
+
+            return {
+                jobs,
+                nextCursor: result.nextCursor,
+                hasMore: result.hasMore
+            };
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getJobDetail: async (jobId) => {
+        const response = await api.get(`/jobs/${jobId}`);
+        return response.data.result;
+    },
+
+    deleteJob: async (jobId) => {
+        const response = await api.delete(`/jobs/feedAdmin/${jobId}`);
+        return response.data;
+    },
+
+    changeModerationStatus: async (jobId, status) => {
+        const response = await api.patch(`/jobs/feedAdmin/${jobId}/moderation`, null, {
+            params: { status }
+        });
+        return response.data;
+    },
+
+    changeStatus: async (jobId, status) => {
+        const response = await api.patch(`/jobs/feedAdmin/${jobId}/status`, null, {
+            params: { status }
+        });
+        return response.data;
     }
 };
 

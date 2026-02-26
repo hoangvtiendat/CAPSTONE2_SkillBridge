@@ -1,0 +1,463 @@
+.admin-container {
+    padding: 2rem;
+    background: #f4f7fa;
+    min-height: 100vh;
+}
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+.header-title h2 {
+    margin: 0;
+    color: #1a202c;
+}
+
+.count-tag {
+    font-size: 0.8rem;
+    background: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: #4a5568;
+}
+
+.filter-shelf {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-item label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #718096;
+}
+
+.filter-item select {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e0;
+    outline: none;
+    background: white;
+}
+
+.table-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+CSS
+/* 1. Ép bảng tuân thủ kích thước cố định */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* QUAN TRỌNG: Ngăn bảng tự co dãn khi dữ liệu thay đổi */
+    min-width: 1000px; /* Đảm bảo đủ không gian cho desktop */
+}
+
+/* 2. Định nghĩa độ rộng cụ thể cho từng cột (Tổng cộng 100%) */
+.admin-table th:nth-child(1),
+.admin-table td:nth-child(1) { width: 30%; } /* Chi tiết */
+
+.admin-table th:nth-child(2),
+.admin-table td:nth-child(2) { width: 25%; } /* Kĩ năng */
+
+.admin-table th:nth-child(3),
+.admin-table td:nth-child(3) { width: 12%; } /* Phân loại */
+
+.admin-table th:nth-child(4),
+.admin-table td:nth-child(4) { width: 12%; } /* Trạng thái */
+
+.admin-table th:nth-child(5),
+.admin-table td:nth-child(5) { width: 12%; } /* Kiểm duyệt */
+
+.admin-table th:nth-child(6),
+.admin-table td:nth-child(6) { width: 9%; }  /* Thao tác */
+
+.admin-table td {
+    padding: 1rem;
+    word-wrap: break-word; /* Đảm bảo chữ không đè lên nhau */
+    overflow: hidden;
+}
+.admin-table th {
+    background: #f8fafc;
+    padding: 1rem;
+    color: #64748b;
+    font-size: 13px;
+    border-bottom: 2px solid #edf2f7;
+}
+
+.company-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.comp-name {
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.job-desc {
+    font-size: 13px;
+    color: #718096;
+    margin: 4px 0;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.na-text {
+    color: #a0aec0;
+    font-size: 12px;
+    font-style: italic;
+    font-weight: 500;
+}
+
+/* Đảm bảo td chứa kĩ năng không quá rộng làm đẩy các cột khác */
+.admin-table td:nth-child(2) {
+    max-width: 200px; /* Bạn có thể điều chỉnh độ rộng này */
+}
+
+.skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0; /* Bỏ margin để không làm lệch dòng */
+}
+
+.skill-tag-mini {
+    background: #edf2f7;
+    color: #4a5568;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+/* Style cho Category Name */
+.cat-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #ebf8ff;
+    color: #2b6cb0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+/* Tinh chỉnh lại loc-tag để tách biệt với skills */
+.loc-tag {
+    font-size: 11px;
+    color: #718096;
+    margin-top: 4px;
+}
+
+.plan-badge-mini {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: #94a3b8;
+    color: white;
+}
+
+.plan-premium, .plan-gold {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: 1px solid #fbbf24;
+}
+
+.plan-pro, .plan-silver {
+    background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+}
+
+.plan-basic, .plan-free {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    box-shadow: none;
+}
+
+.select-status {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.s-open { color: #2f855a; border-color: #c6f6d5; background: #f0fff4; }
+.s-closed { color: #718096; border-color: #e2e8f0; background: #f7fafc; }
+.s-pending { color: #c05621; border-color: #feebc8; background: #fffaf0; }
+
+.mod-indicator select {
+    appearance: none;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 2px solid;
+    font-weight: 800;
+    font-size: 11px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.mod-GREEN select { border-color: #48bb78; color: #2f855a; background: #f0fff4; }
+.mod-YELLOW select { border-color: #ecc94b; color: #975a16; background: #fffff0; }
+.mod-RED select { border-color: #f56565; color: #c53030; background: #fff5f5; }
+
+.btn-action-delete {
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    min-width: 70px;
+}
+
+.btn-action-delete .icon-trash {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e53e3e;
+    transition: all 0.3s;
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-action-delete:hover {
+    background: #e53e3e;
+    border-color: #c53030;
+    box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-action-delete:hover .icon-trash {
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.btn-action-delete:active {
+    transform: translateY(0);
+}
+
+.modal-overlay {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999 !important;
+    animation: fadeIn 0.2s ease;
+}
+
+.confirm-modal {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+    animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.confirm-modal h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #1a202c;
+}
+
+.confirm-modal p {
+    color: #718096;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-cancel, .btn-confirm-delete {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-cancel {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    color: #4a5568;
+}
+
+.btn-cancel:hover {
+    background: #edf2f7;
+}
+
+.btn-confirm-delete {
+    background: #f56565;
+    color: white;
+    border: none;
+}
+
+.btn-confirm-delete:hover {
+    background: #e53e3e;
+    box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+@media (max-width: 992px) {
+    /* Ép layout table về dạng block để làm Card */
+    .admin-table, .admin-table tbody, .admin-table tr, .admin-table td {
+        display: block;
+        width: 100% !important;
+        table-layout: auto !important; /* Reset layout fixed của desktop */
+    }
+
+    .admin-table thead {
+        display: none; /* Ẩn tiêu đề bảng */
+    }
+
+    .admin-table tr {
+        margin-bottom: 2rem;
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f0f4f8;
+        position: relative;
+    }
+
+    /* Tối ưu các ô (td) */
+    .admin-table td {
+        padding: 0.75rem 0 !important;
+        border: none !important;
+    }
+
+    /* Phần thông tin chính (Tên công ty, Plan) */
+    .company-row {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .comp-name {
+        font-size: 1.1rem;
+        color: #1a202c;
+    }
+
+    /* Mô tả công việc */
+    .job-desc {
+        max-width: 100%;
+        white-space: normal;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #4a5568;
+        margin: 12px 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 3; /* Giới hạn 3 dòng cho gọn, muốn hiện hết thì xóa dòng này */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Kỹ năng - Làm cho các tag to hơn một chút để dễ đọc trên mobile */
+    .skills-list {
+        margin: 5px 0;
+        gap: 6px;
+    }
+
+    .skill-tag-mini {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    /* Nhóm các Select (Trạng thái & Kiểm duyệt) nằm cùng 1 hàng nếu màn hình đủ rộng */
+    .admin-table td:nth-child(4),
+    .admin-table td:nth-child(5) {
+        display: inline-block;
+        width: 48% !important;
+        vertical-align: top;
+    }
+
+    .admin-table td:nth-child(5) {
+        margin-left: 4%;
+    }
+
+    .select-status, .mod-indicator select {
+        width: 100%;
+        height: 44px; /* To hơn để dễ chạm bằng tay */
+        font-size: 13px;
+        border-radius: 10px;
+    }
+
+    /* Ô Thao tác */
+    .admin-table td:last-child {
+        display: block;
+        width: 100% !important;
+        margin-top: 1rem;
+        padding-top: 1.5rem !important;
+        border-top: 1px dashed #e2e8f0 !important;
+    }
+
+    .btn-action-delete {
+        width: 100%;
+        height: 48px;
+        border-radius: 12px;
+        font-weight: 700;
+        background: #fff5f5;
+    }
+
+    /* Ẩn các icon/text không cần thiết hoặc căn chỉnh lại */
+    .loc-tag {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+}
+
+/* Fix lỗi tràn modal trên màn hình cực nhỏ */
+@media (max-width: 480px) {
+    .admin-table td:nth-child(4),
+    .admin-table td:nth-child(5) {
+        display: block;
+        width: 100% !important;
+        margin-left: 0;
+    }
+}

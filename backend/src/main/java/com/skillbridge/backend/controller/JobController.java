@@ -45,7 +45,7 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/ADMIN")
+    @GetMapping("/feedAdmin")
     public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getAllJobsForAdmin(
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int limit,
@@ -66,7 +66,7 @@ public class JobController {
 
         return ResponseEntity.ok(response);
     }
-    @DeleteMapping("/ADMIN/{jobId}")
+    @DeleteMapping("/feedAdmin/{jobId}")
     public ResponseEntity<ApiResponse<Void>> deleteJob(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable String jobId
@@ -82,7 +82,7 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/ADMIN/{jobId}/moderation")
+    @PatchMapping("/feedAdmin/{jobId}/moderation")
     public ResponseEntity<ApiResponse<Void>> changeModerationStatus(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable String jobId,
@@ -92,6 +92,22 @@ public class JobController {
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Đã cập nhật trạng thái kiểm duyệt thành " + status,
+                null
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/feedAdmin/{jobId}/status")
+    public ResponseEntity<ApiResponse<Void>> changeStatus(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable String jobId,
+            @RequestParam String status
+    ) {
+        jobService.changeStatus(user, jobId, status);
+        ApiResponse<Void> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Đã cập nhật trạng thái job thành " + status,
                 null
         );
 

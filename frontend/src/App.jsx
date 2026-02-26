@@ -14,6 +14,7 @@ import UpdateProfileDetail from './pages/auth/Update_profile_of_register';
 import OAuthSuccess from './pages/auth/OAuthSuccess';
 import SystemLogs from './pages/SystemLogs/SystemLogs';
 import TaxLookup from './pages/company/TaxLookup';
+import AdminJobPage from './pages/admin/AdminJobPage';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Link title="Về trang chủ" to="/" className="hover:text-blue-400">Home</Link>
           <Link title="Xem hệ thống log" to="/admin/logs" className="hover:text-blue-400">System Logs</Link>
           <Link title="Tra cứu mã số thuế" to="/company/TaxLookup" className="hover:text-blue-400">Tra cứu mã số thuế</Link>
+          <Link title="Quản lý tin tuyển dụng" to="/admin/jobs" className="hover:text-blue-400 text-yellow-400">Quản lý Jobs</Link>
         </nav>
       <div className="pt-[72px]"> {/* Add padding for fixed header */}
         <Routes>
@@ -36,6 +38,8 @@ function App() {
           <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
           <Route path="/admin/logs" element={<SystemLogs />} />
           <Route path="/company/TaxLookup" element={<TaxLookup/>} />
+          <Route path="/admin/jobs" element={<AdminJobPage />} />
+{/*           <Route path="/admin/jobs/:id" element={<AdminJobDetailPage />} /> */}
           {/* Thêm routes khác ở đây */}
         </Routes>
       </div>

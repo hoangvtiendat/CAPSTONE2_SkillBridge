@@ -17,7 +17,7 @@ import java.util.List;
 public interface JobRepository extends JpaRepository<Job, String> {
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.location, 
+            j.id, j.title, j.description, j.location, 
             j.salaryMin, j.salaryMax, j.createdAt, 
             c.name,c.imageUrl,sp.name, cat.name
         )
@@ -43,7 +43,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.location, 
+            j.id, j.title, j.description, j.location, 
             j.salaryMin, j.salaryMax, j.createdAt, 
             c.name,c.imageUrl,sp.name, cat.name
         )
@@ -78,7 +78,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
-            j.id, j.title, j.location, j.salaryMin, 
+            j.id, j.title,j.description, j.location, j.salaryMin, 
             j.salaryMax, j.createdAt, c.name, c.imageUrl, 
             sp.name, cat.name,j.status, j.moderationStatus
         )
@@ -87,7 +87,8 @@ public interface JobRepository extends JpaRepository<Job, String> {
         LEFT JOIN j.category cat
         LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
-        WHERE (:status IS NULL OR j.status = :status)
+        WHERE j.status <> "DELETE"
+        AND (:status IS NULL OR j.status = :status)
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
         AND (:cursor IS NULL OR j.id < :cursor)
         ORDER BY j.createdAt DESC

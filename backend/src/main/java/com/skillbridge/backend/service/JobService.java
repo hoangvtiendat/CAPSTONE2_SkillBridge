@@ -190,11 +190,10 @@ public class JobService {
         System.out.println("BẮT ĐẦU XÓA JOB");
         System.out.println("ID: " + jobId);
         try{
-            Job job = jobRepository.findById(jobId)
-                    .orElseThrow(() -> {
-                        System.out.println("Không tìm thấy Job ID " + jobId + " trong cơ sở dữ liệu.");
-                        return new AppException(ErrorCode.JOB_NOT_FOUND);
-                    });
+            Job job = jobRepository.findById(jobId).orElseThrow(() -> {
+                System.out.println("Không tìm thấy Job ID " + jobId + " trong cơ sở dữ liệu.");
+                return new AppException(ErrorCode.JOB_NOT_FOUND);
+            });
             String jobDescription = job.getDescription();
             SystemLog log = new SystemLog();
             job.setStatus(JobStatus.DELETE);
@@ -218,9 +217,8 @@ public class JobService {
             try {
                 newModStatus = ModerationStatus.valueOf(modStatus.toUpperCase());
             } catch (IllegalArgumentException e) {
-                // NẾU SAI: Ghi log và dừng việc cập nhật tại đây
                 logsService.logAction(userDetails, "Admin nhập sai trạng thái kiểm duyệt: " + modStatus, LogLevel.WARNING);
-                throw new AppException(ErrorCode.INVALID_INPUT); // Hoặc chỉ đơn giản là return;
+                throw new AppException(ErrorCode.INVALID_INPUT);
             }
 
             Job job = jobRepository.findById(jobId)
@@ -229,9 +227,9 @@ public class JobService {
             ModerationStatus oldStatus = job.getModerationStatus();
             job.setModerationStatus(newModStatus);
 
-            if (newModStatus == ModerationStatus.RED) {
-                job.setStatus(JobStatus.CLOSED);
-                System.out.println("Job vi phạm (RED) - Tự động đóng bài đăng.");
+            if (newModStatus == ModerationStatus.RED||newModStatus == ModerationStatus.YELLOW) {
+                job.setStatus(JobStatus.PENDING);
+                System.out.println("Job vi phạm (RED) hoặc đang nghi ngờ (YELLOW) - Tự động đóng bài đăng.");
             }
             jobRepository.save(job);
 
@@ -243,6 +241,39 @@ public class JobService {
         }  catch (Exception e) {
             System.err.println("Lỗi hệ thống khi cập nhật Moderation: " + e.getMessage());
             logsService.logAction(userDetails, "Lỗi hệ thống khi cập nhật Moderation Job ID " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    @Transactional
+    public void changeStatus(CustomUserDetails userDetails, String jobId, String status) {
+        System.out.println("--- CẬP NHẬT TRẠNG THÁI KIỂM DUYỆT ---");
+        try {
+            JobStatus newStatus;
+            try {
+                newStatus = JobStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                logsService.logAction(userDetails, "Admin nhập sai trạng thái kiểm duyệt: " + status, LogLevel.WARNING);
+                throw new AppException(ErrorCode.INVALID_INPUT);
+            }
+
+            Job job = jobRepository.findById(jobId)
+                    .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+            JobStatus oldStatus = job.getStatus();
+            job.setStatus(newStatus);
+
+
+            jobRepository.save(job);
+
+            SystemLog log = new SystemLog();
+            logsService.logAction(userDetails, "Thay đổi trạng thái Job ID: " + jobId + " [" + oldStatus + " -> " + newStatus + "]",LogLevel.WARNING);
+
+            System.out.println("Đã cập nhật status sang " + newStatus);
+
+        }  catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi cập nhật status: " + e.getMessage());
+            logsService.logAction(userDetails, "Lỗi hệ thống khi cập nhật status Job ID " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
