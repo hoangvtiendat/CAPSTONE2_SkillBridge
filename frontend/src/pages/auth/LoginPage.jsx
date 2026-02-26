@@ -1,6 +1,4 @@
-import React from "react";
 import { LoginForm } from "../../components/auth/LoginForm";
-import Header from '../../components/home/Header';
 
 import './authForm.css';
 const LoginPage = () => {

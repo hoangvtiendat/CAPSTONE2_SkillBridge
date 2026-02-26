@@ -21,17 +21,7 @@ const jobService = {
                 company: job.companyName,
                 location: job.location,
                 salary: {
-                    min: parseInt(job.salaryMin) / 1000000, // Convert to Millions for UI (e.g. 25000000 -> 25) ? 
-                    // Wait, JobCard displays `${salary.min}k`.
-                    // If API returns "25000000", UI showing "25000000k" is wrong.
-                    // User said "salaryMin": "25000000".
-                    // JobCard: `${salary.min}k - ${salary.max}k`
-                    // Usually "k" means thousands. 25000000 is 25,000k. 
-                    // Maybe divide by 1000? Or just pass raw and update JobCard?
-                    // Let's assume we format it to "k" (thousands) or "M" (millions).
-                    // If JobCard says "k", likely it expects, e.g., 2000 for $2000.
-                    // Let's divide by 1000 for "k" representation.
-                    min: parseInt(job.salaryMin) / 1000,
+                    min: parseInt(job.salaryMin) / 1000, // Corrected to avoid duplicate key
                     max: parseInt(job.salaryMax) / 1000
                 },
                 tags: (job.skills || []).map(s => s.skillName || s), // Assuming skills might be objects or strings
@@ -47,7 +37,58 @@ const jobService = {
         } catch (error) {
             throw error;
         }
+    },
+    getMyJd_of_Company: async (token) => {
+        try {
+            const response = await api.get(`/jobs/my-company`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching JD:', error);
+            throw error;
+        }
+    },
+    deleteJd: async (jdId) => {
+        try {
+            await api.delete(`/jobs/my-company/delete/${jdId}`);
+        }
+        catch (error) {
+            console.error('Error deleting JD:', error);
+            throw error;
+        }
+    },
+    getDetailJd: async (id) => {
+        try {
+            const response = await api.get(`/jobs/my-company/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching JD details:', error);
+            throw error;
+        }
+    },
+    createJd: async (jdData) => {
+        try {
+            const response = await api.post('/jobs/postJD', jdData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating JD:', error);
+            throw error;
+        }
+    },
+    updateJd: async (id, jdData) => {
+        try {
+            const response = await api.put(`/jobs/my-company/Update/${id}`, jdData);
+            return response.data;
+        }
+        catch (error) {
+            console.error('Error updating JD:', error);
+            throw error;
+        }
     }
+    
 };
 
 export default jobService;

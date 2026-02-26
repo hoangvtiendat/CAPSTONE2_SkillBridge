@@ -14,6 +14,8 @@ import UpdateProfileDetail from './pages/auth/Update_profile_of_register';
 import OAuthSuccess from './pages/auth/OAuthSuccess';
 import SkillPageContainer from './pages/Skill/SkillPage';
 import ListJdOfCompany from './pages/JD/list_jd_of_company';
+import CreateJd from './pages/JD/PostJDPage';
+import DetailJD_Page from './pages/JD/detailJD';
 import { Toaster } from 'sonner';
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
           <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
           <Route path="/category/:categoryId/skills" element={<SkillPageContainer />} />  
           <Route path="/company/jd-list" element={<ListJdOfCompany />} />   
+          <Route path='/create-jd' element={<CreateJd />} />
+          <Route path='/detail-jd/:id' element={<DetailJD_Page />} />
         </Routes>
       </div>
     </>
