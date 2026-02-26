@@ -13,6 +13,7 @@ import { SetPass } from './components/auth/SetPass';
 import UpdateProfileDetail from './pages/auth/Update_profile_of_register';
 import OAuthSuccess from './pages/auth/OAuthSuccess';
 import SkillPageContainer from './pages/Skill/SkillPage';
+import ListJdOfCompany from './pages/JD/list_jd_of_company';
 import { Toaster } from 'sonner';
 
 function App() {
@@ -30,7 +31,8 @@ function App() {
           <Route path="/oauth-success" element={<OAuthSuccess />} />
           <Route path='/set-password' element={<SetPass />} />
           <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
-          <Route path="/category/:categoryId/skills" element={<SkillPageContainer />} />     
+          <Route path="/category/:categoryId/skills" element={<SkillPageContainer />} />  
+          <Route path="/company/jd-list" element={<ListJdOfCompany />} />   
         </Routes>
       </div>
     </>

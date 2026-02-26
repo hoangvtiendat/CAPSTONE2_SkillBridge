@@ -1,0 +1,75 @@
+.jd-list-container {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.jd-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.jd-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.jd-card:hover {
+  transform: translateY(-5px);
+}
+
+.jd-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.company-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.jd-body {
+  padding: 15px;
+}
+
+.jd-body p {
+  margin: 10px 0;
+}
+
+.jd-footer {
+  padding: 10px 15px;
+  background: #f1f1f1;
+  text-align: right;
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.status.pending {
+  background: #ffeb3b;
+  color: #856404;
+}
+
+.status.approved {
+  background: #4caf50;
+  color: #ffffff;
+}
+
+.status.rejected {
+  background: #f44336;
+  color: #ffffff;
+}
