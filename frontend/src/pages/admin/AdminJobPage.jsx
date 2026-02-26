@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import jobService from '../../services/api/jobService';
 import './AdminJob.css';
-import ReactDOM from 'react-dom';
+// 1. Import component dùng chung (nhớ bỏ ReactDOM vì component kia đã lo phần Portal rồi)
+import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
 import { useNavigate } from 'react-router-dom';
 
 const AdminJobPage = () => {
@@ -11,7 +12,7 @@ const AdminJobPage = () => {
     const [filters, setFilters] = useState({ status: '', modStatus: '' });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [jobToDelete, setJobToDelete] = useState(null);
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     const observerTarget = useRef(null);
 
@@ -127,12 +128,11 @@ const AdminJobPage = () => {
                     </thead>
                     <tbody>
                         {jobs.map(job => (
-                            <tr
-                                key={job.id}
-                                className="job-row-card clickable-row"
-                                onClick={() => navigate(`/admin/jobs/${job.id}`)} // Chuyển trang khi nhấn vào dòng
-                            >
-                                <td onClick={(e) => e.stopPropagation()}>
+                            <tr key={job.id} className="job-row-card">
+                                <td
+                                    className="clickable-cell"
+                                    onClick={() => navigate(`/admin/jobs/${job.id}`)}
+                                >
                                     <div className="company-row">
                                         <span className="comp-name">{job.companyName}</span>
                                         {job.subscriptionPlanName && (
@@ -144,20 +144,11 @@ const AdminJobPage = () => {
                                     <div className="job-desc">{job.description}</div>
                                     <div className="loc-tag">{job.location}</div>
                                 </td>
-{/*                                 <td> */}
-{/*                                     <div className="company-row"> */}
-{/*                                         <span className="comp-name">{job.companyName}</span> */}
-{/*                                         {job.subscriptionPlanName && ( */}
-{/*                                             <span className={`plan-badge-mini plan-${job.subscriptionPlanName.toLowerCase()}`}> */}
-{/*                                                 {job.subscriptionPlanName} */}
-{/*                                             </span> */}
-{/*                                         )} */}
-{/*                                     </div> */}
-{/*                                     <div className="job-desc">{job.description}</div> */}
-{/*                                     <div className="loc-tag">{job.location}</div> */}
-{/*                                 </td> */}
 
-                                <td>
+                                <td
+                                    className="clickable-cell"
+                                    onClick={() => navigate(`/admin/jobs/${job.id}`)}
+                                >
                                     <div className="skills-list">
                                         {job.skills && job.skills.length > 0 ? (
                                             job.skills.map((skill, index) => (
@@ -209,19 +200,15 @@ const AdminJobPage = () => {
                 </div>
             </div>
 
-            {showDeleteModal && ReactDOM.createPortal(
-                <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-                    <div className="confirm-modal" onClick={e => e.stopPropagation()}>
-                        <h3>Xác nhận xóa</h3>
-                        <p>Hành động này không thể hoàn tác.</p>
-                        <div className="modal-actions">
-                            <button className="btn-cancel" onClick={() => setShowDeleteModal(false)}>Hủy</button>
-                            <button className="btn-confirm-delete" onClick={confirmDelete}>Xóa ngay</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+            {/* 2. Sử dụng component chung thay cho code Portal cũ */}
+            <DeleteConfirmPage
+                isOpen={showDeleteModal}
+                onCancel={() => {
+                    setShowDeleteModal(false);
+                    setJobToDelete(null);
+                }}
+                onConfirm={confirmDelete}
+            />
         </div>
     );
 };

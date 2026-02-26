@@ -4,6 +4,18 @@
     min-height: 100vh;
 }
 
+.btn-back-nav {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1rem;
+}
+
 .detail-card {
     background: white;
     border-radius: 16px;
@@ -12,10 +24,9 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.02);
 }
 
-/* Header kết hợp ngang */
 .header-main-content {
     display: flex;
-    justify-content: space-between; /* Đẩy thông tin sang trái, nút sang phải */
+    justify-content: space-between;
     align-items: flex-start;
     gap: 2rem;
 }
@@ -33,60 +44,146 @@
     object-fit: contain;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
-    background: white;
+    padding: 5px;
+}
+.company-and-plan {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Khoảng cách giữa tên và gói đăng */
+    margin-bottom: 10px;
 }
 
+/* Kiểu dáng cho tên công ty (xóa margin cũ nếu có) */
+.company-name-text {
+    font-size: 1.1rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* Badge gói đăng bài */
+.plan-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+/* Màu sắc riêng cho từng loại gói (Nếu bạn có các gói khác nhau) */
+.plan-pro, .plan-premium {
+    background: #fffbeb;
+    color: #d97706;
+    border-color: #fef3c7;
+}
+
+.plan-basic {
+    background: #f0fdf4;
+    color: #16a34a;
+    border-color: #dcfce7;
+}
+
+/* Nếu gói là Enterprise/Vip */
+.plan-vip {
+    background: #f5f3ff;
+    color: #7c3aed;
+    border-color: #ede9fe;
+}
 .job-title-info h1 {
-    font-size: 1.8rem;
+    font-size: 2rem;
     margin-bottom: 0.5rem;
-    color: #1a202c;
+    color: #1e293b;
 }
-
 .job-meta-tags {
     display: flex;
-    gap: 15px;
-    color: #718096;
-    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
 }
 
-/* Skills nằm ngay trong Header */
+/* Biến các span thành các bọc badge giống skill-tag */
+.job-meta-tags span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px; /* Bo tròn giống skill-tag */
+
+    /* Màu nền xanh lá nhạt và chữ xanh đậm hơn */
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #dcfce7;
+    transition: all 0.2s ease;
+}
+
+/* Icon bên trong badge */
+.job-meta-tags span svg {
+    color: #16a34a;
+}
+
+/* Riêng thẻ thời gian nếu bạn muốn nhấn mạnh hơn một chút */
+.job-meta-tags span.time-tag {
+    background: #ecfdf5;
+    border-color: #10b981;
+    color: #047857;
+}
+
+/* Hiệu ứng hover cho chuyên nghiệp */
+.job-meta-tags span:hover {
+    background: #dcfce7;
+    transform: translateY(-1px);
+}
+
+.time-tag {
+    color: #10b981; /* Màu xanh lá cho thời gian đăng bài */
+    font-weight: 600;
+}
+
 .inline-skills {
     margin-top: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
 }
 
-.inline-skills .skill-tag {
-    font-size: 12px;
-    padding: 4px 12px;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    color: #475569;
+.skill-tag {
+    display: inline-block;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 8px 8px 0;
 }
 
-/* Admin Control Panel (Cột phải) */
 .admin-action-bar.side-panel {
     display: flex;
-    flex-direction: column; /* Xếp dọc các bộ chọn để tiết kiệm chiều ngang */
+    flex-direction: column;
     gap: 1.2rem;
     background: #f1f5f9;
     padding: 1.5rem;
     border-radius: 12px;
     min-width: 260px;
 }
-
 .control-item {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
 }
 
 .control-item label {
     font-weight: 700;
     font-size: 12px;
-    color: #64748b;
+    color: #475569;
     text-transform: uppercase;
+    margin-bottom: 0;
+    white-space: nowrap;
+    min-width: 100px;
 }
 
 .admin-action-bar select {
@@ -100,14 +197,16 @@
 .btn-delete-job {
     background: #fee2e2;
     color: #dc2626;
-    border: 2px solid #fecaca;
+    border: 1px solid #fecaca;
     padding: 12px;
     border-radius: 8px;
-    font-weight: 800;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     cursor: pointer;
-    transition: 0.3s;
-    width: 100%;
-    margin-top: 5px;
+    transition: 0.2s;
 }
 
 .btn-delete-job:hover {
@@ -115,38 +214,168 @@
     color: white;
 }
 
-/* Nội dung chi tiết */
 .section h3 {
-    border-left: 4px solid #3182ce;
-    padding-left: 12px;
+    border-left: 5px solid #3b82f6;
+    padding-left: 15px;
     margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    color: #1e293b;
 }
 
-.content-text {
-    line-height: 1.8;
-    color: #4a5568;
-    white-space: pre-line;
+.check-list {
+    list-style: none;
+    padding: 0;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
+.check-list li {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+    color: #475569;
+}
+
+.icon-check {
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+}
+
+.info-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.admin-job-detail-container {
+    padding: 1rem;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+    .admin-job-detail-container { padding: 2rem; }
+}
+
+.header-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+@media (min-width: 1025px) {
     .header-main-content {
-        flex-direction: column;
-    }
-    .admin-action-bar.side-panel {
-        width: 100%;
         flex-direction: row;
-        align-items: flex-end;
+        justify-content: space-between;
+        align-items: stretch;
     }
 }
 
-@media (max-width: 768px) {
+.company-info-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
     .company-info-section {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
+        flex-direction: row;
+        text-align: left;
+        align-items: flex-start;
     }
+}
+
+.admin-action-bar.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: #f1f5f9;
+    padding: 1.25rem;
+    border-radius: 12px;
+    width: 100%;
+}
+
+@media (min-width: 1025px) {
     .admin-action-bar.side-panel {
+        width: 320px;
+        min-width: 320px;
+    }
+}
+.control-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+}
+
+.control-item label {
+    flex: 1;
+    min-width: 100px;
+}
+
+.control-item select,
+.mod-indicator {
+    flex: 2;
+    min-width: 150px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #cbd5e0;
+}
+
+.mod-indicator select {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.admin-action-bar select {
+    padding: 10px;
+    text-align: left;
+}
+@media (max-width: 1024px) {
+    .admin-action-bar.side-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        align-items: end;
+    }
+
+    .btn-delete-job {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-action-bar.side-panel {
+        display: flex;
         flex-direction: column;
+    }
+
+    .job-title-info h1 {
+        font-size: 1.5rem;
+    }
+
+    .detail-card {
+        padding: 1.25rem;
+    }
+
+    .job-meta-tags span {
+        width: 100%;
+        justify-content: center;
     }
 }

@@ -29,7 +29,7 @@ public class Job extends BaseEntity{
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
-    private Map<String, Object> title;
+    private Object title;
 
     @Enumerated(EnumType.STRING)
     private ModerationStatus moderationStatus;
@@ -88,11 +88,11 @@ public class Job extends BaseEntity{
         this.position = position;
     }
 
-    public Map<String, Object> getTitle() {
+    public Object getTitle() {
         return title;
     }
 
-    public void setTitle(Map<String, Object> title) {
+    public void setTitle(Object title) {
         this.title = title;
     }
 

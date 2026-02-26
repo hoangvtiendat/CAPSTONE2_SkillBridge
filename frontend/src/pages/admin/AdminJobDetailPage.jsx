@@ -1,137 +1,190 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import jobService from '../../services/api/jobService';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import {
+    MapPin, Banknote, Tag, Clock,
+    Trash2, ChevronLeft
+} from 'lucide-react';
 import './AdminJobDetail.css';
+import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
 
 const AdminJobDetailPage = () => {
     const { jobId } = useParams();
     const navigate = useNavigate();
     const [job, setJob] = useState(null);
+    const [parsedData, setParsedData] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchJobDetail();
-    }, [jobId]);
+    // State quản lý Modal xóa
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-    const fetchJobDetail = async () => {
+    const fetchJobDetail = useCallback(async () => {
         try {
             const data = await jobService.getJobDetail(jobId);
             setJob(data);
+
+            if (data.title) {
+                let rawTitle = data.title;
+                if (typeof rawTitle === 'string') {
+                    try {
+                        rawTitle = JSON.parse(rawTitle);
+                    } catch (e) {
+                        console.error("Lỗi parse chuỗi title:", e);
+                        rawTitle = [];
+                    }
+                }
+                setParsedData(Array.isArray(rawTitle) ? rawTitle : []);
+            }
         } catch (error) {
             console.error("Lỗi khi lấy chi tiết công việc:", error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [jobId]);
 
-    const handleUpdateStatus = async (newStatus) => {
+    useEffect(() => {
+        fetchJobDetail();
+    }, [fetchJobDetail]);
+
+    const onUpdateStatus = async (e, newStatus) => {
+        e.stopPropagation();
         try {
             await jobService.changeStatus(jobId, newStatus);
-            fetchJobDetail(); // Refresh data
+            fetchJobDetail();
         } catch (error) { alert("Cập nhật trạng thái thất bại"); }
     };
 
-    const handleUpdateMod = async (newMod) => {
+    const onUpdateMod = async (e, newMod) => {
+        e.stopPropagation();
         try {
             await jobService.changeModerationStatus(jobId, newMod);
             fetchJobDetail();
         } catch (error) { alert("Cập nhật kiểm duyệt thất bại"); }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm("Bạn có chắc chắn muốn xoá công việc này?")) {
-            try {
-                await jobService.deleteJob(jobId);
-                navigate('/admin/jobs'); // Quay lại danh sách sau khi xoá
-            } catch (error) { alert("Xoá thất bại"); }
+    // Mở modal thay vì dùng confirm của trình duyệt
+    const handleDeleteClick = (e) => {
+        e.stopPropagation();
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await jobService.deleteJob(jobId);
+            navigate('/admin/jobs');
+        } catch (error) {
+            alert("Xoá thất bại");
+        } finally {
+            setShowDeleteModal(false);
         }
     };
 
     if (loading) return <div className="admin-loader">Đang tải...</div>;
-    if (!job) return <div>Không tìm thấy công việc</div>;
+    if (!job) return <div className="admin-error">Không tìm thấy công việc</div>;
+
+    const headerInfo = parsedData[0] || {};
+    const contentSections = parsedData.slice(1);
 
     return (
-        <div className="admin-job-detail-container">
-            {/* Header Section: Chứa cả Info và Admin Controls */}
-            <div className="detail-card header-combined">
-                <div className="header-main-content">
-                    {/* Cột trái: Logo + Thông tin + Skills */}
-                    <div className="company-info-section">
-                        <img
-                            src={job.companyImageUrl || '/default-logo.png'}
-                            alt="logo"
-                            className="company-logo-large"
-                        />
-                        <div className="job-title-info">
-                            <h1>{job.title?.en || job.title?.vi || job.title}</h1>
-                            <p className="company-name-text">{job.companyName}</p>
+        <>
+            <div className="admin-job-detail-container">
+                <button className="btn-back-nav" onClick={() => navigate(-1)}>
+                    <ChevronLeft size={20} /> Quay lại
+                </button>
 
-                            <div className="job-meta-tags">
-                                <span>📍 {job.location}</span>
-                                <span>💰 {job.salaryMin} - {job.salaryMax}</span>
-                                <span>📂 {job.categoryName}</span>
+                <div className="detail-card header-combined">
+                    <div className="header-main-content">
+                        <div className="company-info-section">
+                            <img
+                                src={job.companyImageUrl || '/default-logo.png'}
+                                alt="logo"
+                                className="company-logo-large"
+                            />
+                            <div className="job-title-info">
+                                <h1>{headerInfo.name || job.jobTitle}</h1>
+                                <div className="company-and-plan">
+                                    <p className="company-name-text">{job.companyName}</p>
+                                    <span className={`plan-badge plan-${job.subscriptionPlanName?.toLowerCase()}`}>
+                                        {job.subscriptionPlanName}
+                                    </span>
+                                </div>
+                                <div className="job-meta-tags">
+                                    <span><MapPin size={16} /> {job.location}</span>
+                                    <span><Banknote size={16} /> {job.salaryMin?.toLocaleString()} - {job.salaryMax?.toLocaleString()} VND</span>
+                                    <span><Tag size={16} /> {job.categoryName}</span>
+                                    <span className="time-tag">
+                                        <Clock size={16} /> {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true, locale: vi })}
+                                    </span>
+                                </div>
+
+                                <div className="skills-tags-container inline-skills">
+                                    {job.skills?.map((s, index) => (
+                                        <span key={index} className="skill-tag">{s.skillName || s}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="admin-action-bar side-panel">
+                            <div className="control-item">
+                                <label>Trạng thái</label>
+                                <select
+                                    value={job.status}
+                                    onChange={(e) => onUpdateStatus(e, e.target.value)}
+                                    className={`select-status s-${job.status?.toLowerCase()}`}
+                                >
+                                    <option value="OPEN">OPEN</option>
+                                    <option value="CLOSED">CLOSED</option>
+                                    <option value="PENDING">PENDING</option>
+                                </select>
                             </div>
 
-                            {/* Skills hiển thị ngay dưới Meta Tags */}
-                            <div className="skills-tags-container inline-skills">
-                                {job.skills?.map((s, index) => (
-                                    <span key={index} className="skill-tag">{s.skillName || s}</span>
+                            <div className="control-item">
+                                <label>Kiểm duyệt</label>
+                                <div className={`mod-indicator mod-${job.moderationStatus}`}>
+                                    <select
+                                        value={job.moderationStatus}
+                                        onChange={(e) => onUpdateMod(e, e.target.value)}
+                                    >
+                                        <option value="GREEN">GREEN (Duyệt)</option>
+                                        <option value="YELLOW">YELLOW (Chờ)</option>
+                                        <option value="RED">RED (Vi phạm)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button onClick={handleDeleteClick} className="btn-delete-job">
+                                <Trash2 size={18} /> XOÁ CÔNG VIỆC
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="detail-grid">
+                    {contentSections.map((section, index) => (
+                        <div key={index} className="detail-card section">
+                            <h3>{section.name}</h3>
+                            <ul className="check-list">
+                                {(section.decription || section.Decription)?.map((item, idx) => (
+                                    <li key={idx}>
+                                        <span>{item}</span>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         </div>
-                    </div>
-
-                    {/* Cột phải: Bộ nút của Admin */}
-                    <div className="admin-action-bar side-panel">
-                        <div className="control-item">
-                            <label>Trạng thái Job:</label>
-                            <select
-                                value={job.status}
-                                onChange={(e) => handleUpdateStatus(e.target.value)}
-                                className={`select-status s-${job.status?.toLowerCase()}`}
-                            >
-                                <option value="OPEN">OPEN</option>
-                                <option value="CLOSED">CLOSED</option>
-                                <option value="PENDING">PENDING</option>
-                            </select>
-                        </div>
-
-                        <div className="control-item">
-                            <label>Kiểm duyệt:</label>
-                            <select
-                                value={job.moderationStatus}
-                                onChange={(e) => handleUpdateMod(e.target.value)}
-                                className={`select-mod mod-${job.moderationStatus}`}
-                            >
-                                <option value="GREEN">GREEN (Duyệt)</option>
-                                <option value="YELLOW">YELLOW (Chờ)</option>
-                                <option value="RED">RED (Vi phạm)</option>
-                            </select>
-                        </div>
-
-                        <button onClick={handleDelete} className="btn-delete-job">
-                            XOÁ CÔNG VIỆC
-                        </button>
-                    </div>
+                    ))}
                 </div>
             </div>
 
-
-            <div className="detail-grid">
-                <div className="detail-card section">
-                    <h3>Mô Tả Công Việc</h3>
-                    <div className="content-text">{job.description}</div>
-                </div>
-
-                <div className="detail-card section">
-                    <h3>Thông tin bổ sung</h3>
-                    <ul className="info-list">
-                        <li><strong>Gói đăng bài:</strong> {job.subscriptionPlanName}</li>
-                        <li><strong>Ngày tạo:</strong> {new Date(job.createdAt).toLocaleDateString('vi-VN')}</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+            {/* Sử dụng Modal dùng chung */}
+            <DeleteConfirmPage
+                isOpen={showDeleteModal}
+                onCancel={() => setShowDeleteModal(false)}
+                onConfirm={confirmDelete}
+            />
+        </>
     );
 };
 

@@ -156,11 +156,12 @@ public class JobService {
             List<String> skills = skillData.stream()
                     .map(obj -> (String) obj[1])
                     .collect(Collectors.toList());
-            Map<String, Object> titleMap = job.getTitle();
+
+            Object titleData = job.getTitle();
 
             JobDetailResponse detail = new JobDetailResponse(
                     job.getId(),
-                    titleMap,
+                    titleData,
                     job.getDescription(),
                     job.getPosition(),
                     job.getLocation(),

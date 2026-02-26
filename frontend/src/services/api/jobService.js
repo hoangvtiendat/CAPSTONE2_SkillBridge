@@ -81,7 +81,7 @@ const jobService = {
     },
 
     getJobDetail: async (jobId) => {
-        const response = await api.get(`/jobs/${jobId}`);
+        const response = await api.get(`/jobs/feedAdmin/${jobId}`);
         return response.data.result;
     },
 
