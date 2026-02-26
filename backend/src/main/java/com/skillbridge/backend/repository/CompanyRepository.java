@@ -1,5 +1,6 @@
 package com.skillbridge.backend.repository;
 
+import com.skillbridge.backend.dto.TopCompanyDTO;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.entity.User;
@@ -34,4 +35,19 @@ public interface CompanyRepository extends JpaRepository<Company, String> {
     );
 
     Optional<Company> findCompaniesByTaxId(String taxId);
+
+    long countByStatus(CompanyStatus status);
+
+    @Query("""
+                SELECT new com.skillbridge.backend.dto.TopCompanyDTO(
+                    c.id,
+                    c.name,
+                    COUNT(j)
+                )
+                FROM Company c
+                LEFT JOIN Job j ON j.company.id = c.id
+                GROUP BY c.id, c.name
+                ORDER BY COUNT(j) DESC
+            """)
+    List<TopCompanyDTO> findTop5ByJobCount(Pageable pageable);
 }

@@ -63,6 +63,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/jobs/feed",
+                                "/admin/**",
                                 "/auth/**",
                                 "/users/**",
                                 "/identity/users/**",
