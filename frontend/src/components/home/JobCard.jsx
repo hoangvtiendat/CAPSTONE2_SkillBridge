@@ -25,7 +25,7 @@ const JobCard = ({ job, featured = false }) => {
       </div>
 
       <div className="job-salary">
-        ${salary.min}k - ${salary.max}k
+        {salary.min} - {salary.max} triệu
       </div>
 
       <div className="job-tags">

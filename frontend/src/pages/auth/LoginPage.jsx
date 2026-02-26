@@ -13,10 +13,7 @@ const LoginPage = () => {
                 </main>
             </div>
         </div>
-
-
     );
 }
-
 
 export default LoginPage;

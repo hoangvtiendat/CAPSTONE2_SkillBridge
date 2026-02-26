@@ -62,17 +62,17 @@ export function LoginForm() {
         toast.error(data.message || "Đăng ký thất bại");
 
         if (data.code === 2004) {
-           console.log("Xử lý riêng cho lỗi trùng email ở đây");
+          console.log("Xử lý riêng cho lỗi trùng email ở đây");
         }
         return;
       }
       console.log("Register Response:", data);
-      toast.success(data.result); 
+      toast.success(data.result);
       setTimeout(() => {
         navigate("/otp-verification", {
           state: {
             flow: "register",
-            email: email, 
+            email: email,
           }
         });
       }, 3000);
@@ -81,65 +81,71 @@ export function LoginForm() {
       console.error(err);
       toast.error("Không thể kết nối backend");
     }
-      finally {
+    finally {
       setIsLoading(false);
-      }
-};
+    }
+  };
 
-const login_Google = () => {
+  const login_Google = () => {
     window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
 
-}
+  }
   const handleLogin = async () => {
     setIsLoading(true); // Set loading state to true
 
     if (!email.trim() || !password.trim()) {
-        toast.warning("Thiếu thông tin", { description: "Vui lòng điền email và mật khẩu" });
-        setIsLoading(false); // Reset loading state
-        return;
+      toast.warning("Thiếu thông tin", { description: "Vui lòng điền email và mật khẩu" });
+      setIsLoading(false); // Reset loading state
+      return;
     }
 
     try {
-        const response = await fetch("http://localhost:8081/identity/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
+      const response = await fetch("http://localhost:8081/identity/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        console.log("Login Response:", data);
-        if (response.ok && data.result) {
-            const userData = data.result;
+      console.log("Login Response:", data);
+      if (response.ok && data.result) {
+        const userData = data.result;
 
-            if (userData.is2faEnabled === "1") {
-                toast.success("Yêu cầu xác thực 2 bước", { description: "Chuyển đến trang xác thực OTP" });
-                setTimeout(() => {
-                    navigate("/otp-verification", {
-                        state: {
-                            email: email,
-                            flow: "login",
-                            userData: userData
-                        }
-                    });
-                }, 1000);
-            } else {
-                login(userData);
-                toast.success("Đăng nhập thành công");
-                setTimeout(() => { navigate("/"); }, 1000);
-            }
-
+        if (userData.is2faEnabled === "1") {
+          toast.success("Yêu cầu xác thực 2 bước", { description: "Chuyển đến trang xác thực OTP" });
+          setTimeout(() => {
+            navigate("/otp-verification", {
+              state: {
+                email: email,
+                flow: "login",
+                userData: userData
+              }
+            });
+          }, 1000);
         } else {
-            throw new Error(data.message || "Email hoặc mật khẩu không đúng");
+          login(userData);
+          toast.success("Đăng nhập thành công");
+          setTimeout(() => {
+            if (userData.role === 'ADMIN') {
+              navigate("/admin");
+            } else {
+              navigate("/");
+            }
+          }, 1000);
         }
 
+      } else {
+        throw new Error(data.message || "Email hoặc mật khẩu không đúng");
+      }
+
     } catch (err) {
-        console.error("Login error:", err);
-        toast.error("Đăng nhập thất bại", { description: err.message });
+      console.error("Login error:", err);
+      toast.error("Đăng nhập thất bại", { description: err.message });
     } finally {
-        setIsLoading(false); // Reset loading state
+      setIsLoading(false); // Reset loading state
     }
-};
+  };
   const handleSubmit = (e) => {
     e.preventDefault();
     if (mode === "login") {
@@ -157,7 +163,7 @@ const login_Google = () => {
 
   return (
     <main className="welcome-container">
-      <Toaster position="top-right" richColors />
+
       <div className="auth-card">
         <h1 className="auth-title">
           {mode === "login" ? "Đăng nhập hệ thống" : "Đăng ký tài khoản"}
@@ -183,15 +189,15 @@ const login_Google = () => {
             />
           </div>
           {mode === "login" && (
-             <div className="form-group">
-            <label>Mật khẩu</label>
-            <input
-              type="password"
-              placeholder={mode === "register" ? "Tạo mật khẩu" : "Nhập mật khẩu"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+            <div className="form-group">
+              <label>Mật khẩu</label>
+              <input
+                type="password"
+                placeholder={mode === "register" ? "Tạo mật khẩu" : "Nhập mật khẩu"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
 
           )}
 
