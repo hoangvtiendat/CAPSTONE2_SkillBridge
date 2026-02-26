@@ -4,8 +4,11 @@ import com.skillbridge.backend.dto.MonthlyJobDTO;
 import com.skillbridge.backend.dto.MonthlyRevenueDTO;
 import com.skillbridge.backend.dto.TopCompanyDTO;
 import com.skillbridge.backend.dto.response.SystemStatsResponse;
+import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.enums.JobStatus;
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -25,9 +28,15 @@ public class AdminService {
     private final CompanyRepository companyRepository;
     private final JobRepository jobRepository;
     private final CompanySubscriptionRepository subscriptionRepository;
+    private final UserService userService;
 
-    public SystemStatsResponse statsOverview() {
-
+    public SystemStatsResponse statsOverview(String token) {
+        System.out.println("token: " + token);
+        User user = userService.getMe(token);
+        System.out.println("user: " + user.getRole());
+        if (!"ADMIN".equals(user.getRole())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
         //1.OVERVIEW
         long totalUsers = userRepository.count();
         long totalCompanies = companyRepository.count();
@@ -44,7 +53,6 @@ public class AdminService {
         long pendingJobs = jobRepository.countByStatus(JobStatus.PENDING);
 
         SystemStatsResponse.PendingStats pending = SystemStatsResponse.PendingStats.builder().pendingCompanies(pendingCompanies).pendingJobs(pendingJobs).build();
-
 
 
         LocalDate now = LocalDate.now();
