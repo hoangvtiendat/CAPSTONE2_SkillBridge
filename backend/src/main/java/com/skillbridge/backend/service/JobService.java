@@ -232,6 +232,10 @@ public class JobService {
                 job.setStatus(JobStatus.PENDING);
                 System.out.println("Job vi phạm (RED) hoặc đang nghi ngờ (YELLOW) - Tự động đóng bài đăng.");
             }
+            if (newModStatus == ModerationStatus.GREEN) {
+                job.setStatus(JobStatus.OPEN);
+                System.out.println("Job vi phạm (RED) hoặc đang nghi ngờ (YELLOW) - Tự động đóng bài đăng.");
+            }
             jobRepository.save(job);
 
             SystemLog log = new SystemLog();

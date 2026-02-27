@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import companyService from '../../services/api/companyService';
 import './TaxLookup.css';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
 
 const TaxLookup = () => {
     const [taxCode, setTaxCode] = useState('');
@@ -8,10 +10,9 @@ const TaxLookup = () => {
     const [company, setCompany] = useState(null);
     const [history, setHistory] = useState([]);
     const [error, setError] = useState(null);
-
-    // Thêm state để quản lý API Status thật
     const [apiOnline, setApiOnline] = useState(true);
     const [lastSync, setLastSync] = useState('N/A');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const savedHistory = JSON.parse(localStorage.getItem('tax_history') || '[]');
@@ -28,15 +29,11 @@ const TaxLookup = () => {
 
         try {
             const response = await companyService.lookupTaxCode(searchMst);
-
-            // Cập nhật tình trạng API Online khi có phản hồi từ server
             setApiOnline(true);
 
             if (response && response.result) {
                 setCompany(response.result);
                 updateHistory(response.result, searchMst);
-
-                // Lấy thời gian hiện tại làm Last Sync
                 const now = new Date();
                 const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
                 setLastSync(timeStr);
@@ -45,7 +42,6 @@ const TaxLookup = () => {
                 setError(response?.message || "Không tìm thấy kết quả");
             }
         } catch (err) {
-            // Khi lỗi kết nối (catch), chuyển trạng thái sang Offline
             setApiOnline(false);
             setError("Lỗi kết nối máy chủ");
         } finally {
@@ -64,6 +60,9 @@ const TaxLookup = () => {
 
     return (
         <div className="tax-page-wrapper">
+            <button className="btn-back-nav" onClick={() => navigate(-1)}>
+                <ChevronLeft size={20} /> Quay lại
+            </button>
             <div className="tax-main-container">
                 <aside className="tax-sidebar">
                     <div className="sidebar-header">
@@ -127,9 +126,13 @@ const TaxLookup = () => {
                                 </div>
                                 <div className="banner-right">
                                     <p className="mst-label">MÃ SỐ THUẾ</p>
-                                    {company.taxCodeImg ? (
+                                    {company.taxCode ? (
+                                        <h2 className="mst-text">{company.taxCode}</h2>
+                                    ) : company.taxCodeImg ? (
                                         <img src={company.taxCodeImg} alt="MST" className="mst-img" />
-                                    ) : <h2 className="mst-text">{taxCode}</h2>}
+                                    ) : (
+                                        <h2 className="mst-text">{taxCode}</h2>
+                                    )}
                                 </div>
                             </header>
 

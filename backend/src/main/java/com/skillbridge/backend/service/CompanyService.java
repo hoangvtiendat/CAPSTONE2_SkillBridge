@@ -96,6 +96,8 @@ public class CompanyService {
         System.out.println("-> Bắt đầu bóc tách dữ liệu chính xác...");
         CompanyDTO dto = new CompanyDTO();
 
+        dto.setTaxCode(mst);
+
         Element jumbotron = doc.selectFirst(".jumbotron");
         if (jumbotron != null) {
             Element mainTitle = doc.selectFirst("h4, h1");
@@ -103,12 +105,6 @@ public class CompanyService {
                 dto.setName(mainTitle.text().trim().toUpperCase());
             }
             Elements allBase64Imgs = jumbotron.select("img[src^=data:image]");
-            Element mstLabel = jumbotron.getElementsContainingOwnText("Mã số thuế:").first();
-            if (mstLabel != null && !allBase64Imgs.isEmpty()) {
-                String src = allBase64Imgs.get(0).attr("src");
-                dto.setTaxCodeImg(src);
-                System.out.println("Đã trích xuất ảnh MST");
-            }
 
             Element phoneLabel = jumbotron.getElementsContainingOwnText("Điện thoại").first();
             if (phoneLabel != null && allBase64Imgs.size() >= 2) {

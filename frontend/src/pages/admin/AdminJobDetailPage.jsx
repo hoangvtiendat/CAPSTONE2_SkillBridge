@@ -11,14 +11,17 @@ import './AdminJobDetail.css';
 import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
 import { toast, Toaster } from 'sonner'
 
+const formatSalary = (amount) => {
+    if (!amount && amount !== 0) return "Thỏa thuận";
+    return new Intl.NumberFormat('vi-VN').format(amount) + " VND";
+};
+
 const AdminJobDetailPage = () => {
     const { jobId } = useParams();
     const navigate = useNavigate();
     const [job, setJob] = useState(null);
     const [parsedData, setParsedData] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // State quản lý Modal xóa
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const fetchJobDetail = useCallback(async () => {
@@ -117,13 +120,16 @@ const AdminJobDetailPage = () => {
                                 <h1>{headerInfo.name || job.jobTitle}</h1>
                                 <div className="company-and-plan">
                                     <p className="company-name-text">{job.companyName}</p>
-                                    <span className={`plan-badge plan-${job.subscriptionPlanName?.toLowerCase()}`}>
-                                        {job.subscriptionPlanName}
+                                    <span className={`plan-badge plan-${(job.subscriptionPlanName || 'free').toLowerCase()}`}>
+                                        {job.subscriptionPlanName || 'FREE'}
                                     </span>
                                 </div>
                                 <div className="job-meta-tags">
                                     <span><MapPin size={16} /> {job.location}</span>
-                                    <span><Banknote size={16} /> {job.salaryMin?.toLocaleString()} - {job.salaryMax?.toLocaleString()} VND</span>
+                                    <span>
+                                        <Banknote size={16} />
+                                        {formatSalary(job.salaryMin)} - {formatSalary(job.salaryMax)}
+                                    </span>
                                     <span><Tag size={16} /> {job.categoryName}</span>
                                     <span className="time-tag">
                                         <Clock size={16} /> {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true, locale: vi })}

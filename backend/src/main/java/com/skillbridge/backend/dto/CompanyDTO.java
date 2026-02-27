@@ -8,15 +8,15 @@ public class CompanyDTO {
     private String startDate;
     private String licenseDate;
 
-    private String taxCodeImg;
+    private String taxCode;
     private String phoneImg;
 
-    public String getTaxCodeImg() {
-        return taxCodeImg;
+    public String getTaxCode() {
+        return taxCode;
     }
 
-    public void setTaxCodeImg(String taxCodeImg) {
-        this.taxCodeImg = taxCodeImg;
+    public void setTaxCode(String taxCode) {
+        this.taxCode = taxCode;
     }
 
     public String getPhoneImg() {

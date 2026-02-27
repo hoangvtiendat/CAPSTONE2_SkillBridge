@@ -49,49 +49,65 @@
 .company-and-plan {
     display: flex;
     align-items: center;
-    gap: 12px; /* Khoảng cách giữa tên và gói đăng */
+    gap: 12px;
     margin-bottom: 10px;
 }
 
-/* Kiểu dáng cho tên công ty (xóa margin cũ nếu có) */
 .company-name-text {
     font-size: 1.1rem;
     color: #64748b;
     margin: 0;
 }
 
-/* Badge gói đăng bài */
 .plan-badge {
     padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
+    border-radius: 4px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.plan-free {
     background: #f1f5f9;
     color: #475569;
-    border: 1px solid #e2e8f0;
+    border-color: #cbd5e1;
 }
 
-/* Màu sắc riêng cho từng loại gói (Nếu bạn có các gói khác nhau) */
-.plan-pro, .plan-premium {
+.plan-standard {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+.plan-premium {
     background: #fffbeb;
-    color: #d97706;
-    border-color: #fef3c7;
+    color: #b45309;
+    border-color: #fde68a;
+    position: relative;
+    overflow: hidden;
 }
 
-.plan-basic {
-    background: #f0fdf4;
-    color: #16a34a;
-    border-color: #dcfce7;
+.plan-customize {
+    background: #eef2ff;
+    color: #4f46e5;
+    border-color: #c7d2fe;
 }
 
-/* Nếu gói là Enterprise/Vip */
-.plan-vip {
-    background: #f5f3ff;
-    color: #7c3aed;
-    border-color: #ede9fe;
+.plan-premium:hover, .plan-customize:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1.5px);
 }
+
+.plan-badge:hover {
+    filter: saturate(1.2);
+}
+
 .job-title-info h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
@@ -104,7 +120,6 @@
     margin-top: 12px;
 }
 
-/* Biến các span thành các bọc badge giống skill-tag */
 .job-meta-tags span {
     display: flex;
     align-items: center;
@@ -112,35 +127,30 @@
     font-size: 13px;
     font-weight: 600;
     padding: 5px 12px;
-    border-radius: 20px; /* Bo tròn giống skill-tag */
-
-    /* Màu nền xanh lá nhạt và chữ xanh đậm hơn */
+    border-radius: 20px;
     background: #f0fdf4;
     color: #16a34a;
     border: 1px solid #dcfce7;
     transition: all 0.2s ease;
 }
 
-/* Icon bên trong badge */
 .job-meta-tags span svg {
     color: #16a34a;
 }
 
-/* Riêng thẻ thời gian nếu bạn muốn nhấn mạnh hơn một chút */
 .job-meta-tags span.time-tag {
     background: #ecfdf5;
     border-color: #10b981;
     color: #047857;
 }
 
-/* Hiệu ứng hover cho chuyên nghiệp */
 .job-meta-tags span:hover {
     background: #dcfce7;
     transform: translateY(-1px);
 }
 
 .time-tag {
-    color: #10b981; /* Màu xanh lá cho thời gian đăng bài */
+    color: #10b981;
     font-weight: 600;
 }
 
@@ -321,14 +331,10 @@
 }
 
 .control-item select,
+
 .mod-indicator {
     flex: 2;
-    min-width: 150px;
     display: flex;
-    align-items: center;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #cbd5e0;
 }
 
 .mod-indicator select {
@@ -336,12 +342,31 @@
     height: 100%;
     padding: 10px;
     border: none;
+    border-radius: 8px;
     background: transparent;
     font-weight: 600;
     text-align: left;
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
+}
+
+.mod-GREEN select {
+    border-color: #10b981;
+    color: #047857;
+    background: #ecfdf5;
+}
+
+.mod-YELLOW select {
+    border-color: #f59e0b;
+    color: #b45309;
+    background: #fffbeb;
+}
+
+.mod-RED select {
+    border-color: #ef4444;
+    color: #991b1b;
+    background: #fef2f2;
 }
 
 .admin-action-bar select {

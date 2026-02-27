@@ -15,41 +15,55 @@ const AdminJobPage = () => {
     const navigate = useNavigate();
 
     const observerTarget = useRef(null);
-
-    const loadJobs = useCallback(async (isMore = false) => {
+    const loadJobs = useCallback(async (isMore = false, currentCursor = null) => {
         if (loading) return;
         setLoading(true);
         try {
             const data = await jobService.getAdminJobs({
-                cursor: isMore ? cursor : null,
+                cursor: currentCursor,
                 status: filters.status,
                 modStatus: filters.modStatus
             });
-            setJobs(prev => isMore ? [...prev, ...data.jobs] : data.jobs);
+
+            setJobs(prev => {
+                const newJobs = data.jobs || [];
+                if (!isMore) return newJobs;
+
+                const existingIds = new Set(prev.map(j => j.id));
+                const uniqueNewJobs = newJobs.filter(j => !existingIds.has(j.id));
+                return [...prev, ...uniqueNewJobs];
+            });
+
             setCursor(data.nextCursor);
         } catch (err) {
             console.error("Lỗi tải dữ liệu:", err);
+            toast.error("Không thể tải dữ liệu");
         } finally {
             setLoading(false);
         }
-    }, [cursor, filters, loading]);
+    }, [filters.status, filters.modStatus]);
 
     useEffect(() => {
         setCursor(null);
-        loadJobs(false);
-    }, [filters.status, filters.modStatus]);
+        loadJobs(false, null);
+    }, [loadJobs]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             entries => {
                 if (entries[0].isIntersecting && cursor && !loading) {
-                    loadJobs(true);
+                    loadJobs(true, cursor);
                 }
             },
-            { threshold: 1.0 }
+            { threshold: 0.1 }
         );
-        if (observerTarget.current) observer.observe(observerTarget.current);
-        return () => observer.disconnect();
+
+        const currentTarget = observerTarget.current;
+        if (currentTarget) observer.observe(currentTarget);
+
+        return () => {
+            if (currentTarget) observer.disconnect();
+        };
     }, [loadJobs, cursor, loading]);
 
     const handleAction = async (id, type, value) => {
@@ -64,8 +78,13 @@ const AdminJobPage = () => {
         try {
             if (type === 'moderate') {
                 await jobService.changeModerationStatus(id, value);
-                setJobs(prev => prev.map(j => j.id === id ? { ...j, moderationStatus: value } : j));
-                toast.success("Đã cập nhật trạng thái kiểm duyệt", { id: toastId });
+                const updatedJobFromServer = await jobService.getJobDetail(id);
+                setJobs(prev => prev.map(j => j.id === id ? {
+                    ...j,
+                    moderationStatus: updatedJobFromServer.moderationStatus,
+                    status: updatedJobFromServer.status
+                } : j));
+                toast.success("Đã cập nhật kiểm duyệt thành công", { id: toastId });
             } else if (type === 'status') {
                 await jobService.changeStatus(id, value);
                 setJobs(prev => prev.map(j => j.id === id ? { ...j, status: value } : j));
@@ -145,11 +164,17 @@ const AdminJobPage = () => {
                                 >
                                     <div className="company-row">
                                         <span className="comp-name">{job.companyName}</span>
-                                        {job.subscriptionPlanName && (
-                                            <span className={`plan-badge-mini plan-${job.subscriptionPlanName.toLowerCase()}`}>
-                                                {job.subscriptionPlanName}
-                                            </span>
-                                        )}
+                                        {(() => {
+                                            const rawPlan = job.subscriptionPlanName;
+                                            const isInvalid = !rawPlan || rawPlan === "NA" || rawPlan === "N/A";
+                                            const planDisplay = isInvalid ? "FREE" : rawPlan;
+
+                                            return (
+                                                <span className={`plan-badge-mini plan-${planDisplay.toLowerCase()}`}>
+                                                    {planDisplay}
+                                                </span>
+                                            );
+                                        })()}
                                     </div>
                                     <div className="job-desc">{job.description}</div>
                                     <div className="loc-tag">{job.location}</div>
@@ -164,7 +189,7 @@ const AdminJobPage = () => {
                                             job.skills.map((skill, index) => (
                                                 <span key={index} className="skill-tag-mini">{skill}</span>
                                             ))
-                                        ) : <span className="na-text">N/A</span>}
+                                        ) : <span className="na-text">Không có kĩ năng</span>}
                                     </div>
                                 </td>
 
@@ -183,7 +208,7 @@ const AdminJobPage = () => {
                                 </td>
 
                                 <td>
-                                    <div className={`mod-indicator mod-${job.moderationStatus}`}>
+                                    <div className={`mod-indicator mod-${(job.moderationStatus || 'GREEN').toUpperCase()}`}>
                                         <select
                                             value={job.moderationStatus}
                                             onChange={(e) => handleAction(job.id, 'moderate', e.target.value)}
@@ -210,7 +235,6 @@ const AdminJobPage = () => {
                 </div>
             </div>
 
-            {/* 2. Sử dụng component chung thay cho code Portal cũ */}
             <DeleteConfirmPage
                 isOpen={showDeleteModal}
                 onCancel={() => {
