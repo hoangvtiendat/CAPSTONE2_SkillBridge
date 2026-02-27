@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import jobService from '../../services/api/jobService';
 import './AdminJob.css';
-// 1. Import component dùng chung (nhớ bỏ ReactDOM vì component kia đã lo phần Portal rồi)
 import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
 import { useNavigate } from 'react-router-dom';
+import { toast, Toaster } from "sonner";
 
 const AdminJobPage = () => {
     const [jobs, setJobs] = useState([]);
@@ -58,33 +58,43 @@ const AdminJobPage = () => {
             setShowDeleteModal(true);
             return;
         }
+
+        const toastId = toast.loading("Đang cập nhật...");
+
         try {
             if (type === 'moderate') {
                 await jobService.changeModerationStatus(id, value);
                 setJobs(prev => prev.map(j => j.id === id ? { ...j, moderationStatus: value } : j));
+                toast.success("Đã cập nhật trạng thái kiểm duyệt", { id: toastId });
             } else if (type === 'status') {
                 await jobService.changeStatus(id, value);
                 setJobs(prev => prev.map(j => j.id === id ? { ...j, status: value } : j));
+                toast.success("Đã cập nhật trạng thái bài đăng", { id: toastId });
             }
         } catch (err) {
-            alert("Cập nhật thất bại!");
+            console.error(err);
+            toast.error("Cập nhật thất bại. Vui lòng thử lại!", { id: toastId });
         }
     };
 
     const confirmDelete = async () => {
         if (!jobToDelete) return;
+        const toastId = toast.loading("Đang xóa bài đăng...");
         try {
             await jobService.deleteJob(jobToDelete);
             setJobs(prev => prev.filter(j => j.id !== jobToDelete));
             setShowDeleteModal(false);
             setJobToDelete(null);
+            toast.success("Xóa bài đăng thành công", { id: toastId });
         } catch (err) {
-            alert("Xóa thất bại!");
+            console.error(err);
+            toast.error("Xóa thất bại!", { id: toastId });
         }
     };
 
     return (
         <div className="admin-container">
+            <Toaster position="top-right" richColors closeButton />
             <header className="admin-header">
                 <div className="header-title">
                     <h2>Quản lý Tuyển dụng</h2>

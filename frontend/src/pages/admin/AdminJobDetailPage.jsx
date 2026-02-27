@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import './AdminJobDetail.css';
 import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
+import { toast, Toaster } from 'sonner'
 
 const AdminJobDetailPage = () => {
     const { jobId } = useParams();
@@ -31,14 +32,14 @@ const AdminJobDetailPage = () => {
                     try {
                         rawTitle = JSON.parse(rawTitle);
                     } catch (e) {
-                        console.error("Lỗi parse chuỗi title:", e);
+                        toast.error("Lỗi parse chuỗi title");
                         rawTitle = [];
                     }
                 }
                 setParsedData(Array.isArray(rawTitle) ? rawTitle : []);
             }
         } catch (error) {
-            console.error("Lỗi khi lấy chi tiết công việc:", error);
+            toast.error("Không thể tải chi tiết công việc");
         } finally {
             setLoading(false);
         }
@@ -50,32 +51,41 @@ const AdminJobDetailPage = () => {
 
     const onUpdateStatus = async (e, newStatus) => {
         e.stopPropagation();
+        const toastId = toast.loading("Đang cập nhật trạng thái...");
         try {
             await jobService.changeStatus(jobId, newStatus);
-            fetchJobDetail();
-        } catch (error) { alert("Cập nhật trạng thái thất bại"); }
+            await fetchJobDetail();
+            toast.success("Cập nhật trạng thái bài đăng thành công", { id: toastId });
+        } catch (error) {
+            toast.error("Cập nhật trạng thái thất bại", { id: toastId });
+        }
     };
 
     const onUpdateMod = async (e, newMod) => {
         e.stopPropagation();
+        const toastId = toast.loading("Đang cập nhật kiểm duyệt...");
         try {
             await jobService.changeModerationStatus(jobId, newMod);
-            fetchJobDetail();
-        } catch (error) { alert("Cập nhật kiểm duyệt thất bại"); }
+            await fetchJobDetail();
+            toast.success("Cập nhật trạng thái kiểm duyệt thành công", { id: toastId });
+        } catch (error) {
+            toast.error("Cập nhật kiểm duyệt thất bại", { id: toastId });
+        }
     };
 
-    // Mở modal thay vì dùng confirm của trình duyệt
     const handleDeleteClick = (e) => {
         e.stopPropagation();
         setShowDeleteModal(true);
     };
 
     const confirmDelete = async () => {
+        const toastId = toast.loading("Đang xoá công việc...");
         try {
             await jobService.deleteJob(jobId);
+            toast.success("Xoá công việc thành công", { id: toastId });
             navigate('/admin/jobs');
         } catch (error) {
-            alert("Xoá thất bại");
+            toast.error("Xoá thất bại", { id: toastId });
         } finally {
             setShowDeleteModal(false);
         }
@@ -90,6 +100,7 @@ const AdminJobDetailPage = () => {
     return (
         <>
             <div className="admin-job-detail-container">
+                <Toaster position="top-right" richColors closeButton />
                 <button className="btn-back-nav" onClick={() => navigate(-1)}>
                     <ChevronLeft size={20} /> Quay lại
                 </button>
@@ -178,7 +189,6 @@ const AdminJobDetailPage = () => {
                 </div>
             </div>
 
-            {/* Sử dụng Modal dùng chung */}
             <DeleteConfirmPage
                 isOpen={showDeleteModal}
                 onCancel={() => setShowDeleteModal(false)}
