@@ -20,13 +20,6 @@ import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 function App() {
   return (
     <>
-      <Header />
-      <nav className="fixed top-[72px] left-0 right-0 bg-gray-800 text-white p-2 z-50 flex gap-4 text-sm">
-          <Link title="Về trang chủ" to="/" className="hover:text-blue-400">Home</Link>
-          <Link title="Xem hệ thống log" to="/admin/logs" className="hover:text-blue-400">System Logs</Link>
-          <Link title="Tra cứu mã số thuế" to="/company/TaxLookup" className="hover:text-blue-400">Tra cứu mã số thuế</Link>
-          <Link title="Quản lý tin tuyển dụng" to="/admin/jobs" className="hover:text-blue-400 text-yellow-400">Quản lý Jobs</Link>
-        </nav>
       <div className="pt-[72px]"> {/* Add padding for fixed header */}
         <Routes>
           <Route path="/" element={<HomePage />} />
