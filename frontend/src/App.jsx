@@ -16,10 +16,12 @@ import SystemLogs from './pages/SystemLogs/SystemLogs';
 import TaxLookup from './pages/company/TaxLookup';
 import AdminJobPage from './pages/admin/AdminJobPage';
 import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
+import JobDetailPage from './pages/candidate/JobDetailPage';
 
 function App() {
   return (
     <>
+      <Header />
       <div className="pt-[72px]"> {/* Add padding for fixed header */}
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -34,8 +36,9 @@ function App() {
           <Route path="/company/TaxLookup" element={<TaxLookup/>} />
           <Route path="/admin/jobs" element={<AdminJobPage />} />
           <Route path="/admin/jobs/:jobId" element={<AdminJobDetailPage />} />
-
+          <Route path="/jobs/:jobId" element={<JobDetailPage />} />
           {/* Thêm routes khác ở đây */}
+
         </Routes>
       </div>
     </>

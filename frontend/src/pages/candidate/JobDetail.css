@@ -1,0 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.candidate-job-detail-wrapper {
+    padding: 1.5rem 0;
+    background: #f8fafc;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Các lớp kế thừa từ phong cách Admin */
+.btn-back-nav {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: color 0.2s;
+}
+
+.btn-back-nav:hover { color: #2563eb; }
+
+.detail-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+.header-main-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.company-info-section {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.company-logo-large {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 8px;
+    background: #fff;
+}
+
+.title-status-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
+.job-title-info h1 {
+    font-size: 1.85rem;
+    color: #1e293b;
+    margin: 0;
+    font-weight: 700;
+}
+
+.company-name-text {
+    font-size: 1.1rem;
+    color: #3b82f6;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* Meta tags style Admin */
+.job-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.job-meta-tags span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #dcfce7;
+}
+
+.job-meta-tags span.salary-tag {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #dbeafe;
+}
+
+.job-meta-tags span.time-tag {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+
+.skill-tag {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 8px 8px 0;
+    border: 1px solid #e2e8f0;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-open { background: #dcfce7; color: #15803d; }
+.status-closed { background: #fee2e2; color: #b91c1c; }
+
+/* Side Panel - Candidate Version */
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 16px;
+    width: 300px;
+}
+
+.btn-apply-primary {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-apply-primary:hover:not(:disabled) {
+    background: #0f172a;
+    transform: translateY(-2px);
+}
+
+.btn-ai-sparkle {
+    background: white;
+    color: #db2777;
+    border: 1px solid #fbcfe8;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-ai-sparkle:hover {
+    background: #fdf2f8;
+    border-color: #db2777;
+}
+
+.btn-disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    color: #64748b;
+}
+
+.safety-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #94a3b8;
+    justify-content: center;
+    margin-top: 5px;
+}
+
+/* Section styling */
+.section h3 {
+    border-left: 5px solid #3b82f6;
+    padding-left: 15px;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
+.check-list {
+    list-style: none;
+    padding: 0;
+}
+
+.check-list li {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+    color: #475569;
+}
+
+.check-list li::before {
+    content: "✓";
+    color: #10b981;
+    font-weight: bold;
+}
+
+/* Animations */
+.animate-in {
+    animation: fadeInSlide 0.5s ease-out forwards;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .header-main-content { flex-direction: column; }
+    .side-panel { width: 100%; }
+}
+
+@media (max-width: 640px) {
+    .company-info-section { flex-direction: column; align-items: center; text-align: center; }
+    .job-title-info h1 { font-size: 1.5rem; }
+    .title-status-row { justify-content: center; }
+    .job-meta-tags span { width: 100%; justify-content: center; }
+}

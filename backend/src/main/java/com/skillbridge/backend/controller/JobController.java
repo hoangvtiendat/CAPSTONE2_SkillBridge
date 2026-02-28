@@ -45,6 +45,15 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetailByCandidate(@PathVariable String id) {
+
+        JobDetailResponse result = jobService.getJobDetail(id);
+        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Xem chi tiet jd",result);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/feedAdmin")
     public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getAllJobsForAdmin(
             @RequestParam(required = false) String cursor,

@@ -75,6 +75,7 @@ public class SecurityConfig {
                                 "/identity/swagger-ui/**",
                                 "/identity/v3/api-docs/**",
                                 "/jobs/feed/**",
+                                "/jobs/{id}",
                                 "/ws-log/**"
                         ).permitAll()
 

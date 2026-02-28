@@ -80,6 +80,11 @@ const jobService = {
         }
     },
 
+    getJobDetailByCandidate: async (jobId) => {
+        const response = await api.get(`/jobs/${jobId}`);
+        return response.data.result;
+    },
+
     getJobDetail: async (jobId) => {
         const response = await api.get(`/jobs/feedAdmin/${jobId}`);
         return response.data.result;
