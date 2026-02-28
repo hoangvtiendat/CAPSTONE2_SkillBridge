@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast, Toaster } from 'sonner';
-import { Plus, Trash2 } from 'lucide-react';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons";
+import { Plus, Search, Trash2, X } from 'lucide-react'; // Đã thêm các icon cần thiết
 
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 
 import './DetailJD.css';
+// Tái sử dụng các class từ PostJD.css nếu bạn nhúng chung, 
+// hoặc copy các class cấu trúc grid sang DetailJD.css
 
 const toastStyles = {
     warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
@@ -29,8 +33,9 @@ const DetailJD = () => {
 
     const [categories, setCategories] = useState([]);
     const [skillsList, setSkillsList] = useState([]);
+    const [skillSearchTerm, setSkillSearchTerm] = useState("");
 
-    const fetchJdDetail = async () => {
+    const fetchJdDetail = useCallback(async () => {
         try {
             const response = await jobService.getDetailJd(id);
             setJdDetail(response.result);
@@ -39,12 +44,12 @@ const DetailJD = () => {
             toast.error('Lỗi khi tải chi tiết JD', { style: toastStyles.error });
             setLoading(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchJdDetail();
         getListCategories();
-    }, [id]);
+    }, [id, fetchJdDetail]);
 
     const getListCategories = async () => {
         try {
@@ -84,10 +89,8 @@ const DetailJD = () => {
         const mappedSkills = (jdDetail.skills || []).map(s => {
             let extractedId = s.skillId || s.id || s._id;
             if (!extractedId && s.skill) extractedId = s.skill.id || s.skill._id;
-            
             let extractedName = s.name || s.skillName || s.title;
             if (!extractedName && s.skill) extractedName = s.skill.name || s.skill.title;
-
             const extractedRequired = s.isRequired !== undefined ? s.isRequired : (s.required || false);
             
             return {
@@ -117,6 +120,7 @@ const DetailJD = () => {
         setIsModalOpen(false);
         setEditForm(null);
         setInitialFormState(null); 
+        setSkillSearchTerm("");
     };
 
     const handleChange = (e) => {
@@ -125,33 +129,16 @@ const DetailJD = () => {
     };
 
     const handleCategoryChange = (e) => {
-        const selectedCategoryId = e.target.value;
-        setEditForm(prev => ({
-            ...prev,
-            categoryId: selectedCategoryId
-        }));
+        setEditForm(prev => ({ ...prev, categoryId: e.target.value }));
     };
 
     const handleSkillToggle = (toggledId, toggledName) => {
         setEditForm(prev => {
-            const exists = prev.skills.find(s => 
-                s.skillId === toggledId || 
-                (s.name && toggledName && s.name === toggledName)
-            );
-
+            const exists = prev.skills.find(s => s.skillId === toggledId || (s.name && toggledName && s.name === toggledName));
             if (exists) {
-                return { 
-                    ...prev, 
-                    skills: prev.skills.filter(s => 
-                        s.skillId !== toggledId && 
-                        (!s.name || !toggledName || s.name !== toggledName)
-                    ) 
-                };
+                return { ...prev, skills: prev.skills.filter(s => s.skillId !== toggledId && (!s.name || !toggledName || s.name !== toggledName)) };
             } else {
-                return { 
-                    ...prev, 
-                    skills: [...prev.skills, { skillId: toggledId, isRequired: false, name: toggledName }] 
-                };
+                return { ...prev, skills: [...prev.skills, { skillId: toggledId, isRequired: false, name: toggledName }] };
             }
         });
     };
@@ -166,14 +153,8 @@ const DetailJD = () => {
         }));
     };
 
-    const addDynamicTitle = () => {
-        setDynamicTitles([...dynamicTitles, { key: "", value: "" }]);
-    };
-
-    const removeDynamicTitle = (indexToRemove) => {
-        setDynamicTitles(dynamicTitles.filter((_, index) => index !== indexToRemove));
-    };
-
+    const addDynamicTitle = () => setDynamicTitles([...dynamicTitles, { key: "", value: "" }]);
+    const removeDynamicTitle = (indexToRemove) => setDynamicTitles(dynamicTitles.filter((_, index) => index !== indexToRemove));
     const handleDynamicTitleChange = (index, field, newValue) => {
         const updatedTitles = [...dynamicTitles];
         updatedTitles[index][field] = newValue;
@@ -194,44 +175,29 @@ const DetailJD = () => {
             return;
         }
 
-        // BƯỚC LỌC KỲ DIỆU: Chỉ giữ lại những Kỹ năng thực sự thuộc về Category hiện tại (có mặt trong skillsList)
-        const validSkillsToSubmit = editForm.skills.filter(s => {
-            return skillsList.some(listS => {
-                const listSId = String(listS.id || listS._id || listS.skillId || "");
-                const listSName = String(listS.name || listS.skillName || listS.title || "").trim().toLowerCase();
-                return (s.skillId === listSId) || (s.name && s.name === listSName);
-            });
-        });
+        const validSkillsToSubmit = editForm.skills.filter(s => skillsList.some(listS => {
+            const listSId = String(listS.id || listS._id || listS.skillId || "");
+            const listSName = String(listS.name || listS.skillName || listS.title || "").trim().toLowerCase();
+            return (s.skillId === listSId) || (s.name && s.name === listSName);
+        }));
 
-        // Kiểm tra xem sau khi lọc, người dùng có chọn kỹ năng nào hợp lệ không
         if (validSkillsToSubmit.length === 0) {
-            toast.error("Lỗi nhập liệu", { description: "Vui lòng chọn ít nhất 1 kỹ năng yêu cầu cho danh mục hiện tại", style: toastStyles.warning });
+            toast.error("Lỗi nhập liệu", { description: "Vui lòng chọn ít nhất 1 kỹ năng yêu cầu", style: toastStyles.warning });
             return;
         }
 
         const titleObject = {};
-        dynamicTitles.forEach(item => {
-            const finalKey = item.key.trim() === "" ? "Mục khác" : item.key.trim();
-            titleObject[finalKey] = item.value;
-        });
+        dynamicTitles.forEach(item => { titleObject[item.key.trim() === "" ? "Mục khác" : item.key.trim()] = item.value; });
 
         const cleanSkills = validSkillsToSubmit.map(s => {
             const realSkill = skillsList.find(listS => {
                 const listSName = String(listS.name || listS.skillName || listS.title || "").trim().toLowerCase();
                 return listSName === s.name || String(listS.id || listS._id) === s.skillId;
             });
-            
-            return {
-                skillId: realSkill ? String(realSkill.id || realSkill._id) : s.skillId,
-                isRequired: s.isRequired
-            };
+            return { skillId: realSkill ? String(realSkill.id || realSkill._id) : s.skillId, isRequired: s.isRequired };
         });
 
-        const payloadToSubmit = {
-            ...editForm,
-            title: titleObject,
-            skills: cleanSkills
-        };
+        const payloadToSubmit = { ...editForm, title: titleObject, skills: cleanSkills };
 
         setIsUpdating(true);
         try {
@@ -246,25 +212,17 @@ const DetailJD = () => {
         }
     };
 
-    const isFormChanged = initialFormState 
-        && (JSON.stringify(initialFormState.editForm) !== JSON.stringify(editForm) 
-        || JSON.stringify(initialFormState.dynamicTitles) !== JSON.stringify(dynamicTitles));
+    const isFormChanged = initialFormState && (JSON.stringify(initialFormState.editForm) !== JSON.stringify(editForm) || JSON.stringify(initialFormState.dynamicTitles) !== JSON.stringify(dynamicTitles));
 
-    if (loading) {
-        return (
-            <div className="loading-container">
-                <div className="spinner"></div>
-                <p>Đang tải dữ liệu...</p>
-            </div>
-        );
-    }
+    const filteredSkillsList = skillsList.filter(skill => {
+        const skillName = String(skill.name || skill.skillName || skill.title || "").toLowerCase();
+        return skillName.includes(skillSearchTerm.toLowerCase());
+    });
 
-    if (!jdDetail) {
-        return <div className="error-container">Không tìm thấy thông tin JD</div>;
-    }
+    if (loading) return <div className="loading-container"><div className="spinner"></div><p>Đang tải dữ liệu...</p></div>;
+    if (!jdDetail) return <div className="error-container">Không tìm thấy thông tin JD</div>;
 
     const statusText = jdDetail.status || "PENDING"; 
-
     const getStatusClass = (status) => {
         if (!status) return 'status-pending';
         switch(status.toUpperCase()) {
@@ -274,273 +232,254 @@ const DetailJD = () => {
             default: return 'status-pending';
         }
     };
+
+    const getStatusText = (status) => {
+        if (!status) return 'Đang chờ';
+        switch(status.toUpperCase()) {
+            case 'OPEN': return 'Đang mở';
+            case 'CLOSED': return 'Đã đóng';
+            case 'PENDING': return 'Đang chờ';
+            default: return 'Đang chờ';
+        }
+    };
+
     return (
-        <div className="detail-jd-wrapper">
+        <div className="jd-board-container detail-view-container">
             <Toaster position="top-right" />
             
-            <div className="jd-header-card">
-                <div className="header-left">
-                    <div className="company-logo-wrapper">
-                        <img 
-                            src={jdDetail.company?.logoUrl || "https://via.placeholder.com/100"} 
-                            alt={jdDetail.company?.name || "Company Logo"} 
-                            className="company-logo" 
-                        />
-                    </div>
-                    <div className="header-titles">
-                        <h1 className="job-position">{jdDetail.position}</h1>
-                        <h2 className="company-name">{jdDetail.company?.name || "Tên công ty chưa cập nhật"}</h2>
+            {/* --- HEADER CHI TIẾT --- */}
+            <header className="detail-header-card form-card">
+                <div className="header-company-info">
+                    <img src={jdDetail.company?.logoUrl || "https://via.placeholder.com/80"} alt="Logo" className="company-logo-large" />
+                    <div>
+                        <h1 className="job-title-large">{jdDetail.position}</h1>
+                        <p className="company-name-large">
+                            <FontAwesomeIcon icon={faBuilding} className="icon-sm" /> {jdDetail.company?.name || "Tên công ty chưa cập nhật"}
+                        </p>
                     </div>
                 </div>
-
-                <div className="header-right">
-                    <div className={`status-badge ${getStatusClass(statusText)}`}>
-                            Trạng thái: {statusText}
-                        </div>
-                    <button className="btn-update" onClick={handleOpenModal}>
-                        Cập nhật
+                <div className="header-actions">
+                    <span className={`status-badge-modern ${getStatusClass(statusText)}`}>
+                        {getStatusText(statusText)}
+                    </span>
+                    <button className="btn-primary" onClick={handleOpenModal}>
+                        Chỉnh sửa JD
                     </button>
                 </div>
-            </div>
+            </header>
 
-            <div className="jd-body-layout">
-                <div className="jd-main-content">
-                    <div className="content-section">
-                        <h3>Mô tả công việc</h3>
-                        <p className="text-content">{jdDetail.description}</p>
-                    </div>
+            {/* --- LAYOUT 2 CỘT CHO VIEW MODE --- */}
+            <div className="jd-board-layout">
+                {/* Cột Trái: Mô tả chi tiết */}
+                <div className="layout-main-column">
+                    <section className="form-card content-card">
+                        <h3 className="card-title">Mô tả công việc</h3>
+                        <div className="text-content">{jdDetail.description}</div>
 
-                    {jdDetail.title && Object.entries(jdDetail.title).map(([key, value], index) => (
-                        <div key={index} className="content-section">
-                            <h3>{key}</h3>
-                            <p className="text-content">{value}</p>
-                        </div>
-                    ))}
+                        {jdDetail.title && Object.entries(jdDetail.title).map(([key, value], index) => (
+                            <div key={index} className="dynamic-content-section mt-4">
+                                <h3 className="card-title-sm">{key}</h3>
+                                <div className="text-content">{value}</div>
+                            </div>
+                        ))}
+                    </section>
                 </div>
 
-                <div className="jd-sidebar">
-                    <div className="sidebar-card">
-                        <h3>Thông tin chung</h3>
-                        <div className="info-item">
-                            <span className="info-icon">📍</span>
-                            <div className="info-text">
-                                <span className="info-label">Địa điểm</span>
-                                <span className="info-value">{jdDetail.location}</span>
+                {/* Cột Phải: Thuộc tính & Kỹ năng */}
+                <div className="layout-sidebar">
+                    <section className="form-card sidebar-card">
+                        <h3 className="card-title">Thông tin chung</h3>
+                        <div className="info-list">
+                            <div className="info-item-modern">
+                                <div className="icon-box"><FontAwesomeIcon icon={faMapMarkerAlt} /></div>
+                                <div>
+                                    <span className="info-label">Địa điểm</span>
+                                    <span className="info-value">{jdDetail.location}</span>
+                                </div>
+                            </div>
+                            <div className="info-item-modern">
+                                <div className="icon-box green"><FontAwesomeIcon icon={faMoneyBillWave} /></div>
+                                <div>
+                                    <span className="info-label">Mức lương</span>
+                                    <span className="info-value highlight">
+                                        {Number(jdDetail.salaryMin).toLocaleString()} - {Number(jdDetail.salaryMax).toLocaleString()} VND
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="info-item-modern">
+                                <div className="icon-box blue"><FontAwesomeIcon icon={faBriefcase} /></div>
+                                <div>
+                                    <span className="info-label">Danh mục</span>
+                                    <span className="info-value">{jdDetail.category?.name || jdDetail.category?.categoryName || "Chưa có"}</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="info-item">
-                            <span className="info-icon">💰</span>
-                            <div className="info-text">
-                                <span className="info-label">Mức lương</span>
-                                <span className="info-value highlight-salary">
-                                    {Number(jdDetail.salaryMin).toLocaleString()} - {Number(jdDetail.salaryMax).toLocaleString()} VND
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    </section>
 
-                    <div className="sidebar-card">
-                        <h3>Kỹ năng yêu cầu</h3>
-                        <div className="skills-tag-list">
+                    <section className="form-card sidebar-card">
+                        <h3 className="card-title">Kỹ năng yêu cầu</h3>
+                        <div className="skills-tags-container">
                             {jdDetail.skills?.map((skill, index) => (
-                                <span key={index} className={`skill-tag ${skill.required ? 'tag-required' : ''}`}>
-                                    {skill.name || skill.skillName || skill.title} {skill.required && <span className="req-star">*</span>}
+                                <span key={index} className={`skill-tag-modern ${skill.required ? 'required' : ''}`}>
+                                    {skill.name || skill.skillName || skill.title}
+                                    {skill.required && <span className="star-req">*</span>}
                                 </span>
                             ))}
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 
+            {/* =========================================
+               MODAL CẬP NHẬT (DÙNG LẠI GRID 2 CỘT)
+            ========================================= */}
             {isModalOpen && editForm && (
-                <div className="modal-overlay">
-                    <div className="modal-content" style={{ maxWidth: '850px' }}>
-                        <div className="modal-header">
-                            <h2>Cập nhật Job Description</h2>
-                            <button type="button" className="btn-close" onClick={handleCloseModal}>&times;</button>
-                        </div>
+                <div className="modal-overlay-modern">
+                    <div className="modal-container-modern">
                         
-                        <form onSubmit={handleUpdateSubmit} className="modal-body">
-                            
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Vị trí (Position)</label>
-                                    <input
-                                        type="text"
-                                        name="position"
-                                        value={editForm.position}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-control"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Danh mục (Category)</label>
-                                    <select
-                                        value={editForm.categoryId}
-                                        onChange={handleCategoryChange}
-                                        required
-                                        className="form-control"
-                                    >
-                                        <option value="">-- Chọn danh mục --</option>
-                                        {categories.map(cat => {
-                                            const catId = String(cat.id || cat._id); 
-                                            return (
-                                                <option key={catId} value={catId}>
-                                                    {cat.name || cat.categoryName}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
-                            </div>
+                        <div className="modal-header-modern">
+                            <h2>Cập nhật Job Description</h2>
+                            <button onClick={handleCloseModal} className="btn-close-icon"><X size={24} /></button>
+                        </div>
 
-                            <div className="dynamic-titles-container mt-3 mb-3">
-                                <div className="dynamic-titles-header">
-                                    <label>Các mục Tiêu đề & Mô tả chi tiết</label>
-                                    <button type="button" onClick={addDynamicTitle} className="btn-add">
-                                        <Plus size={16} /> Thêm mục mới
-                                    </button>
-                                </div>
-                                <div className="dynamic-titles-list">
-                                    {dynamicTitles.map((item, index) => (
-                                        <div key={index} className="dynamic-title-row">
-                                            <div className="dynamic-title-key">
-                                                <input
-                                                    type="text"
-                                                    value={item.key}
-                                                    onChange={(e) => handleDynamicTitleChange(index, "key", e.target.value)}
-                                                    className="form-control"
-                                                    placeholder="Tiêu đề..."
-                                                />
+                        <form onSubmit={handleUpdateSubmit} className="modal-body-scroll">
+                            <div className="jd-board-layout" style={{ gap: '20px' }}>
+                                
+                                {/* Cột Trái Modal */}
+                                <div className="layout-main-column">
+                                    <div className="form-card">
+                                        <h3 className="card-title">Thông tin cơ bản</h3>
+                                        <div className="input-group-grid">
+                                            <div className="input-item">
+                                                <label>Vị trí (Position)</label>
+                                                <input type="text" name="position" value={editForm.position} onChange={handleChange} required />
                                             </div>
-                                            <div className="dynamic-title-value">
-                                                <input
-                                                    type="text"
-                                                    value={item.value}
-                                                    onChange={(e) => handleDynamicTitleChange(index, "value", e.target.value)}
-                                                    className="form-control"
-                                                    placeholder="Mô tả..."
-                                                />
+                                            <div className="input-item">
+                                                <label>Danh mục (Category)</label>
+                                                <select value={editForm.categoryId} onChange={handleCategoryChange} required>
+                                                    <option value="">-- Chọn --</option>
+                                                    {categories.map(cat => (
+                                                        <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name || cat.categoryName}</option>
+                                                    ))}
+                                                </select>
                                             </div>
-                                            {dynamicTitles.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeDynamicTitle(index)}
-                                                    className="btn-remove"
-                                                    title="Xóa mục này"
-                                                >
-                                                    <Trash2 size={20} />
-                                                </button>
-                                            )}
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
+                                    </div>
 
-                            <div className="form-group">
-                                <label>Mô tả công việc chung (Description)</label>
-                                <textarea
-                                    name="description"
-                                    value={editForm.description}
-                                    onChange={handleChange}
-                                    required
-                                    rows="4"
-                                    className="form-control"
-                                ></textarea>
-                            </div>
+                                    <div className="form-card">
+                                        <h3 className="card-title">Mô tả công việc</h3>
+                                        <div className="input-item full-width">
+                                            <label>Mô tả chung (Description)</label>
+                                            <textarea name="description" value={editForm.description} onChange={handleChange} required rows="3"></textarea>
+                                        </div>
 
-                            <div className="form-group">
-                                <label>Địa điểm (Location)</label>
-                                <input
-                                    type="text"
-                                    name="location"
-                                    value={editForm.location}
-                                    onChange={handleChange}
-                                    required
-                                    className="form-control"
-                                />
-                            </div>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Lương tối thiểu (VND)</label>
-                                    <input
-                                        type="number"
-                                        name="salaryMin"
-                                        value={editForm.salaryMin}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-control"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Lương tối đa (VND)</label>
-                                    <input
-                                        type="number"
-                                        name="salaryMax"
-                                        value={editForm.salaryMax}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-control"
-                                    />
-                                </div>
-                            </div>
-
-                            {skillsList.length > 0 && (
-                                <div className="skills-container mt-3">
-                                    <label className="skills-title">Kỹ năng yêu cầu</label>
-                                    <div className="skills-grid">
-                                        {skillsList.map(skill => {
-                                            const listSkillId = String(skill.id || skill._id || skill.skillId || "");
-                                            const listSkillName = String(skill.name || skill.skillName || skill.title || "").trim().toLowerCase();
-                                            
-                                            const selectedSkill = editForm.skills.find(s => 
-                                                (s.skillId && s.skillId !== "undefined" && s.skillId === listSkillId) || 
-                                                (s.name && listSkillName && s.name === listSkillName)
-                                            );
-                                            
-                                            const isSelected = !!selectedSkill;
-
-                                            return (
-                                                <div key={listSkillId} className="skill-item">
-                                                    <label className="skill-label">
+                                        <div className="dynamic-section">
+                                            <div className="dynamic-header">
+                                                <label>Các mục Tiêu đề & Chi tiết</label>
+                                                <button type="button" onClick={addDynamicTitle} className="btn-add-outline">
+                                                    <Plus size={16} /> Thêm mục
+                                                </button>
+                                            </div>
+                                            <div className="dynamic-body job-feed">
+                                                {dynamicTitles.map((item, index) => (
+                                                    <div key={index} className="dynamic-row">
                                                         <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={() => handleSkillToggle(listSkillId, listSkillName)}
+                                                            type="text"
+                                                            value={item.key}
+                                                            onChange={(e) => handleDynamicTitleChange(index, "key", e.target.value)}
+                                                            placeholder="Tiêu đề (VD: Quyền lợi)"
+                                                            className="dynamic-input-key"
                                                         />
-                                                        <span>{skill.name || skill.skillName || skill.title}</span>
-                                                    </label>
-
-                                                    {isSelected && (
-                                                        <label className="skill-required-label">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={selectedSkill.isRequired}
-                                                                onChange={(e) => handleSkillRequiredToggle(listSkillId, listSkillName, e.target.checked)}
-                                                            />
-                                                            Bắt buộc?
-                                                        </label>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
+                                                        <textarea
+                                                            value={item.value}
+                                                            onChange={(e) => handleDynamicTitleChange(index, "value", e.target.value)}
+                                                            placeholder="Mô tả chi tiết..."
+                                                            rows="2"
+                                                            className="dynamic-input-value"
+                                                        />
+                                                        {dynamicTitles.length > 1 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeDynamicTitle(index)}
+                                                                className="btn-delete-icon"
+                                                                title="Xóa mục này"
+                                                            >
+                                                                <Trash2 size={18} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            )}
 
-                            {editForm.categoryId && skillsList.length === 0 && (
-                                <p style={{fontSize: '13px', color: '#6b7280', fontStyle: 'italic', marginTop: '10px'}}>
-                                    (Danh mục này chưa có kỹ năng nào hoặc đang tải...)
-                                </p>
-                            )}
+                                {/* Cột Phải Modal */}
+                                <div className="layout-sidebar">
+                                    <div className="form-card sidebar-card">
+                                        <h3 className="card-title">Yêu cầu & Lương</h3>
+                                        <div className="input-item full-width">
+                                            <label>Địa điểm (Location)</label>
+                                            <input type="text" name="location" value={editForm.location} onChange={handleChange} required />
+                                        </div>
+                                        <div className="salary-group">
+                                            <div className="input-item">
+                                                <label>Lương Tối thiểu</label>
+                                                <input type="number" name="salaryMin" value={editForm.salaryMin} onChange={handleChange} required />
+                                            </div>
+                                            <div className="input-item">
+                                                <label>Lương Tối đa</label>
+                                                <input type="number" name="salaryMax" value={editForm.salaryMax} onChange={handleChange} required />
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            <div className="modal-footer" style={{ marginTop: '20px' }}>
-                                <button type="button" className="btn-cancel" onClick={handleCloseModal}>Đóng</button>
-                                
+                                    <div className="form-card sidebar-card skills-card" style={{ maxHeight: '400px' }}>
+                                        <div className="skills-header">
+                                            <h3 className="card-title">Kỹ năng yêu cầu</h3>
+                                            <div className="search-box">
+                                                <Search size={16} />
+                                                <input type="text" placeholder="Tìm nhanh..." value={skillSearchTerm} onChange={(e) => setSkillSearchTerm(e.target.value)} />
+                                            </div>
+                                        </div>
+                                        <div className="skills-content">
+                                            {filteredSkillsList.length > 0 ? (
+                                                <div className="skills-list-compact">
+                                                    {filteredSkillsList.map(skill => {
+                                                        const listSkillId = String(skill.id || skill._id || skill.skillId || "");
+                                                        const listSkillName = String(skill.name || skill.skillName || skill.title || "").trim().toLowerCase();
+                                                        const selectedSkill = editForm.skills.find(s => (s.skillId && s.skillId === listSkillId) || (s.name && s.name === listSkillName));
+                                                        const isSelected = !!selectedSkill;
+
+                                                        return (
+                                                            <div key={listSkillId} className={`compact-skill-item ${isSelected ? 'active' : ''}`}>
+                                                                <label className="checkbox-main">
+                                                                    <input type="checkbox" checked={isSelected} onChange={() => handleSkillToggle(listSkillId, listSkillName)} />
+                                                                    <span>{skill.name || skill.skillName || skill.title}</span>
+                                                                </label>
+                                                                {isSelected && (
+                                                                    <label className="checkbox-sub">
+                                                                        <input type="checkbox" checked={selectedSkill.isRequired} onChange={(e) => handleSkillRequiredToggle(listSkillId, listSkillName, e.target.checked)} />
+                                                                        Bắt buộc?
+                                                                    </label>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <p className="empty-text">Không tìm thấy kỹ năng.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Footer Cố định của Modal */}
+                            <div className="modal-footer-modern">
+                                <button type="button" className="btn-secondary" onClick={handleCloseModal}>Hủy bỏ</button>
                                 {isFormChanged && (
-                                    <button type="submit" className="btn-save" disabled={isUpdating}>
+                                    <button type="submit" className="btn-primary" disabled={isUpdating}>
                                         {isUpdating ? 'Đang lưu...' : 'Lưu thay đổi'}
                                     </button>
                                 )}

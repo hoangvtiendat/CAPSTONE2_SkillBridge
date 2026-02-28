@@ -71,8 +71,8 @@ const JdList = () => {
                 <button className="create-jd-button" onClick={handleCreateJd}>Tạo JD mới</button>
             </div>
 
-            {loading && <p>Đang tải...</p>}
-            {!loading && jdList.length === 0 && <p>Không có JD nào.</p>}
+            {loading && <p className="loading-text">Đang tải dữ liệu...</p>}
+            {!loading && jdList.length === 0 && <p className="empty-state">Không có JD nào.</p>}
 
             {!loading && jdList.length > 0 && (
                 <ul className="jd-list">
@@ -84,24 +84,40 @@ const JdList = () => {
                         >
                             <div className="jd-header">
                                 <img src={jd.company.logoUrl} alt={`${jd.company.name} logo`} className="jd-company-logo" />
-                                <div>
+                                <div className="jd-header-info">
                                     <h2 className="jd-title">{jd.position}</h2>
                                     <p className="jd-company-name">{jd.company.name}</p>
                                 </div>
                             </div>
-                            <p className="jd-location">Địa điểm: {jd.location}</p>
-                            <p className="jd-salary">Mức lương: {jd.salaryMin} - {jd.salaryMax} VND</p>
-                            <p className="jd-description">{jd.description}</p>
-                            <div className="jd-skills">
-                                <h3>Kỹ năng yêu cầu:</h3>
-                                <ul>
-                                    {jd.skills.map((skill, index) => (
-                                        <li key={index} className={skill.required ? 'required-skill' : ''}>
-                                            {skill.name} {skill.required && '(Bắt buộc)'}
-                                        </li>
-                                    ))}
-                                </ul>
+                            
+                            <div className="jd-details-wrapper">
+                                <div className="jd-section-content">
+                                    <h3>Địa điểm</h3>
+                                    <p>{jd.location}</p>
+                                </div>
+                                
+                                <div className="jd-section-content">
+                                    <h3>Mức lương</h3>
+                                    <p className="highlight-salary">{Number(jd.salaryMin).toLocaleString()} - {Number(jd.salaryMax).toLocaleString()} VND</p>
+                                </div>
+                                
+                                <div className="jd-section-content">
+                                    <h3>Mô tả công việc</h3>
+                                    <p className="text-truncate">{jd.description}</p>
+                                </div>
+                                
+                                <div className="jd-section-content">
+                                    <h3>Kỹ năng yêu cầu</h3>
+                                    <ul className="jd-skills-list">
+                                        {jd.skills.map((skill, index) => (
+                                            <li key={index} className={skill.required ? 'required-skill' : ''}>
+                                                {skill.name} {skill.required && <span className="req-badge">Bắt buộc</span>}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
                             </div>
+
                             <div className="jd-actions">
                                 <button onClick={(e) => handleViewDetails(e, jd)}>Xem thông tin</button>
                                 <button onClick={(e) => handleDeleteJd(e, jd.id)}>Xóa</button>
