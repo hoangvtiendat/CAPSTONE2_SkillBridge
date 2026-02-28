@@ -79,7 +79,9 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(
-                                "/Logs/**"
+                                "/jobs/feedAdmin/**",
+                                "/Logs/**",
+                                "/companies/taxLook"
                         ).hasRole("ADMIN")
 
                         .anyRequest().authenticated()
