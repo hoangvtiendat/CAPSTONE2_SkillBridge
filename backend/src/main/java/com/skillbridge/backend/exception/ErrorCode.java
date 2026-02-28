@@ -31,6 +31,7 @@ public enum ErrorCode {
 
     SKILL_EXITS_NAME(502, "Tên kỹ năng đã tồn tại trước đó"),
     SKILL_NOT_FOUND(503,"Không tìm thấy kĩ năng"),
+    DUPLICATE_JOB_SKILL(504, "Hiện tại kĩ năng đang được sử dụng"),
     /// Company
     COMPANY_NOT_FOUND(601,"Không tìm thấy công ty"),
     /// Comapany_member

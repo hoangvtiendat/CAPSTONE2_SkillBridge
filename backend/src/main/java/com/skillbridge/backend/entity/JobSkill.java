@@ -30,6 +30,8 @@ public class JobSkill extends BaseEntity{
     @Column(name = "is_required")
     private Boolean isRequired;
 
+
+
     public String getId() {
         return id;
     }

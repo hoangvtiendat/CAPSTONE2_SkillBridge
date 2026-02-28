@@ -6,6 +6,7 @@ import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.entity.Skill;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.JobSkillRepository;
 import com.skillbridge.backend.repository.SkillRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,11 +18,17 @@ public class SkillService {
     private SkillRepository skillRepository;
     @Autowired
     private CategoryProfessionService categoryProfessionService;
+    @Autowired
+    private JobSkillRepository jobSkillRepository;
+
     public Skill CreateNewSkill(SkillRequest skillRequest) {
         Skill skill = new Skill();
+        // check trùng tên
         if(skillRepository.existsByName(skillRequest.getName())) {
             throw new AppException(ErrorCode.SKILL_EXITS_NAME);
         }
+        // check coi thử kĩ năng có tồn tại ở đâu trong các bài đăng không
+
         skill.setName(skillRequest.getName());
         Category category = categoryProfessionService.getCategoryProfessionById(skillRequest.getCategory_id());
         skill.setCategory(category);
@@ -50,10 +57,13 @@ public class SkillService {
     }
     public Skill deleteSkill(String id) {
         Skill skill = getSkillById(id);
+        Boolean isDeleted = jobSkillRepository.existsBySkillId(id);
+        if(isDeleted) {
+            throw new AppException(ErrorCode.DUPLICATE_JOB_SKILL);
+        }
+
         skillRepository.delete(skill);
         return skill;
     }
-
-
 
 }

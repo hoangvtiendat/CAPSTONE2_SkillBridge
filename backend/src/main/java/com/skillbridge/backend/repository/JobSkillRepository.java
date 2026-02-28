@@ -12,10 +12,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface JobSkillRepository extends JpaRepository<JobSkill, Long> {
+public interface JobSkillRepository extends JpaRepository<JobSkill, String> {
     @Modifying
     @Query("DELETE FROM JobSkill js WHERE js.skill.id = :skillId")
     void deleteBySkillId(@Param("skillId") String skillId);
+    Boolean existsBySkillId(@Param("skillId") String skillId);
 
     @Modifying
     @Query("DELETE FROM JobSkill js WHERE js.job.id = :jobId")
