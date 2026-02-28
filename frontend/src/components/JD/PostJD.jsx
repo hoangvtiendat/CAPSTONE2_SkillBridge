@@ -22,7 +22,6 @@ const PostJD = () => {
     const [categories, setCategories] = useState([]);
     const [skillsList, setSkillsList] = useState([]);
     
-    // Thêm state cho thanh tìm kiếm kỹ năng giống DetailJD
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
 
     const [dynamicTitles, setDynamicTitles] = useState([
@@ -50,7 +49,6 @@ const PostJD = () => {
         } else {
             setSkillsList([]);
         }
-        // Reset thanh tìm kiếm khi đổi category
         setSkillSearchTerm("");
     }, [formData.categoryId]);
 

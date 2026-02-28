@@ -19,12 +19,14 @@ import DetailJD_Page from './pages/JD/detailJD';
 import SubscriptionManagerPage from './pages/Subscription.jsx/SubscriptionManager';
 import { Toaster } from 'sonner';
 
+import AdminRoute from './components/admin/AdminRoute';
+
 function App() {
   return (
     <>
       <Toaster position="top-right" richColors />
       <Header />
-      <div className="pt-[72px]"> {/* Add padding for fixed header */}
+      <div className="pt-[72px]">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -34,11 +36,25 @@ function App() {
           <Route path="/oauth-success" element={<OAuthSuccess />} />
           <Route path='/set-password' element={<SetPass />} />
           <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
-          <Route path="/category/:categoryId/skills" element={<SkillPageContainer />} />  
-          <Route path="/company/jd-list" element={<ListJdOfCompany />} />   
           <Route path='/create-jd' element={<CreateJd />} />
           <Route path='/detail-jd/:id' element={<DetailJD_Page />} />
-          <Route path='/subscriptions' element={<SubscriptionManagerPage />} />
+          <Route path='/company/jd-list' element={<ListJdOfCompany />} />
+          <Route 
+            path="/category/:categoryId/skills" 
+            element={
+              <AdminRoute>
+                <SkillPageContainer />
+              </AdminRoute>
+            } 
+          />  
+          <Route 
+            path='/subscriptions' 
+            element={
+              <AdminRoute>
+                <SubscriptionManagerPage />
+              </AdminRoute>
+            } 
+          />
         </Routes>
       </div>
     </>

@@ -1,9 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { toast, Toaster } from 'sonner'; 
 import { useNavigate } from 'react-router-dom'; 
 import jobService from '../../services/api/jobService';
 import './JdList.css';
 import { useAuth } from '../../context/AuthContext';
+
+// Đưa toastStyles ra ngoài component để tránh việc bị tạo lại mỗi lần render
+const toastStyles = {
+    warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
+    success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
+    error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
+};
 
 const JdList = () => {
     const { user, token } = useAuth();
@@ -12,22 +19,30 @@ const JdList = () => {
     const [selectedJd, setSelectedJd] = useState(null);
     const navigate = useNavigate(); 
 
-    const toastStyles = {
-        warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
-        success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
-        error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
-    };
+    // FIX 1: Đưa useRef VÀO TRONG component
+    const hasShownError = useRef(false);
 
-    const handGetJdList = async () => {
+    // FIX 2: Bọc hàm trong useCallback để tránh warning dependency của useEffect
+    const handGetJdList = useCallback(async () => {
         try {
             const data = await jobService.getMyJd_of_Company(token);
             setJdList(data.result);
         } catch (error) {
-            toast.error("Lỗi khi tải", { description: "Không thể tải danh sách JD", style: toastStyles.error });
+            // FIX 3: Thêm điều kiện if để check xem lỗi đã được show chưa
+            if (!hasShownError.current) {
+                const errorMessage = error.response?.data?.message || 'Không thể tải danh sách JD';
+                toast.error("Lỗi khi tải dữ liệu", { 
+                    description: errorMessage, 
+                    style: toastStyles.error 
+                });
+                
+                // Đánh dấu là đã hiển thị
+                hasShownError.current = true;
+            }
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]); // token là dependency của hàm này
 
     const handleDeleteJd = async (e, jdId) => {
         e.stopPropagation();
@@ -59,8 +74,9 @@ const JdList = () => {
     };
   
     useEffect(() => {
+        // Gọi hàm đã bọc useCallback
         handGetJdList();
-    }, [user, token]);
+    }, [handGetJdList]); // Đưa handGetJdList vào dependency array để tắt cảnh báo ESLint
 
     return (
         <main className="jd-list-container">
@@ -68,7 +84,9 @@ const JdList = () => {
 
             <div className="jd-header-container">
                 <h1 className="jd-list-title">Danh sách JD của công ty</h1>
-                <button className="create-jd-button" onClick={handleCreateJd}>Tạo JD mới</button>
+                {user && (
+                    <button className="create-jd-button" onClick={handleCreateJd}>Tạo JD mới</button>
+                )}
             </div>
 
             {loading && <p className="loading-text">Đang tải dữ liệu...</p>}
