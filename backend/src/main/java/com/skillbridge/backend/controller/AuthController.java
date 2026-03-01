@@ -54,7 +54,7 @@ public class AuthController {
 
             String email = oauthUser.getAttribute("email");
             String name = oauthUser.getAttribute("name");
-
+            System.out.println("đang ở controller");
             RegisterResponse rs = authService.registerGoogle(email, name);
 
             ApiResponse<RegisterResponse> response = new ApiResponse<>(

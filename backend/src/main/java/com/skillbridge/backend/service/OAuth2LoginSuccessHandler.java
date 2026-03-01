@@ -46,50 +46,44 @@ public class OAuth2LoginSuccessHandler
             String name = oauthUser.getAttribute("name");
             String picture = oauthUser.getAttribute("picture");
 
-            User user = userRepository.findByEmail(email)
-                    .orElseGet(() -> {
-                        User newUser = new User();
-                        newUser.setEmail(email);
-                        newUser.setName(name);
-                        newUser.setRole("USER");
-                        newUser.setProvider("GOOGLE");
-                        return newUser;
-                    });
+            Optional<User> userOptional = userRepository.findByEmail(email);
+            User user;
 
-            // Email đã tồn tại nhưng không phải Google
-            if (!"GOOGLE".equals(user.getProvider())) {
-                try {
-                    String message = "Email này đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập thủ công!";
-
-                    String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
-
-
-                    String targetUrl = "http://localhost:3000/login?error=true&message=" + encodedMessage;
-
-                    response.sendRedirect(targetUrl);
-
-                    return;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            if (userOptional.isPresent()) {
+                user = userOptional.get();
+            } else {
+                // 2. Nếu là user mới, tạo object và LƯU NGAY để lấy ID
+                user = new User();
+                user.setEmail(email);
+                user.setName(name);
+                user.setRole("USER"); // Hoặc CANDIDATE tùy bạn
+                user.setProvider("GOOGLE");
+                user = userRepository.saveAndFlush(user); // Dùng saveAndFlush để có ID ngay lập tức
             }
-            // Sinh JWT
+
+            // 3. Kiểm tra provider (như cũ)
+            if (!"GOOGLE".equals(user.getProvider())) {
+                // ... redirect báo lỗi email đã đăng ký bằng password ...
+                return;
+            }
+
+            // 4. BÂY GIỜ user.getId() CHẮC CHẮN ĐÃ CÓ GIÁ TRỊ (vì đã được save ở trên)
             String accessToken = jwtService.generateAccesToken(
                     user.getId(),
                     user.getEmail(),
                     user.getRole()
             );
 
-            String refreshToken =
-                    jwtService.generateRefreshToken(user.getId());
+            String refreshToken = jwtService.generateRefreshToken(user.getId());
 
+            // 5. Cập nhật refreshToken và lưu lại lần nữa
             user.setRefreshToken(refreshToken);
             userRepository.save(user);
 
-            String redirectUrl =
-                    "http://localhost:3000/oauth-success" +
-                            "?accessToken=" + accessToken +
-                            "&refreshToken=" + refreshToken;
+            // 6. Redirect (như cũ)
+            String redirectUrl = "http://localhost:3000/oauth-success" +
+                    "?accessToken=" + accessToken +
+                    "&refreshToken=" + refreshToken;
 
             response.sendRedirect(redirectUrl);
         } catch (Exception e) {

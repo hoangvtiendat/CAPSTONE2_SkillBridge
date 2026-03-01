@@ -105,44 +105,44 @@ public class AuthService {
     ) {
 
         if (userRepository.findByEmail(email).isPresent()) {
+            System.out.println("aaa");
             throw new AppException(ErrorCode.EMAIL_EXIST);
         }
-
+        System.out.println("abc");
         User user = new User();
         user.setEmail(email);
         user.setName(fullName);
         user.setProvider(provider);
+        user.setRole("CANDIDATE");
 
         return user;
     }
-
+    @Transactional
     public RegisterResponse registerGoogle(String email, String name) {
+        System.out.println("Đang xử lý Register Google cho: " + email);
+
         User user = userRepository.findByEmail(email)
-                .orElseGet(() ->
-                        createUserCommon(email, name, "GOOGLE")
-                );
+                .orElseGet(() -> createUserCommon(email, name, "GOOGLE"));
 
         if (!"GOOGLE".equals(user.getProvider())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_REGISTERED_BY_PASSWORD);
         }
-        user = userRepository.save(user);
 
+        // Dùng saveAndFlush để chắc chắn lấy được ID
+        User savedUser = userRepository.saveAndFlush(user);
+
+        // Lấy ID từ savedUser (đối tượng đã được DB trả về ID)
         String accessToken = jwtService.generateAccesToken(
-                user.getId(),
-                user.getEmail(),
-                user.getRole()
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getRole()
         );
 
-        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        String refreshToken = jwtService.generateRefreshToken(savedUser.getId());
+        savedUser.setRefreshToken(refreshToken);
+        userRepository.save(savedUser);
 
-        user.setRefreshToken(refreshToken);
-        userRepository.save(user);
-
-        return new RegisterResponse(
-                user.getEmail(),
-                accessToken,
-                refreshToken
-        );
+        return new RegisterResponse(savedUser.getEmail(), accessToken, refreshToken);
     }
 
 
@@ -206,7 +206,8 @@ public class AuthService {
         return issueToken(user);
     }
 
-    private LoginResponse issueToken(User user) {
+    @Transactional
+    public LoginResponse issueToken(User user) {
 
         String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());

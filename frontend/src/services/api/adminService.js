@@ -1,10 +1,14 @@
 import api from '../../config/axiosConfig';
 
 const adminService = {
+    getOverviewStats: async () => {
+        const response = await api.get('/admin/stats/overview');
+        return response.data;
+    },
     // User Management
     getUsers: async (params = {}) => {
-        const { page = 0, size = 10, sortBy = 'createdAt', direction = 'desc', name, email, role, status } = params;
-        const queryParams = new URLSearchParams({ page, size, sortBy, direction });
+        const {page = 0, size = 10, sortBy = 'createdAt', direction = 'desc', name, email, role, status} = params;
+        const queryParams = new URLSearchParams({page, size, sortBy, direction});
         if (name) queryParams.append('name', name);
         if (email) queryParams.append('email', email);
         if (role) queryParams.append('role', role);
@@ -26,8 +30,8 @@ const adminService = {
 
     // Company Management
     getCompanies: async (params = {}) => {
-        const { page = 0, size = 10, sortBy = 'createdAt', direction = 'desc', name, taxId, status } = params;
-        const queryParams = new URLSearchParams({ page, size, sortBy, direction });
+        const {page = 0, size = 10, sortBy = 'createdAt', direction = 'desc', name, taxId, status} = params;
+        const queryParams = new URLSearchParams({page, size, sortBy, direction});
         if (name) queryParams.append('name', name);
         if (taxId) queryParams.append('taxId', taxId);
         if (status) queryParams.append('status', status);
@@ -48,8 +52,8 @@ const adminService = {
 
     // Industry (Category) Management
     getCategories: async (params = {}) => {
-        const { page = 0, size = 10, sortBy = 'createdAt', direction = 'desc' } = params;
-        const queryParams = new URLSearchParams({ page, size, sortBy, direction });
+        const {page = 0, size = 10, sortBy = 'createdAt', direction = 'desc'} = params;
+        const queryParams = new URLSearchParams({page, size, sortBy, direction});
 
         const response = await api.get(`/admin/categories?${queryParams.toString()}`);
         return response.data;
@@ -69,6 +73,8 @@ const adminService = {
         const response = await api.delete(`/admin/categories/${id}`);
         return response.data;
     }
+
+
 };
 
 export default adminService;
