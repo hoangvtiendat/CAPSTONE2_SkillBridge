@@ -119,19 +119,13 @@ public class AuthService {
     }
     @Transactional
     public RegisterResponse registerGoogle(String email, String name) {
-        System.out.println("Đang xử lý Register Google cho: " + email);
-
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> createUserCommon(email, name, "GOOGLE"));
 
         if (!"GOOGLE".equals(user.getProvider())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_REGISTERED_BY_PASSWORD);
         }
-
-        // Dùng saveAndFlush để chắc chắn lấy được ID
         User savedUser = userRepository.saveAndFlush(user);
-
-        // Lấy ID từ savedUser (đối tượng đã được DB trả về ID)
         String accessToken = jwtService.generateAccesToken(
                 savedUser.getId(),
                 savedUser.getEmail(),
@@ -214,7 +208,6 @@ public class AuthService {
 
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
-
         return new LoginResponse("0", accessToken, refreshToken);
     }
 
