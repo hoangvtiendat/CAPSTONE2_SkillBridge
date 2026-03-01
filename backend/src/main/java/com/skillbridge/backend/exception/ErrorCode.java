@@ -41,7 +41,29 @@ public enum ErrorCode {
     EXITS_JD_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
     EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền xóa bài đăng này"),
     ///  ===== SUBSCRIPTTION
-    NOT_FOUND_SUBSCRIPTTION (901, "Không tìm thấy gói đằng ký"),
+    // Thêm vào Enum ErrorCode của bạn
+    NOT_FOUND_SUBSCRIPTION(901, "Không tìm thấy gói đăng ký"),
+
+    // 1. Ràng buộc về Giá (Price)
+    FREE_PRICE_CANNOT_BE_CHANGED(902, "Gói FREE không được phép sửa giá"),
+    STANDARD_PRICE_MUST_BE_GREATER_THAN_ZERO(903, "Giá của gói STANDARD bắt buộc phải lớn hơn 0"),
+    STANDARD_PRICE_EXCEEDS_PREMIUM(904, "Giá của gói STANDARD không được vượt quá gói PREMIUM"),
+    PREMIUM_PRICE_LOWER_THAN_STANDARD(905, "Giá của gói PREMIUM không được bé hơn gói STANDARD"),
+
+    // 2. Ràng buộc về Tin tuyển dụng (Job Limit)
+    FREE_JOB_LIMIT_EXCEEDS_STANDARD(906, "Số lượng JD của gói FREE không được vượt quá gói STANDARD"),
+    STANDARD_JOB_LIMIT_LOWER_THAN_FREE(907, "Số lượng JD của gói STANDARD không được bé hơn gói FREE"),
+    STANDARD_JOB_LIMIT_EXCEEDS_PREMIUM(908, "Số lượng JD của gói STANDARD không được vượt quá gói PREMIUM"),
+    PREMIUM_JOB_LIMIT_LOWER_THAN_STANDARD(909, "Số lượng JD của gói PREMIUM không được bé hơn gói STANDARD"),
+
+    // 3. Ràng buộc về Lượt xem hồ sơ (Candidate View Limit)
+    FREE_CANDIDATE_VIEW_LIMIT_EXCEEDS_STANDARD(910, "Lượt xem hồ sơ của gói FREE không được vượt quá gói STANDARD"),
+    STANDARD_CANDIDATE_VIEW_LIMIT_LOWER_THAN_FREE(911, "Lượt xem hồ sơ của gói STANDARD không được bé hơn gói FREE"),
+    STANDARD_CANDIDATE_VIEW_LIMIT_EXCEEDS_PREMIUM(912, "Lượt xem hồ sơ của gói STANDARD không được vượt quá gói PREMIUM"),
+    PREMIUM_CANDIDATE_VIEW_LIMIT_LOWER_THAN_STANDARD(913, "Lượt xem hồ sơ của gói PREMIUM không được bé hơn gói STANDARD"),
+
+    // 4. Ràng buộc về Hiển thị ưu tiên (Priority Display)
+    FREE_HAS_PRIORITY_DISPLAY_NOT_ALLOWED(914, "Gói FREE không được phép bật hiển thị ưu tiên"),
         ///  ===== Other ======
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),

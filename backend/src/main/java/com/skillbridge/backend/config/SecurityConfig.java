@@ -79,7 +79,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/CategoryProfession/Create",
                                 "/CategoryProfession/Delete/**",
-                                "/CategoryProfession/Update/**"
+                                "/CategoryProfession/Update/**",
+                                "/skill/set/**"
+
                                 ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

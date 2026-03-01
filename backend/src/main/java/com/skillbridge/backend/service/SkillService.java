@@ -27,7 +27,6 @@ public class SkillService {
         if(skillRepository.existsByName(skillRequest.getName())) {
             throw new AppException(ErrorCode.SKILL_EXITS_NAME);
         }
-        // check coi thử kĩ năng có tồn tại ở đâu trong các bài đăng không
 
         skill.setName(skillRequest.getName());
         Category category = categoryProfessionService.getCategoryProfessionById(skillRequest.getCategory_id());

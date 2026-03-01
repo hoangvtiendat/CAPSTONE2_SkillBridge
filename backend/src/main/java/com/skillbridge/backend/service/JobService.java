@@ -354,8 +354,8 @@ public class JobService {
     public Job deleteJD(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+                !(authentication.getPrincipal() instanceof CustomUserDetails)) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
@@ -368,14 +368,16 @@ public class JobService {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
 
-        if (!job.getCompanyMember().getId().equals(recruiter.getId())) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-        if(recruiter.getRole() != CompanyRole.ADMIN){
+        boolean isAdmin = recruiter.getRole() == CompanyRole.ADMIN;
+        boolean isJobOwner = job.getCompanyMember().getId().equals(recruiter.getId());
+
+        if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        jobSkillRepository.deleteBySkillId(id);
-        jobRepository.deleteJobById(id);
+
+        jobSkillRepository.deleteByJobId(id);
+        jobRepository.delete(job);
+
         return job;
     }
 }

@@ -16,7 +16,7 @@ import java.util.List;
 public class SkillController {
     @Autowired
     private SkillService skillService;
-    @PostMapping("/Create")
+    @PostMapping("/set/create")
     public ResponseEntity<ApiResponse> createSkill(@RequestBody SkillRequest skillRequest) {
         Skill skill = skillService.CreateNewSkill(skillRequest);
         return ResponseEntity.ok(
@@ -37,14 +37,14 @@ public class SkillController {
     public Skill getSkillById(@PathVariable String id) {
         return skillService.getSkillById(id);
     }
-    @PutMapping("/Update/{id}")
+    @PutMapping("/set/Update/{id}")
     public ResponseEntity<ApiResponse> UpdateSkill(@PathVariable String id, @RequestBody SkillRequest skillRequest){
         Skill skill = skillService.UpdateSkill(id, skillRequest);
         return ResponseEntity.ok(
                 new ApiResponse<>(200,"Update kỹ năng thành công ", skill)
         );
     }
-    @DeleteMapping("/Delete/{id}")
+    @DeleteMapping("/set/Delete/{id}")
     public ResponseEntity<ApiResponse> deleteSkill(@PathVariable String id) {
         Skill skill = skillService.deleteSkill(id);
         return ResponseEntity.ok(
