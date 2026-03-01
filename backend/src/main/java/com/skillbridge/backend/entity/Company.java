@@ -35,11 +35,9 @@ public class Company extends BaseEntity {
     @Column(name = "tax_id", nullable = false, unique = true)
     private String taxId;
 
-    @URL(message = "Định dạng link giấy phép kinh doanh không hợp lệ")
     @Column(name = "business_license_url")
     private String businessLicenseUrl; // link ảnh GPKD
 
-    @URL(message = "Định dạng link ảnh không hợp lệ")
     @Column(name = "image_url")
     private String imageUrl;
 

@@ -20,13 +20,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class CompanyService {
-
+    private final String UPLOAD_DIR = "uploads/";
     @Autowired
     private OtpService otpService;
 
@@ -68,29 +75,83 @@ public class CompanyService {
         throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
     }
 
-    public CompanyFeedItemResponse identifyCompany(CompanyIdentificationRequest request) {
+//    public CompanyFeedItemResponse identifyCompany(CompanyIdentificationRequest request) {
+//
+//        Optional<Company> companyOpt = companyRepository.findCompaniesByTaxId(request.getTaxcode());
+//
+//        if (companyOpt.isPresent()) {
+//            throw new AppException(ErrorCode.COMPANY_EXIST);
+//        }
+//
+//        Company company = new Company();
+//
+//        company.setName(request.getName());
+//        company.setTaxId(request.getTaxcode());
+//        company.setBusinessLicenseUrl(request.getBusinessLicenseUrl());
+//        company.setImageUrl(request.getImageUrl());
+//        company.setDescription(request.getDescription());
+//        company.setAddress(request.getAddress());
+//        company.setWebsiteUrl(request.getWebsiteUrl());
+//        company.setStatus(CompanyStatus.PENDING);
+//        companyRepository.saveAndFlush(company);
+//
+//        String planName = company.getCurrentSubscriptionPlanName();
+//
+//        return new CompanyFeedItemResponse(company.getId(), company.getName(), company.getTaxId(), company.getBusinessLicenseUrl(), company.getImageUrl(), company.getDescription(), company.getAddress(), company.getWebsiteUrl(), company.getStatus(), planName);
+//    }
 
+    public CompanyFeedItemResponse identifyCompany(CompanyIdentificationRequest request,
+                                                   MultipartFile logo,
+                                                   MultipartFile license) throws IOException {
+
+        // 1. Kiểm tra tồn tại qua Tax Code
         Optional<Company> companyOpt = companyRepository.findCompaniesByTaxId(request.getTaxcode());
-
         if (companyOpt.isPresent()) {
             throw new AppException(ErrorCode.COMPANY_EXIST);
         }
 
-        Company company = new Company();
+        // 2. Xử lý lưu File
+        String logoUrl = saveFile(logo, "logos");
+        String licenseUrl = saveFile(license, "licenses");
 
+        // 3. Lưu vào Database
+        Company company = new Company();
         company.setName(request.getName());
         company.setTaxId(request.getTaxcode());
-        company.setBusinessLicenseUrl(request.getBusinessLicenseUrl());
-        company.setImageUrl(request.getImageUrl());
+        company.setBusinessLicenseUrl(licenseUrl); // Lưu path/url
+        company.setImageUrl(logoUrl);              // Lưu path/url
         company.setDescription(request.getDescription());
         company.setAddress(request.getAddress());
         company.setWebsiteUrl(request.getWebsiteUrl());
         company.setStatus(CompanyStatus.PENDING);
+
         companyRepository.saveAndFlush(company);
 
         String planName = company.getCurrentSubscriptionPlanName();
+        return new CompanyFeedItemResponse(
+                company.getId(), company.getName(), company.getTaxId(),
+                company.getBusinessLicenseUrl(), company.getImageUrl(),
+                company.getDescription(), company.getAddress(),
+                company.getWebsiteUrl(), company.getStatus(), planName
+        );
+    }
 
-        return new CompanyFeedItemResponse(company.getId(), company.getName(), company.getTaxId(), company.getBusinessLicenseUrl(), company.getImageUrl(), company.getDescription(), company.getAddress(), company.getWebsiteUrl(), company.getStatus(), planName);
+    // Helper: Hàm lưu file vào ổ đĩa
+    private String saveFile(MultipartFile file, String subFolder) throws IOException {
+        if (file == null || file.isEmpty()) return null;
+
+        Path uploadPath = Paths.get(UPLOAD_DIR + subFolder);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Tạo tên file duy nhất để tránh trùng lặp
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // Trả về đường dẫn để lưu vào DB (Sau này có thể là URL của Cloudinary)
+        return "/" + subFolder + "/" + fileName;
     }
 
     public String joinCompany(String companyId, String token) {

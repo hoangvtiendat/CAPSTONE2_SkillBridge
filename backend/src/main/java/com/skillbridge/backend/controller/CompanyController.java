@@ -14,8 +14,10 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.CompanyService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/companies")
@@ -61,20 +63,26 @@ public class CompanyController {
         }
     }
 
-    @PostMapping("/identification")
-    public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> identifyCompany(@Valid @RequestBody CompanyIdentificationRequest request) {
+    @PostMapping(value = "/identification", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> identifyCompany(
+            @RequestPart("request") @Valid CompanyIdentificationRequest request, // Dữ liệu text
+            @RequestPart("logo") MultipartFile logoFile,                         // File ảnh logo
+            @RequestPart("license") MultipartFile licenseFile                      // File GPKD
+    ) {
         try {
-            CompanyFeedItemResponse rs = companyService.identifyCompany(request);
+            CompanyFeedItemResponse rs = companyService.identifyCompany(request, logoFile, licenseFile);
             ApiResponse<CompanyFeedItemResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(),
-                    "Định danh doanh nghiệp",
+                    "Định danh doanh nghiệp và upload hồ sơ thành công",
                     rs
             );
             return ResponseEntity.ok(response);
         } catch (AppException ex) {
-            System.out.println("[COMPANY IDENTITY] AppException occurred");
-            System.out.println("[COMPANY IDENTITY] ErrorCode: " + ex.getErrorCode());
+            ex.printStackTrace();
             throw ex;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
