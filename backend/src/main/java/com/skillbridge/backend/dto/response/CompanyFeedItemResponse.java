@@ -1,6 +1,8 @@
 package com.skillbridge.backend.dto.response;
 
 import com.skillbridge.backend.enums.CompanyStatus;
+import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
+import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 
 public class CompanyFeedItemResponse {
     private String id;
@@ -12,11 +14,11 @@ public class CompanyFeedItemResponse {
     private String address;
     private String websiteUrl;
     private CompanyStatus status;
-    private String subscriptionPlanName;
+    private SubscriptionPlanStatus subscriptionPlanName;
 
     public CompanyFeedItemResponse(String id, String name, String taxId, String businessLicenseUrl,
                                    String imageUrl, String description, String address,
-                                   String websiteUrl, CompanyStatus status, String subscriptionPlanName) {
+                                   String websiteUrl, CompanyStatus status, SubscriptionPlanStatus subscriptionPlanName) {
         this.id = id;
         this.name = name;
         this.taxId = taxId;
@@ -101,11 +103,11 @@ public class CompanyFeedItemResponse {
         this.status = status;
     }
 
-    public String getSubscriptionPlanName() {
+    public SubscriptionPlanStatus getSubscriptionPlanName() {
         return subscriptionPlanName;
     }
 
-    public void setSubscriptionPlanName(String subscriptionPlanName) {
+    public void setSubscriptionPlanName(SubscriptionPlanStatus subscriptionPlanName) {
         this.subscriptionPlanName = subscriptionPlanName;
     }
 }

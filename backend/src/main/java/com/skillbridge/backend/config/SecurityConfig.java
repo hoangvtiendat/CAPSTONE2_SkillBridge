@@ -74,13 +74,15 @@ public class SecurityConfig {
                                 "/jobs/{id}",
                                 "/ws-log/**"
                         ).permitAll()
-
                         .requestMatchers(
+                                "/CategoryProfession/Create",
+                                "/CategoryProfession/Delete/**",
+                                "/CategoryProfession/Update/**",
+                                "/skill/set/**",
                                 "/jobs/feedAdmin/**",
                                 "/Logs/**",
                                 "/companies/taxLook"
-                        ).hasRole("ADMIN")
-
+                                ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 

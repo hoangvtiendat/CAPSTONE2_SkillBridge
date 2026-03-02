@@ -11,6 +11,7 @@ import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.CompanyRole;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.enums.JoinRequestStatus;
+import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyJoinRequestRepository;
@@ -20,7 +21,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import com.skillbridge.backend.repository.SubscriptionPlanRepository;
-import com.skillbridge.backend.repository.companyMemberRepository;
+import com.skillbridge.backend.repository.CompanyMemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,13 +43,13 @@ public class CompanyService {
     @Autowired
     private OtpService otpService;
 
-    private final com.skillbridge.backend.repository.companyMemberRepository companyMemberRepository;
+    private final com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository;
     private final UserService userService;
     private final CompanyRepository companyRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final CompanyJoinRequestRepository companyJoinRequestRepository;
 
-    public CompanyService(CompanyRepository companyRepository, SubscriptionPlanRepository subscriptionPlanRepository, companyMemberRepository companyMemberRepository, UserService userService, CompanyJoinRequestRepository companyJoinRequestRepository) {
+    public CompanyService(CompanyRepository companyRepository, SubscriptionPlanRepository subscriptionPlanRepository, CompanyMemberRepository companyMemberRepository, UserService userService, CompanyJoinRequestRepository companyJoinRequestRepository) {
         this.companyRepository = companyRepository;
         this.subscriptionPlanRepository = subscriptionPlanRepository;
         this.companyMemberRepository = companyMemberRepository;
@@ -76,7 +77,7 @@ public class CompanyService {
         System.out.println("===========================================");
 
         try {
-            String searchUrl = "https://www.tratencongty.com/search/"+ cleanMst;
+            String searchUrl = "https://www.tratencongty.com/search/" + cleanMst;
             System.out.println("-> Đang gửi POST request tới: " + searchUrl);
 
             Document searchDoc = Jsoup.connect(searchUrl)
@@ -185,7 +186,7 @@ public class CompanyService {
 
         if (companyOpt.isPresent()) {
             Company company = companyOpt.get();
-            String planName = company.getCurrentSubscriptionPlanName();
+            SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
             return new CompanyFeedItemResponse(company.getId(), company.getName(), company.getTaxId(), company.getBusinessLicenseUrl(), company.getImageUrl(), company.getDescription(), company.getAddress(), company.getWebsiteUrl(), company.getStatus(), planName);
         }
         throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
@@ -218,7 +219,7 @@ public class CompanyService {
 
         companyRepository.saveAndFlush(company);
 
-        String planName = company.getCurrentSubscriptionPlanName();
+        SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
         return new CompanyFeedItemResponse(
                 company.getId(), company.getName(), company.getTaxId(),
                 company.getBusinessLicenseUrl(), company.getImageUrl(),

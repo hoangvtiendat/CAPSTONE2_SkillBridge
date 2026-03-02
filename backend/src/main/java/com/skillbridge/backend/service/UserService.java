@@ -61,6 +61,9 @@ public class UserService {
         } catch (Exception e) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
+        if (userId == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
 
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         System.out.println("user = " + user);

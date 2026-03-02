@@ -69,3 +69,7 @@ jwt:
 gemini:
   api:
     key: ${gemini.api.key}}
+ai:
+  ollama:
+    url: http://localhost:11434
+    model: llama3.2:3b

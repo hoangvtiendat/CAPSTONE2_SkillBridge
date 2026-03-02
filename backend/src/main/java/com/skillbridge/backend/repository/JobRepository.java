@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, String> {
@@ -67,37 +68,20 @@ public interface JobRepository extends JpaRepository<Job, String> {
                     ))
         ORDER BY j.createdAt DESC, j.id DESC
     """)
-    List<JobFeedItemResponse> getJobFeedFiltered(
-            @Param("cursor") String cursor,
-            @Param("status") Enum status,
-            @Param("categoryId") String categoryId,
-            @Param("location") String location,
-            @Param("salary") Double minSalary,
-            Pageable pageable
-    );
+        List<JobFeedItemResponse> getJobFeedFiltered(
+                @Param("cursor") String cursor,
+                @Param("status") Enum status,
+                @Param("categoryId") String categoryId,
+                @Param("location") String location,
+                @Param("salary") Double minSalary,
+                Pageable pageable
+        );
 
     @Query("SELECT js.job.id, s.name " +
             "FROM JobSkill js " +
             "LEFT JOIN js.skill s " +
             "WHERE js.job.id IN :jobIds")
     List<Object[]> findSkillNamesByJobIds(@Param("jobIds") List<String> jobIds);
-
-    long countByStatus(JobStatus status);
-    @Query("""
-                SELECT new com.skillbridge.backend.dto.MonthlyJobDTO(
-                    MONTH(j.createdAt),
-                    COUNT(j)
-                )
-                FROM Job j
-                WHERE j.createdAt >= :fromDate
-                GROUP BY MONTH(j.createdAt)
-                ORDER BY MONTH(j.createdAt)
-            """)
-    List<MonthlyJobDTO> jobGrowthLast6Months(@Param("fromDate") LocalDateTime fromDate);
-
-    long countByCreatedAtAfter(LocalDateTime createdAtAfter);
-
-    long countByCreatedAtBetween(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
@@ -120,10 +104,30 @@ public interface JobRepository extends JpaRepository<Job, String> {
         )
         ORDER BY j.createdAt DESC, j.id DESC
     """)
-        List<AdminJobFeedItemResponse> adminGetJobs(
-                @Param("cursor") String cursor,
-                @Param("status") JobStatus status,
-                @Param("modStatus") ModerationStatus modStatus,
-                Pageable pageable
-        );
+    List<AdminJobFeedItemResponse> adminGetJobs(
+            @Param("cursor") String cursor,
+            @Param("status") JobStatus status,
+            @Param("modStatus") ModerationStatus modStatus,
+            Pageable pageable
+    );
+
+    List<Job>findJobsByCompanyId(@Param("companyId") String companyId);
+
+    long countByStatus(JobStatus status);
+
+    long countByCreatedAtAfter(LocalDateTime createdAtAfter);
+
+    long countByCreatedAtBetween(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
+
+    @Query("""
+                SELECT new com.skillbridge.backend.dto.MonthlyJobDTO(
+                    MONTH(j.createdAt),
+                    COUNT(j)
+                )
+                FROM Job j
+                WHERE j.createdAt >= :fromDate
+                GROUP BY MONTH(j.createdAt)
+                ORDER BY MONTH(j.createdAt)
+            """)
+    List<MonthlyJobDTO> jobGrowthLast6Months(@Param("fromDate") LocalDateTime fromDate);
 }

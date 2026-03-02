@@ -1,6 +1,7 @@
 package com.skillbridge.backend.entity;
 
 import com.skillbridge.backend.enums.CompanyStatus;
+import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -59,16 +60,30 @@ public class Company extends BaseEntity {
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     private List<CompanySubscription> subscriptions;
 
-    public String getCurrentSubscriptionPlanName() {
+//    public String getCurrentSubscriptionPlanName() {
+//        if (this.subscriptions == null || this.subscriptions.isEmpty()) {
+//            return "No Plan";
+//        }
+//
+//        return this.subscriptions.stream()
+//                .filter(sub -> Boolean.TRUE.equals(sub.getActive()))
+//                .findFirst()
+//                .map(sub -> sub.getSubscriptionPlan().getName().toString())
+//                .orElse("No Active Plan");
+//    }
+
+    public SubscriptionPlanStatus getCurrentSubscriptionPlanName() {
+        // Nếu không có danh sách subscription, mặc định trả về FREE hoặc null
         if (this.subscriptions == null || this.subscriptions.isEmpty()) {
-            return "No Plan";
+            return SubscriptionPlanStatus.FREE;
         }
 
         return this.subscriptions.stream()
                 .filter(sub -> Boolean.TRUE.equals(sub.getActive()))
                 .findFirst()
-                .map(sub -> sub.getSubscriptionPlan().getName().toString())
-                .orElse("No Active Plan");
+                .map(sub -> sub.getSubscriptionPlan().getName())
+                // Giả định: getName() của SubscriptionPlan đã trả về kiểu SubscriptionPlanStatus
+                .orElse(SubscriptionPlanStatus.FREE);
     }
 
     public String getImageUrl() {

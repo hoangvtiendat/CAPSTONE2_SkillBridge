@@ -19,7 +19,7 @@ public class JobFeedItemResponse {
 
     public JobFeedItemResponse(String jobId, Object title, String description, String location,
                                String salaryMin, String salaryMax, LocalDateTime createdAt,
-                               String companyName,String companyImageUrl, Object subscriptionPlanName, String categoryName) {
+                               String companyName, String companyImageUrl, Object subscriptionPlanName, String categoryName) {
         this.jobId = jobId;
         this.title = title;
         this.description = description;
@@ -58,6 +58,10 @@ public class JobFeedItemResponse {
         this.description = description;
     }
 
+    public void setSubscriptionPlanName(Object subscriptionPlanName) {
+        this.subscriptionPlanName = subscriptionPlanName;
+    }
+
     public String getCompanyName() {
         return companyName;
     }
@@ -79,7 +83,7 @@ public class JobFeedItemResponse {
         return subscriptionPlanName;
     }
 
-    public void setSubscriptionPlanName(Object subscriptionPlanName) {
+    public void setSubscriptionPlanName(String subscriptionPlanName) {
         this.subscriptionPlanName = subscriptionPlanName;
     }
 

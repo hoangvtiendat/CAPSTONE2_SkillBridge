@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.List;
 import java.util.Map;
 
 /// Done
@@ -29,20 +30,24 @@ public class Job extends BaseEntity{
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
-    private Object title;
+    private Map<String, Object> title;
 
     @Enumerated(EnumType.STRING)
     private ModerationStatus moderationStatus;
 
     private Float moderationScore;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
-    private String vectorEmbedding;
+    private float[] vectorEmbedding;
 
     private Integer viewCount;
 
     @Enumerated(EnumType.STRING)
     private JobStatus status;
+
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<JobSkill> jobSkills;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -88,11 +93,11 @@ public class Job extends BaseEntity{
         this.position = position;
     }
 
-    public Object getTitle() {
+    public Map<String, Object> getTitle() {
         return title;
     }
 
-    public void setTitle(Object title) {
+    public void setTitle(Map<String, Object> title) {
         this.title = title;
     }
 
@@ -112,11 +117,11 @@ public class Job extends BaseEntity{
         this.moderationScore = moderationScore;
     }
 
-    public String getVectorEmbedding() {
+    public float[] getVectorEmbedding() {
         return vectorEmbedding;
     }
 
-    public void setVectorEmbedding(String vectorEmbedding) {
+    public void setVectorEmbedding(float[] vectorEmbedding) {
         this.vectorEmbedding = vectorEmbedding;
     }
 
@@ -174,5 +179,11 @@ public class Job extends BaseEntity{
 
     public void setLocation(String location) {
         this.location = location;
+    }
+    public List<JobSkill> getJobSkills() {
+        return jobSkills;
+    }
+    public void setJobSkills(List<JobSkill> jobSkills) {
+        this.jobSkills = jobSkills;
     }
 }

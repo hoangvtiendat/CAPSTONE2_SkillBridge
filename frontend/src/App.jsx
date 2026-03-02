@@ -1,6 +1,5 @@
 import React from 'react';
-import {Routes, Route, useNavigate, useLocation} from 'react-router-dom';
-import {Routes, Route, Link} from 'react-router-dom';
+import {Routes, Route, useNavigate, useLocation, Link} from 'react-router-dom';
 import './App.css';
 import Header from './components/home/Header';
 
