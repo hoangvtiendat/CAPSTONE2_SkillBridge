@@ -319,7 +319,6 @@
     transition: all 0.2s ease-in-out;
 }
 
-
 /* Khi đã chọn file, đổi màu viền cho nổi bật */
 .file-label-custom:has(input:valid) {
     border-color: #10b981;
