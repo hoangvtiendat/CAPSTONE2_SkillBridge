@@ -1,0 +1,490 @@
+/* =========================================
+   TỔNG QUAN & HEADER
+========================================= */
+.jd-board-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #1f2937;
+    background-color: #f9fafb; /* Màu nền xám nhạt giúp làm nổi bật các Card */
+    min-height: 100vh;
+}
+
+.jd-board-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.jd-board-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.icon-header {
+    color: #3b82f6; /* Màu xanh dương chủ đạo */
+}
+
+.subtitle {
+    font-size: 0.95rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* =========================================
+   LAYOUT LƯỚI 2 CỘT (GRID)
+========================================= */
+.jd-board-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Cột trái chiếm 2 phần, cột phải 1 phần */
+    gap: 24px;
+    align-items: start;
+}
+
+/* =========================================
+   THẺ COMPONENT (CARDS)
+========================================= */
+.form-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f3f4f6;
+    margin-bottom: 24px;
+}
+
+.card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 12px;
+}
+
+/* =========================================
+   INPUTS & FORM ELEMENTS
+========================================= */
+.input-group-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.input-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-item.full-width {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.input-item label,
+.dynamic-header label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.input-item input,
+.input-item select,
+.input-item textarea,
+.dynamic-input-key,
+.dynamic-input-value {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #111827;
+    background-color: #fff;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.input-item textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.input-item input:focus,
+.input-item select:focus,
+.input-item textarea:focus,
+.dynamic-input-key:focus,
+.dynamic-input-value:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Custom styles for the category select dropdown */
+.input-item select {
+    appearance: none;
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    color: #374151;
+    transition: all 0.2s ease;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%236b7280" viewBox="0 0 16 16"><path d="M4.646 6.646a.5.5 0 0 1 .708 0L8 9.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.input-item select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.input-item select:hover {
+    border-color: #3b82f6;
+}
+
+.input-item select:disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* =========================================
+   PHẦN TIÊU ĐỀ ĐỘNG (DYNAMIC TITLES)
+========================================= */
+.dynamic-section {
+    margin-top: 24px;
+    background-color: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.dynamic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.dynamic-row {
+    display: grid;
+    grid-template-columns: 1fr 2.5fr auto;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.dynamic-row:last-child {
+    margin-bottom: 0;
+}
+
+/* =========================================
+   CỘT PHẢI (SIDEBAR) & LƯƠNG
+========================================= */
+.salary-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* =========================================
+   KỸ NĂNG (SKILLS LIST)
+========================================= */
+.skills-card {
+    display: flex;
+    flex-direction: column;
+    max-height: 550px;
+}
+
+.skills-header {
+    margin-bottom: 12px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: #f3f4f6;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.search-box svg {
+    color: #6b7280;
+}
+
+.search-box input {
+    border: none;
+    background: transparent;
+    margin-left: 8px;
+    width: 100%;
+    outline: none;
+    font-size: 0.875rem;
+}
+
+.skills-content {
+    overflow-y: auto;
+    padding-right: 4px;
+    flex-grow: 1;
+}
+
+/* Scrollbar mỏng cho danh sách kỹ năng */
+.skills-content::-webkit-scrollbar {
+    width: 6px;
+}
+.skills-content::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+.skills-list-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.compact-skill-item {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s;
+    background: #fff;
+}
+
+.compact-skill-item.active {
+    border-color: #3b82f6;
+    background-color: #eff6ff; /* Nền xanh nhạt khi được chọn */
+}
+
+.checkbox-main, .checkbox-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #374151;
+    user-select: none;
+}
+
+.checkbox-main {
+    font-weight: 500;
+}
+
+.checkbox-sub {
+    margin-top: 8px;
+    margin-left: 24px;
+    font-size: 0.85rem;
+    color: #ef4444; /* Màu đỏ nhấn mạnh yêu cầu bắt buộc */
+}
+
+.empty-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-align: center;
+    font-style: italic;
+    padding: 20px 0;
+}
+
+/* =========================================
+   BUTTONS (NÚT BẤM)
+========================================= */
+.btn-primary-large {
+    width: 100%;
+    background-color: #3b82f6;
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.btn-primary-large:hover:not(:disabled) {
+    background-color: #2563eb;
+}
+
+.btn-primary-large:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-add-outline {
+    background: transparent;
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-add-outline:hover {
+    background: #eff6ff;
+}
+
+.btn-delete-icon {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    height: 100%;
+}
+
+.btn-delete-icon:hover {
+    background: #fca5a5;
+    color: #991b1b;
+}
+
+.action-wrapper {
+    position: sticky;
+    bottom: 24px;
+}
+
+@media (max-width: 992px) {
+    .jd-board-layout {
+        grid-template-columns: 1fr; /* Gộp thành 1 cột */
+    }
+    
+    .dynamic-row {
+        grid-template-columns: 1fr; /* Các input trong mục động xếp dọc */
+        gap: 8px;
+    }
+    
+    .btn-delete-icon {
+        width: 100%;
+        padding: 8px;
+    }
+    
+    .action-wrapper {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 16px;
+        background: white;
+        box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .jd-board-container {
+        padding-bottom: 80px; /* Tránh bị che bởi action-wrapper ở bottom */
+    }
+}
+
+/* =========================================
+   SKILLS DROPDOWN (REACT-SELECT)
+========================================= */
+.skills-container {
+    margin-top: 1rem;
+}
+
+.skills-title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.skills-dropdown {
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.skills__control {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem;
+    box-shadow: none;
+    transition: border-color 0.2s;
+}
+
+.skills__control:hover {
+    border-color: #007bff;
+}
+
+.skills__control--is-focused {
+    border-color: #007bff;
+    box-shadow: 0 0 0 1px #007bff;
+}
+
+.skills__multi-value {
+    background-color: #e9ecef;
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.skills__multi-value__label {
+    color: #495057;
+}
+
+.skills__multi-value__remove {
+    color: #6c757d;
+    cursor: pointer;
+}
+
+.skills__multi-value__remove:hover {
+    color: #dc3545;
+}
+
+.skills__menu {
+    z-index: 1050;
+}
+
+.skills__option {
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.skills__option--is-focused {
+    background-color: #f8f9fa;
+}
+
+.skills__option--is-selected {
+    background-color: #007bff;
+    color: white;
+}
+
+.job-feed {
+    max-height: 300px; /* Adjust height as needed */
+    overflow-y: auto;
+    padding-right: 10px; /* Add padding for scrollbar */
+    margin-top: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+}

@@ -2,7 +2,7 @@ import api from '../../config/axiosConfig';
 const skillService = {
     createSkill: async (skillData) => {
         try {
-            const response = await api.post('/skill/Create', skillData);
+            const response = await api.post('/skill/set/create', skillData);
             return response.data; 
         } catch (error) {
             console.error('Error creating skill:', error);
@@ -29,7 +29,7 @@ const skillService = {
     },
     upDateSkill: async (id, skillData) => {
         try{
-            const response = await api.put(`/skill/Update/${id}`, skillData);
+            const response = await api.put(`/skill/set/Update/${id}`, skillData);
             return response.data;
         }catch (error) {
             console.error('Error updating skill:', error);
@@ -38,7 +38,7 @@ const skillService = {
     },
     deleteSkill: async (id) => {
         try {
-            const response = await api.delete(`/skill/Delete/${id}`);
+            const response = await api.delete(`/skill/set/Delete/${id}`);
             return response.data;
         }catch (error) {
             console.error('Error deleting skill:', error);

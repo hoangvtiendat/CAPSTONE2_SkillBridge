@@ -1,0 +1,389 @@
+/* =========================================
+   TỔNG QUAN & LOADING
+========================================= */
+.detail-view-container {
+    padding-top: 16px;
+    padding-bottom: 40px;
+}
+
+.loading-container, .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    font-size: 1.1rem;
+    color: #4b5563;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* =========================================
+   HEADER VIEW MODE (GIAO DIỆN XEM)
+========================================= */
+.detail-header-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32px 24px;
+    margin-bottom: 24px;
+    border-left: 6px solid #3b82f6; /* Nhấn nhá viền trái */
+}
+
+.header-company-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.company-logo-large {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background-color: #fff;
+    padding: 4px;
+}
+
+.job-title-large {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.company-name-large {
+    font-size: 1.1rem;
+    color: #6b7280;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.icon-sm {
+    color: #9ca3af;
+}
+
+.header-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+}
+
+/* TRẠNG THÁI (STATUS) */
+.status-badge-modern {
+    padding: 6px 16px;
+    border-radius: 9px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-open {
+    background-color: #d1fae5;
+    color: #059669;
+    border: 1px solid #10b981;
+}
+
+.status-closed {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #ef4444;
+}
+
+.status-pending {
+    background-color: #fef3c7;
+    color: #d97706;
+    border: 1px solid #f59e0b;
+}
+
+/* =========================================
+   NỘI DUNG VIEW MODE (BODY)
+========================================= */
+.content-card {
+    padding: 32px;
+}
+
+.text-content {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #374151;
+    white-space: pre-wrap; /* Giữ nguyên xuống dòng của text */
+}
+
+.card-title-sm {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 12px;
+    border-bottom: 1px dashed #e5e7eb;
+    padding-bottom: 8px;
+}
+
+.mt-4 {
+    margin-top: 32px;
+}
+
+/* THÔNG TIN CHUNG CỘT PHẢI */
+.info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.info-item-modern {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icon-box {
+    width: 40px;
+    height: 40px;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.icon-box.green { background-color: #ecfdf5; color: #10b981; }
+.icon-box.blue { background-color: #eff6ff; color: #3b82f6; }
+
+.info-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.info-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.info-value.highlight {
+    color: #059669;
+    font-weight: 700;
+}
+
+/* TAGS KỸ NĂNG */
+.skills-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skill-tag-modern {
+    background-color: #f3f4f6;
+    color: #374151;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid #e5e7eb;
+}
+
+.skill-tag-modern.required {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.star-req {
+    color: #ef4444;
+    margin-left: 4px;
+    font-weight: bold;
+}
+
+/* =========================================
+   MODAL CẬP NHẬT (POPUP)
+========================================= */
+.modal-overlay-modern {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(17, 24, 39, 0.6);
+    backdrop-filter: blur(4px); /* Hiệu ứng mờ nền */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-container-modern {
+    background-color: #f9fafb;
+    width: 100%;
+    max-width: 1100px; /* Rộng rãi để chia 2 cột */
+    max-height: 90vh;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header-modern {
+    padding: 20px 24px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header-modern h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.btn-close-icon {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.btn-close-icon:hover {
+    background-color: #f3f4f6;
+    color: #ef4444;
+}
+
+.modal-body-scroll {
+    padding: 24px;
+    overflow-y: auto; /* Thanh cuộn riêng cho phần thân modal */
+    flex-grow: 1;
+}
+
+.modal-footer-modern {
+    padding: 16px 24px;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* =========================================
+   BUTTONS TRONG MODAL & VIEW MODE
+========================================= */
+.btn-primary {
+    background-color: #3b82f6;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 1rem ;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #2563eb;
+}
+
+.btn-primary:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: #ffffff;
+    color: #374151;
+    padding: 10px 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: #f3f4f6;
+}
+
+/* =========================================
+   RESPONSIVE (ĐIỆN THOẠI / TABLET)
+========================================= */
+@media (max-width: 992px) {
+    .detail-header-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body-scroll .jd-board-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-container-modern {
+        max-height: 95vh;
+        width: 100%;
+    }
+}
+
+.scrollable-container {
+    max-height: 300px; /* Adjust height as needed */
+    overflow-y: auto;
+    padding-right: 10px; /* Add padding for scrollbar */
+    margin-top: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--card-bg);
+}
+
+.job-feed {
+    max-height: 300px; /* Adjust height as needed */
+    overflow-y: auto;
+    padding-right: 10px; /* Add padding for scrollbar */
+    margin-top: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+}

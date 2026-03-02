@@ -21,8 +21,8 @@ const jobService = {
                 company: job.companyName,
                 location: job.location,
                 salary: {
-                    min: parseInt(job.salaryMin) / 1000000,
-                    max: parseInt(job.salaryMax) / 1000000
+                    min: parseInt(job.salaryMin) / 1000, // Corrected to avoid duplicate key
+                    max: parseInt(job.salaryMax) / 1000
                 },
                 tags: (job.skills || []).map(s => s.skillName || s), // Assuming skills might be objects or strings
                 logo: job.companyImageUrl, // URL string
@@ -35,6 +35,56 @@ const jobService = {
                 hasMore: result.hasMore
             };
         } catch (error) {
+            throw error;
+        }
+    },
+    getMyJd_of_Company: async (token) => {
+        try {
+            const response = await api.get(`/jobs/my-company`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching JD:', error);
+            throw error;
+        }
+    },
+    deleteJd: async (jdId) => {
+        try {
+            await api.delete(`/jobs/my-company/delete/${jdId}`);
+        }
+        catch (error) {
+            console.error('Error deleting JD:', error);
+            throw error;
+        }
+    },
+    getDetailJd: async (id) => {
+        try {
+            const response = await api.get(`/jobs/my-company/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching JD details:', error);
+            throw error;
+        }
+    },
+    createJd: async (jdData) => {
+        try {
+            const response = await api.post('/jobs/postJD', jdData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating JD:', error);
+            throw error;
+        }
+    },
+    updateJd: async (id, jdData) => {
+        try {
+            const response = await api.put(`/jobs/my-company/Update/${id}`, jdData);
+            return response.data;
+        }
+        catch (error) {
+            console.error('Error updating JD:', error);
             throw error;
         }
     },
@@ -98,6 +148,7 @@ const jobService = {
         });
         return response.data;
     }
+
 };
 
 export default jobService;
