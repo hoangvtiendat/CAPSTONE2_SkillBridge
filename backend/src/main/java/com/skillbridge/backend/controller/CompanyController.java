@@ -44,7 +44,7 @@ public class CompanyController {
             @RequestParam(value = "status", required = false) CompanyStatus status,
             @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
-        CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.VERIFIED;
+        CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
         Map<String, Object> rs = companyService.getCompanies(page, searchStatus, limit);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),

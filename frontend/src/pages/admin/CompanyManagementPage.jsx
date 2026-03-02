@@ -145,8 +145,8 @@ const CompanyManagementPage = () => {
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'VERIFIED': return { backgroundColor: '#ecfdf5', color: '#059669' };
-            case 'BANNED': return { backgroundColor: '#fef2f2', color: '#dc2626' };
+            case 'ACTIVE': return { backgroundColor: '#ecfdf5', color: '#059669' };
+            case 'BAN': return { backgroundColor: '#fef2f2', color: '#dc2626' };
             case 'PENDING': return { backgroundColor: '#fffbeb', color: '#d97706' };
             default: return { backgroundColor: '#f8fafc', color: '#64748b' };
         }
@@ -193,8 +193,8 @@ const CompanyManagementPage = () => {
                                 onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                             >
                                 <option value="">Tất cả trạng thái</option>
-                                <option value="VERIFIED">Đã xác thực</option>
-                                <option value="BANNED">Đã khóa</option>
+                                <option value="ACTIVE">Đã xác thực</option>
+                                <option value="BAN">Đã khóa</option>
                                 <option value="PENDING">Chờ duyệt</option>
                             </select>
                         </div>
@@ -243,11 +243,11 @@ const CompanyManagementPage = () => {
                                             <p style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>{company.taxId}</p>
                                         </td>
                                         <td>
-                                            <div className={`status-indicator ${company.status === 'VERIFIED' ? 'active' : company.status === 'BANNED' ? 'banned' : ''}`}>
+                                            <div className={`status-indicator ${company.status === 'ACTIVE' ? 'active' : company.status === 'BAN' ? 'banned' : ''}`}>
                                                 <div className="status-dot"></div>
                                                 <span>
-                                                    {company.status === 'VERIFIED' ? 'Đã xác thực' :
-                                                        company.status === 'BANNED' ? 'Đã khóa' :
+                                                    {company.status === 'ACTIVE' ? 'Đã xác thực' :
+                                                        company.status === 'BAN' ? 'Đã khóa' :
                                                             company.status === 'PENDING' ? 'Chờ duyệt' : company.status}
                                                 </span>
                                             </div>
@@ -261,7 +261,7 @@ const CompanyManagementPage = () => {
                                                 >
                                                     <Eye size={18} />
                                                 </button>
-                                                {company.status === 'BANNED' ? (
+                                                {company.status === 'BAN' ? (
                                                     <button
                                                         onClick={() => handleUnbanCompany(company.id, company.name)}
                                                         className="action-btn unban-btn"
@@ -421,9 +421,9 @@ const CompanyManagementPage = () => {
                                         <div style={{ flex: 1 }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                 <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>{selectedCompany.name}</h3>
-                                                <div className={`status-indicator ${selectedCompany.status === 'VERIFIED' ? 'active' : selectedCompany.status === 'BANNED' ? 'banned' : ''}`}>
+                                                <div className={`status-indicator ${selectedCompany.status === 'ACTIVE' ? 'active' : selectedCompany.status === 'BAN' ? 'banned' : ''}`}>
                                                     <div className="status-dot"></div>
-                                                    <span>{selectedCompany.status === 'VERIFIED' ? 'Đã xác thực' : selectedCompany.status === 'BANNED' ? 'Đã khóa' : 'Chờ duyệt'}</span>
+                                                    <span>{selectedCompany.status === 'ACTIVE' ? 'Đã xác thực' : selectedCompany.status === 'BAN' ? 'Đã khóa' : 'Chờ duyệt'}</span>
                                                 </div>
                                             </div>
                                             <p style={{ margin: '8px 0', fontSize: '15px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
