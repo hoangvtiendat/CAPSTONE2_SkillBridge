@@ -3,7 +3,6 @@ package com.skillbridge.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +10,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Data
 @Setter
 @Table(name = "skills")
 public class Skill extends BaseEntity {

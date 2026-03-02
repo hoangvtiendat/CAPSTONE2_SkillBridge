@@ -20,8 +20,6 @@ public class CompanySubscription extends BaseEntity{
     @JoinColumn(name = "plan_id")
     private SubscriptionPlan subscriptionPlan;
 
-    private Integer currentJobCount;
-    private Integer currentViewCount;
 
     private LocalDateTime startDate;
     private LocalDateTime endDate;
@@ -52,21 +50,7 @@ public class CompanySubscription extends BaseEntity{
         this.subscriptionPlan = subscriptionPlan;
     }
 
-    public Integer getCurrentJobCount() {
-        return currentJobCount;
-    }
 
-    public void setCurrentJobCount(Integer currentJobCount) {
-        this.currentJobCount = currentJobCount;
-    }
-
-    public Integer getCurrentViewCount() {
-        return currentViewCount;
-    }
-
-    public void setCurrentViewCount(Integer currentViewCount) {
-        this.currentViewCount = currentViewCount;
-    }
 
     public LocalDateTime getStartDate() {
         return startDate;
@@ -92,3 +76,4 @@ public class CompanySubscription extends BaseEntity{
         isActive = active;
     }
 }
+

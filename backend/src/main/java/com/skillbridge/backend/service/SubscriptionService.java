@@ -1,25 +1,41 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.request.CompanySubscriptionRequest;
+import com.skillbridge.backend.entity.Company;
+import com.skillbridge.backend.entity.SubcriptionOfCompany;
 import com.skillbridge.backend.entity.SubscriptionPlan;
+import com.skillbridge.backend.enums.CompanyRole;
+import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
 import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.CompanyMemberRepository;
+import com.skillbridge.backend.repository.SubcriptionOfCompanyRepository;
 import com.skillbridge.backend.repository.SubscriptionRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.View;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class SubscriptionService {
     @Autowired
     SubscriptionRepository subscriptionRepository;
     @Autowired
+    SubcriptionOfCompanyRepository companySubcriptionRespository;
+    @Autowired
+    CompanyMemberRepository companyMemberRepository;
+    @Autowired
     private View error;
-
     public List<SubscriptionPlan> getAllSubscriptionPlans() {
         return subscriptionRepository.findAll();
     }
@@ -27,7 +43,7 @@ public class SubscriptionService {
         return subscriptionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
     }
-    public SubscriptionPlan Updatescription(String id, SubscriptionPlan subscriptionPlan) {
+    public SubscriptionPlan updateSubscription(String id, SubscriptionPlan subscriptionPlan) {
 
         SubscriptionPlan updatedSubscriptionPlan = getSubscriptionPlanById(id);
         SubscriptionPlanStatus status_name = updatedSubscriptionPlan.getName();
@@ -100,4 +116,139 @@ public class SubscriptionService {
             }
         }
     }
+
+    public SubcriptionOfCompany createCompanySubscriptions(CompanySubscriptionRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        var recruiter = companyMemberRepository.findByUser_Id(userDetails.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
+            throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
+        }
+
+        Company currentCompany = recruiter.getCompany();
+
+        BigDecimal calculatedPrice = priceForCompanySubscriptions(request);
+
+        SubcriptionOfCompany newSubscription = new SubcriptionOfCompany();
+        newSubscription.setCompany(currentCompany);
+        newSubscription.setName(SubscriptionPlanStatus.CUSTOM);
+        newSubscription.setJobLimit(request.getJobLimit());
+        newSubscription.setCandidateViewLimit(request.getCandidateViewLimit());
+        newSubscription.setHasPriorityDisplay(request.getHasPriorityDisplay());
+        newSubscription.setPrice(calculatedPrice);
+        newSubscription.setStatus(SubscriptionOfCompanyStatus.PENDING_PAYMENT);
+
+        newSubscription.setStartDate(LocalDateTime.now());
+        newSubscription.setEndDate(LocalDateTime.now().plusDays(30));
+        newSubscription.setIsActive(true);
+
+        return companySubcriptionRespository.save(newSubscription);
+    }
+
+    public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request) {
+        SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
+
+        BigDecimal premiumPrice = premium.getPrice();
+        int premJobLimit = premium.getJobLimit();
+        int premViewLimit = premium.getCandidateViewLimit();
+
+        if (request.getJobLimit() <= 0 || request.getCandidateViewLimit() <= 0) {
+            throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
+        }
+
+        double premiumRatio = (double) premViewLimit / premJobLimit;
+        double requestRatio = (double) request.getCandidateViewLimit() / request.getJobLimit();
+
+        if (requestRatio > (premiumRatio * 1.2) || requestRatio < (premiumRatio /1.2)) {
+            throw new AppException(ErrorCode.UNBALANCED_CUSTOM_PLAN);
+        }
+
+        BigDecimal unitJobPrice = premiumPrice.multiply(new BigDecimal("0.70"))
+                .divide(new BigDecimal(premJobLimit), 4, RoundingMode.HALF_UP);
+
+        BigDecimal unitViewPrice = premiumPrice.multiply(new BigDecimal("0.25"))
+                .divide(new BigDecimal(premViewLimit), 4, RoundingMode.HALF_UP);
+
+        BigDecimal priorityFixedPrice = premiumPrice.multiply(new BigDecimal("0.05"));
+
+        BigDecimal customJobCost;
+        if (request.getJobLimit() <= premJobLimit) {
+            customJobCost = unitJobPrice.multiply(new BigDecimal(request.getJobLimit()));
+        } else {
+            BigDecimal baseJobCost = unitJobPrice.multiply(new BigDecimal(premJobLimit));
+            int extraJobs = request.getJobLimit() - premJobLimit;
+            BigDecimal extraJobCost = unitJobPrice.multiply(new BigDecimal("0.90"))
+                    .multiply(new BigDecimal(extraJobs));
+            customJobCost = baseJobCost.add(extraJobCost);
+        }
+
+        BigDecimal customViewCost;
+        if (request.getCandidateViewLimit() <= premViewLimit) {
+            customViewCost = unitViewPrice.multiply(new BigDecimal(request.getCandidateViewLimit()));
+        } else {
+            BigDecimal baseViewCost = unitViewPrice.multiply(new BigDecimal(premViewLimit));
+            int extraViews = request.getCandidateViewLimit() - premViewLimit;
+            BigDecimal extraViewCost = unitViewPrice.multiply(new BigDecimal("0.90"))
+                    .multiply(new BigDecimal(extraViews));
+            customViewCost = baseViewCost.add(extraViewCost);
+        }
+
+        BigDecimal totalPriorityCost = Boolean.TRUE.equals(request.getHasPriorityDisplay())
+                ? priorityFixedPrice
+                : BigDecimal.ZERO;
+
+        return customJobCost.add(customViewCost).add(totalPriorityCost)
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+    public void deleteCompanySubscription(String subscriptionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        var recruiter = companyMemberRepository.findByUser_Id(userDetails.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
+            throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
+        }
+
+        SubcriptionOfCompany subscription = companySubcriptionRespository.findById(subscriptionId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
+
+        if (!subscription.getCompany().getId().equals(recruiter.getCompany().getId())) {
+            throw new AppException(ErrorCode.ACCESS_DENIED);
+        }
+
+        companySubcriptionRespository.delete(subscription);
+;
+    }
+    public List<SubcriptionOfCompany> getMyCompanySubscriptions() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        var recruiter = companyMemberRepository.findByUser_Id(userDetails.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
+            throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
+        }
+        return companySubcriptionRespository.findByCompanyId(recruiter.getCompany().getId());
+
+
+    }
+
 }

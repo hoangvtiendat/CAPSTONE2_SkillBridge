@@ -39,7 +39,7 @@ public enum ErrorCode {
     // Jobs
     JD_NOT_FOUND(801, "Không tìm thấy bài đăng"),
     EXITS_JD_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
-    EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền xóa bài đăng này"),
+    EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền để thực hiện chức năng này"),
     ///  ===== SUBSCRIPTTION
     // Thêm vào Enum ErrorCode của bạn
     NOT_FOUND_SUBSCRIPTION(901, "Không tìm thấy gói đăng ký"),
@@ -64,6 +64,10 @@ public enum ErrorCode {
 
     // 4. Ràng buộc về Hiển thị ưu tiên (Priority Display)
     FREE_HAS_PRIORITY_DISPLAY_NOT_ALLOWED(914, "Gói FREE không được phép bật hiển thị ưu tiên"),
+    UNBALANCED_CUSTOM_PLAN(915,  "Tỷ lệ Job và View không cân bằng"),
+    INVALID_CUSTOM_LIMITS(916, "Số lượng phải lớn hơn 0"),
+    ACCESS_DENIED(917, "Bạn chỉ có thể xóa gói cước của công ty bạn"),
+
         ///  ===== Other ======
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
