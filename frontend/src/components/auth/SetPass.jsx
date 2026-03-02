@@ -49,7 +49,7 @@ export function SetPass() {
                 });
             }, 1000);
 
-            return; 
+            return;
         }
 
         try {
@@ -93,7 +93,7 @@ export function SetPass() {
 
     return (
         <main className="welcome-container">
-            <Toaster position="top-right" richColors />
+
 
             <div className="auth-card">
                 <h1 className="auth-title">

@@ -13,8 +13,7 @@ public class SubscriptionPlan extends BaseEntity{
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Enumerated(EnumType.STRING)
-    private SubscriptionPlanStatus name;
+    private String name;
 
     private BigDecimal price;
 
@@ -32,11 +31,11 @@ public class SubscriptionPlan extends BaseEntity{
         this.id = id;
     }
 
-    public SubscriptionPlanStatus getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(SubscriptionPlanStatus name) {
+    public void setName(String name) {
         this.name = name;
     }
 

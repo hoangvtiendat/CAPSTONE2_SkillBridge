@@ -54,7 +54,6 @@ public class AuthController {
 
             String email = oauthUser.getAttribute("email");
             String name = oauthUser.getAttribute("name");
-
             RegisterResponse rs = authService.registerGoogle(email, name);
 
             ApiResponse<RegisterResponse> response = new ApiResponse<>(
@@ -96,7 +95,7 @@ public class AuthController {
             System.out.println("[LOGIN] Login success");
 
             String message = "Đăng nhập thành công";
-            if (String.valueOf(result.getIs2faEnabled()) == "1") {
+            if ("1".equals(result.getIs2faEnabled()) || "true".equalsIgnoreCase(result.getIs2faEnabled())) {
                 message = "Mã xác thực 2 lớp đã được gửi về email " + request.getEmail();
             }
             ApiResponse<LoginResponse> response = new ApiResponse<>(

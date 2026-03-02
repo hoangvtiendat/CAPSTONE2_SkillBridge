@@ -55,6 +55,9 @@ public class JwtService {
     }
 
     private String generateToken(Map<String, Object> claims, String subject, long expTime) {
+        if (subject == null || subject.isBlank()) {
+            throw new IllegalArgumentException("Không thể tạo Token vì UserId (subject) bị NULL!");
+        }
         Date now = new Date();
         Date exp = new Date(now.getTime() + expTime);
 

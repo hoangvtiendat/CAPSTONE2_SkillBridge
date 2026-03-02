@@ -1,6 +1,6 @@
 import userService from '../services/api/userService';
 import authService from '../services/api/authService';
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext();
 
@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchProfile = async () => {
+    const fetchProfile = useCallback(async () => {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
 
@@ -27,23 +27,26 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await userService.getProfile();
             if (response && response.result) {
-                setUser(response.result);
-                localStorage.setItem('user', JSON.stringify(response.result));
+                // Merge to preserve role and other fields that might not be in profile response
+                const userStr = localStorage.getItem('user');
+                const existingUser = userStr ? JSON.parse(userStr) : {};
+                const updatedUser = { ...existingUser, ...response.result };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
             }
         } catch (err) {
             console.error('Failed to fetch profile:', err);
             setError(err);
-            // Optional: logout if fetch fails with 401?
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchProfile();
-    }, []);
+    }, [fetchProfile]);
 
-    const login = (userData) => {
+    const login = useCallback((userData) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
 
@@ -54,17 +57,13 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('accessToken', userData.token);
             fetchProfile();
         }
-        // If token is not in userData but expected to be in localStorage already or handled otherwise
-    };
+    }, [fetchProfile]);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (token) {
-                await authService.logout(token);
-            }
+            await authService.logout();
         } catch (error) {
-            console.error("Logout API failed", error);
+            console.error('Logout API failed:', error);
         } finally {
             setUser(null);
             localStorage.removeItem('user');
@@ -72,9 +71,9 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('token');
         }
-    };
+    }, []);
 
-    const updateUser = async (newData) => {
+    const updateUser = useCallback(async (newData) => {
         setLoading(true);
         try {
             const response = await userService.updateProfile(newData);
@@ -91,7 +90,7 @@ export const AuthProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     return (
         <AuthContext.Provider value={{ user, login, logout, updateUser, fetchProfile, loading, error }}>

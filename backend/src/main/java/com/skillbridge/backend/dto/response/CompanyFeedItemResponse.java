@@ -1,27 +1,26 @@
 package com.skillbridge.backend.dto.response;
 
 import com.skillbridge.backend.enums.CompanyStatus;
-import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 
 public class CompanyFeedItemResponse {
     private String id;
     private String name;
     private String taxId;
-    private String gpkdUrl;
+    private String businessLicenseUrl;
     private String imageUrl;
     private String description;
     private String address;
     private String websiteUrl;
     private CompanyStatus status;
-    private SubscriptionPlanStatus subscriptionPlanName;
+    private String subscriptionPlanName;
 
-    public CompanyFeedItemResponse(String id, String name, String taxId, String gpkdUrl,
+    public CompanyFeedItemResponse(String id, String name, String taxId, String businessLicenseUrl,
                                    String imageUrl, String description, String address,
-                                   String websiteUrl, CompanyStatus status, SubscriptionPlanStatus subscriptionPlanName) {
+                                   String websiteUrl, CompanyStatus status, String subscriptionPlanName) {
         this.id = id;
         this.name = name;
         this.taxId = taxId;
-        this.gpkdUrl = gpkdUrl;
+        this.businessLicenseUrl = businessLicenseUrl;
         this.imageUrl = imageUrl;
         this.description = description;
         this.address = address;
@@ -54,12 +53,12 @@ public class CompanyFeedItemResponse {
         this.taxId = taxId;
     }
 
-    public String getGpkdUrl() {
-        return gpkdUrl;
+    public String getBusinessLicenseUrl() {
+        return businessLicenseUrl;
     }
 
-    public void setGpkdUrl(String gpkdUrl) {
-        this.gpkdUrl = gpkdUrl;
+    public void setBusinessLicenseUrl(String businessLicenseUrl) {
+        this.businessLicenseUrl = businessLicenseUrl;
     }
 
     public String getImageUrl() {
@@ -102,11 +101,11 @@ public class CompanyFeedItemResponse {
         this.status = status;
     }
 
-    public SubscriptionPlanStatus getSubscriptionPlanName() {
+    public String getSubscriptionPlanName() {
         return subscriptionPlanName;
     }
 
-    public void setSubscriptionPlanName(SubscriptionPlanStatus subscriptionPlanName) {
+    public void setSubscriptionPlanName(String subscriptionPlanName) {
         this.subscriptionPlanName = subscriptionPlanName;
     }
 }

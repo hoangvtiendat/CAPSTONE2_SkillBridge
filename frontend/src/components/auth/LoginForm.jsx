@@ -108,7 +108,7 @@ export function LoginForm() {
 
       const data = await response.json();
 
-
+      console.log("Login Response:", data);
       if (response.ok && data.result) {
         const userData = data.result;
 
@@ -126,7 +126,13 @@ export function LoginForm() {
         } else {
           login(userData);
           toast.success("Đăng nhập thành công");
-          setTimeout(() => { navigate("/"); }, 1000);
+          setTimeout(() => {
+            if (userData.role === 'ADMIN') {
+              navigate("/admin");
+            } else {
+              navigate("/");
+            }
+          }, 1000);
         }
 
       } else {
@@ -157,7 +163,7 @@ export function LoginForm() {
 
   return (
     <main className="welcome-container">
-      <Toaster position="top-right" richColors />
+
       <div className="auth-card">
         <h1 className="auth-title">
           {mode === "login" ? "Đăng nhập hệ thống" : "Đăng ký tài khoản"}

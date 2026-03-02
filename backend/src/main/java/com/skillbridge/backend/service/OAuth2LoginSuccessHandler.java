@@ -1,5 +1,6 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.dto.response.RegisterResponse;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -10,9 +11,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,13 +24,16 @@ public class OAuth2LoginSuccessHandler
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final AuthService authService;
 
     public OAuth2LoginSuccessHandler(
             JwtService jwtService,
-            UserRepository userRepository
+            UserRepository userRepository,
+            AuthService authService
     ) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.authService = authService;
     }
 
 
@@ -40,57 +44,63 @@ public class OAuth2LoginSuccessHandler
             Authentication authentication
     ) throws IOException {
         try {
-            OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
+//            OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
+//
+//            String email = oauthUser.getAttribute("email");
+//            String name = oauthUser.getAttribute("name");
+//            String picture = oauthUser.getAttribute("picture");
+//
+//            Optional<User> userOptional = userRepository.findByEmail(email);
+//            User user;
+//
+//            if (userOptional.isPresent()) {
+//                user = userOptional.get();
+//            } else {
+//                // 2. Nếu là user mới, tạo object và LƯU NGAY để lấy ID
+//                user = new User();
+//                user.setEmail(email);
+//                user.setName(name);
+//                user.setRole("USER"); // Hoặc CANDIDATE tùy bạn
+//                user.setProvider("GOOGLE");
+//                user = userRepository.saveAndFlush(user); // Dùng saveAndFlush để có ID ngay lập tức
+//            }
+//
+//            // 3. Kiểm tra provider (như cũ)
+//            if (!"GOOGLE".equals(user.getProvider())) {
+//                // ... redirect báo lỗi email đã đăng ký bằng password ...
+//                return;
+//            }
+//
+//            // 4. BÂY GIỜ user.getId() CHẮC CHẮN ĐÃ CÓ GIÁ TRỊ (vì đã được save ở trên)
+//            String accessToken = jwtService.generateAccesToken(
+//                    user.getId(),
+//                    user.getEmail(),
+//                    user.getRole()
+//            );
+//
+//            String refreshToken = jwtService.generateRefreshToken(user.getId());
+//
+//            // 5. Cập nhật refreshToken và lưu lại lần nữa
+//            user.setRefreshToken(refreshToken);
+//            userRepository.save(user);
+//
+//            // 6. Redirect (như cũ)
+//            String redirectUrl = "http://localhost:3000/oauth-success" +
+//                    "?accessToken=" + accessToken +
+//                    "&refreshToken=" + refreshToken;
+//
+//            response.sendRedirect(redirectUrl);
 
+            OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
             String email = oauthUser.getAttribute("email");
             String name = oauthUser.getAttribute("name");
-            String picture = oauthUser.getAttribute("picture");
 
-            User user = userRepository.findByEmail(email)
-                    .orElseGet(() -> {
-                        User newUser = new User();
-                        newUser.setEmail(email);
-                        newUser.setName(name);
-                        newUser.setRole("USER");
-                        newUser.setProvider("GOOGLE");
-                        return newUser;
-                    });
+            // GỌI SERVICE Ở ĐÂY ĐỂ ĐỒNG NHẤT LOGIC
+            RegisterResponse rs = authService.registerGoogle(email, name);
 
-            // Email đã tồn tại nhưng không phải Google
-            if (!"GOOGLE".equals(user.getProvider())) {
-                try {
-                    String message = "Email này đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập thủ công!";
-
-                    String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
-
-
-                    String targetUrl = "http://localhost:3000/login?error=true&message=" + encodedMessage;
-
-                    response.sendRedirect(targetUrl);
-
-                    return;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            // Sinh JWT
-            String accessToken = jwtService.generateAccesToken(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getRole()
-            );
-
-            String refreshToken =
-                    jwtService.generateRefreshToken(user.getId());
-
-            user.setRefreshToken(refreshToken);
-            userRepository.save(user);
-
-            String redirectUrl =
-                    "http://localhost:3000/oauth-success" +
-                            "?accessToken=" + accessToken +
-                            "&refreshToken=" + refreshToken;
-
+            String redirectUrl = "http://localhost:3000/oauth-success" +
+                    "?accessToken=" + rs.getAccessToken() +
+                    "&refreshToken=" + rs.getRefreshToken();
             response.sendRedirect(redirectUrl);
         } catch (Exception e) {
             e.printStackTrace();

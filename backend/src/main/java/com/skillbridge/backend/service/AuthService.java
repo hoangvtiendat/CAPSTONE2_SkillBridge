@@ -41,7 +41,6 @@ public class AuthService {
             System.out.println("email exist");
             throw new AppException(ErrorCode.EMAIL_EXIST);
         }
-        System.out.println(111);
 
         String subject = "[SkillBridge] Mã xác thực đăng ký tài khoản";
         String otp = otpService.generateOtp(request.getEmail());
@@ -64,9 +63,7 @@ public class AuthService {
                         "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br>Đội ngũ SkillBridge</p>" +
                         "    </div>" +
                         "</div>";
-        System.out.println(request.getEmail());
         otpService.sendOtpEmail(request.getEmail(), subject, content);
-        System.out.println(2222);
         return "Mã xác thực đăng ký tài khoản đã được gửi về mail";
     }
 
@@ -108,47 +105,38 @@ public class AuthService {
     ) {
 
         if (userRepository.findByEmail(email).isPresent()) {
+            System.out.println("aaa");
             throw new AppException(ErrorCode.EMAIL_EXIST);
         }
-
+        System.out.println("abc");
         User user = new User();
         user.setEmail(email);
         user.setName(fullName);
         user.setProvider(provider);
+        user.setRole("CANDIDATE");
 
         return user;
     }
-
+    @Transactional
     public RegisterResponse registerGoogle(String email, String name) {
         User user = userRepository.findByEmail(email)
-                .orElseGet(() ->
-                        createUserCommon(email, name, "GOOGLE")
-                );
+                .orElseGet(() -> createUserCommon(email, name, "GOOGLE"));
 
-        // Nếu email tồn tại nhưng không phải Google
         if (!"GOOGLE".equals(user.getProvider())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_REGISTERED_BY_PASSWORD);
         }
-
-        // ✅ SAVE TRƯỚC (đảm bảo có ID)
-        user = userRepository.save(user);
-
+        User savedUser = userRepository.saveAndFlush(user);
         String accessToken = jwtService.generateAccesToken(
-                user.getId(),
-                user.getEmail(),
-                user.getRole()
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getRole()
         );
 
-        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        String refreshToken = jwtService.generateRefreshToken(savedUser.getId());
+        savedUser.setRefreshToken(refreshToken);
+        userRepository.save(savedUser);
 
-        user.setRefreshToken(refreshToken);
-        userRepository.save(user); // OK: update refresh token
-
-        return new RegisterResponse(
-                user.getEmail(),
-                accessToken,
-                refreshToken
-        );
+        return new RegisterResponse(savedUser.getEmail(), accessToken, refreshToken);
     }
 
 
@@ -164,7 +152,7 @@ public class AuthService {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
 
-        if (user.getIs2faEnabled()) {
+        if ("1".equals(user.getIs2faEnabled()) || "true".equalsIgnoreCase(user.getIs2faEnabled())) {
             System.out.println("is2faEnabled");
             String subject = "[SkillBridge] Mã xác thực đăng nhập";
             String otp = otpService.generateOtp(user.getEmail());
@@ -212,14 +200,14 @@ public class AuthService {
         return issueToken(user);
     }
 
-    private LoginResponse issueToken(User user) {
+    @Transactional
+    public LoginResponse issueToken(User user) {
 
         String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
-
         return new LoginResponse("0", accessToken, refreshToken);
     }
 
@@ -259,7 +247,7 @@ public class AuthService {
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new LoginResponse(String.valueOf(user.getIs2faEnabled()), accessToken, refreshToken);
+        return new LoginResponse(user.getIs2faEnabled(), accessToken, refreshToken);
     }
 
     public User toggleTwoFactor(boolean is2faEnabled, String token) {
@@ -275,7 +263,7 @@ public class AuthService {
         }
         System.out.println("is2faEnabled = " + is2faEnabled);
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        user.setIs2faEnabled(is2faEnabled);
+        user.setIs2faEnabled(String.valueOf(is2faEnabled));
         return userRepository.save(user);
 
     }

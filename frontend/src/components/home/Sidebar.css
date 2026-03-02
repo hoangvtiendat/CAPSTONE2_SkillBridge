@@ -13,7 +13,7 @@
 .sidebar-nav {
 	display: flex;
 	flex-direction: column;
-	gap: 40px;
+	gap: 20px;
 	/* Sticky Positioning for elements only */
 	position: sticky;
 	top: 20px;

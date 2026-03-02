@@ -51,7 +51,7 @@ public class User {
     private String refreshToken;
 
     @Column(name = "is_2fa_enabled", nullable = false)
-    private boolean is2faEnabled = false;
+    private String is2faEnabled = "false";
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -79,9 +79,10 @@ public class User {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
-    public boolean getIs2faEnabled() {
+    public String getIs2faEnabled() {
         return is2faEnabled;
     }
+
     public String getPhoneNumber() {
 
         return phoneNumber;
@@ -95,10 +96,7 @@ public class User {
     public void setAddress(String address) {
         this.address = address;
     }
-    public boolean isIs2faEnabled() {
-        return is2faEnabled;
-    }
-    public void setIs2faEnabled(boolean is2faEnabled) {
+    public void setIs2faEnabled(String is2faEnabled) {
         this.is2faEnabled = is2faEnabled;
     }
     public String getId() {
