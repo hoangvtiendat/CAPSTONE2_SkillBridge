@@ -21,6 +21,7 @@ import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.JobRepository;
+import org.springframework.data.domain.Page;
 import com.skillbridge.backend.repository.SystemLogRepository;
 import jakarta.transaction.Transactional;
 import com.skillbridge.backend.repository.*;
@@ -53,39 +54,47 @@ public class JobService {
 
 
 
-    public JobFeedResponse getJobFeed(String cursor, int limit, String categoryId, String location, Double salary) {
-        System.out.println("--- GỌI API GET FEED ---");
-        Pageable pageable = PageRequest.of(0, limit + 1);
+    public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
+        Pageable pageable = PageRequest.of(page, limit);
 
-        List<JobFeedItemResponse> jobFeed = jobRepository.getJobFeedFiltered(
-                cursor, JobStatus.OPEN, categoryId, location, salary, pageable
+        Page<JobFeedItemResponse> jobPage = jobRepository.getJobFeedFiltered(
+                JobStatus.OPEN, categoryId, location, salary, pageable
         );
 
-        if (jobFeed.isEmpty()) {
-            System.out.println("Kết quả: Rỗng (Không tìm thấy job nào khớp điều kiện)");
-            return new JobFeedResponse(List.of(), null, false);
+        if (jobPage.isEmpty()) {
+            return Map.of(
+                    "jobs", List.of(),
+                    "totalPages", 0,
+                    "totalElements", 0,
+                    "currentPage", page
+            );
         }
 
-        boolean hasMore = jobFeed.size() > limit;
+        List<JobFeedItemResponse> resultList = jobPage.getContent();
 
-        List<JobFeedItemResponse> resultList = hasMore
-                ? jobFeed.subList(0, limit)
-                : jobFeed;
-        System.out.println("Logic - hasMore: " + hasMore);
-        System.out.println("Logic - Số lượng job thực tế trả về Client: " + resultList.size());
+        List<String> jobIds = resultList.stream()
+                .map(JobFeedItemResponse::getJobId)
+                .toList();
 
-        enrichSkills(resultList);
+        List<Object[]> skillData = jobRepository.findSkillNamesByJobIds(jobIds);
 
-        String nextCursor = null;
-        if (hasMore) {
-            nextCursor = jobFeed.get(limit).getJobId();
-        }
-        System.out.println("Next Cursor cho trang sau: " + nextCursor);
-        System.out.println("--- KẾT THÚC API ---");
+        Map<String, List<String>> skillsMap = skillData.stream()
+                .collect(Collectors.groupingBy(
+                        obj -> (String) obj[0],
+                        Collectors.mapping(obj -> (String) obj[1], Collectors.toList())
+                ));
 
-        return new JobFeedResponse(resultList, nextCursor, hasMore);
+        resultList.forEach(item ->
+                item.setSkills(skillsMap.getOrDefault(item.getJobId(), List.of()))
+        );
+
+        return Map.of(
+                "jobs", resultList,
+                "totalPages", jobPage.getTotalPages(),
+                "totalElements", jobPage.getTotalElements(),
+                "currentPage", jobPage.getNumber()
+        );
     }
-
     public AdminJobFeedResponse adminGetJob(String cursor, int limit, String status, String modStatus) {
         System.out.println("--- ADMIN: BẮT ĐẦU LẤY DANH SÁCH JOB ---");
         try {

@@ -16,6 +16,7 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyJoinRequestRepository;
 import com.skillbridge.backend.repository.CompanyRepository;
+import org.springframework.data.domain.Page;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -34,6 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -57,17 +59,16 @@ public class CompanyService {
         this.companyJoinRequestRepository = companyJoinRequestRepository;
     }
 
-    public CompanyFeedResponse getCompanies(String cursor, CompanyStatus status, int limit) {
-        Pageable pageable = PageRequest.of(0, limit + 1);
-        List<CompanyFeedItemResponse> companies = companyRepository.getCompanyFeed(cursor, status, pageable);
-        boolean hasMore = companies.size() > limit;
-        String nextCursor = null;
+    public Map<String, Object> getCompanies(int page, CompanyStatus status, int limit) {
+        Pageable pageable = PageRequest.of(page, limit);
+        Page<CompanyFeedItemResponse> companyPage = companyRepository.getCompanyFeed(status, pageable);
 
-        if (hasMore) {
-            companies.remove(limit);
-            nextCursor = companies.get(companies.size() - 1).getId();
-        }
-        return new CompanyFeedResponse(companies, nextCursor, hasMore);
+        return Map.of(
+                "companies", companyPage.getContent(),
+                "totalPages", companyPage.getTotalPages(),
+                "totalElements", companyPage.getTotalElements(),
+                "currentPage", companyPage.getNumber()
+        );
     }
 
     public CompanyDTO lookupByTaxCode(String mst) {

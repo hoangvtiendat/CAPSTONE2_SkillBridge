@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.AuthProvider;
 import java.util.Date;
 
@@ -80,7 +82,7 @@ public class AuthService {
         user.setPhoneNumber(request.getPhoneNumber());
         user.setName(request.getName());
         user.setAddress(request.getAddress());
-
+        user.setStatus("ACTIVE");
         userRepository.saveAndFlush(user);
 
         String accessToken = jwtService.generateAccesToken(
@@ -105,10 +107,9 @@ public class AuthService {
     ) {
 
         if (userRepository.findByEmail(email).isPresent()) {
-            System.out.println("aaa");
             throw new AppException(ErrorCode.EMAIL_EXIST);
         }
-        System.out.println("abc");
+
         User user = new User();
         user.setEmail(email);
         user.setName(fullName);
@@ -125,7 +126,11 @@ public class AuthService {
         if (!"GOOGLE".equals(user.getProvider())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_REGISTERED_BY_PASSWORD);
         }
+        if (!"ACTIVE".equals(user.getStatus())) {
+            throw new AppException(ErrorCode.USER_STATUS);
+        }
         User savedUser = userRepository.saveAndFlush(user);
+
         String accessToken = jwtService.generateAccesToken(
                 savedUser.getId(),
                 savedUser.getEmail(),
@@ -196,6 +201,10 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+
+        if (!"ACTIVE".equals(user.getStatus())) {
+            throw new AppException(ErrorCode.USER_STATUS);
+        }
 
         return issueToken(user);
     }

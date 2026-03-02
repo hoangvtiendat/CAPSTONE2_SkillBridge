@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/companies")
 public class CompanyController {
@@ -37,14 +39,14 @@ public class CompanyController {
     }
 
     @GetMapping("/feed")
-    public ResponseEntity<ApiResponse<CompanyFeedResponse>> getCompanyFeed(
-            @RequestParam(value = "cursor", required = false) String cursor,
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getCompanyFeed(
+            @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "status", required = false) CompanyStatus status,
             @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
-        CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
-        CompanyFeedResponse rs = companyService.getCompanies(cursor, searchStatus, limit);
-        ApiResponse<CompanyFeedResponse> response = new ApiResponse<>(
+        CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.VERIFIED;
+        Map<String, Object> rs = companyService.getCompanies(page, searchStatus, limit);
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Company Feed",
                 rs

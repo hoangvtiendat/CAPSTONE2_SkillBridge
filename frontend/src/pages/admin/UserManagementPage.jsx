@@ -10,10 +10,13 @@ import {
     Calendar,
     ChevronLeft,
     ChevronRight,
-    Loader2
+    Loader2,
+    Shield,
+    Users
 } from 'lucide-react';
 import adminService from '../../services/api/adminService';
 import { toast } from 'sonner';
+import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
 
 const UserManagementPage = () => {
@@ -24,7 +27,7 @@ const UserManagementPage = () => {
     const [statusFilter, setStatusFilter] = useState('');
     const [pagination, setPagination] = useState({
         page: 0,
-        size: 10,
+        size: 5,
         totalElements: 0,
         totalPages: 0
     });
@@ -64,23 +67,73 @@ const UserManagementPage = () => {
         return () => clearTimeout(timer);
     }, [fetchUsers]);
 
-    const handleBanUser = async (id) => {
-        try {
-            await adminService.banUser(id);
-            toast.success('Đã khóa người dùng thành công');
-            fetchUsers(pagination.page);
-        } catch (error) {
-            toast.error('Không thể khóa người dùng');
+    const handleBanUser = async (user) => {
+        const result = await Swal.fire({
+            title: 'Khóa tài khoản?',
+            text: `Bạn có chắc chắn muốn khóa tài khoản của ${user.name} không? Người dùng này sẽ không thể truy cập vào hệ thống.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Đồng ý, khóa ngay!',
+            cancelButtonText: 'Hủy bỏ',
+            background: '#ffffff',
+            borderRadius: '16px',
+            customClass: {
+                popup: 'premium-swal-popup',
+                title: 'premium-swal-title',
+                confirmButton: 'premium-swal-confirm',
+                cancelButton: 'premium-swal-cancel'
+            }
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await adminService.banUser(user.id);
+                fetchUsers(pagination.page);
+                Swal.fire({
+                    title: 'Thành công!',
+                    text: 'Tài khoản đã được khóa.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    borderRadius: '16px'
+                });
+            } catch (error) {
+                toast.error('Không thể khóa người dùng');
+            }
         }
     };
 
-    const handleUnbanUser = async (id) => {
-        try {
-            await adminService.unbanUser(id);
-            toast.success('Đã mở khóa người dùng thành công');
-            fetchUsers(pagination.page);
-        } catch (error) {
-            toast.error('Không thể mở khóa người dùng');
+    const handleUnbanUser = async (user) => {
+        const result = await Swal.fire({
+            title: 'Mở khóa tài khoản?',
+            text: `Xác nhận mở khóa quyền truy cập cho ${user.name}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Đồng ý, mở khóa',
+            cancelButtonText: 'Hủy bỏ',
+            background: '#ffffff',
+            borderRadius: '16px'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await adminService.unbanUser(user.id);
+                fetchUsers(pagination.page);
+                Swal.fire({
+                    title: 'Đã mở khóa!',
+                    text: 'Người dùng hiện đã có thể truy cập hệ thống.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    borderRadius: '16px'
+                });
+            } catch (error) {
+                toast.error('Không thể mở khóa người dùng');
+            }
         }
     };
 
@@ -96,51 +149,58 @@ const UserManagementPage = () => {
         <div className="user-management">
             <div className="flex-between" style={{ marginBottom: '32px' }}>
                 <div>
-                    <h1 style={{ fontSize: '32px', margin: 0, fontWeight: '900', color: '#0f172a' }}>Quản lí người dùng</h1>
-                    <p style={{ margin: '8px 0 0', color: '#64748b' }}>Quản lý tài khoản, phân quyền và trạng thái hoạt động trên toàn hệ thống.</p>
+                    <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0 }}>Quản lý người dùng</h1>
+                    <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Kiểm soát truy cập, phân quyền và giám sát hoạt động tài khoản.</p>
                 </div>
             </div>
 
-            <div className="data-card">
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, position: 'relative', minWidth: '250px' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            <div className="modern-card">
+                <div className="filters-bar">
+                    <div className="search-wrapper">
+                        <Search size={18} className="search-icon" />
                         <input
                             type="text"
-                            placeholder="Tìm kiếm theo tên hoặc email..."
-                            style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none' }}
+                            placeholder="Tìm tên, email..."
+                            className="modern-input"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <select
-                        value={roleFilter}
-                        onChange={(e) => setRoleFilter(e.target.value)}
-                        style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none', backgroundColor: 'white' }}
-                    >
-                        <option value="">Tất cả vai trò</option>
-                        <option value="CANDIDATE">Candidate</option>
-                        <option value="EMPLOYER">Employer</option>
-                        <option value="ADMIN">Admin</option>
-                    </select>
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none', backgroundColor: 'white' }}
-                    >
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="ACTIVE">Hoạt động</option>
-                        <option value="BANNED">Đã khóa</option>
-                    </select>
+                    <div className="filters-group">
+                        <div className="filter-item">
+                            <Filter size={14} className="filter-icon" />
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value)}
+                                className="modern-select"
+                            >
+                                <option value="">Vai trò</option>
+                                <option value="CANDIDATE">Ứng viên</option>
+                                <option value="EMPLOYER">Nhà tuyển dụng</option>
+                            </select>
+                        </div>
+                        <div className="filter-item">
+                            <Shield size={14} className="filter-icon" />
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="modern-select"
+                            >
+                                <option value="">Trạng thái</option>
+                                <option value="ACTIVE">Hoạt động</option>
+                                <option value="BANNED">Đã khóa</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="table-responsive" style={{ minHeight: '300px', position: 'relative' }}>
+                <div className="table-container">
                     {loading && (
-                        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.7)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Loader2 className="spinning-icon" size={32} color="#4f46e5" />
+                        <div className="table-loader-overlay">
+                            <Loader2 className="spinning-icon" size={40} />
                         </div>
                     )}
-                    <table className="admin-table">
+                    <table className="modern-table">
                         <thead>
                             <tr>
                                 <th>Người dùng</th>
@@ -152,70 +212,70 @@ const UserManagementPage = () => {
                         </thead>
                         <tbody>
                             {users.length > 0 ? users.map((user) => (
-                                <tr key={user.id}>
+                                <tr key={user.id} className="table-row-hover">
                                     <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-                                                {user.avatar ? <img src={user.avatar} style={{ width: '100%', height: '100%', borderRadius: '10px', objectFit: 'cover' }} alt="" /> : <UserIcon size={20} />}
+                                        <div className="user-info-cell">
+                                            <div className="user-avatar-wrapper">
+                                                {user.avatar ? (
+                                                    <img src={user.avatar} className="user-avatar" alt="" />
+                                                ) : (
+                                                    <div className="user-avatar-placeholder">
+                                                        {user.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div>
-                                                <p style={{ margin: 0, fontWeight: '700', fontSize: '14px' }}>{user.name}</p>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#64748b' }}>
-                                                    <Mail size={12} />
-                                                    <span>{user.email}</span>
-                                                </div>
+                                            <div className="user-details">
+                                                <p className="user-name">{user.name}</p>
+                                                <p className="user-email">{user.email}</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span className="badge" style={getRoleStyle(user.role)}>
+                                        <span className="modern-badge" style={getRoleStyle(user.role)}>
                                             {user.role}
                                         </span>
                                     </td>
-                                    <td style={{ color: '#64748b', fontSize: '13px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <Calendar size={12} />
-                                            <span>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</span>
+                                    <td>
+                                        <div className="date-cell">
+                                            <Calendar size={14} />
+                                            <span>{user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A'}</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <span className="badge" style={{
-                                            backgroundColor: user.status === 'ACTIVE' ? '#ecfdf5' : '#fef2f2',
-                                            color: user.status === 'ACTIVE' ? '#059669' : '#dc2626',
-                                            borderColor: user.status === 'ACTIVE' ? '#d1fae5' : '#fee2e2'
-                                        }}>
-                                            {user.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã khóa'}
-                                        </span>
+                                        <div className={`status-indicator ${user.status.toLowerCase()}`}>
+                                            <div className="status-dot"></div>
+                                            <span>{user.status === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}</span>
+                                        </div>
                                     </td>
                                     <td style={{ textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                        <div className="actions-wrapper">
                                             {user.status === 'ACTIVE' ? (
                                                 <button
-                                                    onClick={() => handleBanUser(user.id)}
+                                                    onClick={() => handleBanUser(user)}
+                                                    className="action-btn ban-btn"
                                                     title="Khóa tài khoản"
-                                                    style={{ border: 'none', background: '#fef2f2', color: '#dc2626', padding: '6px', borderRadius: '8px', cursor: 'pointer' }}
                                                 >
                                                     <Ban size={18} />
                                                 </button>
                                             ) : (
                                                 <button
-                                                    onClick={() => handleUnbanUser(user.id)}
+                                                    onClick={() => handleUnbanUser(user)}
+                                                    className="action-btn unban-btn"
                                                     title="Mở khóa tài khoản"
-                                                    style={{ border: 'none', background: '#ecfdf5', color: '#059669', padding: '6px', borderRadius: '8px', cursor: 'pointer' }}
                                                 >
                                                     <CheckCircle size={18} />
                                                 </button>
                                             )}
-                                            <button style={{ border: 'none', background: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-                                                <MoreVertical size={18} />
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                             )) : !loading && (
                                 <tr>
-                                    <td colSpan="5" style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
-                                        Không tìm thấy người dùng nào phù hợp.
+                                    <td colSpan="5" className="empty-table-state">
+                                        <div className="empty-content">
+                                            <Search size={48} />
+                                            <p>Không tìm thấy người dùng nào phù hợp</p>
+                                        </div>
                                     </td>
                                 </tr>
                             )}
@@ -224,48 +284,57 @@ const UserManagementPage = () => {
                 </div>
 
                 {pagination.totalPages > 1 && (
-                    <div style={{ padding: '16px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc' }}>
-                        <span style={{ fontSize: '13px', color: '#64748b' }}>
-                            Trang <b>{pagination.page + 1}</b> trên tổng số <b>{pagination.totalPages}</b>
-                        </span>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="modern-pagination">
+                        <div className="pagination-info">
+                            Tổng <b>{pagination.totalElements}</b> người dùng
+                        </div>
+                        <div className="pagination-controls">
                             <button
                                 disabled={pagination.page === 0}
                                 onClick={() => fetchUsers(pagination.page - 1)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0',
-                                    backgroundColor: 'white', fontSize: '12px', fontWeight: '600', cursor: pagination.page === 0 ? 'default' : 'pointer',
-                                    opacity: pagination.page === 0 ? 0.5 : 1
-                                }}
+                                className="pagination-btn"
+                                title="Trang trước"
                             >
-                                <ChevronLeft size={14} /> Trước
+                                <ChevronLeft size={18} />
                             </button>
+
+                            {[...Array(pagination.totalPages)].map((_, index) => {
+                                // Show first, last, and pages around current
+                                if (
+                                    index === 0 ||
+                                    index === pagination.totalPages - 1 ||
+                                    (index >= pagination.page - 1 && index <= pagination.page + 1)
+                                ) {
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => fetchUsers(index)}
+                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    );
+                                } else if (
+                                    index === pagination.page - 2 ||
+                                    index === pagination.page + 2
+                                ) {
+                                    return <span key={index} className="pagination-ellipsis">...</span>;
+                                }
+                                return null;
+                            })}
+
                             <button
                                 disabled={pagination.page >= pagination.totalPages - 1}
                                 onClick={() => fetchUsers(pagination.page + 1)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0',
-                                    backgroundColor: 'white', fontSize: '12px', fontWeight: '600', cursor: pagination.page >= pagination.totalPages - 1 ? 'default' : 'pointer',
-                                    opacity: pagination.page >= pagination.totalPages - 1 ? 0.5 : 1
-                                }}
+                                className="pagination-btn"
+                                title="Trang sau"
                             >
-                                Sau <ChevronRight size={14} />
+                                <ChevronRight size={18} />
                             </button>
                         </div>
                     </div>
                 )}
             </div>
-            <style>
-                {`
-                .spinning-icon {
-                    animation: spin 1s linear infinite;
-                }
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-                `}
-            </style>
         </div>
     );
 };

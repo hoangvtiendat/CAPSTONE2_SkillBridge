@@ -3,10 +3,10 @@ import api from '../../config/axiosConfig';
 const jobService = {
     getFeed: async (params = {}) => {
         try {
-            const { cursor, limit = 10, categoryId, location, salary } = params;
+            const { page = 0, limit = 6, categoryId, location, salary } = params;
             const queryParams = new URLSearchParams();
-            if (cursor) queryParams.append('cursor', cursor);
-            if (limit) queryParams.append('limit', limit);
+            queryParams.append('page', page);
+            queryParams.append('limit', limit);
             if (categoryId) queryParams.append('categoryId', categoryId);
             if (location) queryParams.append('location', location);
             if (salary) queryParams.append('salary', salary);
@@ -31,8 +31,9 @@ const jobService = {
 
             return {
                 jobs,
-                nextCursor: result.nextCursor,
-                hasMore: result.hasMore
+                totalPages: result.totalPages || 0,
+                totalElements: result.totalElements || 0,
+                currentPage: result.currentPage || 0
             };
         } catch (error) {
             throw error;

@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Plus,
     Trash2,
     Edit,
     Briefcase,
-    AlertTriangle,
     X,
-    CheckCircle2
+    CheckCircle2,
+    Calendar,
+    Loader2,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import adminService from '../../services/api/adminService';
 import { toast } from 'sonner';
+import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
 
 const IndustryManagementPage = () => {
@@ -18,21 +23,32 @@ const IndustryManagementPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
     const [categoryName, setCategoryName] = useState('');
-    const [isDeleting, setIsDeleting] = useState(null);
+    const [pagination, setPagination] = useState({
+        page: 0,
+        size: 5,
+        totalElements: 0,
+        totalPages: 0
+    });
 
-    const fetchCategories = useCallback(async () => {
+    const fetchCategories = useCallback(async (page = 0) => {
         setLoading(true);
         try {
-            const data = await adminService.getCategories({ size: 100 });
+            const data = await adminService.getCategories({ page, size: pagination.size });
             if (data && data.result) {
                 setCategories(data.result.content);
+                setPagination(prev => ({
+                    ...prev,
+                    page: data.result.number,
+                    totalElements: data.result.totalElements,
+                    totalPages: data.result.totalPages
+                }));
             }
         } catch (error) {
             toast.error("Không thể tải danh sách ngành nghề");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [pagination.size]);
 
     useEffect(() => {
         fetchCategories();
@@ -53,20 +69,39 @@ const IndustryManagementPage = () => {
             setCategoryName('');
             setEditingCategory(null);
             setIsModalOpen(false);
-            fetchCategories();
+            fetchCategories(pagination.page);
         } catch (error) {
-            toast.error("Thao tác thất bại");
+            const errorMessage = error.response?.data?.message || "Thao tác thất bại";
+            toast.error(errorMessage);
         }
     };
 
-    const handleDelete = async (id) => {
-        try {
-            await adminService.deleteCategory(id);
-            toast.success("Đã xóa ngành nghề");
-            setIsDeleting(null);
-            fetchCategories();
-        } catch (error) {
-            toast.error("Không thể xóa ngành nghề này (có thể đang được sử dụng)");
+    const handleDelete = async (id, name) => {
+        const result = await Swal.fire({
+            title: 'Xác nhận xóa?',
+            text: `Bạn có chắc chắn muốn xóa ngành nghề "${name}"? Hành động này không thể hoàn tác.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Có, xóa ngay',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                popup: 'premium-swal-popup',
+                title: 'premium-swal-title',
+                confirmButton: 'premium-swal-confirm',
+                cancelButton: 'premium-swal-cancel'
+            }
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await adminService.deleteCategory(id);
+                toast.success("Đã xóa ngành nghề thành công");
+                fetchCategories(pagination.page);
+            } catch (error) {
+                toast.error("Không thể xóa ngành nghề này (có thể đang được sử dụng)");
+            }
         }
     };
 
@@ -77,25 +112,45 @@ const IndustryManagementPage = () => {
     };
 
     return (
-        <div className="industry-management">
+        <div className="industry-management animate-fade-in">
             <div className="flex-between" style={{ marginBottom: '32px' }}>
                 <div>
                     <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0 }}>Quản lý ngành nghề</h1>
                     <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Danh mục các lĩnh vực kinh doanh và tuyển dụng trên hệ thống.</p>
                 </div>
+            </div>
+
+            <div className="flex-between" style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>
+                    Tổng số: <b>{pagination.totalElements}</b> ngành nghề
+                </div>
                 <button
                     onClick={() => { setEditingCategory(null); setCategoryName(''); setIsModalOpen(true); }}
-                    className="btn-primary"
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    className="action-btn"
+                    style={{
+                        width: 'auto',
+                        padding: '0 20px',
+                        gap: '8px',
+                        background: 'var(--admin-primary)',
+                        color: 'white',
+                        borderColor: 'transparent',
+                        fontWeight: '700',
+                        fontSize: '14px'
+                    }}
                 >
                     <Plus size={18} />
                     Thêm ngành nghề
                 </button>
             </div>
 
-            <div className="data-card">
-                <div className="table-responsive">
-                    <table className="admin-table">
+            <div className="modern-card">
+                <div className="table-container">
+                    {loading && (
+                        <div className="table-loader-overlay">
+                            <Loader2 className="spinning-icon" size={40} />
+                        </div>
+                    )}
+                    <table className="modern-table">
                         <thead>
                             <tr>
                                 <th>Tên ngành nghề</th>
@@ -104,37 +159,38 @@ const IndustryManagementPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {loading ? (
-                                <tr><td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Đang tải dữ liệu...</td></tr>
-                            ) : categories.length > 0 ? (
+                            {categories.length > 0 ? (
                                 categories.map((cat) => (
-                                    <tr key={cat.id}>
+                                    <tr key={cat.id} className="table-row-hover">
                                         <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <div style={{ padding: '8px', backgroundColor: '#f1f5f9', borderRadius: '8px', color: '#64748b' }}>
-                                                    <Briefcase size={18} />
+                                            <div className="user-info-cell">
+                                                <div className="user-avatar-wrapper" style={{ width: '40px', height: '40px', borderRadius: '10px' }}>
+                                                    <div className="user-avatar-placeholder" style={{ background: '#f1f5f9', color: '#64748b' }}>
+                                                        <Briefcase size={18} />
+                                                    </div>
                                                 </div>
-                                                <span style={{ fontSize: '14px', fontWeight: '600' }}>{cat.name}</span>
+                                                <span style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b' }}>{cat.name}</span>
                                             </div>
                                         </td>
-                                        <td style={{ fontSize: '13px', color: '#64748b' }}>
-                                            {new Date(cat.createdAt).toLocaleDateString('vi-VN')}
+                                        <td>
+                                            <div className="date-cell">
+                                                <Calendar size={14} />
+                                                <span>{new Date(cat.createdAt).toLocaleDateString('vi-VN')}</span>
+                                            </div>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                            <div className="actions-wrapper">
                                                 <button
                                                     onClick={() => openEditModal(cat)}
-                                                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}
-                                                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                                                    onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    className="action-btn info-btn"
+                                                    title="Chỉnh sửa"
                                                 >
                                                     <Edit size={18} />
                                                 </button>
                                                 <button
-                                                    onClick={() => setIsDeleting(cat.id)}
-                                                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}
-                                                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                                                    onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    onClick={() => handleDelete(cat.id, cat.name)}
+                                                    className="action-btn ban-btn"
+                                                    title="Xóa ngành nghề"
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
@@ -142,86 +198,152 @@ const IndustryManagementPage = () => {
                                         </td>
                                     </tr>
                                 ))
-                            ) : (
-                                <tr><td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Chưa có dữ liệu ngành nghề</td></tr>
+                            ) : !loading && (
+                                <tr>
+                                    <td colSpan="3" className="empty-table-state">
+                                        <div className="empty-content">
+                                            <Briefcase size={48} />
+                                            <p>Chưa có dữ liệu ngành nghề</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
+
+                {pagination.totalPages > 1 && (
+                    <div className="modern-pagination">
+                        <div className="pagination-info">
+                            Tổng <b>{pagination.totalElements}</b> ngành nghề
+                        </div>
+                        <div className="pagination-controls">
+                            <button
+                                disabled={pagination.page === 0}
+                                onClick={() => fetchCategories(pagination.page - 1)}
+                                className="pagination-btn"
+                                title="Trang trước"
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
+
+                            {[...Array(pagination.totalPages)].map((_, index) => {
+                                if (
+                                    index === 0 ||
+                                    index === pagination.totalPages - 1 ||
+                                    (index >= pagination.page - 1 && index <= pagination.page + 1)
+                                ) {
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => fetchCategories(index)}
+                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    );
+                                } else if (
+                                    index === pagination.page - 2 ||
+                                    index === pagination.page + 2
+                                ) {
+                                    return <span key={index} className="pagination-ellipsis">...</span>;
+                                }
+                                return null;
+                            })}
+
+                            <button
+                                disabled={pagination.page >= pagination.totalPages - 1}
+                                onClick={() => fetchCategories(pagination.page + 1)}
+                                className="pagination-btn"
+                                title="Trang sau"
+                            >
+                                <ChevronRight size={18} />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Modal - Add/Edit */}
-            {isModalOpen && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)' }}>
-                    <div className="data-card" style={{ width: '100%', maxWidth: '400px', padding: 0 }}>
-                        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>
+            {isModalOpen && createPortal(
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 9999,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+                    backdropFilter: 'blur(4px)',
+                    animation: 'fadeIn 0.2s ease-out'
+                }}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) setIsModalOpen(false);
+                    }}>
+                    <div className="modern-card" style={{ width: '100%', maxWidth: '450px', padding: 0, borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fcfcfd' }}>
+                            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>
                                 {editingCategory ? 'Chỉnh sửa ngành nghề' : 'Thêm ngành nghề mới'}
                             </h2>
-                            <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
-                                <X size={20} />
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="action-btn"
+                                style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+                            >
+                                <X size={18} />
                             </button>
                         </div>
-                        <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
-                            <div style={{ marginBottom: '24px' }}>
-                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '8px' }}>Tên ngành nghề</label>
+                        <form onSubmit={handleSubmit} style={{ padding: '32px' }}>
+                            <div style={{ marginBottom: '32px' }}>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '800', color: '#475569', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Tên ngành nghề
+                                </label>
                                 <input
                                     autoFocus
                                     type="text"
-                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '14px' }}
+                                    className="modern-input"
+                                    style={{ paddingLeft: '20px' }}
                                     placeholder="Vd: Công nghệ thông tin, Kế toán..."
                                     value={categoryName}
                                     onChange={(e) => setCategoryName(e.target.value)}
                                     required
                                 />
+                                <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '10px' }}>
+                                    Nhập tên ngành nghề chính xác để hiển thị cho người dùng và nhà tuyển dụng.
+                                </p>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    style={{ padding: '10px 16px', borderRadius: '10px', border: 'none', background: '#f1f5f9', color: '#475569', fontWeight: '700', cursor: 'pointer' }}
+                                    className="action-btn"
+                                    style={{ width: 'auto', padding: '0 24px', fontWeight: '700' }}
                                 >
                                     Hủy
                                 </button>
                                 <button
                                     type="submit"
-                                    className="btn-primary"
-                                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                    className="action-btn"
+                                    style={{
+                                        width: 'auto',
+                                        padding: '0 24px',
+                                        background: 'var(--admin-primary)',
+                                        color: 'white',
+                                        borderColor: 'transparent',
+                                        fontWeight: '700'
+                                    }}
                                 >
-                                    <CheckCircle2 size={16} />
+                                    <CheckCircle2 size={18} style={{ marginRight: '8px' }} />
                                     {editingCategory ? 'Lưu thay đổi' : 'Tạo mới'}
                                 </button>
                             </div>
                         </form>
                     </div>
-                </div>
-            )}
-
-            {/* Delete Confirmation Modal */}
-            {isDeleting && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)' }}>
-                    <div className="data-card" style={{ width: '100%', maxWidth: '350px', padding: '32px', textAlign: 'center' }}>
-                        <div style={{ width: '64px', height: '64px', backgroundColor: '#fef2f2', color: '#dc2626', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                            <AlertTriangle size={32} />
-                        </div>
-                        <h2 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 8px' }}>Xác nhận xóa?</h2>
-                        <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px' }}>Hành động này không thể hoàn tác. Ngành nghề sẽ bị xóa vĩnh viễn.</p>
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                            <button
-                                onClick={() => setIsDeleting(null)}
-                                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: '#f1f5f9', color: '#475569', fontWeight: '700', cursor: 'pointer' }}
-                            >
-                                Quay lại
-                            </button>
-                            <button
-                                onClick={() => handleDelete(isDeleting)}
-                                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: '#ef4444', color: 'white', fontWeight: '700', cursor: 'pointer' }}
-                            >
-                                Xóa ngay
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

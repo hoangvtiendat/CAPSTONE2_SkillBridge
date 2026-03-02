@@ -9,6 +9,7 @@ import com.skillbridge.backend.enums.ModerationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -29,53 +30,47 @@ public interface JobRepository extends JpaRepository<Job, String> {
         LEFT JOIN j.category cat
         LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
-        WHERE j.status = :status 
-        AND (
-            :cursor IS NULL OR 
-            j.createdAt < (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
-            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id < :cursor)
-        )
-        ORDER BY j.createdAt DESC, j.id DESC
-    """)
-    List<JobFeedItemResponse> getJobFeed(
-            @Param("cursor") String cursor,
-            @Param("status") String status,
-            Pageable pageable
-    );
-
-    @Query("""
-        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.description, j.location, 
-            j.salaryMin, j.salaryMax, j.createdAt, 
-            c.name, c.imageUrl, sp.name, cat.name
-        )
-        FROM Job j
-        LEFT JOIN j.company c
-        LEFT JOIN j.category cat
-        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
-        WHERE j.status = :status 
-        AND (
-            :cursor IS NULL OR 
-            j.createdAt < (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
-            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id < :cursor)
-        )
+        WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
         AND (:location IS NULL OR j.location LIKE %:location%)
         AND (:salary IS NULL OR (
                         CAST(j.salaryMin AS double) <= :salary
                         AND CAST(j.salaryMax AS double) >= :salary
                     ))
-        ORDER BY j.createdAt DESC, j.id DESC
+        ORDER BY j.createdAt DESC
     """)
-        List<JobFeedItemResponse> getJobFeedFiltered(
-                @Param("cursor") String cursor,
-                @Param("status") Enum status,
-                @Param("categoryId") String categoryId,
-                @Param("location") String location,
-                @Param("salary") Double minSalary,
-                Pageable pageable
-        );
+    Page<JobFeedItemResponse> getJobFeed(
+            @Param("status") String status,
+            Pageable pageable
+    );
+
+    @Query("""
+        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
+            j.id, j.title,j.description, j.location, 
+            j.salaryMin, j.salaryMax, j.createdAt, 
+            c.name,c.imageUrl,sp.name, cat.name
+        )
+        FROM Job j
+        LEFT JOIN j.company c
+        LEFT JOIN j.category cat
+        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
+        WHERE j.status = :status AND (:cursor IS NULL OR j.id < :cursor)
+        AND (:categoryId IS NULL OR cat.id = :categoryId)
+        AND (:location IS NULL OR j.location LIKE %:location%)
+        AND (:salary IS NULL OR (
+                        CAST(j.salaryMin AS double) <= :salary
+                        AND CAST(j.salaryMax AS double) >= :salary
+                    ))
+        ORDER BY j.createdAt DESC
+    """)
+    Page<JobFeedItemResponse> getJobFeedFiltered(
+            @Param("status") Enum status,
+            @Param("categoryId") String categoryId,
+            @Param("location") String location,
+            @Param("salary") Double minSalary,
+            Pageable pageable
+    );
 
     @Query("SELECT js.job.id, s.name " +
             "FROM JobSkill js " +

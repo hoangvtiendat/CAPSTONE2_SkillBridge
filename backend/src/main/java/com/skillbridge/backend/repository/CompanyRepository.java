@@ -5,8 +5,10 @@ import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.CompanyStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CompanyRepository extends JpaRepository<Company, String> {
+public interface CompanyRepository extends JpaRepository<Company, String>, JpaSpecificationExecutor<Company> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
@@ -27,15 +29,14 @@ public interface CompanyRepository extends JpaRepository<Company, String> {
         LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
         LEFT JOIN SubscriptionPlan sp ON cs.subscriptionPlan.id = sp.id
         WHERE (:status IS NULL OR c.status = :status)
-        AND (
+         AND (
             :cursor IS NULL OR 
             c.createdAt < (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) OR
             (c.createdAt = (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) AND c.id < :cursor)
         )
         ORDER BY c.createdAt DESC, c.id DESC
     """)
-    List<CompanyFeedItemResponse> getCompanyFeed(
-            @Param("cursor") String cursor,
+    Page<CompanyFeedItemResponse> getCompanyFeed(
             @Param("status") CompanyStatus status,
             Pageable pageable
     );

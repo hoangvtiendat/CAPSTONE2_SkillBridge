@@ -1,50 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import companyService from '../../services/api/companyService';
 import './CompanyGrid.css';
-
-const ITEMS_PER_PAGE = 6;
 
 const CompanyGrid = () => {
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [pagination, setPagination] = useState({
+        page: 0,
+        size: 6,
+        totalElements: 0,
+        totalPages: 0
+    });
 
-    const fetchCompanies = async (page) => {
+    const fetchCompanies = useCallback(async (page = 0) => {
         setLoading(true);
         try {
-            const data = await companyService.getFeed({ page, limit: ITEMS_PER_PAGE });
-            // Assuming data structure: { result: { content: [...], totalPages: ... } } 
-            // OR { result: [...] } if no pagination metadata
-            // Adjust based on actual API response
-            if (data && data.result) {
-                if (data.result.companies && Array.isArray(data.result.companies)) {
-                    setCompanies(data.result.companies);
-                    // Handle hasMore if using cursor-based pagination
-                    // For now, keep it simple as the user might be moving towards cursor-based
-                } else if (Array.isArray(data.result)) {
-                    setCompanies(data.result);
-                } else if (data.result.content) {
-                    setCompanies(data.result.content);
-                    setTotalPages(data.result.totalPages || 1);
-                }
-            } else if (Array.isArray(data)) {
-                setCompanies(data);
+            const data = await companyService.getFeed({ page, limit: pagination.size });
+            if (data) {
+                setCompanies(data.companies || []);
+                setPagination(prev => ({
+                    ...prev,
+                    page: data.currentPage,
+                    totalElements: data.totalElements,
+                    totalPages: data.totalPages
+                }));
             }
         } catch (error) {
             console.error("Failed to fetch companies:", error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [pagination.size]);
 
     useEffect(() => {
-        fetchCompanies(currentPage);
-    }, [currentPage]);
+        fetchCompanies(0);
+    }, [fetchCompanies]);
 
     const handlePageChange = (page) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
+        fetchCompanies(page);
+        const element = document.getElementById('company-grid');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
         }
     };
 
@@ -55,7 +52,7 @@ const CompanyGrid = () => {
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>Loading...</div>
+                <div style={{ textAlign: 'center', padding: '100px 0' }}>Loading companies...</div>
             ) : (
                 <div className="company-grid">
                     {companies.length > 0 ? companies.map(company => (
@@ -70,35 +67,53 @@ const CompanyGrid = () => {
                             <span className="company-jobs-count">{company.jobCount || 0} Open Jobs</span>
                         </div>
                     )) : (
-                        <p>No companies found.</p>
+                        <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0' }}>No companies found.</p>
                     )}
                 </div>
             )}
 
-            {totalPages > 1 && (
+            {pagination.totalPages > 1 && (
                 <div className="pagination">
                     <button
                         className="page-btn"
-                        disabled={currentPage === 1}
-                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={pagination.page === 0}
+                        onClick={() => handlePageChange(pagination.page - 1)}
+                        title="Trang trước"
                     >
-                        &lt;
+                        <ChevronLeft size={18} />
                     </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <button
-                            key={page}
-                            className={`page-btn ${currentPage === page ? 'active' : ''}`}
-                            onClick={() => handlePageChange(page)}
-                        >
-                            {page}
-                        </button>
-                    ))}
+
+                    {[...Array(pagination.totalPages)].map((_, index) => {
+                        if (
+                            index === 0 ||
+                            index === pagination.totalPages - 1 ||
+                            (index >= pagination.page - 1 && index <= pagination.page + 1)
+                        ) {
+                            return (
+                                <button
+                                    key={index}
+                                    onClick={() => handlePageChange(index)}
+                                    className={`page-btn ${pagination.page === index ? 'active' : ''}`}
+                                >
+                                    {index + 1}
+                                </button>
+                            );
+                        } else if (
+                            index === pagination.page - 2 ||
+                            index === pagination.page + 2
+                        ) {
+                            return <span key={index} className="pagination-ellipsis">...</span>;
+                        }
+                        return null;
+                    })}
+
                     <button
                         className="page-btn"
-                        disabled={currentPage === totalPages}
-                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={pagination.page >= pagination.totalPages - 1}
+                        onClick={() => handlePageChange(pagination.page + 1)}
+                        title="Trang sau"
                     >
-                        &gt;
+                        <ChevronRight size={18} />
                     </button>
                 </div>
             )}

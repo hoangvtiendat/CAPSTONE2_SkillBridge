@@ -44,53 +44,6 @@ public class OAuth2LoginSuccessHandler
             Authentication authentication
     ) throws IOException {
         try {
-//            OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
-//
-//            String email = oauthUser.getAttribute("email");
-//            String name = oauthUser.getAttribute("name");
-//            String picture = oauthUser.getAttribute("picture");
-//
-//            Optional<User> userOptional = userRepository.findByEmail(email);
-//            User user;
-//
-//            if (userOptional.isPresent()) {
-//                user = userOptional.get();
-//            } else {
-//                // 2. Nếu là user mới, tạo object và LƯU NGAY để lấy ID
-//                user = new User();
-//                user.setEmail(email);
-//                user.setName(name);
-//                user.setRole("USER"); // Hoặc CANDIDATE tùy bạn
-//                user.setProvider("GOOGLE");
-//                user = userRepository.saveAndFlush(user); // Dùng saveAndFlush để có ID ngay lập tức
-//            }
-//
-//            // 3. Kiểm tra provider (như cũ)
-//            if (!"GOOGLE".equals(user.getProvider())) {
-//                // ... redirect báo lỗi email đã đăng ký bằng password ...
-//                return;
-//            }
-//
-//            // 4. BÂY GIỜ user.getId() CHẮC CHẮN ĐÃ CÓ GIÁ TRỊ (vì đã được save ở trên)
-//            String accessToken = jwtService.generateAccesToken(
-//                    user.getId(),
-//                    user.getEmail(),
-//                    user.getRole()
-//            );
-//
-//            String refreshToken = jwtService.generateRefreshToken(user.getId());
-//
-//            // 5. Cập nhật refreshToken và lưu lại lần nữa
-//            user.setRefreshToken(refreshToken);
-//            userRepository.save(user);
-//
-//            // 6. Redirect (như cũ)
-//            String redirectUrl = "http://localhost:3000/oauth-success" +
-//                    "?accessToken=" + accessToken +
-//                    "&refreshToken=" + refreshToken;
-//
-//            response.sendRedirect(redirectUrl);
-
             OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
             String email = oauthUser.getAttribute("email");
             String name = oauthUser.getAttribute("name");

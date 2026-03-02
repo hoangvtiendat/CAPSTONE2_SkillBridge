@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import JobCard from './JobCard';
 import jobService from '../../services/api/jobService';
 import './JobGrid.css';
@@ -6,37 +7,52 @@ import './JobGrid.css';
 const JobGrid = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [nextCursor, setNextCursor] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 6,
+    totalElements: 0,
+    totalPages: 0
+  });
   const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchJobs = async (cursor = null) => {
+  const fetchJobs = useCallback(async (page = 0) => {
     setLoading(true);
     try {
-      const data = await jobService.getFeed({ cursor, limit: 6 });
-      if (data && data.jobs) {
-        setJobs(prev => cursor ? [...prev, ...data.jobs] : data.jobs);
-        setNextCursor(data.nextCursor);
-        setHasMore(!!data.nextCursor);
+      const data = await jobService.getFeed({
+        page,
+        limit: pagination.size,
+        // search: searchTerm // Add search if backend supports it in feed
+      });
+
+      if (data) {
+        setJobs(data.jobs || []);
+        setPagination(prev => ({
+          ...prev,
+          page: data.currentPage,
+          totalElements: data.totalElements,
+          totalPages: data.totalPages
+        }));
       }
     } catch (error) {
       console.error("Failed to fetch jobs", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.size]);
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    fetchJobs(0);
+  }, [fetchJobs]);
 
-  const handleLoadMore = () => {
-    if (nextCursor) {
-      fetchJobs(nextCursor);
+  const handlePageChange = (page) => {
+    fetchJobs(page);
+    // Scroll to top of grid
+    const element = document.getElementById('job-grid');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  // Client-side filtering on the fetched jobs (optional, can be removed if backend search is preferred)
   const filteredJobs = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return jobs;
@@ -44,7 +60,6 @@ const JobGrid = () => {
       const inTitle = job.position?.toLowerCase().includes(q);
       const inCompany = job.company?.toLowerCase().includes(q);
       const inLocation = job.location?.toLowerCase().includes(q);
-      // const inTags = (job.tags || []).some((t) => t.toLowerCase().includes(q)); // Assuming tags might not be in API response yet
       return inTitle || inCompany || inLocation;
     });
   }, [jobs, searchTerm]);
@@ -69,22 +84,63 @@ const JobGrid = () => {
       </div>
 
       <div className="job-grid">
-        {filteredJobs.map((job) => (
-          <JobCard key={job.id} job={job} featured={job.featured} />
-        ))}
-        {!loading && filteredJobs.length === 0 && <p>No jobs found.</p>}
+        {loading ? (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0' }}>
+            <p>Loading jobs...</p>
+          </div>
+        ) : filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => (
+            <JobCard key={job.id} job={job} featured={job.featured} />
+          ))
+        ) : (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0' }}>
+            <p>No jobs found.</p>
+          </div>
+        )}
       </div>
 
-      {loading && <p style={{ textAlign: 'center', padding: '20px' }}>Loading...</p>}
-
-      {!loading && hasMore && (
-        <div className="job-pagination" style={{ justifyContent: 'center' }}>
+      {pagination.totalPages > 1 && (
+        <div className="job-pagination">
           <button
+            disabled={pagination.page === 0}
+            onClick={() => handlePageChange(pagination.page - 1)}
             className="job-page-btn"
-            style={{ width: 'auto', padding: '0 20px', borderRadius: '8px' }}
-            onClick={handleLoadMore}
+            title="Previous"
           >
-            Load More
+            <ChevronLeft size={20} />
+          </button>
+
+          {[...Array(pagination.totalPages)].map((_, index) => {
+            if (
+              index === 0 ||
+              index === pagination.totalPages - 1 ||
+              (index >= pagination.page - 1 && index <= pagination.page + 1)
+            ) {
+              return (
+                <button
+                  key={index}
+                  onClick={() => handlePageChange(index)}
+                  className={`job-page-btn ${pagination.page === index ? 'active' : ''}`}
+                >
+                  {index + 1}
+                </button>
+              );
+            } else if (
+              index === pagination.page - 2 ||
+              index === pagination.page + 2
+            ) {
+              return <span key={index} className="pagination-ellipsis">...</span>;
+            }
+            return null;
+          })}
+
+          <button
+            disabled={pagination.page >= pagination.totalPages - 1}
+            onClick={() => handlePageChange(pagination.page + 1)}
+            className="job-page-btn"
+            title="Next"
+          >
+            <ChevronRight size={20} />
           </button>
         </div>
       )}

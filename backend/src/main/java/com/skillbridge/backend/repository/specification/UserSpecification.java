@@ -20,4 +20,8 @@ public class UserSpecification {
     public static Specification<User> hasStatus(String status) {
         return (root, query, cb) -> status == null ? cb.conjunction() : cb.equal(root.get("status"), status);
     }
+
+    public static Specification<User> isNotAdmin() {
+        return (root, query, cb) -> cb.notEqual(root.get("role"), "ADMIN");
+    }
 }

@@ -77,6 +77,7 @@ public enum ErrorCode {
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
     INVALID_CERTIFICATE(5003, "Chứng chỉ không hợp lệ hoặc đã hết hạn"),
     INVALID_DEGREE_TYPE(5004, "Loại bằng cấp không hỗ trợ"),
+    CATEGORY_EXIST(2008, "Ngành nghề này đã tồn tại"),
 
     //COMPANIES
     COMPANY_EXIST(6001,"Công ty đã được đăng ký"),
