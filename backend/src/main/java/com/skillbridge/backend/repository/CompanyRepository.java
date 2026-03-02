@@ -17,18 +17,23 @@ import java.util.Optional;
 
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, String> {
+
     @Query("""
-                SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
-                    c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl, 
-                    c.description, c.address, c.websiteUrl, c.status, sp.name
-                )
-                FROM Company c
-                LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
-                LEFT JOIN SubscriptionPlan sp ON cs.subscriptionPlan.id = sp.id
-                WHERE (:status IS NULL OR c.status = :status)
-                AND (:cursor IS NULL OR c.id < :cursor)
-                ORDER BY c.id DESC
-            """)
+        SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
+            c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl, 
+            c.description, c.address, c.websiteUrl, c.status, sp.name
+        )
+        FROM Company c
+        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN SubscriptionPlan sp ON cs.subscriptionPlan.id = sp.id
+        WHERE (:status IS NULL OR c.status = :status)
+        AND (
+            :cursor IS NULL OR 
+            c.createdAt < (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) OR
+            (c.createdAt = (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) AND c.id < :cursor)
+        )
+        ORDER BY c.createdAt DESC, c.id DESC
+    """)
     List<CompanyFeedItemResponse> getCompanyFeed(
             @Param("cursor") String cursor,
             @Param("status") CompanyStatus status,

@@ -1,5 +1,6 @@
 import React from 'react';
 import {Routes, Route, useNavigate, useLocation} from 'react-router-dom';
+import {Routes, Route, Link} from 'react-router-dom';
 import './App.css';
 import Header from './components/home/Header';
 
@@ -12,6 +13,12 @@ import {OTPVerification} from './components/auth/OTPVerification';
 import {SetPass} from './components/auth/SetPass';
 import UpdateProfileDetail from './pages/auth/Update_profile_of_register';
 import OAuthSuccess from './pages/auth/OAuthSuccess';
+import SystemLogs from './pages/SystemLogs/SystemLogs';
+import TaxLookup from './pages/company/TaxLookup';
+import AdminJobPage from './pages/admin/AdminJobPage';
+import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
+import JobDetailPage from './pages/candidate/JobDetailPage';
+
 import {Toaster} from 'sonner';
 import BusinessIdentity from './pages/recruiter/BusinessIdentity'
 // Admin Components & Pages
@@ -61,6 +68,11 @@ function App() {
                     <Route path='/set-password' element={<SetPass/>}/>
                     <Route path='/auth/complete-profile' element={<UpdateProfileDetail/>}/>
                     <Route path="recruiter/identity" element={<BusinessIdentity/>}/>
+                    <Route path="/admin/logs" element={<SystemLogs/>}/>
+                    <Route path="/company/TaxLookup" element={<TaxLookup/>}/>
+                    <Route path="/admin/jobs" element={<AdminJobPage/>}/>
+                    <Route path="/admin/jobs/:jobId" element={<AdminJobDetailPage/>}/>
+                    <Route path="/jobs/:jobId" element={<JobDetailPage/>}/>
                     {/* Admin Routes */}
                     <Route path="/admin" element={<AdminLayout/>}>
                         <Route index element={<AdminDashboardPage/>}/>

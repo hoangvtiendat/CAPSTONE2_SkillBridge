@@ -2,30 +2,55 @@ package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import jakarta.annotation.PostConstruct;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 @Service
 public class OcrService {
-    @Value("${TESSERACT_DATAPATH:C:/Program Files/Tesseract-OCR/tessdata}")
+
+    @Value("${TESSERACT_DATAPATH}")
     private String dataPath;
 
-    @Value("${TESSERACT_LIBPATH:C:/Program Files/Tesseract-OCR}")
+    @Value("${TESSERACT_LIBPATH}")
     private String libraryPath;
 
+
+    @PostConstruct
+    public void init() {
+        String cleanPath = libraryPath.trim();
+        if (!cleanPath.endsWith(File.separator)) {
+            cleanPath += File.separator;
+        }
+
+        System.setProperty("jna.library.path", cleanPath);
+
+        try {
+            System.load(cleanPath + "libleptonica.dylib");
+            System.load(cleanPath + "libtesseract.dylib");
+
+            System.out.println("✅ Hệ thống OCR đã sẵn sàng (M4 Silicon Optimized)");
+        } catch (UnsatisfiedLinkError e) {
+            System.err.println("Lỗi nạp thư viện Native: " + e.getMessage());
+        }
+    }
     public String scanFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new AppException(ErrorCode.INVALID_FILE_FORMAT);
         }
-
         System.setProperty("jna.library.path", libraryPath);
 
         File convFile = null;
@@ -35,7 +60,7 @@ public class OcrService {
             file.transferTo(convFile);
 
             Tesseract tesseract = new Tesseract();
-            tesseract.setDatapath(dataPath); // Sử dụng biến dataPath
+            tesseract.setDatapath(dataPath);
             tesseract.setLanguage("vie+eng");
 
             System.out.println("--- Đang quét OCR với cấu hình từ ENV ---");

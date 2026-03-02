@@ -1,5 +1,6 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.request.RegisterRequest;
 import com.skillbridge.backend.dto.request.respondToJoinRequestRequest;
@@ -13,15 +14,19 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.CompanyService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/companies")
 public class CompanyController {
+
+    @Autowired
     private final CompanyService companyService;
 
     public CompanyController(CompanyService companyService) {
@@ -41,6 +46,19 @@ public class CompanyController {
                 "Company Feed",
                 rs
         );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/taxLook")
+    public ResponseEntity<ApiResponse<CompanyDTO>> getInfo(@RequestParam(value = "taxCode", required = false) String mst) {
+        System.out.println("mst: " + mst);
+        CompanyDTO result = companyService.lookupByTaxCode(mst);
+
+        ApiResponse<CompanyDTO> response = new ApiResponse<>();
+        response.setCode(HttpStatus.OK.value());
+        response.setResult(result);
+        response.setMessage(result != null ? "Tra cứu thành công" : "Không tìm thấy thông tin");
+
         return ResponseEntity.ok(response);
     }
 

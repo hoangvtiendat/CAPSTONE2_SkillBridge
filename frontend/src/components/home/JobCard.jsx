@@ -41,7 +41,7 @@ const JobCard = ({ job, featured = false }) => {
       </div>
 
       <div className="job-actions">
-        <Link to={`/job/${id}`} className="btn-apply">
+        <Link to={`/jobs/${id}`} className="btn-apply">
           Apply Now
         </Link>
         <button className="btn-check">Self-Check</button>

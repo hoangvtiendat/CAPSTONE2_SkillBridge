@@ -1,5 +1,6 @@
 package com.skillbridge.backend.entity;
 
+import com.skillbridge.backend.enums.LogLevel;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,17 @@ public class SystemLog extends BaseEntity{
     private User user;
 
     private String action;
+
+    public LogLevel getLogLevel() {
+        return logLevel;
+    }
+
+    public void setLogLevel(LogLevel logLevel) {
+        this.logLevel = logLevel;
+    }
+
+    @Enumerated(EnumType.STRING)
+    private LogLevel logLevel;
 
     public String getId() {
         return id;

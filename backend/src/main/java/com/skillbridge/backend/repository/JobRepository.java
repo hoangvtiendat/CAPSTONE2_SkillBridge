@@ -1,9 +1,11 @@
 package com.skillbridge.backend.repository;
 
 import com.skillbridge.backend.dto.MonthlyJobDTO;
+import com.skillbridge.backend.dto.response.AdminJobFeedItemResponse;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.JobStatus;
+import com.skillbridge.backend.enums.ModerationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,25 +18,24 @@ import java.util.List;
 @Repository
 public interface JobRepository extends JpaRepository<Job, String> {
     @Query("""
-                SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-                    j.id, j.title, j.location, 
-                    j.salaryMin, j.salaryMax, j.createdAt, 
-                    c.name,c.imageUrl,sp.name, cat.name
-                )
-                FROM Job j
-                LEFT JOIN j.company c
-                LEFT JOIN j.category cat
-                LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
-                LEFT JOIN cs.subscriptionPlan sp
-                WHERE j.status = :status AND (:cursor IS NULL OR j.id < :cursor)
-                AND (:categoryId IS NULL OR cat.id = :categoryId)
-                AND (:location IS NULL OR j.location LIKE %:location%)
-                AND (:salary IS NULL OR (
-                                CAST(j.salaryMin AS double) <= :salary
-                                AND CAST(j.salaryMax AS double) >= :salary
-                            ))
-                ORDER BY j.createdAt DESC
-            """)
+        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
+            j.id, j.title, j.description, j.location, 
+            j.salaryMin, j.salaryMax, j.createdAt, 
+            c.name, c.imageUrl, sp.name, cat.name
+        )
+        FROM Job j
+        LEFT JOIN j.company c
+        LEFT JOIN j.category cat
+        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
+        WHERE j.status = :status 
+        AND (
+            :cursor IS NULL OR 
+            j.createdAt < (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
+            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id < :cursor)
+        )
+        ORDER BY j.createdAt DESC, j.id DESC
+    """)
     List<JobFeedItemResponse> getJobFeed(
             @Param("cursor") String cursor,
             @Param("status") String status,
@@ -42,25 +43,30 @@ public interface JobRepository extends JpaRepository<Job, String> {
     );
 
     @Query("""
-                SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-                    j.id, j.title, j.location, 
-                    j.salaryMin, j.salaryMax, j.createdAt, 
-                    c.name,c.imageUrl,sp.name, cat.name
-                )
-                FROM Job j
-                LEFT JOIN j.company c
-                LEFT JOIN j.category cat
-                LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
-                LEFT JOIN cs.subscriptionPlan sp
-                WHERE j.status = :status AND (:cursor IS NULL OR j.id < :cursor)
-                AND (:categoryId IS NULL OR cat.id = :categoryId)
-                AND (:location IS NULL OR j.location LIKE %:location%)
-                AND (:salary IS NULL OR (
-                                CAST(j.salaryMin AS double) <= :salary
-                                AND CAST(j.salaryMax AS double) >= :salary
-                            ))
-                ORDER BY j.createdAt DESC
-            """)
+        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
+            j.id, j.title, j.description, j.location, 
+            j.salaryMin, j.salaryMax, j.createdAt, 
+            c.name, c.imageUrl, sp.name, cat.name
+        )
+        FROM Job j
+        LEFT JOIN j.company c
+        LEFT JOIN j.category cat
+        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
+        WHERE j.status = :status 
+        AND (
+            :cursor IS NULL OR 
+            j.createdAt < (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
+            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id < :cursor)
+        )
+        AND (:categoryId IS NULL OR cat.id = :categoryId)
+        AND (:location IS NULL OR j.location LIKE %:location%)
+        AND (:salary IS NULL OR (
+                        CAST(j.salaryMin AS double) <= :salary
+                        AND CAST(j.salaryMax AS double) >= :salary
+                    ))
+        ORDER BY j.createdAt DESC, j.id DESC
+    """)
     List<JobFeedItemResponse> getJobFeedFiltered(
             @Param("cursor") String cursor,
             @Param("status") Enum status,
@@ -92,4 +98,32 @@ public interface JobRepository extends JpaRepository<Job, String> {
     long countByCreatedAtAfter(LocalDateTime createdAtAfter);
 
     long countByCreatedAtBetween(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
+
+    @Query("""
+        SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
+            j.id, j.title, j.description, j.location, j.salaryMin, 
+            j.salaryMax, j.createdAt, c.name, c.imageUrl, 
+            sp.name, cat.name, j.status, j.moderationStatus
+        )
+        FROM Job j
+        LEFT JOIN j.company c
+        LEFT JOIN j.category cat
+        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
+        WHERE j.status <> com.skillbridge.backend.enums.JobStatus.DELETE
+        AND (:status IS NULL OR j.status = :status)
+        AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
+        AND (
+            :cursor IS NULL OR 
+            j.createdAt < (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
+            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id < :cursor)
+        )
+        ORDER BY j.createdAt DESC, j.id DESC
+    """)
+        List<AdminJobFeedItemResponse> adminGetJobs(
+                @Param("cursor") String cursor,
+                @Param("status") JobStatus status,
+                @Param("modStatus") ModerationStatus modStatus,
+                Pageable pageable
+        );
 }
