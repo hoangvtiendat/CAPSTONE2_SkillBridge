@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -23,15 +24,15 @@ public class JobController {
     }
 
     @GetMapping("/feed")
-    public ResponseEntity<ApiResponse<JobFeedResponse>> getFeed(
-            @RequestParam(required = false) String cursor,
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getFeed(
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String categoryId,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Double salary
     ) {
-        JobFeedResponse rs = jobService.getJobFeed(cursor, limit, categoryId, location, salary);
-        ApiResponse<JobFeedResponse> response = new ApiResponse<>(
+        Map<String, Object> rs = jobService.getJobFeed(page, limit, categoryId, location, salary);
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Job Feed",
                 rs

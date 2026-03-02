@@ -6,6 +6,7 @@ import com.skillbridge.backend.enums.JobStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -24,7 +25,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         LEFT JOIN j.category cat
         LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
-        WHERE j.status = :status AND (:cursor IS NULL OR j.id < :cursor)
+        WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
         AND (:location IS NULL OR j.location LIKE %:location%)
         AND (:salary IS NULL OR (
@@ -33,8 +34,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
                     ))
         ORDER BY j.createdAt DESC
     """)
-    List<JobFeedItemResponse> getJobFeed(
-            @Param("cursor") String cursor,
+    Page<JobFeedItemResponse> getJobFeed(
             @Param("status") String status,
             Pageable pageable
     );
@@ -59,14 +59,13 @@ public interface JobRepository extends JpaRepository<Job, String> {
                     ))
         ORDER BY j.createdAt DESC
     """)
-        List<JobFeedItemResponse> getJobFeedFiltered(
-                @Param("cursor") String cursor,
-                @Param("status") Enum status,
-                @Param("categoryId") String categoryId,
-                @Param("location") String location,
-                @Param("salary") Double minSalary,
-                Pageable pageable
-        );
+                                Page<JobFeedItemResponse> getJobFeedFiltered(
+                                        @Param("status") Enum status,
+                                        @Param("categoryId") String categoryId,
+                                        @Param("location") String location,
+                                        @Param("salary") Double minSalary,
+                                        Pageable pageable
+                                );
 
     @Query("SELECT js.job.id, s.name " +
             "FROM JobSkill js " +

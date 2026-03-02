@@ -151,6 +151,16 @@
   opacity: 0.5;
   cursor: not-allowed;
   background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.pagination-ellipsis {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 8px 8px;
+  color: #9ca3af;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
 /* Responsive */

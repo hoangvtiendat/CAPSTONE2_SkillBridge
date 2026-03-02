@@ -46,6 +46,11 @@ const adminService = {
         return response.data;
     },
 
+    getCompanyDetail: async (id) => {
+        const response = await api.get(`/admin/companies/${id}`);
+        return response.data;
+    },
+
     // Industry (Category) Management
     getCategories: async (params = {}) => {
         const { page = 0, size = 10, sortBy = 'createdAt', direction = 'desc' } = params;

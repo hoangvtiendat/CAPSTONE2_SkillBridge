@@ -1,6 +1,7 @@
 package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,9 +18,11 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final com.skillbridge.backend.repository.UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, com.skillbridge.backend.repository.UserRepository userRepository) {
         this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -56,8 +59,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String userId = jwtService.getUserId(token);
-        String email = jwtService.getEmail(token);
-        String role = jwtService.getRole(token);
+
+        // Kiểm tra status người dùng trong database
+        var userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty() || !"ACTIVE".equals(userOptional.get().getStatus())) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"code\": 3003, \"message\": \"Tài khoản đã bị khóa\"}");
+            return;
+        }
+
+        User user = userOptional.get();
+        String email = user.getEmail();
+        String role = user.getRole();
 
         CustomUserDetails userDetails =
                 new CustomUserDetails(userId, email, role);

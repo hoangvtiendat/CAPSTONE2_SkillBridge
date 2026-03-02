@@ -4,11 +4,13 @@ import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.repository.CompanyRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CompanyService {
@@ -18,16 +20,15 @@ public class CompanyService {
         this.companyRepository = companyRepository;
     }
 
-    public CompanyFeedResponse getCompanies(String cursor, CompanyStatus status, int limit) {
-        Pageable pageable = PageRequest.of(0, limit + 1);
-        List<CompanyFeedItemResponse> companies = companyRepository.getCompanyFeed(cursor, status, pageable);
-        boolean hasMore = companies.size() > limit;
-        String nextCursor = null;
+    public Map<String, Object> getCompanies(int page, CompanyStatus status, int limit) {
+        Pageable pageable = PageRequest.of(page, limit);
+        Page<CompanyFeedItemResponse> companyPage = companyRepository.getCompanyFeed(status, pageable);
 
-        if (hasMore) {
-            companies.remove(limit);
-            nextCursor = companies.get(companies.size() - 1).getId();
-        }
-        return new CompanyFeedResponse(companies, nextCursor, hasMore);
+        return Map.of(
+            "companies", companyPage.getContent(),
+            "totalPages", companyPage.getTotalPages(),
+            "totalElements", companyPage.getTotalElements(),
+            "currentPage", companyPage.getNumber()
+        );
     }
 }

@@ -3,6 +3,7 @@ package com.skillbridge.backend.repository;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.enums.CompanyStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,11 +25,9 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
         LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
         LEFT JOIN SubscriptionPlan sp ON cs.subscriptionPlan.id = sp.id
         WHERE (:status IS NULL OR c.status = :status)
-        AND (:cursor IS NULL OR c.id < :cursor)
         ORDER BY c.id DESC
     """)
-    List<CompanyFeedItemResponse> getCompanyFeed(
-            @Param("cursor") String cursor,
+    Page<CompanyFeedItemResponse> getCompanyFeed(
             @Param("status") CompanyStatus status,
             Pageable pageable
     );

@@ -38,7 +38,8 @@ public class AdminService {
         Specification<User> spec = Specification.where(UserSpecification.hasName(name))
                 .and(UserSpecification.hasEmail(email))
                 .and(UserSpecification.hasRole(role))
-                .and(UserSpecification.hasStatus(status));
+                .and(UserSpecification.hasStatus(status))
+                .and(UserSpecification.isNotAdmin());
 
         return userRepository.findAll(spec, pageable).map(this::mapToUserResponse);
     }
@@ -83,14 +84,24 @@ public class AdminService {
         companyRepository.save(company);
     }
 
+    public CompanyResponse getCompanyById(String id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+        return mapToCompanyResponse(company);
+    }
+
     public Page<CategoryResponse> getCategories(Pageable pageable) {
         return categoryRepository.findAll(pageable).map(this::mapToCategoryResponse);
     }
 
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
+        String trimmedName = request.getName().trim();
+        if (categoryRepository.existsByNameIgnoreCase(trimmedName)) {
+            throw new AppException(ErrorCode.CATEGORY_EXIST);
+        }
         Category category = Category.builder()
-                .name(request.getName())
+                .name(trimmedName)
                 .build();
         return mapToCategoryResponse(categoryRepository.save(category));
     }
@@ -99,7 +110,13 @@ public class AdminService {
     public CategoryResponse updateCategory(String id, CategoryRequest request) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-        category.setName(request.getName());
+
+        String trimmedName = request.getName().trim();
+        if (!category.getName().equalsIgnoreCase(trimmedName) && categoryRepository.existsByNameIgnoreCase(trimmedName)) {
+            throw new AppException(ErrorCode.CATEGORY_EXIST);
+        }
+
+        category.setName(trimmedName);
         return mapToCategoryResponse(categoryRepository.save(category));
     }
 

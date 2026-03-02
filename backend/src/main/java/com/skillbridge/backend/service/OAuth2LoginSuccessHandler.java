@@ -51,10 +51,19 @@ public class OAuth2LoginSuccessHandler
                         User newUser = new User();
                         newUser.setEmail(email);
                         newUser.setName(name);
-                        newUser.setRole("USER");
+                        newUser.setRole("CANDIDATE");
                         newUser.setProvider("GOOGLE");
+                        newUser.setStatus("ACTIVE");
                         return newUser;
                     });
+
+            if (!"ACTIVE".equals(user.getStatus())) {
+                String message = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+                String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
+                String targetUrl = "http://localhost:3000/login?error=true&message=" + encodedMessage;
+                response.sendRedirect(targetUrl);
+                return;
+            }
 
             // Email đã tồn tại nhưng không phải Google
             if (!"GOOGLE".equals(user.getProvider())) {

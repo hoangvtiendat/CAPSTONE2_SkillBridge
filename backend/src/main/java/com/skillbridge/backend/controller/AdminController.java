@@ -119,6 +119,17 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/companies/{id}")
+    public ResponseEntity<ApiResponse<CompanyResponse>> getCompanyById(@PathVariable String id) {
+        CompanyResponse company = adminService.getCompanyById(id);
+        ApiResponse<CompanyResponse> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Lấy thông tin chi tiết công ty thành công",
+                company
+        );
+        return ResponseEntity.ok(response);
+    }
+
     // Category Management
     @GetMapping("/categories")
     public ResponseEntity<ApiResponse<Page<CategoryResponse>>> getCategories(

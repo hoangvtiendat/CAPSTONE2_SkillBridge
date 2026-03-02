@@ -83,7 +83,7 @@ public class AuthService {
         user.setPhoneNumber(request.getPhoneNumber());
         user.setName(request.getName());
         user.setAddress(request.getAddress());
-
+        user.setStatus("ACTIVE");
         userRepository.saveAndFlush(user);
 
         String accessToken = jwtService.generateAccesToken(
@@ -128,6 +128,10 @@ public class AuthService {
         // Nếu email tồn tại nhưng không phải Google
         if (!"GOOGLE".equals(user.getProvider())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_REGISTERED_BY_PASSWORD);
+        }
+
+        if (!"ACTIVE".equals(user.getStatus())) {
+            throw new AppException(ErrorCode.USER_STATUS);
         }
 
         // ✅ SAVE TRƯỚC (đảm bảo có ID)
@@ -208,6 +212,10 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+
+        if (!"ACTIVE".equals(user.getStatus())) {
+            throw new AppException(ErrorCode.USER_STATUS);
+        }
 
         return issueToken(user);
     }
