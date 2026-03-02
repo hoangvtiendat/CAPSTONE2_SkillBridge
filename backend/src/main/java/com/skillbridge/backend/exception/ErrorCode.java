@@ -40,6 +40,7 @@ public enum ErrorCode {
     JD_NOT_FOUND(801, "Không tìm thấy bài đăng"),
     EXITS_JD_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
     EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền để thực hiện chức năng này"),
+    JOB_STATUS_EXITS(804,"Hiện tại JD đang được sử dụng vui lòng đăng lại khi bài đăng đóng"),
     ///  ===== SUBSCRIPTTION
     // Thêm vào Enum ErrorCode của bạn
     NOT_FOUND_SUBSCRIPTION(901, "Không tìm thấy gói đăng ký"),

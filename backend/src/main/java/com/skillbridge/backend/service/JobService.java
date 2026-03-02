@@ -380,4 +380,36 @@ public class JobService {
 
         return job;
     }
+    public Job repost(String id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String userId = userDetails.getUserId();
+
+        var recruiter = companyMemberRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Job job = jobRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
+
+        boolean isAdmin = recruiter.getRole() == CompanyRole.ADMIN;
+        boolean isJobOwner = job.getCompanyMember().getId().equals(recruiter.getId());
+
+        if (!isAdmin && !isJobOwner) {
+            throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
+        }
+
+        Job oldPost = jobRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
+        if(JobStatus.CLOSED.equals(oldPost.getStatus())){
+            Job newJob = jobRepository.save(job);
+            return newJob;
+        }
+        throw new AppException(ErrorCode.JOB_STATUS_EXITS);
+    }
 }

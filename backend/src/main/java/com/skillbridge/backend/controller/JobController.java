@@ -77,5 +77,12 @@ public class JobController {
                 new ApiResponse<>(200,"Xóa bài đăng thành công", updatedJob)
         );
     }
+    @PostMapping("/repost/{id}")
+    public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
+        Job rePost = jobService.repost(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(200,"Đăng lại bài đăng thành ", rePost)
+        );
+    }
 
 }
