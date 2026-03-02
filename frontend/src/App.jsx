@@ -35,7 +35,6 @@ import ListJdOfCompany from './pages/JD/list_jd_of_company';
 import CreateJd from './pages/JD/PostJDPage';
 import DetailJD_Page from './pages/JD/detailJD';
 import SubscriptionManagerPage from './pages/Subscription.jsx/SubscriptionManager';
-import {Toaster} from 'sonner';
 
 import AdminRoute from './components/admin/AdminRoute';
 
@@ -82,29 +81,25 @@ function App() {
                     <Route path='/create-jd' element={<CreateJd/>}/>
                     <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
                     <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
-                    {/* Admin Routes */}
+
+                    {/*Admin router*/}
                     <Route path="/admin" element={<AdminLayout/>}>
                         <Route index element={<AdminDashboardPage/>}/>
                         <Route path="dashboard" element={<AdminDashboardPage/>}/>
+                        <Route path="logs" element={<SystemLogs/>}/>
+                        <Route path="jobs" element={<AdminJobPage/>}/>
+                        <Route path="jobs/:jobId" element={<AdminJobDetailPage/>}/>
+
                         <Route path="management/users" element={<UserManagementPage/>}/>
                         <Route path="management/companies" element={<CompanyManagementPage/>}/>
                         <Route path="management/industries" element={<IndustryManagementPage/>}/>
                         <Route path="management/skills" element={<SkillManagementPage/>}/>
-                        <Route path="*"
-                               element={<div style={{padding: '32px', textAlign: 'center', color: '#64748b'}}>Feature
-                                   Coming Soon</div>}/>
-                        <Route
-                            path="/category/:categoryId/skills"
-                            element={<AdminRoute>
-                                <SkillPageContainer/>
-                            </AdminRoute>}
-                        />
-                        <Route
-                            path='/subscriptions'
-                            element={<AdminRoute>
-                                <SubscriptionManagerPage/>
-                            </AdminRoute>}
-                        />
+
+                        {/* Các route yêu cầu bảo mật cao hơn */}
+                        <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer/></AdminRoute>}/>
+                        <Route path='subscriptions' element={<AdminRoute><SubscriptionManagerPage/></AdminRoute>}/>
+
+                        <Route path="*" element={<div style={{padding: '32px', textAlign: 'center', color: '#64748b'}}>Feature Coming Soon</div>}/>
                     </Route>
                 </Routes>
             </div>
