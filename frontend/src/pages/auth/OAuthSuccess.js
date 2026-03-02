@@ -41,9 +41,7 @@ function OAuthSuccess() {
         name: nameFromGoogle ? decodeURIComponent(nameFromGoogle) : "Google User"
       };
 
-      login(userData); 
-      toast.success("Đăng nhập thành công!");
-      
+      login(userData);
       setTimeout(() => {
           navigate("/");
       }, 100);

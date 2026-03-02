@@ -12,12 +12,13 @@ import { OTPVerification } from './components/auth/OTPVerification';
 import { SetPass } from './components/auth/SetPass';
 import UpdateProfileDetail from './pages/auth/Update_profile_of_register';
 import OAuthSuccess from './pages/auth/OAuthSuccess';
+import SkillPageContainer from './pages/Skill/SkillPage';
 import { Toaster } from 'sonner';
 
 function App() {
   return (
     <>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors closeButton />
       <Header />
       <div className="pt-[72px]"> {/* Add padding for fixed header */}
         <Routes>
@@ -29,8 +30,7 @@ function App() {
           <Route path="/oauth-success" element={<OAuthSuccess />} />
           <Route path='/set-password' element={<SetPass />} />
           <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
-
-          {/* Thêm routes khác ở đây */}
+          <Route path="/category/:categoryId/skills" element={<SkillPageContainer />} />     
         </Routes>
       </div>
     </>

@@ -41,6 +41,16 @@ const authService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    logout: async (token) => {
+        try {
+            const response = await api.post('/auth/logout', { token });
+            console.log(response.data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     }
 };
 

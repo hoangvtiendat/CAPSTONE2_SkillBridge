@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Carousel.css';
 
-const Carousel = ({ items, autoSlideInterval = 4000 }) => {
+const Carousel = ({ items, autoSlideInterval = 3000 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [transitionMode, setTransitionMode] = useState('auto'); // 'auto' | 'manual'
 
   // Auto-slide effect
   useEffect(() => {
     if (!isAutoPlay || items.length === 0) return;
 
     const timer = setInterval(() => {
+      setTransitionMode('auto');
       setCurrentIndex((prev) => (prev + 1) % items.length);
     }, autoSlideInterval);
 
@@ -18,6 +20,7 @@ const Carousel = ({ items, autoSlideInterval = 4000 }) => {
   }, [isAutoPlay, items.length, autoSlideInterval]);
 
   const goToSlide = (index) => {
+    setTransitionMode('manual');
     setCurrentIndex(index);
     setIsAutoPlay(false);
     // Resume auto-play after 10 seconds
@@ -37,7 +40,11 @@ const Carousel = ({ items, autoSlideInterval = 4000 }) => {
   }
 
   return (
-    <div className="carousel" onMouseEnter={() => setIsAutoPlay(false)} onMouseLeave={() => setIsAutoPlay(true)}>
+    <div
+      className={`carousel ${transitionMode === 'manual' ? 'manual-transition' : ''}`}
+      onMouseEnter={() => setIsAutoPlay(false)}
+      onMouseLeave={() => setIsAutoPlay(true)}
+    >
       {/* Slides */}
       <div className="carousel-slides">
         {items.map((item, index) => (

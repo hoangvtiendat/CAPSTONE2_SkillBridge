@@ -114,12 +114,12 @@ export const CVParser = () => {
 
     const applySelectedData = () => {
         if (!parsedData) return;
-        if (isFilled) return; // Prevent double fill
+        // Logic change: Allow multiple fills, but check for duplicates (Smart Merge)
 
         setCvData(prev => {
             const newData = { ...prev };
 
-            // Apply Personal Info
+            // Apply Personal Info (Overwrite if selected, as these are single fields)
             if (selectedItems.personalInfo) {
                 if (parsedData.name) newData.name = parsedData.name;
                 if (parsedData.description) newData.description = parsedData.description;
@@ -128,10 +128,19 @@ export const CVParser = () => {
                 if (parsedData.category) newData.category = parsedData.category;
             }
 
-            // Apply Experience
+            // Apply Experience (Append unique items)
             if (parsedData.experience) {
                 const selectedExp = parsedData.experience.filter((_, idx) => selectedItems.experience[idx]);
-                const formattedExp = selectedExp.map(item => ({
+
+                // Filter out experiences that already exist (checking by description or star/end date combination)
+                const newExpToAdd = selectedExp.filter(newItem => {
+                    return !prev.experience.some(existing =>
+                        (existing.description === newItem.description) ||
+                        (existing.startDate === newItem.startDate && existing.endDate === newItem.endDate)
+                    );
+                });
+
+                const formattedExp = newExpToAdd.map(item => ({
                     startDate: item.startDate,
                     endDate: item.endDate,
                     description: item.description,
@@ -140,7 +149,7 @@ export const CVParser = () => {
                 newData.experience = [...prev.experience, ...formattedExp];
             }
 
-            // Apply Degrees & Certificates
+            // Apply Degrees & Certificates (Append unique items)
             if (parsedData.degrees) {
                 const degreesToAdd = [];
 
@@ -148,7 +157,15 @@ export const CVParser = () => {
                 const parsedDegrees = parsedData.degrees.filter(d => d.type === 'DEGREE');
                 parsedDegrees.forEach((deg, idx) => {
                     if (selectedItems.degrees[idx]) {
-                        degreesToAdd.push({ ...deg, id: Date.now() + Math.random() });
+                        // Check duplicate: Same degree AND institution
+                        const exists = prev.degrees.some(existing =>
+                            existing.type === 'DEGREE' &&
+                            existing.degree === deg.degree &&
+                            existing.institution === deg.institution
+                        );
+                        if (!exists) {
+                            degreesToAdd.push({ ...deg, id: Date.now() + Math.random() });
+                        }
                     }
                 });
 
@@ -156,19 +173,25 @@ export const CVParser = () => {
                 const parsedCerts = parsedData.degrees.filter(d => d.type === 'CERTIFICATE');
                 parsedCerts.forEach((cert, idx) => {
                     if (selectedItems.certificates[idx]) {
-                        degreesToAdd.push({ ...cert, id: Date.now() + Math.random() });
+                        // Check duplicate: Same name
+                        const exists = prev.degrees.some(existing =>
+                            existing.type === 'CERTIFICATE' &&
+                            existing.name === cert.name
+                        );
+                        if (!exists) {
+                            degreesToAdd.push({ ...cert, id: Date.now() + Math.random() });
+                        }
                     }
                 });
 
                 newData.degrees = [...prev.degrees, ...degreesToAdd];
             }
 
-            // Apply Skills
+            // Apply Skills (Append unique items)
             if (selectedItems.skills && parsedData.skills) {
                 const newSkills = parsedData.skills.map(s => {
                     const isObj = typeof s === 'object';
                     const id = isObj ? s.skillId : null;
-                    // If name is NOT present, but ID is, use ID as name fallback so user sees SOMETHING
                     const name = isObj ? (s.skillName || s.name || s.skillId) : s;
                     const exp = isObj && s.experienceYears ? s.experienceYears : 1;
 
@@ -188,8 +211,8 @@ export const CVParser = () => {
             return newData;
         });
 
-        setIsFilled(true);
-        toast.success("Đã điền thông tin vào mẫu thành công!");
+        // Removed setIsFilled(true) restriction logic
+        toast.success("Đã điền thông tin vào mẫu (đã lọc trùng lặp)!");
     };
 
     /* ================= FORM HANDLERS ================= */
@@ -337,89 +360,90 @@ export const CVParser = () => {
                     )}
 
                     {parsingState === 'done' && parsedData && (
-                        <div className="ai-results-container">
-                            {/* Personal Info */}
-                            <div className="ai-section">
-                                <div className="ai-section-header">
-                                    <span>Thông tin chung</span>
-                                    <input type="checkbox" checked={selectedItems.personalInfo} onChange={(e) => setSelectedItems({ ...selectedItems, personalInfo: e.target.checked })} />
-                                </div>
-                                <div className="ai-item-row">
-                                    <div className="ai-item-content">
-                                        <strong>{parsedData.name}</strong>
-                                        <p>{parsedData.address}</p>
-                                        <p className="text-sm text-gray-500">{parsedData.description}</p>
-                                        {/* Display ID if Name is missing, assuming parser returns ID for now based on user feedback */}
-                                        {parsedData.categoryId && <p className="text-xs text-blue-600">Category ID: {parsedData.categoryId}</p>}
+                        <>
+                            <div className="ai-results-container">
+                                {/* Personal Info */}
+                                <div className="ai-section">
+                                    <div className="ai-section-header">
+                                        <span>Thông tin chung</span>
+                                        <input type="checkbox" checked={selectedItems.personalInfo} onChange={(e) => setSelectedItems({ ...selectedItems, personalInfo: e.target.checked })} />
+                                    </div>
+                                    <div className="ai-item-row">
+                                        <div className="ai-item-content">
+                                            <strong>{parsedData.name}</strong>
+                                            <p>{parsedData.address}</p>
+                                            <p className="text-sm text-gray-500">{parsedData.description}</p>
+                                            {/* Display ID if Name is missing, assuming parser returns ID for now based on user feedback */}
+                                            {parsedData.categoryId && <p className="text-xs text-blue-600">Category ID: {parsedData.categoryId}</p>}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Degrees */}
-                            <div className="ai-section">
-                                <div className="ai-section-header">Bằng cấp</div>
-                                {parsedData.degrees?.filter(d => d.type === 'DEGREE').map((d, idx) => (
-                                    <label key={idx} className="ai-item-row">
-                                        <input type="checkbox" checked={!!selectedItems.degrees[idx]}
-                                            onChange={() => setSelectedItems(prev => ({ ...prev, degrees: { ...prev.degrees, [idx]: !prev.degrees[idx] } }))} />
-                                        <div className="ai-item-content">
-                                            <strong>{d.degree} - {d.major}</strong>
-                                            <p>{d.institution} ({d.graduationYear})</p>
-                                        </div>
-                                    </label>
-                                ))}
-                            </div>
-
-                            {/* Certificates */}
-                            <div className="ai-section">
-                                <div className="ai-section-header">Chứng chỉ</div>
-                                {parsedData.degrees?.filter(d => d.type === 'CERTIFICATE').map((c, idx) => (
-                                    <label key={idx} className="ai-item-row">
-                                        <input type="checkbox" checked={!!selectedItems.certificates[idx]}
-                                            onChange={() => setSelectedItems(prev => ({ ...prev, certificates: { ...prev.certificates, [idx]: !prev.certificates[idx] } }))} />
-                                        <div className="ai-item-content">
-                                            <strong>{c.name}</strong>
-                                            <p>{c.year}</p>
-                                        </div>
-                                    </label>
-                                ))}
-                            </div>
-
-                            {/* Skills */}
-                            <div className="ai-section">
-                                <div className="ai-section-header">
-                                    <span>Kỹ năng</span>
-                                    <input type="checkbox" checked={selectedItems.skills} onChange={(e) => setSelectedItems({ ...selectedItems, skills: e.target.checked })} />
+                                {/* Degrees */}
+                                <div className="ai-section">
+                                    <div className="ai-section-header">Bằng cấp</div>
+                                    {parsedData.degrees?.filter(d => d.type === 'DEGREE').map((d, idx) => (
+                                        <label key={idx} className="ai-item-row">
+                                            <input type="checkbox" checked={!!selectedItems.degrees[idx]}
+                                                onChange={() => setSelectedItems(prev => ({ ...prev, degrees: { ...prev.degrees, [idx]: !prev.degrees[idx] } }))} />
+                                            <div className="ai-item-content">
+                                                <strong>{d.degree} - {d.major}</strong>
+                                                <p>{d.institution} ({d.graduationYear})</p>
+                                            </div>
+                                        </label>
+                                    ))}
                                 </div>
-                                <div className="ai-item-row">
-                                    <div className="ai-item-content">
-                                        <p>{parsedData.skills?.map(s => (typeof s === 'string' ? s : (s.skillName || s.name || s.skillId))).join(', ')}</p>
+
+                                {/* Certificates */}
+                                <div className="ai-section">
+                                    <div className="ai-section-header">Chứng chỉ</div>
+                                    {parsedData.degrees?.filter(d => d.type === 'CERTIFICATE').map((c, idx) => (
+                                        <label key={idx} className="ai-item-row">
+                                            <input type="checkbox" checked={!!selectedItems.certificates[idx]}
+                                                onChange={() => setSelectedItems(prev => ({ ...prev, certificates: { ...prev.certificates, [idx]: !prev.certificates[idx] } }))} />
+                                            <div className="ai-item-content">
+                                                <strong>{c.name}</strong>
+                                                <p>{c.year}</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+
+                                {/* Skills */}
+                                <div className="ai-section">
+                                    <div className="ai-section-header">
+                                        <span>Kỹ năng</span>
+                                        <input type="checkbox" checked={selectedItems.skills} onChange={(e) => setSelectedItems({ ...selectedItems, skills: e.target.checked })} />
+                                    </div>
+                                    <div className="ai-item-row">
+                                        <div className="ai-item-content">
+                                            <p>{parsedData.skills?.map(s => (typeof s === 'string' ? s : (s.skillName || s.name || s.skillId))).join(', ')}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Experience */}
-                            <div className="ai-section">
-                                <div className="ai-section-header">Kinh nghiệm</div>
-                                {parsedData.experience?.map((exp, idx) => (
-                                    <label key={idx} className="ai-item-row">
-                                        <input type="checkbox" checked={!!selectedItems.experience[idx]}
-                                            onChange={() => setSelectedItems(prev => ({ ...prev, experience: { ...prev.experience, [idx]: !prev.experience[idx] } }))} />
-                                        <div className="ai-item-content">
-                                            <strong>{exp.startDate} - {exp.endDate || 'Hiện tại'}</strong>
-                                            <p className="text-sm">{exp.description}</p>
-                                        </div>
-                                    </label>
-                                ))}
-                            </div>
+                                {/* Experience */}
+                                <div className="ai-section">
+                                    <div className="ai-section-header">Kinh nghiệm</div>
+                                    {parsedData.experience?.map((exp, idx) => (
+                                        <label key={idx} className="ai-item-row">
+                                            <input type="checkbox" checked={!!selectedItems.experience[idx]}
+                                                onChange={() => setSelectedItems(prev => ({ ...prev, experience: { ...prev.experience, [idx]: !prev.experience[idx] } }))} />
+                                            <div className="ai-item-content">
+                                                <strong>{exp.startDate} - {exp.endDate || 'Hiện tại'}</strong>
+                                                <p className="text-sm">{exp.description}</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
 
-                            <div className="transfer-actions flex gap-2">
+                            </div>
+                            <div className="transfer-actions">
                                 <button
-                                    className={`btn-primary flex-1 flex items-center justify-center gap-2 ${isFilled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className="btn-primary flex-1 flex items-center justify-center gap-2"
                                     onClick={applySelectedData}
-                                    disabled={isFilled}
                                 >
-                                    <ArrowRight size={18} /> {isFilled ? 'Đã điền' : 'Điền vào mẫu'}
+                                    <ArrowRight size={18} /> Điền vào mẫu
                                 </button>
                                 <button
                                     className="btn-secondary flex items-center justify-center gap-2 px-4 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md transition-colors"
@@ -428,7 +452,7 @@ export const CVParser = () => {
                                     <X size={18} /> Hủy kết quả
                                 </button>
                             </div>
-                        </div>
+                        </>
                     )}
                 </div>
 
