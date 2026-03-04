@@ -24,14 +24,13 @@ const SubscriptionManager = () => {
         setLoading(true);
         try {
             const response = await subscriptionService.getlistSubscription();
-            // Điều chỉnh lại tuỳ theo data backend trả về (response.result hoặc response)
             const data = response?.result || response?.data || response || [];
             
-            // Sắp xếp các gói theo giá tiền từ thấp đến cao (Free -> Standard -> Premium)
             const sortedData = Array.isArray(data) ? data.sort((a, b) => a.price - b.price) : [];
             setSubscriptions(sortedData);
         } catch (error) {
-            toast.error('Lỗi khi tải danh sách gói đăng ký', { style: toastStyles.error });
+            const errorMessage = error.response?.data?.message || 'Lỗi khi tải danh sách gói đăng ký';
+            toast.error(errorMessage, { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
@@ -43,9 +42,10 @@ const SubscriptionManager = () => {
             const response = await subscriptionService.getDetailSubscription(id);
             const data = response?.result || response?.data || response;
             setSelectedSubscription(data);
-            setEditForm(data); // Đổ dữ liệu vào form
+            setEditForm(data);
         } catch (error) {
-            toast.error('Lỗi khi tải chi tiết gói đăng ký', { style: toastStyles.error });
+            const errorMessage = error.response?.data?.message || 'Lỗi khi tải chi tiết gói đăng ký';
+            toast.error(errorMessage, { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
@@ -64,13 +64,13 @@ const SubscriptionManager = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            // Chú ý: đảm bảo payload và id truyền đi khớp với backend yêu cầu
             await subscriptionService.UpdateSubcription(selectedSubscription.id, editForm, token);
             toast.success('Cập nhật gói đăng ký thành công', { style: toastStyles.success });
-            setSelectedSubscription(null); // Đóng modal
-            fetchSubscriptions(); // Tải lại danh sách
+            setSelectedSubscription(null); 
+            fetchSubscriptions(); 
         } catch (error) {
-            toast.error('Lỗi khi cập nhật gói đăng ký', { style: toastStyles.error });
+            const errorMessage = error.response?.data?.message || 'Lỗi khi cập nhật gói đăng ký';
+            toast.error(errorMessage, { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
@@ -90,7 +90,6 @@ const SubscriptionManager = () => {
             
             <div className="admin-header">
                 <h1>Quản lý Cấu hình Gói cước</h1>
-                <p>Xem và chỉnh sửa giới hạn, giá tiền của các gói đăng ký trên hệ thống.</p>
             </div>
 
             {loading && !selectedSubscription && <div className="loading-spinner">Đang tải dữ liệu...</div>}
@@ -144,7 +143,6 @@ const SubscriptionManager = () => {
                 </div>
             )}
 
-            {/* ================= MODAL CẬP NHẬT GÓI ================= */}
             {selectedSubscription && (
                 <div className="modal-overlay">
                     <div className="modal-content">
@@ -163,23 +161,41 @@ const SubscriptionManager = () => {
                                     name="name"
                                     value={editForm.name || ''}
                                     onChange={handleInputChange}
-                                    required
-                                    className="form-control"
+                                    disabled
+                                    className="form-control bg-light"
                                 />
                             </div>
-
-                            <div className="form-group">
+                            {editForm.name?.toUpperCase().includes('FREE') ? (
+                                <div className="form-group">
+                                        <label>Giá tiền (VND)</label>
+                                        <input
+                                            type="text"
+                                            value="0"
+                                            disabled
+                                            className="form-control bg-light"
+                                        />
+                                    </div>
+                            ) : ( 
+                                <div className="form-group">
                                 <label>Giá tiền (VND)</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="price"
-                                    value={editForm.price ?? ''}
-                                    onChange={handleInputChange}
-                                    min="0"
+                                    value={editForm.price ? Number(editForm.price).toLocaleString('vi-VN') : ''}
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                        const numValue = rawValue ? Number(rawValue) : 0;
+                                        setEditForm(prev => ({ ...prev, price: numValue }));
+                                    }}
                                     required
                                     className="form-control"
+                                    placeholder="Ví dụ: 1.000.000"
                                 />
                             </div>
+                            )}
+                              
+                            
+                         
 
                             <div className="form-row">
                                 <div className="form-group">

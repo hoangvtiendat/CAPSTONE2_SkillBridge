@@ -114,11 +114,7 @@ const JdList = () => {
                                     <p>{jd.location}</p>
                                 </div>
                                 
-                                <div className="jd-section-content">
-                                    <h3>Mức lương</h3>
-                                    <p className="highlight-salary">{Number(jd.salaryMin).toLocaleString()} - {Number(jd.salaryMax).toLocaleString()} VND</p>
-                                </div>
-                                
+                              
                                 <div className="jd-section-content">
                                     <h3>Mô tả công việc</h3>
                                     <p className="text-truncate">{jd.description}</p>
