@@ -46,7 +46,7 @@ function App() {
 
     useEffect(() => {
         if (user) {
-            if (user.role === 'ADMIN') {
+            if (user.role === 'admin') {
                 if (!isAdminPath && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/admin/dashboard', {replace: true});
                 }
@@ -62,7 +62,7 @@ function App() {
             <Toaster position="top-right" richColors visibleToasts={1} expand={false}/>
             {!isAdminPath && <Header/>}
             <div
-                className={!isAdminPath ? "content-with-header" : ""}> {/* Add padding only for fixed header on non-admin pages */}
+                className={!isAdminPath ? "content-with-header" : ""}> 
                 <Routes>
                     <Route path="/" element={<HomePage/>}/>
                     <Route path="/login" element={<LoginPage/>}/>
@@ -82,7 +82,6 @@ function App() {
                     <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
                     <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
 
-                    {/*Admin router*/}
                     <Route path="/admin" element={<AdminLayout/>}>
                         <Route index element={<AdminDashboardPage/>}/>
                         <Route path="dashboard" element={<AdminDashboardPage/>}/>
@@ -95,7 +94,6 @@ function App() {
                         <Route path="management/industries" element={<IndustryManagementPage/>}/>
                         <Route path="management/skills" element={<SkillManagementPage/>}/>
 
-                        {/* Các route yêu cầu bảo mật cao hơn */}
                         <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer/></AdminRoute>}/>
                         <Route path='subscriptions' element={<AdminRoute><SubscriptionManagerPage/></AdminRoute>}/>
 

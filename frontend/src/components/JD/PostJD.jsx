@@ -21,7 +21,6 @@ const PostJD = () => {
 
     const [categories, setCategories] = useState([]);
     const [skillsList, setSkillsList] = useState([]);
-    
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
 
     const [dynamicTitles, setDynamicTitles] = useState([
@@ -81,10 +80,15 @@ const PostJD = () => {
             return;
         }
 
-        const requiredFields = ["categoryId", "position", "description", "location", "salaryMin", "salaryMax"];
-        const hasEmptyFields = requiredFields.some(field => formData[field].trim() === "");
-        if (hasEmptyFields) {
+        const stringFields = ["categoryId", "position", "description", "location"];
+        const hasEmptyStringFields = stringFields.some(field => !formData[field] || formData[field].trim() === "");
+        if (hasEmptyStringFields) {
             toast.error("Lỗi nhập liệu", { description: "Vui lòng điền đầy đủ các trường bắt buộc", style: toastStyles.warning });
+            return;
+        }
+
+        if (!formData.salaryMin || !formData.salaryMax) {
+            toast.error("Lỗi nhập liệu", { description: "Vui lòng điền đầy đủ thông tin lương", style: toastStyles.warning });
             return;
         }
 
@@ -183,10 +187,8 @@ const PostJD = () => {
 
             <form onSubmit={handleCreateJd} className="jd-board-layout">
                 
-                {/* --- CỘT TRÁI: THÔNG TIN CHÍNH --- */}
                 <div className="layout-main-column">
                     
-                    {/* Card 1: Thông tin cơ bản */}
                     <section className="form-card">
                         <h3 className="card-title">Thông tin cơ bản</h3>
                         <div className="input-group-grid">
@@ -219,7 +221,6 @@ const PostJD = () => {
                         </div>
                     </section>
 
-                    {/* Card 2: Chi tiết công việc */}
                     <section className="form-card">
                         <h3 className="card-title">Mô tả công việc</h3>
                         
@@ -277,10 +278,8 @@ const PostJD = () => {
                     </section>
                 </div>
 
-                {/* --- CỘT PHẢI: THUỘC TÍNH & KỸ NĂNG --- */}
                 <div className="layout-sidebar">
                     
-                    {/* Card 3: Thông tin bổ sung */}
                     <section className="form-card sidebar-card">
                         <h3 className="card-title">Yêu cầu & Quyền lợi</h3>
                         
@@ -300,21 +299,31 @@ const PostJD = () => {
                             <div className="input-item">
                                 <label>Lương Tối thiểu (VND)</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="salaryMin"
-                                    value={formData.salaryMin}
-                                    onChange={handleChange}
+                                    value={formData.salaryMin ? Number(formData.salaryMin).toLocaleString('vi-VN') : ''}
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                        const numValue = rawValue ? Number(rawValue) : '';
+                                        setFormData(prev => ({ ...prev, salaryMin: numValue }));
+                                    }}
                                     required
+                                    placeholder="Ví dụ: 10.000.000"
                                 />
                             </div>
                             <div className="input-item">
                                 <label>Lương Tối đa (VND)</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="salaryMax"
-                                    value={formData.salaryMax}
-                                    onChange={handleChange}
+                                    value={formData.salaryMax ? Number(formData.salaryMax).toLocaleString('vi-VN') : ''}
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                        const numValue = rawValue ? Number(rawValue) : '';
+                                        setFormData(prev => ({ ...prev, salaryMax: numValue }));
+                                    }}
                                     required
+                                    placeholder="Ví dụ: 20.000.000"
                                 />
                             </div>
                         </div>
@@ -383,7 +392,6 @@ const PostJD = () => {
                         </div>
                     </section>
 
-                    {/* Nút Submit cố định ở dưới cột phải */}
                     <div className="action-wrapper">
                         <button type="submit" disabled={loading} className="btn-primary-large">
                             {loading ? 'Đang xử lý...' : 'Xác nhận Tạo JD'}

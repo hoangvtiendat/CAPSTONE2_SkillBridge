@@ -17,6 +17,8 @@ const JdList = () => {
     const [jdList, setJdList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedJd, setSelectedJd] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL');
     const navigate = useNavigate(); 
 
     // FIX 1: Đưa useRef VÀO TRONG component
@@ -72,11 +74,34 @@ const JdList = () => {
     const handleCreateJd = () => {
         navigate('/create-jd');
     };
+
+    // Lọc danh sách JD theo search và status
+    const filteredJdList = jdList.filter(jd => {
+        // Lọc theo tìm kiếm
+        const matchesSearch = 
+            jd.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            jd.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            jd.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            jd.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        // Lọc theo trạng thái
+        const matchesStatus = statusFilter === 'ALL' || jd.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    // Đếm số lượng theo từng trạng thái
+    const statusCounts = {
+        ALL: jdList.length,
+        OPEN: jdList.filter(jd => jd.status === 'OPEN').length,
+        PENDING: jdList.filter(jd => jd.status === 'PENDING').length,
+        DELETE: jdList.filter(jd => jd.status === 'DELETE').length,
+        CLOSED: jdList.filter(jd => jd.status === 'CLOSED').length
+    };
   
     useEffect(() => {
-        // Gọi hàm đã bọc useCallback
         handGetJdList();
-    }, [handGetJdList]); // Đưa handGetJdList vào dependency array để tắt cảnh báo ESLint
+    }, [handGetJdList]);
 
     return (
         <main className="jd-list-container">
@@ -89,12 +114,73 @@ const JdList = () => {
                 )}
             </div>
 
-            {loading && <p className="loading-text">Đang tải dữ liệu...</p>}
-            {!loading && jdList.length === 0 && <p className="empty-state">Không có JD nào.</p>}
+            {/* Search và Filter */}
+            <div className="jd-filter-section">
+                <div className="search-box">
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm theo vị trí, công ty, địa điểm..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="search-input"
+                    />
+                    {searchTerm && (
+                        <button 
+                            className="clear-search"
+                            onClick={() => setSearchTerm('')}
+                            aria-label="Xóa tìm kiếm"
+                        >
+                            ×
+                        </button>
+                    )}
+                </div>
 
-            {!loading && jdList.length > 0 && (
+                <div className="status-filters">
+                    <button
+                        className={`filter-btn ${statusFilter === 'ALL' ? 'OPEN' : ''}`}
+                        onClick={() => setStatusFilter('ALL')}
+                    >
+                        Tất cả ({statusCounts.ALL})
+                    </button>
+                    <button
+                        className={`filter-btn ${statusFilter === 'OPEN' ? 'OPEN' : ''}`}
+                        onClick={() => setStatusFilter('OPEN')}
+                    >
+                        Đang hoạt động ({statusCounts.OPEN})
+                    </button>
+                    <button
+                        className={`filter-btn ${statusFilter === 'PENDING' ? 'OPEN' : ''}`}
+                        onClick={() => setStatusFilter('PENDING')}
+                    >
+                        Chờ duyệt ({statusCounts.PENDING})
+                    </button>
+                    <button
+                        className={`filter-btn ${statusFilter === 'DELETE' ? 'OPEN' : ''}`}
+                        onClick={() => setStatusFilter('DELETE')}
+                    >
+                        Xóa ({statusCounts.DELETE})
+                    </button>
+                    <button
+                        className={`filter-btn ${statusFilter === 'CLOSED' ? 'OPEN' : ''}`}
+                        onClick={() => setStatusFilter('CLOSED')}
+                    >
+                        Đã đóng ({statusCounts.CLOSED})
+                    </button>
+                </div>
+            </div>
+
+            {loading && <p className="loading-text">Đang tải dữ liệu...</p>}
+            {!loading && filteredJdList.length === 0 && (
+                <p className="empty-state">
+                    {searchTerm || statusFilter !== 'ALL' 
+                        ? 'Không tìm thấy JD phù hợp với bộ lọc.' 
+                        : 'Không có JD nào.'}
+                </p>
+            )}
+
+            {!loading && filteredJdList.length > 0 && (
                 <ul className="jd-list">
-                    {jdList.map(jd => (
+                    {filteredJdList.map(jd => (
                         <li 
                             key={jd.id} 
                             className={`jd-item ${selectedJd?.id === jd.id ? 'selected' : ''}`} 
@@ -106,6 +192,7 @@ const JdList = () => {
                                     <h2 className="jd-title">{jd.position}</h2>
                                     <p className="jd-company-name">{jd.company.name}</p>
                                 </div>
+                             
                             </div>
                             
                             <div className="jd-details-wrapper">

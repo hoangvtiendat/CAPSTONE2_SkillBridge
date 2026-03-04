@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import subscriptionService from '../../services/api/subscriptionService';
 import { toast, Toaster } from 'sonner';
 import { Check, Edit, X } from 'lucide-react';
@@ -76,7 +76,6 @@ const SubscriptionManager = () => {
         }
     };
 
-    // --- HÀM HỖ TRỢ HIỂN THỊ GIAO DIỆN ---
     const getThemeClass = (planName) => {
         const name = planName?.toUpperCase() || '';
         if (name.includes('PREMIUM')) return 'theme-premium';
@@ -154,23 +153,13 @@ const SubscriptionManager = () => {
                         </div>
 
                         <form onSubmit={handleUpdateSubscription} className="modal-body">
-                            <div className="form-group">
-                                <label>Tên gói cước</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={editForm.name || ''}
-                                    onChange={handleInputChange}
-                                    disabled
-                                    className="form-control bg-light"
-                                />
-                            </div>
+                          
                             {editForm.name?.toUpperCase().includes('FREE') ? (
                                 <div className="form-group">
                                         <label>Giá tiền (VND)</label>
                                         <input
                                             type="text"
-                                            value="0"
+                                            value="Miễn phí"
                                             disabled
                                             className="form-control bg-light"
                                         />
@@ -225,16 +214,20 @@ const SubscriptionManager = () => {
                                 </div>
                             </div>
 
-                            <div className="form-group">
-                                <label className="checkbox-wrapper">
-                                    <input
-                                        type="checkbox"
-                                        name="hasPriorityDisplay"
-                                        checked={editForm.hasPriorityDisplay || false}
-                                        onChange={handleInputChange}
-                                    />
-                                    <span className="checkbox-text">Kích hoạt tính năng Duyệt tin ưu tiên (Đèn xanh)</span>
-                                </label>
+                       <div className="form-group">
+                                {!editForm.name?.toUpperCase().includes('FREE') && (
+                                    <label className="checkbox-wrapper">
+                                        <input
+                                            type="checkbox"
+                                            name="hasPriorityDisplay"
+                                            checked={editForm.hasPriorityDisplay || false}
+                                            onChange={handleInputChange}
+                                        />
+                                        <span className="checkbox-text">
+                                            Kích hoạt tính năng Duyệt tin ưu tiên (Đèn xanh)
+                                        </span>
+                                    </label>
+                                )}
                             </div>
 
                             <div className="modal-footer">
