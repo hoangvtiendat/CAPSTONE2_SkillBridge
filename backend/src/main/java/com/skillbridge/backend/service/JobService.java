@@ -54,11 +54,11 @@ public class JobService {
 
 
 
-    public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
+    public Map<String, Object> getJobFeed(int page, String cursor ,int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
 
         Page<JobFeedItemResponse> jobPage = jobRepository.getJobFeedFiltered(
-                JobStatus.OPEN, categoryId, location, salary, pageable
+                JobStatus.OPEN,cursor ,categoryId, location, salary, pageable
         );
 
         if (jobPage.isEmpty()) {

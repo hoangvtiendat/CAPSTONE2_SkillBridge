@@ -41,11 +41,12 @@ public class CompanyController {
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCompanyFeed(
             @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(required = false) String cursor,
             @RequestParam(value = "status", required = false) CompanyStatus status,
             @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
         CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
-        Map<String, Object> rs = companyService.getCompanies(page, searchStatus, limit);
+        Map<String, Object> rs = companyService.getCompanies(page,cursor ,searchStatus, limit);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Company Feed",

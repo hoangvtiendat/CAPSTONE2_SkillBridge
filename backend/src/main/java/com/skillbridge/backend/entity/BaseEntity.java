@@ -28,4 +28,13 @@ public abstract class BaseEntity {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
+    public void setIsDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
 }
