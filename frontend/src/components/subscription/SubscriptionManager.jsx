@@ -123,6 +123,10 @@ const SubscriptionManager = () => {
                                         </li>
                                         <li>
                                             <Check className="check-icon" size={18} />
+                                            <span>Thời hạn đăng: <strong>{sub.postingDuration || 'N/A'} ngày</strong></span>
+                                        </li>
+                                        <li>
+                                            <Check className="check-icon" size={18} />
                                             <span>Duyệt tin ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span>
                                         </li>
                                     </ul>
@@ -212,6 +216,20 @@ const SubscriptionManager = () => {
                                         className="form-control"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Thời hạn đăng tin (ngày)</label>
+                                <input
+                                    type="number"
+                                    name="postingDuration"
+                                    value={editForm.postingDuration ?? ''}
+                                    onChange={handleInputChange}
+                                    min="1"
+                                    required
+                                    className="form-control"
+                                    placeholder="Ví dụ: 30 (ngày)"
+                                />
                             </div>
 
                        <div className="form-group">

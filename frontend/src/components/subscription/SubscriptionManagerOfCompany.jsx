@@ -97,6 +97,7 @@ const handleDeleteSubscription = async (id) => {
                                     <li><Check size={16}/> Lượt xem ứng viên: <strong>{sub.candidateViewLimit}</strong></li>
                                     <li><Info size={16}/> Đã dùng: {sub.currentJobCount} Jobs / {sub.currentViewCount} Views</li>
                                     <li><Calendar size={16}/> Hết hạn: {new Date(sub.endDate).toLocaleDateString('vi-VN')}</li>
+                                    <li><Calendar size={16}/> Thời hạn đăng tin: {sub.postingDuration || 'N/A'} ngày</li>
                                     
                                     {sub.hasPriorityDisplay && (
                                         <li className="highlight"><Check size={16}/> Ưu tiên hiển thị trên hệ thống</li>
