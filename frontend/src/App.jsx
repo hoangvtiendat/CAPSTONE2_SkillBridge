@@ -17,7 +17,7 @@ import TaxLookup from './pages/company/TaxLookup';
 import AdminJobPage from './pages/admin/AdminJobPage';
 import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
-
+import SubscriptionOfCompanyPage from './pages/Subscription.jsx/SubscriftionOfCompany';
 import {Toaster} from 'sonner';
 import BusinessIdentity from './pages/recruiter/BusinessIdentity'
 // Admin Components & Pages
@@ -81,7 +81,8 @@ function App() {
                     <Route path='/create-jd' element={<CreateJd/>}/>
                     <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
                     <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
-
+                    <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage/>}/>
+                    
                     <Route path="/admin" element={<AdminLayout/>}>
                         <Route index element={<AdminDashboardPage/>}/>
                         <Route path="dashboard" element={<AdminDashboardPage/>}/>

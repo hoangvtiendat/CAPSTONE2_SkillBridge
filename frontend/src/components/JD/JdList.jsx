@@ -5,8 +5,7 @@ import jobService from '../../services/api/jobService';
 import './JdList.css';
 import { useAuth } from '../../context/AuthContext';
 
-// Đưa toastStyles ra ngoài component để tránh việc bị tạo lại mỗi lần render
-const toastStyles = {
+ const toastStyles = {
     warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
     success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
     error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
@@ -21,16 +20,13 @@ const JdList = () => {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const navigate = useNavigate(); 
 
-    // FIX 1: Đưa useRef VÀO TRONG component
     const hasShownError = useRef(false);
 
-    // FIX 2: Bọc hàm trong useCallback để tránh warning dependency của useEffect
     const handGetJdList = useCallback(async () => {
         try {
             const data = await jobService.getMyJd_of_Company(token);
             setJdList(data.result);
         } catch (error) {
-            // FIX 3: Thêm điều kiện if để check xem lỗi đã được show chưa
             if (!hasShownError.current) {
                 const errorMessage = error.response?.data?.message || 'Không thể tải danh sách JD';
                 toast.error("Lỗi khi tải dữ liệu", { 
@@ -38,14 +34,12 @@ const JdList = () => {
                     style: toastStyles.error 
                 });
                 
-                // Đánh dấu là đã hiển thị
                 hasShownError.current = true;
             }
         } finally {
             setLoading(false);
         }
-    }, [token]); // token là dependency của hàm này
-
+    }, [token]); 
     const handleDeleteJd = async (e, jdId) => {
         e.stopPropagation();
         
@@ -75,23 +69,19 @@ const JdList = () => {
         navigate('/create-jd');
     };
 
-    // Lọc danh sách JD theo search và status
-    const filteredJdList = jdList.filter(jd => {
-        // Lọc theo tìm kiếm
-        const matchesSearch = 
+     const filteredJdList = jdList.filter(jd => {
+         const matchesSearch = 
             jd.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             jd.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             jd.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             jd.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // Lọc theo trạng thái
-        const matchesStatus = statusFilter === 'ALL' || jd.status === statusFilter;
+         const matchesStatus = statusFilter === 'ALL' || jd.status === statusFilter;
 
         return matchesSearch && matchesStatus;
     });
 
-    // Đếm số lượng theo từng trạng thái
-    const statusCounts = {
+     const statusCounts = {
         ALL: jdList.length,
         OPEN: jdList.filter(jd => jd.status === 'OPEN').length,
         PENDING: jdList.filter(jd => jd.status === 'PENDING').length,
