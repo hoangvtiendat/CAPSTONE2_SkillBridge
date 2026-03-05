@@ -37,7 +37,9 @@ public class Company extends BaseEntity {
     private String taxId;
 
     @Column(name = "business_license_url")
-    private String businessLicenseUrl; // link ảnh GPKD
+    private String businessLicenseUrl;
+
+    private int postingDuration;
 
     @Column(name = "image_url")
     private String imageUrl;
@@ -59,6 +61,8 @@ public class Company extends BaseEntity {
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     private List<CompanySubscription> subscriptions;
+
+
 
 //    public String getCurrentSubscriptionPlanName() {
 //        if (this.subscriptions == null || this.subscriptions.isEmpty()) {
@@ -156,5 +160,12 @@ public class Company extends BaseEntity {
 
     public void setWebsiteUrl(String websiteUrl) {
         this.websiteUrl = websiteUrl;
+    }
+
+    public void getpostingDuration(int postingDuration){
+        this.postingDuration = postingDuration;
+    }
+    public void setSubscriptions(List<CompanySubscription> subscriptions) {
+        this.subscriptions = subscriptions;
     }
 }

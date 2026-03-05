@@ -1,4 +1,5 @@
 package com.skillbridge.backend.service;
 
-public class CompanyMemberServic {
-}
+import com.skillbridge.backend.entity.CompanyMember;
+
+

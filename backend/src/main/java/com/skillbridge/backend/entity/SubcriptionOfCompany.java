@@ -57,6 +57,9 @@ public class SubcriptionOfCompany {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "posting_Duration")
+    private Integer postingDuration;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
