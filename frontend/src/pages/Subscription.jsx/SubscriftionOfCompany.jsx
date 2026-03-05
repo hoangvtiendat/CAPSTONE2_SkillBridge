@@ -1,11 +1,11 @@
-import SubscriptionOfCompany from "../../components/subscription/SubcriptionOfCompany";
+import SubscriptionManagerOfCompany from "../../components/subscription/SubscriptionManagerOfCompany";
 const SubscriptionOfCompanyPage = () => {
     return (
             <div className="home-page">
     
                 <div className="home-container">
                     <main className="card-main">
-                        <SubscriptionOfCompany />
+                        <SubscriptionManagerOfCompany />
                     </main>
                 </div>
             </div>

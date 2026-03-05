@@ -29,17 +29,17 @@ const subscriptionService = {
                 throw error;
         }
     },
-    getCreateSubscriptionOfCompany: async (token) => {
+    createSubscriptionOfCompany: async (data, token) => {
         try{
-            const repsonse = await api.get("/subscription/company/create", {
+            const response = await api.post("/subscription/company/create", data, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            return repsonse.data;
+            return response.data;
         }catch (error) {
-            console.error('Error fetching subscription list of company:', error);
-             throw error;
+            console.error('Error creating subscription for company:', error);
+            throw error;
         }
     },
     deleteSubscriptionOfCompany: async (id, token) => {
@@ -56,18 +56,16 @@ const subscriptionService = {
         }
     },
     listSubcriftionOfCompany: async (token) => {
-        try{
-            const response = await api.get('subscription/company/list', {
+        try {
+            const response = await api.get('/subscription/company/list', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            console.log('Response from listSubcriftionOfCompany:', response.data);
             return response.data;       
-        }
-        catch (error) {
-            console.error('Error fetching subscription list of company:', error);
-                throw error;
+        } catch (error) {
+            console.error('Error:', error);
+            throw error;
         }
     }
 };

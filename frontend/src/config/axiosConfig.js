@@ -7,12 +7,10 @@ const api = axios.create({
     },
 });
 
-// Request interceptor to add the auth token header to requests
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
 
-        // Không add token cho login/register
         if (
             token &&
             !config.url.includes('/auth/login') &&
@@ -24,6 +22,26 @@ api.interceptors.request.use(
         return config;
     },
     (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            
+            window.location.href = '/login';
+        }
+        
+        if (error.response && error.response.status === 403) {
+            console.error('Không có quyền truy cập tài nguyên này');
+        }
+        
+        return Promise.reject(error);
+    }
 );
 
 

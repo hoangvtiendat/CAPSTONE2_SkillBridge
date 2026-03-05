@@ -1,6 +1,4 @@
-/* =========================================
-   CONTAINER CHÍNH
-========================================= */
+
 .subscription-admin-manager {
     max-width: 1100px;
     margin: 40px auto;
@@ -13,6 +11,14 @@
     margin-bottom: 40px;
     border-bottom: 2px solid #f3f4f6;
     padding-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.admin-header > div {
+    flex: 1;
 }
 
 .admin-header h1 {
@@ -28,174 +34,195 @@
     font-size: 1rem;
 }
 
+.btn-create-subscription {
+    background: #2e4569;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-create-subscription:hover {
+    background: #2563eb;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-create-subscription:active {
+    transform: translateY(0);
+}
+
 
 .admin-plans-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
+    gap: 20px;
 }
 
 .admin-plan-card {
-    border-radius: 16px;
-    padding: 32px 24px;
+    background-color: #ffffff;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
     position: relative;
-    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s;
 }
 
 .admin-plan-card:hover {
-    transform: translateY(-4px);
-}
-
-/* THEME: FREE (Cơ bản) */
-.theme-free {
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-/* THEME: STANDARD (Trắng - Xanh) */
-.theme-standard {
-    background-color: #ffffff;
-    border: 2px solid #e5e7eb;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-/* THEME: PREMIUM (Xanh đen - Vàng sang trọng giống ảnh) */
-.theme-premium {
-    background-color: #0f172a; /* Màu xanh đen */
-    color: #ffffff;
-    border: 2px solid #1e293b;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.premium-badge {
-    position: absolute;
-    top: -12px;
-    right: 20px;
-    background-color: #facc15; /* Vàng */
-    color: #000;
-    padding: 6px 16px;
-    border-radius: 6px;
-    font-weight: 800;
-    font-size: 0.85rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Card Header */
 .plan-header {
     text-align: left;
-    margin-bottom: 24px;
-    border-bottom: 1px dashed #d1d5db;
-    padding-bottom: 24px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.theme-premium .plan-header {
-    border-bottom-color: #334155;
+.plan-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.plan-name-section {
+    flex: 1;
 }
 
 .plan-name {
-    font-size: 1.5rem;
-    font-weight: 800;
-    margin: 0 0 8px 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: #111827;
 }
 
 .plan-price-box {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
+    margin: 12px 0;
 }
 
 .price-value {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 800;
+    color: #3b82f6;
 }
 
-.theme-premium .price-value {
-    color: #facc15; /* Màu vàng */
-}
-
-.theme-standard .price-value {
-    color: #2563eb;
-}
-
-.price-unit {
-    color: #6b7280;
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
     font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.theme-premium .price-unit {
-    color: #94a3b8;
+.status-badge.PENDING_PAYMENT {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.ACTIVE {
+    background: #d1fae5;
+    color: #065f46;
 }
 
 /* Card Body (Tính năng) */
 .plan-body {
     flex-grow: 1;
+    margin: 16px 0;
 }
 
 .plan-features {
     list-style: none;
     padding: 0;
-    margin: 0 0 32px 0;
+    margin: 0;
 }
 
 .plan-features li {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    font-size: 0.95rem;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
 }
 
-.theme-premium .plan-features li {
-    color: #e2e8f0;
+.plan-features li {
+    color: #4b5563;
 }
 
-.check-icon {
-    color: #22c55e; /* Xanh lá */
+.plan-features li svg {
     flex-shrink: 0;
+    color: #6b7280;
+}
+
+.plan-features li.highlight {
+    font-weight: 600;
 }
 
 /* Card Footer (Nút bấm) */
-.btn-edit-plan {
+.plan-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.btn-edit-plan,
+.btn-delete-plan {
     width: 100%;
     padding: 12px;
     border-radius: 8px;
-    font-weight: 700;
-    font-size: 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 8px;
     cursor: pointer;
     transition: all 0.2s;
-}
-
-/* Style nút tuỳ theo theme */
-.theme-free .btn-edit-plan {
-    background-color: #f3f4f6;
     border: 1px solid #d1d5db;
-    color: #374151;
 }
 
-.theme-free .btn-edit-plan:hover { background-color: #e5e7eb; }
-
-.theme-standard .btn-edit-plan {
-    background-color: #eff6ff;
-    border: 1px solid #bfdbfe;
-    color: #1d4ed8;
+.btn-edit-plan {
+    background-color: #384b6c;
+    color: white;
+    border-color: #3b82f6;
+    font-weight: 600;
 }
 
-.theme-standard .btn-edit-plan:hover { background-color: #dbeafe; }
-
-.theme-premium .btn-edit-plan {
-    background-color: #facc15;
-    border: none;
-    color: #000;
+.btn-edit-plan:hover {
+    background-color: #a7c9ba;
+    border-color: #2563eb;
 }
 
-.theme-premium .btn-edit-plan:hover { background-color: #eab308; }
+.btn-delete-plan {
+    background-color: white;
+    color: #dc2626;
+    border-color: #fca5a5;
+}
+
+.btn-delete-plan:hover {
+    background-color: #fee2e2;
+    border-color: #fca5a5;
+}
 
 
 /* =========================================
@@ -355,4 +382,25 @@
     padding: 40px;
     color: #6b7280;
     font-size: 1.1rem;
+}
+
+/* Loading state */
+.loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* No data message */
+.no-data {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+    font-size: 1rem;
+    grid-column: 1 / -1;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px dashed #e5e7eb;
 }

@@ -16,6 +16,10 @@ export const AuthProvider = ({ children }) => {
         }
     });
 
+    const [token, setToken] = useState(() => {
+        return localStorage.getItem('accessToken') || null;
+    });
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -36,6 +40,13 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (err) {
             console.error('Failed to fetch profile:', err);
+            
+           
+            if (err.response && err.response.status === 401) {
+                setUser(null);
+                setToken(null);
+            }
+            
             setError(err);
         } finally {
             setLoading(false);
@@ -51,9 +62,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
 
         if (userData.accessToken) {
+            setToken(userData.accessToken);
             localStorage.setItem('accessToken', userData.accessToken);
             fetchProfile();
         } else if (userData.token) {
+            setToken(userData.token);
             localStorage.setItem('accessToken', userData.token);
             fetchProfile();
         }
@@ -66,10 +79,14 @@ export const AuthProvider = ({ children }) => {
             console.error('Logout API failed:', error);
         } finally {
             setUser(null);
+            setToken(null);
             localStorage.removeItem('user');
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('token');
+            
+            // Redirect về trang login sau khi logout
+            window.location.href = '/login';
         }
     }, []);
 
@@ -93,7 +110,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, updateUser, fetchProfile, loading, error }}>
+        <AuthContext.Provider value={{ user, token, login, logout, updateUser, fetchProfile, loading, error }}>
             {children}
         </AuthContext.Provider>
     );
