@@ -163,13 +163,17 @@ public class SubscriptionService {
             throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
         }
 
-        double premiumRatio = (double) premViewLimit / premJobLimit;
-        double requestRatio = (double) request.getCandidateViewLimit() / request.getJobLimit();
 
-        if (requestRatio > (premiumRatio * 1.2) || requestRatio < (premiumRatio /1.2)) {
+
+        double premiumRatio = (double) premViewLimit / premJobLimit;
+        double requestRatio = (double) premViewLimit / premJobLimit;
+
+        double minRatio = premiumRatio * 0.8;
+        double maxRatio = premiumRatio * 1.2;
+
+        if (requestRatio < minRatio || requestRatio > maxRatio) {
             throw new AppException(ErrorCode.UNBALANCED_CUSTOM_PLAN);
         }
-
         BigDecimal unitJobPrice = premiumPrice.multiply(new BigDecimal("0.70"))
                 .divide(new BigDecimal(premJobLimit), 4, RoundingMode.HALF_UP);
 

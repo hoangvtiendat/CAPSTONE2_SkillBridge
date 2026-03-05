@@ -597,9 +597,8 @@ public class JobService {
         if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-
-        jobSkillRepository.deleteByJobId(id);
-        jobRepository.delete(job);
+        job.setStatus(JobStatus.DELETE);
+        jobRepository.save(job);
 
         return job;
     }
