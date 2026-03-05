@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, KeyRound, ChevronRight, ArrowLeft } from 'lucide-react';
 import authService from '../../services/api/authService';
 import { toast } from 'sonner';
+import Swal from 'sweetalert2';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -15,6 +16,11 @@ const ProfilePage = () => {
     const [viewMode, setViewMode] = useState('profile');
     const [isOpenToWork, setIsOpenToWork] = useState(true);
     const [isToggling2FA, setIsToggling2FA] = useState(false);
+    const [is2faEnabledLocal, setIs2faEnabledLocal] = useState(user?.is2faEnabled || false);
+
+    useEffect(() => {
+        setIs2faEnabledLocal(user?.is2faEnabled || false);
+    }, [user?.is2faEnabled]);
 
     useEffect(() => {
         if (!user) {
@@ -64,11 +70,36 @@ const ProfilePage = () => {
                                         <label className={`toggle-switch ${isToggling2FA ? 'opacity-50 cursor-wait' : ''}`}>
                                             <input
                                                 type="checkbox"
-                                                checked={user?.is2faEnabled || false}
+                                                checked={is2faEnabledLocal}
                                                 disabled={isToggling2FA}
                                                 onChange={async (e) => {
                                                     if (isToggling2FA) return;
                                                     const newValue = e.target.checked;
+
+                                                    // Visual feedback immediately
+                                                    setIs2faEnabledLocal(newValue);
+
+                                                    const result = await Swal.fire({
+                                                        title: newValue ? 'Bật xác thực 2 bước?' : 'Tắt xác thực 2 bước?',
+                                                        text: newValue
+                                                            ? "Tài khoản của bạn sẽ an toàn hơn với xác thực 2 lớp."
+                                                            : "Bảo mật tài khoản sẽ giảm đi nếu bạn tắt tính năng này.",
+                                                        icon: 'warning',
+                                                        showCancelButton: true,
+                                                        confirmButtonColor: '#667eea',
+                                                        cancelButtonColor: '#d33',
+                                                        confirmButtonText: 'Đồng ý',
+                                                        cancelButtonText: 'Hủy',
+                                                        background: '#ffffff',
+                                                        borderRadius: '16px'
+                                                    });
+
+                                                    if (!result.isConfirmed) {
+                                                        // Revert if cancelled
+                                                        setIs2faEnabledLocal(!newValue);
+                                                        return;
+                                                    }
+
                                                     setIsToggling2FA(true);
                                                     try {
                                                         await authService.toggleTwoFactor(newValue);
@@ -79,6 +110,8 @@ const ProfilePage = () => {
                                                     } catch (error) {
                                                         console.error("Toggle 2FA failed", error);
                                                         toast.error("Không thể thay đổi trạng thái 2FA");
+                                                        // Revert on error
+                                                        setIs2faEnabledLocal(!newValue);
                                                     } finally {
                                                         setIsToggling2FA(false);
                                                     }

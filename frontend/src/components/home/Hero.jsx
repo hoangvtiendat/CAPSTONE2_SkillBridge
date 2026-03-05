@@ -6,7 +6,7 @@ import './Hero.css';
 const Hero = () => {
   return (
     <section className="hero">
-      <Carousel items={bannersMockData} autoSlideInterval={4000} />
+      <Carousel items={bannersMockData} autoSlideInterval={3000} />
     </section>
   );
 };

@@ -28,7 +28,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
         WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
@@ -40,7 +40,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         ORDER BY j.createdAt DESC
     """)
     Page<JobFeedItemResponse> getJobFeed(
-            @Param("status") String status,
+            @Param("status") JobStatus status,
             Pageable pageable
     );
 
@@ -53,9 +53,9 @@ public interface JobRepository extends JpaRepository<Job, String> {
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
-        WHERE j.status = :status AND (:cursor IS NULL OR j.id < :cursor)
+        WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
         AND (:location IS NULL OR j.location LIKE %:location%)
         AND (:salary IS NULL OR (
@@ -65,12 +65,21 @@ public interface JobRepository extends JpaRepository<Job, String> {
         ORDER BY j.createdAt DESC
     """)
     Page<JobFeedItemResponse> getJobFeedFiltered(
-            @Param("status") Enum status,
+            @Param("status") JobStatus status,
             @Param("categoryId") String categoryId,
             @Param("location") String location,
-            @Param("salary") Double minSalary,
+            @Param("salary") Double salary,
             Pageable pageable
     );
+
+    // - [x] Implement profile change confirmation with SweetAlert2
+    // - [x] Add confirmation to 2FA toggle in `ProfilePage.jsx`
+    // - [x] Add confirmation to update profile in `UserInfo.jsx`
+    // - [x] Add confirmation to "Open to work" in `UserCard.jsx`
+    // - [/] Refine 2FA toggle responsiveness and Carousel UI
+    //     - [ ] Fix 2FA toggle responsiveness in `ProfilePage.jsx`
+    //     - [ ] Set 3s auto-slide interval in `Hero.jsx`
+    //     - [ ] Refine Carousel aesthetics in `Carousel.css`
 
     @Query("SELECT js.job.id, s.name " +
             "FROM JobSkill js " +
@@ -87,20 +96,14 @@ public interface JobRepository extends JpaRepository<Job, String> {
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
         WHERE j.status <> com.skillbridge.backend.enums.JobStatus.DELETE
         AND (:status IS NULL OR j.status = :status)
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
-        AND (
-            :cursor IS NULL OR 
-            j.createdAt < (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
-            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id < :cursor)
-        )
         ORDER BY j.createdAt DESC, j.id DESC
     """)
     List<AdminJobFeedItemResponse> adminGetJobs(
-            @Param("cursor") String cursor,
             @Param("status") JobStatus status,
             @Param("modStatus") ModerationStatus modStatus,
             Pageable pageable

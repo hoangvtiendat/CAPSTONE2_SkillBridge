@@ -243,12 +243,14 @@ public class AdminService {
 
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
-        String trimmedName = request.getName().trim();
-        if (categoryRepository.existsByNameIgnoreCase(trimmedName)) {
+        // Loại bỏ khoảng trắng thừa đầu cuối và thay thế 2+ khoảng trắng ở giữa bằng 1 khoảng trắng
+        String normalizedName = request.getName().trim().replaceAll("\\s+", " ");
+        
+        if (categoryRepository.existsByNameIgnoreCase(normalizedName)) {
             throw new AppException(ErrorCode.CATEGORY_EXIST);
         }
         Category category = Category.builder()
-                .name(trimmedName)
+                .name(normalizedName)
                 .build();
         return mapToCategoryResponse(categoryRepository.save(category));
     }
@@ -259,12 +261,14 @@ public class AdminService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        String trimmedName = request.getName().trim();
-        if (!category.getName().equalsIgnoreCase(trimmedName) && categoryRepository.existsByNameIgnoreCase(trimmedName)) {
+        // Loại bỏ khoảng trắng thừa đầu cuối và thay thế 2+ khoảng trắng ở giữa bằng 1 khoảng trắng
+        String normalizedName = request.getName().trim().replaceAll("\\s+", " ");
+        
+        if (!category.getName().equalsIgnoreCase(normalizedName) && categoryRepository.existsByNameIgnoreCase(normalizedName)) {
             throw new AppException(ErrorCode.CATEGORY_EXIST);
         }
 
-        category.setName(trimmedName);
+        category.setName(normalizedName);
         return mapToCategoryResponse(categoryRepository.save(category));
     }
 

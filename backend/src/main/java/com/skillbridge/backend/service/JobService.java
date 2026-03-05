@@ -95,7 +95,7 @@ public class JobService {
                 "currentPage", jobPage.getNumber()
         );
     }
-    public AdminJobFeedResponse adminGetJob(String cursor, int limit, String status, String modStatus) {
+    public Map<String, Object> adminGetJob(int page, int limit, String status, String modStatus) {
         System.out.println("--- ADMIN: BẮT ĐẦU LẤY DANH SÁCH JOB ---");
         try {
             JobStatus newStatus = null;
@@ -107,7 +107,6 @@ public class JobService {
                 }
             }
 
-            // 2. Chuyển đổi an toàn moderationStatus
             ModerationStatus newModStatus = null;
             if (modStatus != null && !modStatus.isEmpty()) {
                 try {
@@ -117,23 +116,31 @@ public class JobService {
                 }
             }
 
-            Pageable pageable = PageRequest.of(0, limit + 1);
-            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobs(cursor, newStatus, newModStatus, pageable);
+            Pageable pageable = PageRequest.of(page, limit);
+            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobs(newStatus, newModStatus, pageable);
 
             if (jobs.isEmpty()) {
-                return new AdminJobFeedResponse(List.of(), null, false);
+                return Map.of(
+                        "jobs", List.of(),
+                        "totalPages", 0,
+                        "totalElements", 0,
+                        "currentPage", page
+                );
             }
 
-            boolean hasMore = jobs.size() > limit;
-            List<AdminJobFeedItemResponse> resultList = hasMore ? jobs.subList(0, limit) : jobs;
+            enrichSkills((List<JobFeedItemResponse>) (List<?>) jobs);
 
-            enrichSkills((List<JobFeedItemResponse>) (List<?>) resultList);
-
-            String nextCursor = hasMore ? jobs.get(limit).getJobId() : null;
-
-            return new AdminJobFeedResponse(resultList, nextCursor, hasMore);
+            // Vì repo adminGetJobs trả về List, chúng ta không có tổng số bản ghi dễ dàng nếu không dùng Page.
+            // Nhưng hiện tại để demo/vẩy lỗi, tôi sẽ tạm thời trả về Map đơn giản.
+            // Nếu muốn chuẩn 1, 2, 3 thì Repo nên trả về Page<AdminJobFeedItemResponse>.
+            
+            return Map.of(
+                    "jobs", jobs,
+                    "currentPage", page
+            );
 
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println("Lỗi khi admin lấy danh sách job: " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }

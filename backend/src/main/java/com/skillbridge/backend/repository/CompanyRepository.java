@@ -26,14 +26,9 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
             c.description, c.address, c.websiteUrl, c.status, sp.name
         )
         FROM Company c
-        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
-        LEFT JOIN SubscriptionPlan sp ON cs.subscriptionPlan.id = sp.id
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
         WHERE (:status IS NULL OR c.status = :status)
-         AND (
-            :cursor IS NULL OR 
-            c.createdAt < (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) OR
-            (c.createdAt = (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) AND c.id < :cursor)
-        )
         ORDER BY c.createdAt DESC, c.id DESC
     """)
     Page<CompanyFeedItemResponse> getCompanyFeed(
