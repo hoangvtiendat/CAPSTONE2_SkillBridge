@@ -202,7 +202,6 @@ public class CompanyService {
             throw new AppException(ErrorCode.COMPANY_EXIST);
         }
 
-        // 2. Xử lý lưu File
         String logoUrl = saveFile(logo, "logos");
         String licenseUrl = saveFile(license, "licenses");
 

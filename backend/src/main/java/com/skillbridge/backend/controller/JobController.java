@@ -131,7 +131,6 @@ public class JobController {
 
     @PostMapping("/postJD")
     public ResponseEntity<Job> createJob(@Valid @RequestBody CreateJobRequest request) {
-        // Tạm thời vẫn giữ nguyên trả về Job, nếu sau này muốn làm sạch thì map qua DTO tương tự các hàm dưới
         Job createdJob = jobService.createJD(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJob);
     }
