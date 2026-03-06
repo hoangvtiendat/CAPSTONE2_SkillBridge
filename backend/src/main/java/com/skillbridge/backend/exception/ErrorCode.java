@@ -36,6 +36,7 @@ public enum ErrorCode {
     SKILL_NOT_FOUND(503,"Không tìm thấy kĩ năng"),
     DUPLICATE_JOB_SKILL(504, "Hiện tại kĩ năng đang được sử dụng"),
     /// Company
+    EXIT_STATUS_COMPANY(601, "Hiện tại trạng thái của công ty bạn không cho phép"),
     /// Comapany_member
     MEMBER_NOT_FOUND(701,"Bạn chưa là nhân viên của công ty nào cả"),
     // Jobs

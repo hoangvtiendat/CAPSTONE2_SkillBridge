@@ -2,8 +2,7 @@ package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.response.*;
-import com.skillbridge.backend.entity.Job;
-import com.skillbridge.backend.entity.SystemLog;
+import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
@@ -11,12 +10,7 @@ import com.skillbridge.backend.dto.response.JobFeedItemResponse;
 import com.skillbridge.backend.dto.response.JobFeedResponse;
 import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
-import com.skillbridge.backend.entity.JobSkill;
-import com.skillbridge.backend.entity.Skill;
-import com.skillbridge.backend.enums.CompanyRole;
-import com.skillbridge.backend.enums.JobStatus;
-import com.skillbridge.backend.enums.LogLevel;
-import com.skillbridge.backend.enums.ModerationStatus;
+import com.skillbridge.backend.enums.*;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -51,6 +45,7 @@ public class JobService {
     private final JobSkillRepository jobSkillRepository;
     private final CompanyMemberRepository companyMemberRepository;
     private final EmbeddingService embeddingService;
+    private final CompanyRepository companyRepository;
 
 
     public Map<String, Object> getJobFeed(int page, String cursor, int limit, String categoryId, String location, Double salary) {
@@ -332,6 +327,11 @@ public class JobService {
 
         var category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        Company getComPany = companyRepository.getReferenceById(recruiter.getCompany().getId());
+        if(!CompanyStatus.ACTIVE.equals(getComPany.getStatus())) {
+            throw new AppException(ErrorCode.EXIT_STATUS_COMPANY);
+        }
 
         List<JobSkill> jobSkills = new ArrayList<>();
         StringBuilder textBuilder = new StringBuilder();
