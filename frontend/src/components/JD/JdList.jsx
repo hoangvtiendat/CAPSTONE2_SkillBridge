@@ -177,7 +177,7 @@ const JdList = () => {
                         className={`filter-btn ${statusFilter === 'DELETE' ? 'OPEN' : ''}`}
                         onClick={() => setStatusFilter('DELETE')}
                     >
-                        Xóa ({statusCounts.DELETE})
+                        Khóa ({statusCounts.DELETE})
                     </button>
                     <button
                         className={`filter-btn ${statusFilter === 'CLOSED' ? 'OPEN' : ''}`}
@@ -241,7 +241,7 @@ const JdList = () => {
                             <div className="jd-actions">
                                 <button onClick={(e) => handleViewDetails(e, jd)}>Xem thông tin</button>
                                 {jd.status !== "DELETE" && <span className="deleted-label">
-                                     <button onClick={(e) => handleDeleteJd(e, jd.id)}>Xóa</button>
+                                     <button onClick={(e) => handleDeleteJd(e, jd.id)}>Khóa</button>
                                 </span>}
 
                                
