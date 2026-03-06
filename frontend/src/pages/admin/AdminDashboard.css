@@ -111,3 +111,67 @@ td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
 }
 
 .btn-view:hover { background: #e2e8f0; }
+
+.filter-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.filter-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-right: 1px solid #eee;
+    padding-right: 15px;
+    color: #001F3F;
+}
+
+.filter-select {
+    border: none;
+    font-weight: 600;
+    color: #001F3F;
+    cursor: pointer;
+    background: transparent;
+    outline: none;
+}
+
+.custom-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-input {
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.btn-apply {
+    background: #001F3F;
+    color: white;
+    border: none;
+    padding: 6px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-apply:hover {
+    background: #003366;
+}
+
+.animate-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}

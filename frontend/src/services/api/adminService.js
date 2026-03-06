@@ -1,8 +1,13 @@
 import api from '../../config/axiosConfig';
 
 const adminService = {
-    getOverviewStats: async () => {
-        const response = await api.get('/admin/stats/overview');
+    getOverviewStats: async (startDate, endDate) => {
+        const response = await api.get('/admin/stats/overview', {
+            params: {
+                startDate: startDate, // Định dạng YYYY-MM-DD
+                endDate: endDate      // Định dạng YYYY-MM-DD
+            }
+        });
         return response.data;
     },
     // User Management

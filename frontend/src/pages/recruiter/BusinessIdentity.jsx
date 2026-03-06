@@ -100,7 +100,7 @@ const BusinessRegisterForm = ({taxCode, onBack}) => {
                         <input type="file" accept="image/*" onChange={handleLogoChange} className="file-input-hidden"
                                id="logo-upload"/>
                         <label htmlFor="logo-upload" className="file-label-custom">
-                            {logoFile ? `✅ ${logoFile.name}` : "Chọn ảnh Logo"}
+                            {logoFile ? ` ${logoFile.name}` : "Chọn ảnh Logo"}
                         </label>
                     </div>
                 </div>
@@ -121,7 +121,7 @@ const BusinessRegisterForm = ({taxCode, onBack}) => {
                         <input type="file" accept=".pdf,image/*" onChange={handleLicenseChange}
                                className="file-input-hidden" id="gpkd-upload"/>
                         <label htmlFor="gpkd-upload" className="file-label-custom">
-                            {gpkdFile ? `✅ ${gpkdFile.name}` : "Chọn GPKD (PDF/Ảnh)"}
+                            {gpkdFile ? ` ${gpkdFile.name}` : "Chọn GPKD (PDF/Ảnh)"}
                         </label>
                     </div>
                 </div>

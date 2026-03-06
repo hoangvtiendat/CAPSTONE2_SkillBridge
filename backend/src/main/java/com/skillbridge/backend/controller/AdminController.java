@@ -13,10 +13,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -50,24 +53,30 @@ public class AdminController {
 
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/stats/overview")
-    public ResponseEntity<ApiResponse<SystemStatsResponse>> statsOverview(@Valid @RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<ApiResponse<SystemStatsResponse>> statsOverview(
+            @Valid @RequestHeader(value = "Authorization") String token,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             String jwt = token.substring(7);
-            SystemStatsResponse rs = adminService.statsOverview(jwt);
-            ApiResponse<SystemStatsResponse> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Thống kê hệ thống", rs
-            );
-            return ResponseEntity.ok(response);
+
+            if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1);
+            if (endDate == null) endDate = LocalDate.now();
+
+            SystemStatsResponse rs = adminService.statsOverview(jwt, startDate, endDate);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Thống kê hệ thống", rs));
         } catch (AppException ex) {
             System.out.println("[STATS OVERVIEW] AppException occurred");
             System.out.println("[STATS OVERVIEW] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
     }
+
     @PutMapping("/users/{id}/ban")
     public ResponseEntity<ApiResponse<Void>> banUser(@PathVariable String id) {
         adminService.banUser(id);
