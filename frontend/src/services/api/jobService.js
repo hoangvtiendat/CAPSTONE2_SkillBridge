@@ -3,7 +3,7 @@ import api from '../../config/axiosConfig';
 const jobService = {
     getFeed: async (params = {}) => {
         try {
-            const { page = 0, limit = 6, categoryId, location, salary } = params;
+            const {page = 0, limit = 6, categoryId, location, salary} = params;
             const queryParams = new URLSearchParams();
             queryParams.append('page', page);
             queryParams.append('limit', limit);
@@ -55,8 +55,7 @@ const jobService = {
     deleteJd: async (jdId) => {
         try {
             await api.delete(`/jobs/my-company/delete/${jdId}`);
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Error deleting JD:', error);
             throw error;
         }
@@ -83,8 +82,7 @@ const jobService = {
         try {
             const response = await api.put(`/jobs/my-company/Update/${id}`, jdData);
             return response.data;
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Error updating JD:', error);
             throw error;
         }
@@ -92,9 +90,9 @@ const jobService = {
 
     getAdminJobs: async (params = {}) => {
         try {
-            const { cursor, limit = 10, status, modStatus } = params;
+            const {cursor, limit = 10, status, modStatus} = params;
             const response = await api.get(`/jobs/feedAdmin`, {
-                params: { cursor, limit, status, modStatus }
+                params: {cursor, limit, status, modStatus}
             });
 
             const result = response.data.result;
@@ -121,6 +119,7 @@ const jobService = {
         }
     },
 
+
     getJobDetailByCandidate: async (jobId) => {
         const response = await api.get(`/jobs/${jobId}`);
         return response.data.result;
@@ -138,14 +137,14 @@ const jobService = {
 
     changeModerationStatus: async (jobId, status) => {
         const response = await api.patch(`/jobs/feedAdmin/${jobId}/moderation`, null, {
-            params: { status }
+            params: {status}
         });
         return response.data;
     },
 
     changeStatus: async (jobId, status) => {
         const response = await api.patch(`/jobs/feedAdmin/${jobId}/status`, null, {
-            params: { status }
+            params: {status}
         });
         return response.data;
     }

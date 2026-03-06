@@ -53,12 +53,11 @@ public class JobService {
     private final EmbeddingService embeddingService;
 
 
-
-    public Map<String, Object> getJobFeed(int page, String cursor ,int limit, String categoryId, String location, Double salary) {
+    public Map<String, Object> getJobFeed(int page, String cursor, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
 
         Page<JobFeedItemResponse> jobPage = jobRepository.getJobFeedFiltered(
-                JobStatus.OPEN,cursor ,categoryId, location, salary, pageable
+                JobStatus.OPEN, categoryId, location, salary, pageable
         );
 
         if (jobPage.isEmpty()) {
@@ -95,7 +94,8 @@ public class JobService {
                 "currentPage", jobPage.getNumber()
         );
     }
-    public Map<String, Object> adminGetJob(int page, int limit, String status, String modStatus) {
+
+    public Map<String, Object> adminGetJob(int page, String cursor, int limit, String status, String modStatus) {
         System.out.println("--- ADMIN: BẮT ĐẦU LẤY DANH SÁCH JOB ---");
         try {
             JobStatus newStatus = null;
@@ -117,7 +117,7 @@ public class JobService {
             }
 
             Pageable pageable = PageRequest.of(page, limit);
-            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobs(newStatus, newModStatus, pageable);
+            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobs(cursor, newStatus, newModStatus, pageable);
 
             if (jobs.isEmpty()) {
                 return Map.of(
@@ -133,7 +133,7 @@ public class JobService {
             // Vì repo adminGetJobs trả về List, chúng ta không có tổng số bản ghi dễ dàng nếu không dùng Page.
             // Nhưng hiện tại để demo/vẩy lỗi, tôi sẽ tạm thời trả về Map đơn giản.
             // Nếu muốn chuẩn 1, 2, 3 thì Repo nên trả về Page<AdminJobFeedItemResponse>.
-            
+
             return Map.of(
                     "jobs", jobs,
                     "currentPage", page

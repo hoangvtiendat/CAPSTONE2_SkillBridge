@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.List;
@@ -36,14 +37,13 @@ public class JobController {
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFeed(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String categoryId,
-
+            @RequestParam(required = false) String cursor,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Double salary
     ) {
-        Map<String, Object> rs = jobService.getJobFeed(page,cursor ,limit ,categoryId, location, salary);
+        Map<String, Object> rs = jobService.getJobFeed(page, cursor, limit, categoryId, location, salary);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Job Feed",
@@ -51,11 +51,12 @@ public class JobController {
         );
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetailByCandidate(@PathVariable String id) {
 
         JobDetailResponse result = jobService.getJobDetail(id);
-        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Xem chi tiet jd",result);
+        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Xem chi tiet jd", result);
 
         return ResponseEntity.ok(response);
     }
@@ -63,11 +64,12 @@ public class JobController {
     @GetMapping("/feedAdmin")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAllJobsForAdmin(
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String modStatus) {
 
-        Map<String, Object> result = jobService.adminGetJob(page, limit, status, modStatus);
+        Map<String, Object> result = jobService.adminGetJob(page, cursor, limit, status, modStatus);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
 
         return ResponseEntity.ok(response);
@@ -77,17 +79,18 @@ public class JobController {
     public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetail(@PathVariable String id) {
 
         JobDetailResponse result = jobService.getJobDetail(id);
-        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Xem chi tiet jd",result);
+        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Xem chi tiet jd", result);
 
         return ResponseEntity.ok(response);
     }
+
     @DeleteMapping("/feedAdmin/{jobId}")
     public ResponseEntity<ApiResponse<Void>> deleteJob(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable String jobId
     ) {
         System.out.println("Admin yêu cầu xóa Job ID: " + jobId);
-        jobService.deleteJob(user,jobId);
+        jobService.deleteJob(user, jobId);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Đã xóa bài đăng tuyển dụng thành công",
@@ -150,25 +153,28 @@ public class JobController {
                 new ApiResponse<>(200, "Lấy thông tin thành công", in4_job)
         );
     }
+
     @PutMapping("/my-company/Update/{id}")
     public ResponseEntity<ApiResponse<Job>> updateJD(@PathVariable String id, @RequestBody CreateJobRequest request) {
         Job updatedJob = jobService.updateJD(id, request);
         return ResponseEntity.ok(
-                new ApiResponse<>(200,"Update bài đăng thành công ", updatedJob)
+                new ApiResponse<>(200, "Update bài đăng thành công ", updatedJob)
         );
     }
+
     @DeleteMapping("/my-company/delete/{id}")
     public ResponseEntity<ApiResponse<Job>> deleteJD(@PathVariable String id) {
         Job updatedJob = jobService.deleteJD(id);
         return ResponseEntity.ok(
-                new ApiResponse<>(200,"Xóa bài đăng thành công", updatedJob)
+                new ApiResponse<>(200, "Xóa bài đăng thành công", updatedJob)
         );
     }
+
     @PostMapping("/repost/{id}")
     public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
         Job rePost = jobService.repost(id);
         return ResponseEntity.ok(
-                new ApiResponse<>(200,"Đăng lại bài đăng thành ", rePost)
+                new ApiResponse<>(200, "Đăng lại bài đăng thành ", rePost)
         );
     }
 }

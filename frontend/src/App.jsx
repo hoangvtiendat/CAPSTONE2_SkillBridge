@@ -46,7 +46,7 @@ function App() {
 
     useEffect(() => {
         if (user) {
-            if (user.role === 'admin') {
+            if (user.role === 'ADMIN') {
                 if (!isAdminPath && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/admin/dashboard', {replace: true});
                 }
