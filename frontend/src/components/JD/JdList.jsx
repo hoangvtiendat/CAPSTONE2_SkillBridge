@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { toast, Toaster } from 'sonner'; 
 import { useNavigate } from 'react-router-dom'; 
 import jobService from '../../services/api/jobService';
+import companyMemberService from '../../services/api/companyMemberService';
 import './JdList.css';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,6 +19,7 @@ const JdList = () => {
     const [selectedJd, setSelectedJd] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [role , setRole] = useState(null);
     const navigate = useNavigate(); 
 
     const hasShownError = useRef(false);
@@ -40,6 +42,19 @@ const JdList = () => {
             setLoading(false);
         }
     }, [token]); 
+    const handGetRole = async () => {
+        try {
+            const roleOfUser = await companyMemberService.getCompanyMembersRole(token);
+            setRole(roleOfUser);
+        }
+        catch (error) {
+            const errorMessage = error.response?.data?.message || 'Không thể xác định vai trò người dùng';
+            toast.error("Lỗi khi xác định vai trò", { 
+                description: errorMessage, 
+                style: toastStyles.error 
+            });
+        }
+    }
     const handleDeleteJd = async (e, jdId) => {
         e.stopPropagation();
         
@@ -91,6 +106,7 @@ const JdList = () => {
   
     useEffect(() => {
         handGetJdList();
+        handGetRole();
     }, [handGetJdList]);
 
     return (
@@ -99,9 +115,21 @@ const JdList = () => {
 
             <div className="jd-header-container">
                 <h1 className="jd-list-title">Danh sách JD của công ty</h1>
-                {user && (
-                    <button className="create-jd-button" onClick={handleCreateJd}>Tạo JD mới</button>
-                )}
+                <div className="header-actions">
+                    {user && (
+                        <button className="create-jd-button" onClick={handleCreateJd}>Tạo JD mới</button>
+                    )}
+                    {role === 'ADMIN' && (
+                        <button className="subscription-button" onClick={() => navigate('/company/subscriptions')}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Đăng ký gói dịch vụ
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Search và Filter */}
