@@ -28,7 +28,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
         WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
@@ -40,7 +40,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         ORDER BY j.createdAt DESC
     """)
     Page<JobFeedItemResponse> getJobFeed(
-            @Param("status") String status,
+            @Param("status") JobStatus status,
             Pageable pageable
     );
 
@@ -53,9 +53,9 @@ public interface JobRepository extends JpaRepository<Job, String> {
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
-        WHERE j.status = :status AND (:cursor IS NULL OR j.id < :cursor)
+        WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
         AND (:location IS NULL OR j.location LIKE %:location%)
         AND (:salary IS NULL OR (
@@ -65,10 +65,10 @@ public interface JobRepository extends JpaRepository<Job, String> {
         ORDER BY j.createdAt DESC
     """)
     Page<JobFeedItemResponse> getJobFeedFiltered(
-            @Param("status") Enum status,
+            @Param("status") JobStatus status,
             @Param("categoryId") String categoryId,
             @Param("location") String location,
-            @Param("salary") Double minSalary,
+            @Param("salary") Double salary,
             Pageable pageable
     );
 
@@ -87,7 +87,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN CompanySubscription cs ON cs.company.id = c.id AND cs.isActive = true
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
         WHERE j.isDeleted = false
         AND (:status IS NULL OR j.status = :status)

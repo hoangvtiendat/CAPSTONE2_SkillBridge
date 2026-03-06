@@ -59,14 +59,14 @@ public class JobController {
     }
 
     @GetMapping("/feedAdmin")
-    public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getAllJobsForAdmin(
-            @RequestParam(required = false) String cursor,
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllJobsForAdmin(
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String modStatus) {
 
-        AdminJobFeedResponse result = jobService.adminGetJob(cursor, limit, status, modStatus);
-        ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
+        Map<String, Object> result = jobService.adminGetJob(page, limit, status, modStatus);
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
 
         return ResponseEntity.ok(response);
     }

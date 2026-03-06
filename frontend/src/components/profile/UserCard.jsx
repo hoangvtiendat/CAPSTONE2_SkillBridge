@@ -1,5 +1,6 @@
 import React from 'react';
 import { Camera } from 'lucide-react';
+import Swal from 'sweetalert2';
 import './UserCard.css';
 
 export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork }) => {
@@ -53,7 +54,25 @@ export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork }) => {
 
             <div className="open-to-work-section">
                 <div
-                    onClick={onToggleOpenToWork}
+                    onClick={async () => {
+                        const newValue = !isOpenToWork;
+                        const result = await Swal.fire({
+                            title: newValue ? 'Bật trạng thái tìm việc?' : 'Tắt trạng thái tìm việc?',
+                            text: newValue
+                                ? "Hệ thống sẽ ưu tiên hiển thị hồ sơ của bạn cho các nhà tuyển dụng."
+                                : "Bạn sẽ tạm thời không xuất hiện trong danh sách tìm kiếm của nhà tuyển dụng.",
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonColor: '#667eea',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Xác nhận',
+                            cancelButtonText: 'Hủy'
+                        });
+
+                        if (result.isConfirmed) {
+                            onToggleOpenToWork();
+                        }
+                    }}
                     className={`open-to-work-toggle ${isOpenToWork ? 'active' : 'inactive'}`}
                 >
                     <div className="toggle-label">

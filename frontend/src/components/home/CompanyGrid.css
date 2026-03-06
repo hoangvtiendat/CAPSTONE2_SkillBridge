@@ -29,11 +29,12 @@
     border-radius: 12px;
     padding: 24px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    text-align: center;
     transition: all 0.2s ease;
     cursor: pointer;
+    text-align: left;
 }
 
 .company-card:hover {
@@ -43,11 +44,10 @@
 }
 
 .company-grid-logo-wrapper {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 16px;
     background: #f9fafb;
     display: flex;
     align-items: center;
@@ -69,29 +69,37 @@
 }
 
 .company-name {
-    font-size: 18px;
-    font-weight: 600;
+    flex: 1;
+    font-size: 20px;
+    font-weight: 700;
     color: #111827;
-    margin-bottom: 8px;
+    margin-left: 16px;
+    margin-bottom: 0;
+    text-align: left;
 }
 
 .company-desc {
-    font-size: 14px;
-    color: #6b7280;
-    margin-bottom: 16px;
+    width: 100%;
+    font-size: 15px;
+    color: #4b5563;
+    margin: 20px 0;
+    line-height: 1.5;
+    text-align: left;
     display: -webkit-box;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
-    height: 40px;
-    /* Force consistent height */
+    height: 45px;
 }
 
 .company-jobs-count {
+    width: fit-content;
     font-size: 13px;
-    color: #667eea;
-    font-weight: 500;
+    color: #4f46e5;
+    font-weight: 600;
     background: #eef2ff;
-    padding: 6px 12px;
+    padding: 8px 16px;
     border-radius: 20px;
 }
 

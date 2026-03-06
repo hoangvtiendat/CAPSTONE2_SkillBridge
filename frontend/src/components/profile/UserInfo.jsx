@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import Swal from 'sweetalert2';
 import { useAuth } from '../../context/AuthContext';
 import './UserInfo.css';
 
@@ -36,6 +37,19 @@ export const UserInfo = ({ user }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!isDirty || isSubmitting) return;
+
+        const result = await Swal.fire({
+            title: 'Xác nhận thay đổi?',
+            text: "Bạn có chắc chắn muốn cập nhật thông tin cá nhân của mình?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#667eea',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Lưu ngay',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (!result.isConfirmed) return;
 
         setIsSubmitting(true);
         try {
