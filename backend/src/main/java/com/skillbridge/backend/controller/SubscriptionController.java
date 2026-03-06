@@ -36,7 +36,7 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.getSubscriptionPlanById(id));
     }
 
-    @PostMapping("/company")
+    @PostMapping("/company/create")
     public ResponseEntity<SubcriptionOfCompany> createCompanySubscription(
             @Valid @RequestBody CompanySubscriptionRequest companySubscriptionRequest) {
 
@@ -63,9 +63,9 @@ public class SubscriptionController {
 
         return ResponseEntity.ok(sub);
     }
-    @GetMapping("/company/list/subscription")
+    @GetMapping("/company/list")
     public ResponseEntity<List<SubcriptionOfCompany>> getAllSubscriptionPlans() {
         return ResponseEntity.ok(subscriptionService.getMyCompanySubscriptions());
-
     }
+
 }

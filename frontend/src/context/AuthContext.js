@@ -16,6 +16,10 @@ export const AuthProvider = ({ children }) => {
         }
     });
 
+    const [token, setToken] = useState(() => {
+        return localStorage.getItem('accessToken') || null;
+    });
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -27,7 +31,6 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await userService.getProfile();
             if (response && response.result) {
-                // Merge to preserve role and other fields that might not be in profile response
                 const userStr = localStorage.getItem('user');
                 const existingUser = userStr ? JSON.parse(userStr) : {};
                 const updatedUser = { ...existingUser, ...response.result };
@@ -36,6 +39,13 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (err) {
             console.error('Failed to fetch profile:', err);
+            
+           
+            if (err.response && err.response.status === 401) {
+                setUser(null);
+                setToken(null);
+            }
+            
             setError(err);
         } finally {
             setLoading(false);
@@ -51,9 +61,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
 
         if (userData.accessToken) {
+            setToken(userData.accessToken);
             localStorage.setItem('accessToken', userData.accessToken);
             fetchProfile();
         } else if (userData.token) {
+            setToken(userData.token);
             localStorage.setItem('accessToken', userData.token);
             fetchProfile();
         }
@@ -66,10 +78,13 @@ export const AuthProvider = ({ children }) => {
             console.error('Logout API failed:', error);
         } finally {
             setUser(null);
+            setToken(null);
             localStorage.removeItem('user');
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('token');
+            
+            window.location.href = '/login';
         }
     }, []);
 
@@ -80,7 +95,7 @@ export const AuthProvider = ({ children }) => {
             if (response && response.result) {
                 const updatedUser = response.result;
                 setUser(updatedUser);
-                localStorage.setItem('user', JSON.stringify(updatedUser)); // Update local storage with new profile
+                localStorage.setItem('user', JSON.stringify(updatedUser)); 
                 return updatedUser;
             }
         } catch (err) {
@@ -93,7 +108,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, updateUser, fetchProfile, loading, error }}>
+        <AuthContext.Provider value={{ user, token, login, logout, updateUser, fetchProfile, loading, error }}>
             {children}
         </AuthContext.Provider>
     );

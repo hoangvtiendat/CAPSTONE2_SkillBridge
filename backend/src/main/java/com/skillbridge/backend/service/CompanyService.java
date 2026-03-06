@@ -59,10 +59,9 @@ public class CompanyService {
         this.companyJoinRequestRepository = companyJoinRequestRepository;
     }
 
-    public Map<String, Object> getCompanies(int page, CompanyStatus status, int limit) {
+    public Map<String, Object> getCompanies(int page,String cursor , CompanyStatus status, int limit) {
         Pageable pageable = PageRequest.of(page, limit);
-        Page<CompanyFeedItemResponse> companyPage = companyRepository.getCompanyFeed(status, pageable);
-
+        Page<CompanyFeedItemResponse> companyPage = companyRepository.getCompanyFeed(status, cursor, pageable);
         return Map.of(
                 "companies", companyPage.getContent(),
                 "totalPages", companyPage.getTotalPages(),
@@ -203,7 +202,6 @@ public class CompanyService {
             throw new AppException(ErrorCode.COMPANY_EXIST);
         }
 
-        // 2. Xử lý lưu File
         String logoUrl = saveFile(logo, "logos");
         String licenseUrl = saveFile(license, "licenses");
 

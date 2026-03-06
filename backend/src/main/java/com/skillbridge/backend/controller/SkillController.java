@@ -51,6 +51,14 @@ public class SkillController {
                 new ApiResponse<>(200,"Xóa kỹ năng thành công", skill)
         );
     }
+    @PutMapping("/set/update/{id}")
+    public ResponseEntity<ApiResponse> updateSkill(@PathVariable String id, @RequestBody SkillRequest skillRequest) {
+        Skill skill = skillService.UpdateSkill(id, skillRequest);
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "Update tên kỹ năng thành công", skill)
+        );
+    }
+
 
 
 }

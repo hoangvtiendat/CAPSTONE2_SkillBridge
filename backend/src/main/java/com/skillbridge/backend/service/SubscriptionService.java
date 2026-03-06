@@ -49,8 +49,8 @@ public class SubscriptionService {
         SubscriptionPlanStatus status_name = updatedSubscriptionPlan.getName();
 
         LogicUpdateForUpdatescription(status_name, subscriptionPlan);
-
         updatedSubscriptionPlan.setPrice(subscriptionPlan.getPrice());
+        updatedSubscriptionPlan.setPostingDuration(subscriptionPlan.getPostingDuration());
         updatedSubscriptionPlan.setJobLimit(subscriptionPlan.getJobLimit());
         updatedSubscriptionPlan.setCandidateViewLimit(subscriptionPlan.getCandidateViewLimit());
         updatedSubscriptionPlan.setHasPriorityDisplay(subscriptionPlan.getHasPriorityDisplay());
@@ -130,6 +130,8 @@ public class SubscriptionService {
         if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
+        SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
         Company currentCompany = recruiter.getCompany();
 
@@ -143,7 +145,7 @@ public class SubscriptionService {
         newSubscription.setHasPriorityDisplay(request.getHasPriorityDisplay());
         newSubscription.setPrice(calculatedPrice);
         newSubscription.setStatus(SubscriptionOfCompanyStatus.PENDING_PAYMENT);
-
+        newSubscription.setPostingDuration(premium.getPostingDuration());
         newSubscription.setStartDate(LocalDateTime.now());
         newSubscription.setEndDate(LocalDateTime.now().plusDays(30));
         newSubscription.setIsActive(true);
@@ -151,7 +153,8 @@ public class SubscriptionService {
         return companySubcriptionRespository.save(newSubscription);
     }
 
-    public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request) {
+    public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request)
+    {
         SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
@@ -163,12 +166,15 @@ public class SubscriptionService {
             throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
         }
 
-        double premiumRatio = (double) premViewLimit / premJobLimit;
         double requestRatio = (double) request.getCandidateViewLimit() / request.getJobLimit();
 
-        if (requestRatio > (premiumRatio * 1.2) || requestRatio < (premiumRatio /1.2)) {
+        double minRatio = 8.0;
+        double maxRatio = 12.0;
+
+        if (requestRatio < minRatio || requestRatio > maxRatio) {
             throw new AppException(ErrorCode.UNBALANCED_CUSTOM_PLAN);
         }
+
 
         BigDecimal unitJobPrice = premiumPrice.multiply(new BigDecimal("0.70"))
                 .divide(new BigDecimal(premJobLimit), 4, RoundingMode.HALF_UP);
@@ -184,8 +190,7 @@ public class SubscriptionService {
         } else {
             BigDecimal baseJobCost = unitJobPrice.multiply(new BigDecimal(premJobLimit));
             int extraJobs = request.getJobLimit() - premJobLimit;
-            BigDecimal extraJobCost = unitJobPrice.multiply(new BigDecimal("0.90"))
-                    .multiply(new BigDecimal(extraJobs));
+            BigDecimal extraJobCost = unitJobPrice.multiply(new BigDecimal("0.90")).multiply(new BigDecimal(extraJobs));
             customJobCost = baseJobCost.add(extraJobCost);
         }
 
@@ -195,8 +200,7 @@ public class SubscriptionService {
         } else {
             BigDecimal baseViewCost = unitViewPrice.multiply(new BigDecimal(premViewLimit));
             int extraViews = request.getCandidateViewLimit() - premViewLimit;
-            BigDecimal extraViewCost = unitViewPrice.multiply(new BigDecimal("0.90"))
-                    .multiply(new BigDecimal(extraViews));
+            BigDecimal extraViewCost = unitViewPrice.multiply(new BigDecimal("0.90")).multiply(new BigDecimal(extraViews));
             customViewCost = baseViewCost.add(extraViewCost);
         }
 
@@ -247,7 +251,6 @@ public class SubscriptionService {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
         return companySubcriptionRespository.findByCompanyId(recruiter.getCompany().getId());
-
 
     }
 

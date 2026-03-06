@@ -82,7 +82,7 @@ public class SecurityConfig {
                                 "/jobs/feedAdmin/**",
                                 "/Logs/**",
                                 "/companies/taxLook"
-                                ).hasRole("ADMIN")
+                                ).hasRole("admin")
                         .anyRequest().authenticated()
                 )
 

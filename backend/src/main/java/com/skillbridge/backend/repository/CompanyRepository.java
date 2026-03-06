@@ -34,6 +34,7 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     """)
     Page<CompanyFeedItemResponse> getCompanyFeed(
             @Param("status") CompanyStatus status,
+            @Param("cursor") String cursor,
             Pageable pageable
     );
 

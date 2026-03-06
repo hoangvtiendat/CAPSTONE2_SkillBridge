@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import subscriptionService from '../../services/api/subscriptionService';
 import { toast, Toaster } from 'sonner';
 import { Check, Edit, X } from 'lucide-react';
@@ -24,14 +24,13 @@ const SubscriptionManager = () => {
         setLoading(true);
         try {
             const response = await subscriptionService.getlistSubscription();
-            // Điều chỉnh lại tuỳ theo data backend trả về (response.result hoặc response)
             const data = response?.result || response?.data || response || [];
             
-            // Sắp xếp các gói theo giá tiền từ thấp đến cao (Free -> Standard -> Premium)
             const sortedData = Array.isArray(data) ? data.sort((a, b) => a.price - b.price) : [];
             setSubscriptions(sortedData);
         } catch (error) {
-            toast.error('Lỗi khi tải danh sách gói đăng ký', { style: toastStyles.error });
+            const errorMessage = error.response?.data?.message || 'Lỗi khi tải danh sách gói đăng ký';
+            toast.error(errorMessage, { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
@@ -43,9 +42,10 @@ const SubscriptionManager = () => {
             const response = await subscriptionService.getDetailSubscription(id);
             const data = response?.result || response?.data || response;
             setSelectedSubscription(data);
-            setEditForm(data); // Đổ dữ liệu vào form
+            setEditForm(data);
         } catch (error) {
-            toast.error('Lỗi khi tải chi tiết gói đăng ký', { style: toastStyles.error });
+            const errorMessage = error.response?.data?.message || 'Lỗi khi tải chi tiết gói đăng ký';
+            toast.error(errorMessage, { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
@@ -64,19 +64,18 @@ const SubscriptionManager = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            // Chú ý: đảm bảo payload và id truyền đi khớp với backend yêu cầu
             await subscriptionService.UpdateSubcription(selectedSubscription.id, editForm, token);
             toast.success('Cập nhật gói đăng ký thành công', { style: toastStyles.success });
-            setSelectedSubscription(null); // Đóng modal
-            fetchSubscriptions(); // Tải lại danh sách
+            setSelectedSubscription(null); 
+            fetchSubscriptions(); 
         } catch (error) {
-            toast.error('Lỗi khi cập nhật gói đăng ký', { style: toastStyles.error });
+            const errorMessage = error.response?.data?.message || 'Lỗi khi cập nhật gói đăng ký';
+            toast.error(errorMessage, { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
     };
 
-    // --- HÀM HỖ TRỢ HIỂN THỊ GIAO DIỆN ---
     const getThemeClass = (planName) => {
         const name = planName?.toUpperCase() || '';
         if (name.includes('PREMIUM')) return 'theme-premium';
@@ -90,7 +89,6 @@ const SubscriptionManager = () => {
             
             <div className="admin-header">
                 <h1>Quản lý Cấu hình Gói cước</h1>
-                <p>Xem và chỉnh sửa giới hạn, giá tiền của các gói đăng ký trên hệ thống.</p>
             </div>
 
             {loading && !selectedSubscription && <div className="loading-spinner">Đang tải dữ liệu...</div>}
@@ -125,6 +123,10 @@ const SubscriptionManager = () => {
                                         </li>
                                         <li>
                                             <Check className="check-icon" size={18} />
+                                            <span>Thời hạn đăng: <strong>{sub.postingDuration || 'N/A'} ngày</strong></span>
+                                        </li>
+                                        <li>
+                                            <Check className="check-icon" size={18} />
                                             <span>Duyệt tin ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span>
                                         </li>
                                     </ul>
@@ -144,7 +146,6 @@ const SubscriptionManager = () => {
                 </div>
             )}
 
-            {/* ================= MODAL CẬP NHẬT GÓI ================= */}
             {selectedSubscription && (
                 <div className="modal-overlay">
                     <div className="modal-content">
@@ -156,30 +157,38 @@ const SubscriptionManager = () => {
                         </div>
 
                         <form onSubmit={handleUpdateSubscription} className="modal-body">
-                            <div className="form-group">
-                                <label>Tên gói cước</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={editForm.name || ''}
-                                    onChange={handleInputChange}
-                                    required
-                                    className="form-control"
-                                />
-                            </div>
-
-                            <div className="form-group">
+                          
+                            {editForm.name?.toUpperCase().includes('FREE') ? (
+                                <div className="form-group">
+                                        <label>Giá tiền (VND)</label>
+                                        <input
+                                            type="text"
+                                            value="Miễn phí"
+                                            disabled
+                                            className="form-control bg-light"
+                                        />
+                                    </div>
+                            ) : ( 
+                                <div className="form-group">
                                 <label>Giá tiền (VND)</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="price"
-                                    value={editForm.price ?? ''}
-                                    onChange={handleInputChange}
-                                    min="0"
+                                    value={editForm.price ? Number(editForm.price).toLocaleString('vi-VN') : ''}
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                        const numValue = rawValue ? Number(rawValue) : 0;
+                                        setEditForm(prev => ({ ...prev, price: numValue }));
+                                    }}
                                     required
                                     className="form-control"
+                                    placeholder="Ví dụ: 1.000.000"
                                 />
                             </div>
+                            )}
+                              
+                            
+                         
 
                             <div className="form-row">
                                 <div className="form-group">
@@ -210,15 +219,33 @@ const SubscriptionManager = () => {
                             </div>
 
                             <div className="form-group">
-                                <label className="checkbox-wrapper">
-                                    <input
-                                        type="checkbox"
-                                        name="hasPriorityDisplay"
-                                        checked={editForm.hasPriorityDisplay || false}
-                                        onChange={handleInputChange}
-                                    />
-                                    <span className="checkbox-text">Kích hoạt tính năng Duyệt tin ưu tiên (Đèn xanh)</span>
-                                </label>
+                                <label>Thời hạn đăng tin (ngày)</label>
+                                <input
+                                    type="number"
+                                    name="postingDuration"
+                                    value={editForm.postingDuration ?? ''}
+                                    onChange={handleInputChange}
+                                    min="1"
+                                    required
+                                    className="form-control"
+                                    placeholder="Ví dụ: 30 (ngày)"
+                                />
+                            </div>
+
+                       <div className="form-group">
+                                {!editForm.name?.toUpperCase().includes('FREE') && (
+                                    <label className="checkbox-wrapper">
+                                        <input
+                                            type="checkbox"
+                                            name="hasPriorityDisplay"
+                                            checked={editForm.hasPriorityDisplay || false}
+                                            onChange={handleInputChange}
+                                        />
+                                        <span className="checkbox-text">
+                                            Kích hoạt tính năng Duyệt tin ưu tiên (Đèn xanh)
+                                        </span>
+                                    </label>
+                                )}
                             </div>
 
                             <div className="modal-footer">

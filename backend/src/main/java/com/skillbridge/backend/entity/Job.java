@@ -3,6 +3,8 @@ package com.skillbridge.backend.entity;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -11,6 +13,8 @@ import java.util.Map;
 
 /// Done
 @Entity
+@Getter
+@Setter
 @Table(name = "jobs")
 public class Job extends BaseEntity{
 

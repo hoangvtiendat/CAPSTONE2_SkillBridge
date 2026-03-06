@@ -17,6 +17,7 @@ public class SubscriptionPlan extends BaseEntity{
     private SubscriptionPlanStatus name;
     private BigDecimal price;
     private Integer jobLimit;
+    private Integer postingDuration;
     private Integer candidateViewLimit;
     private Boolean hasPriorityDisplay;
 
@@ -56,5 +57,11 @@ public class SubscriptionPlan extends BaseEntity{
     }
     public void setHasPriorityDisplay(Boolean hasPriorityDisplay) {
         this.hasPriorityDisplay = hasPriorityDisplay;
+    }
+    public Integer getPostingDuration() {
+        return postingDuration;
+    }
+    public void setPostingDuration(Integer postingDuration) {
+        this.postingDuration = postingDuration;
     }
 }

@@ -36,12 +36,14 @@ public class JobController {
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFeed(
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String categoryId,
+
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Double salary
     ) {
-        Map<String, Object> rs = jobService.getJobFeed(page, limit, categoryId, location, salary);
+        Map<String, Object> rs = jobService.getJobFeed(page,cursor ,limit ,categoryId, location, salary);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Job Feed",
@@ -129,7 +131,6 @@ public class JobController {
 
     @PostMapping("/postJD")
     public ResponseEntity<Job> createJob(@Valid @RequestBody CreateJobRequest request) {
-        // Tạm thời vẫn giữ nguyên trả về Job, nếu sau này muốn làm sạch thì map qua DTO tương tự các hàm dưới
         Job createdJob = jobService.createJD(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJob);
     }

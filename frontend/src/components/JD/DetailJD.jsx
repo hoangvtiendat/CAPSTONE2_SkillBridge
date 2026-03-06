@@ -3,15 +3,14 @@ import { useParams } from 'react-router-dom';
 import { toast, Toaster } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons";
-import { Plus, Search, Trash2, X } from 'lucide-react'; // Đã thêm các icon cần thiết
+import { Plus, Search, Trash2, X } from 'lucide-react'; 
 
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 
 import './DetailJD.css';
-// Tái sử dụng các class từ PostJD.css nếu bạn nhúng chung, 
-// hoặc copy các class cấu trúc grid sang DetailJD.css
+
 
 const toastStyles = {
     warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
@@ -247,7 +246,6 @@ const DetailJD = () => {
         <div className="jd-board-container detail-view-container">
             <Toaster position="top-right" />
             
-            {/* --- HEADER CHI TIẾT --- */}
             <header className="detail-header-card form-card">
                 <div className="header-company-info">
                     <img src={jdDetail.company?.logoUrl || "https://via.placeholder.com/80"} alt="Logo" className="company-logo-large" />
@@ -268,9 +266,7 @@ const DetailJD = () => {
                 </div>
             </header>
 
-            {/* --- LAYOUT 2 CỘT CHO VIEW MODE --- */}
             <div className="jd-board-layout">
-                {/* Cột Trái: Mô tả chi tiết */}
                 <div className="layout-main-column">
                     <section className="form-card content-card">
                         <h3 className="card-title">Mô tả công việc</h3>
@@ -285,7 +281,6 @@ const DetailJD = () => {
                     </section>
                 </div>
 
-                {/* Cột Phải: Thuộc tính & Kỹ năng */}
                 <div className="layout-sidebar">
                     <section className="form-card sidebar-card">
                         <h3 className="card-title">Thông tin chung</h3>
@@ -330,9 +325,7 @@ const DetailJD = () => {
                 </div>
             </div>
 
-            {/* =========================================
-               MODAL CẬP NHẬT (DÙNG LẠI GRID 2 CỘT)
-            ========================================= */}
+         
             {isModalOpen && editForm && (
                 <div className="modal-overlay-modern">
                     <div className="modal-container-modern">
@@ -414,7 +407,6 @@ const DetailJD = () => {
                                     </div>
                                 </div>
 
-                                {/* Cột Phải Modal */}
                                 <div className="layout-sidebar">
                                     <div className="form-card sidebar-card">
                                         <h3 className="card-title">Yêu cầu & Lương</h3>
@@ -425,11 +417,35 @@ const DetailJD = () => {
                                         <div className="salary-group">
                                             <div className="input-item">
                                                 <label>Lương Tối thiểu</label>
-                                                <input type="number" name="salaryMin" value={editForm.salaryMin} onChange={handleChange} required />
+                                               <input
+                                                    type="text"
+                                                    name="salaryMin"
+                                                    value={editForm.salaryMin ? Number(editForm.salaryMin).toLocaleString('vi-VN') : ''}
+                                                    onChange={(e) => {
+                                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                                        const numValue = rawValue ? Number(rawValue) : 0;
+                                                        setEditForm(prev => ({ ...prev, salaryMin: numValue }));
+                                                    }}
+                                                    required
+                                                    className="form-control"
+                                                    placeholder="Ví dụ: 1.000.000"
+                                                />
                                             </div>
                                             <div className="input-item">
                                                 <label>Lương Tối đa</label>
-                                                <input type="number" name="salaryMax" value={editForm.salaryMax} onChange={handleChange} required />
+                                                 <input
+                                                    type="text"
+                                                    name="salaryMax"
+                                                    value={editForm.salaryMax ? Number(editForm.salaryMax).toLocaleString('vi-VN') : ''}
+                                                    onChange={(e) => {
+                                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                                        const numValue = rawValue ? Number(rawValue) : 0;
+                                                        setEditForm(prev => ({ ...prev, salaryMax: numValue }));
+                                                    }}
+                                                    required
+                                                    className="form-control"
+                                                    placeholder="Ví dụ: 1.000.000"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -475,7 +491,6 @@ const DetailJD = () => {
                                 </div>
                             </div>
                             
-                            {/* Footer Cố định của Modal */}
                             <div className="modal-footer-modern">
                                 <button type="button" className="btn-secondary" onClick={handleCloseModal}>Hủy bỏ</button>
                                 {isFormChanged && (
