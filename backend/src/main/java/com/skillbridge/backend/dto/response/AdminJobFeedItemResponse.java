@@ -1,5 +1,6 @@
 package com.skillbridge.backend.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
@@ -8,8 +9,8 @@ public class AdminJobFeedItemResponse extends JobFeedItemResponse {
     private String status;
     private String moderationStatus;
 
-    public AdminJobFeedItemResponse(String jobId, Object title,String description, String location,
-                                    String salaryMin, String salaryMax, LocalDateTime createdAt,
+    public AdminJobFeedItemResponse(String jobId, Object title, String description, String location,
+                                    BigDecimal salaryMin, BigDecimal salaryMax, LocalDateTime createdAt,
                                     String companyName, String companyImageUrl,
                                     Object subscriptionPlanName, String categoryName,
                                     JobStatus status, ModerationStatus moderationStatus) {

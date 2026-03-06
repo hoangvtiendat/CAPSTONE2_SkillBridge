@@ -1,7 +1,7 @@
 package com.skillbridge.backend.enums;
 
 public enum ApplicationStatus {
-    NEW,
+    PENDING,
     INTERVIEW,
     HIRED,
     REJECTED

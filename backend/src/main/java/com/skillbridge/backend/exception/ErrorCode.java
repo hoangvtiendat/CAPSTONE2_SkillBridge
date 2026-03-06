@@ -95,7 +95,10 @@ public enum ErrorCode {
     JOIN_REQUEST_NOT_FOUND(7003, "Không tìm thấy yêu cầu tham gia"),
     INVALID_JOIN_REQUEST(7004, "Yêu cầu tham gia không hợp lệ"),
     JOIN_REQUEST_ALREADY_PROCESSED(7005, "Yêu cầu này đã được xử lý"),
-    JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text")
+    JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text"),
+
+    //JOB
+    ALREADY_APPLIED(6001, "Hồ sơ ứng tuyển đã tồn tại cho bài đăng tuyển này")
     ;
     private int code;
     private String message;

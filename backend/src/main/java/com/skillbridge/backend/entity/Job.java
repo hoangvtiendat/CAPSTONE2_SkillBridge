@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -56,8 +57,8 @@ public class Job extends BaseEntity{
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private String salaryMin;
-    private String salaryMax;
+    private BigDecimal salaryMin;
+    private BigDecimal salaryMax;
 
     private String location;
 
@@ -157,19 +158,19 @@ public class Job extends BaseEntity{
         this.description = description;
     }
 
-    public String getSalaryMin() {
+    public BigDecimal getSalaryMin() {
         return salaryMin;
     }
 
-    public void setSalaryMin(String salaryMin) {
+    public void setSalaryMin(BigDecimal salaryMin) {
         this.salaryMin = salaryMin;
     }
 
-    public String getSalaryMax() {
+    public BigDecimal getSalaryMax() {
         return salaryMax;
     }
 
-    public void setSalaryMax(String salaryMax) {
+    public void setSalaryMax(BigDecimal salaryMax) {
         this.salaryMax = salaryMax;
     }
 

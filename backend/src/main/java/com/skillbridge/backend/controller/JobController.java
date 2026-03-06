@@ -1,16 +1,19 @@
 package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.response.AdminJobFeedResponse;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.JobDetailResponse;
 import com.skillbridge.backend.dto.response.JobFeedResponse;
+import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
+import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.JobService;
 import jakarta.validation.Valid;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.List;
@@ -49,11 +53,12 @@ public class JobController {
         );
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetailByCandidate(@PathVariable String id) {
 
         JobDetailResponse result = jobService.getJobDetail(id);
-        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Xem chi tiet jd",result);
+        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Xem chi tiet jd", result);
 
         return ResponseEntity.ok(response);
     }
@@ -75,17 +80,18 @@ public class JobController {
     public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetail(@PathVariable String id) {
 
         JobDetailResponse result = jobService.getJobDetail(id);
-        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Xem chi tiet jd",result);
+        ApiResponse<JobDetailResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Xem chi tiet jd", result);
 
         return ResponseEntity.ok(response);
     }
+
     @DeleteMapping("/feedAdmin/{jobId}")
     public ResponseEntity<ApiResponse<Void>> deleteJob(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable String jobId
     ) {
         System.out.println("Admin yêu cầu xóa Job ID: " + jobId);
-        jobService.deleteJob(user,jobId);
+        jobService.deleteJob(user, jobId);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Đã xóa bài đăng tuyển dụng thành công",
@@ -149,25 +155,45 @@ public class JobController {
                 new ApiResponse<>(200, "Lấy thông tin thành công", in4_job)
         );
     }
+
     @PutMapping("/my-company/Update/{id}")
     public ResponseEntity<ApiResponse<Job>> updateJD(@PathVariable String id, @RequestBody CreateJobRequest request) {
         Job updatedJob = jobService.updateJD(id, request);
         return ResponseEntity.ok(
-                new ApiResponse<>(200,"Update bài đăng thành công ", updatedJob)
+                new ApiResponse<>(200, "Update bài đăng thành công ", updatedJob)
         );
     }
+
     @DeleteMapping("/my-company/delete/{id}")
     public ResponseEntity<ApiResponse<Job>> deleteJD(@PathVariable String id) {
         Job updatedJob = jobService.deleteJD(id);
         return ResponseEntity.ok(
-                new ApiResponse<>(200,"Xóa bài đăng thành công", updatedJob)
+                new ApiResponse<>(200, "Xóa bài đăng thành công", updatedJob)
         );
     }
+
     @PostMapping("/repost/{id}")
     public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
         Job rePost = jobService.repost(id);
         return ResponseEntity.ok(
-                new ApiResponse<>(200,"Đăng lại bài đăng thành ", rePost)
+                new ApiResponse<>(200, "Đăng lại bài đăng thành ", rePost)
         );
     }
+
+    @PostMapping("/{jobId/apply}")
+    public ResponseEntity<ApiResponse<JobApplicationRequest>> applyJob(@RequestBody JobApplicationRequest request, @PathVariable String jobId) {
+        try {
+            JobApplicationRequest rs = jobService.applyJob(request, jobId);
+
+            ApiResponse<JobApplicationRequest> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Lấy dữ liệu cá nhân thành công", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[APPLY-JOB] AppException occurred");
+            System.out.println("[APPLY-JOB] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
+
 }

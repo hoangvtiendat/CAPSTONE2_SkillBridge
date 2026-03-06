@@ -1,44 +1,37 @@
 package com.skillbridge.backend.service;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.response.*;
-import com.skillbridge.backend.entity.Job;
-import com.skillbridge.backend.entity.SystemLog;
-import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
-import com.skillbridge.backend.dto.response.JobFeedResponse;
 import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
-import com.skillbridge.backend.entity.JobSkill;
-import com.skillbridge.backend.entity.Skill;
-import com.skillbridge.backend.enums.CompanyRole;
-import com.skillbridge.backend.enums.JobStatus;
-import com.skillbridge.backend.enums.LogLevel;
-import com.skillbridge.backend.enums.ModerationStatus;
-import com.skillbridge.backend.enums.ModerationStatus;
+import com.skillbridge.backend.enums.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.JobRepository;
+import lombok.Builder;
 import org.springframework.data.domain.Page;
 import com.skillbridge.backend.repository.SystemLogRepository;
 import jakarta.transaction.Transactional;
 import com.skillbridge.backend.repository.*;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -51,7 +44,9 @@ public class JobService {
     private final JobSkillRepository jobSkillRepository;
     private final CompanyMemberRepository companyMemberRepository;
     private final EmbeddingService embeddingService;
-
+    private final CandidateRepository candidateRepository;
+    private final ApplicationRepository applicationRepository;
+    private final ObjectMapper objectMapper;
 
 
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
@@ -95,6 +90,7 @@ public class JobService {
                 "currentPage", jobPage.getNumber()
         );
     }
+
     public AdminJobFeedResponse adminGetJob(String cursor, int limit, String status, String modStatus) {
         System.out.println("--- ADMIN: BẮT ĐẦU LẤY DANH SÁCH JOB ---");
         try {
@@ -442,7 +438,6 @@ public class JobService {
         return mapToJobResponse(job);
     }
 
-
     public JobResponse mapToJobResponse(Job job) {
         return JobResponse.builder()
                 .id(job.getId())
@@ -635,5 +630,46 @@ public class JobService {
             return newJob;
         }
         throw new AppException(ErrorCode.JOB_STATUS_EXITS);
+    }
+
+    @Transactional
+    public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId)
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String userId = userDetails.getUserId();
+
+        Candidate candidate = candidateRepository.findByUser_Id(userId).orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+        if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
+            throw new AppException(ErrorCode.ALREADY_APPLIED);
+        }
+
+        String qualificationsSnapshot = null;
+        try {
+            qualificationsSnapshot = objectMapper.writeValueAsString(candidate.getDegree());
+        } catch (JsonProcessingException e) {
+            log.error("Lỗi parse qualifications: {}", e.getMessage());
+        }
+        Application application = Application.builder()
+                .job(job)
+                .candidate(candidate)
+                .fullName(request.getName())
+                .email(request.getEmail())
+                .phoneNumber(request.getNumberPhone())
+                .cvUrl(request.getCvUrl())
+                .recommendationLetter(request.getRecommendationLetter())
+                .qualifications(qualificationsSnapshot)
+                .status(ApplicationStatus.PENDING)
+                .aiMatchingScore(0.0f)
+                .build();
+
+        applicationRepository.save(application);
+
+        return request;
     }
 }
