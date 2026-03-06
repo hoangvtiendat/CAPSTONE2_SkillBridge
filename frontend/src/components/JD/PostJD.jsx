@@ -67,7 +67,8 @@ const PostJD = () => {
             const data = response?.result || [];
             setSkillsList(Array.isArray(data) ? data : []);
         } catch (error) {
-            toast.error("Error loading skills list", { style: toastStyles.error });
+            const errorMessage = error.response?.data?.message || "Đã có lỗi xảy ra khi tải danh sách kỹ năng";
+            toast.error("Lỗi khi tải danh sách kỹ năng", { description: errorMessage, style: toastStyles.error });
         }
     };
 
@@ -97,6 +98,15 @@ const PostJD = () => {
             return;
         }
 
+        // Validation: Kiểm tra skills không được để trống
+        if (!formData.skills || formData.skills.length === 0) {
+            toast.error("Lỗi nhập liệu", { 
+                description: "Vui lòng chọn ít nhất một kỹ năng yêu cầu", 
+                style: toastStyles.warning 
+            });
+            return;
+        }
+
         const titleObject = {};
         dynamicTitles.forEach(item => {
             const finalKey = item.key.trim() === "" ? "Mục khác" : item.key.trim();
@@ -114,7 +124,8 @@ const PostJD = () => {
             toast.success("Thành công", { description: "Tạo JD thành công!", style: toastStyles.success });
             navigate('/company/jd-list');
         } catch (error) {
-            toast.error("Lỗi khi tạo JD", { style: toastStyles.error });
+            const errorMessage = error.response?.data?.message || "Đã có lỗi xảy ra khi tạo JD";
+            toast.error("Lỗi khi tạo JD", { description: errorMessage, style: toastStyles.error });
         } finally {
             setLoading(false);
         }

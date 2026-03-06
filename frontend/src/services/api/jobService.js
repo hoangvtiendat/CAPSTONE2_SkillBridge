@@ -13,20 +13,19 @@ const jobService = {
 
             const response = await api.get(`/jobs/feed?${queryParams.toString()}`);
 
-            // Transform Data for UI
             const result = response.data.result;
             const jobs = (result.jobs || []).map(job => ({
                 id: job.jobId,
-                position: job.title?.en || job.title?.vi || 'Unknown Position', // Prefer EN, fallback VI
+                position: job.title?.en || job.title?.vi || 'Unknown Position', 
                 company: job.companyName,
                 location: job.location,
                 salary: {
-                    min: parseInt(job.salaryMin) / 1000, // Corrected to avoid duplicate key
+                    min: parseInt(job.salaryMin) / 1000, 
                     max: parseInt(job.salaryMax) / 1000
                 },
-                tags: (job.skills || []).map(s => s.skillName || s), // Assuming skills might be objects or strings
-                logo: job.companyImageUrl, // URL string
-                featured: false // API doesn't seem to return featured flag yet
+                tags: (job.skills || []).map(s => s.skillName || s), 
+                logo: job.companyImageUrl,
+                featured: false 
             }));
 
             return {
@@ -72,10 +71,17 @@ const jobService = {
     createJd: async (jdData) => {
         try {
             const response = await api.post('/jobs/postJD', jdData);
-            return response.data;
+            
+            if (!response) {
+                throw new Error("Không nhận được phản hồi từ server");
+            }
+            
+            return response.data;       
         } catch (error) {
-            console.error('Error creating JD:', error);
-            throw error;
+            console.error(' Error creating JD:', error);
+            console.error('Backend response:', error.response?.data);
+            
+            throw error; 
         }
     },
     updateJd: async (id, jdData) => {

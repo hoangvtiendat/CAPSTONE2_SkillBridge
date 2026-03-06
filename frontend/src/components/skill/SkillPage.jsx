@@ -87,7 +87,6 @@ export function SkillPage() {
         <div className="page-wrapper">
             <Toaster position="top-right" expand={false} richColors />
             
-            {/* Box Header Trắng */}
             <div className="header-card">
                 <div className="header-left">
                     <button onClick={() => navigate(-1)} className="btn-back">

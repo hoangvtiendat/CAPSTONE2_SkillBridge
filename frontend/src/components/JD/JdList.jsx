@@ -65,6 +65,7 @@ const JdList = () => {
             setJdList(prevJdList => prevJdList.filter(jd => jd.id !== jdId));
             
             toast.success("Thành công", { description: "Xóa JD thành công!", style: toastStyles.success });
+            handGetJdList();
         } catch (error) {
             if (error.response && error.response.data && error.response.data.message) {
                 toast.error("Lỗi khi xóa", { description: error.response.data.message, style: toastStyles.error });
@@ -239,7 +240,11 @@ const JdList = () => {
 
                             <div className="jd-actions">
                                 <button onClick={(e) => handleViewDetails(e, jd)}>Xem thông tin</button>
-                                <button onClick={(e) => handleDeleteJd(e, jd.id)}>Xóa</button>
+                                {jd.status !== "DELETE" && <span className="deleted-label">
+                                     <button onClick={(e) => handleDeleteJd(e, jd.id)}>Xóa</button>
+                                </span>}
+
+                               
                             </div>
                         </li>
                     ))}
