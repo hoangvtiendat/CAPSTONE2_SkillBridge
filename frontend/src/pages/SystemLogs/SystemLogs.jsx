@@ -12,12 +12,16 @@ const SystemLogs = () => {
     const [hasMore, setHasMore] = useState(true);
     const consoleBodyRef = useRef(null);
 
+    const handleResetFilters = () => {
+        setLevel('');
+        setFilterDate('');
+    };
+
     const fetchLogs = async (cursor = null, isAppend = false) => {
         if (loading) return;
         setLoading(true);
         try {
             const limit = 40;
-            console.log(filterDate);
             const response = await systemLogService.getLogs(cursor, limit, level, filterDate);
 
             if (response && response.code === 200) {
@@ -55,10 +59,9 @@ const SystemLogs = () => {
         const client = new Client({
             webSocketFactory: () => new SockJS('http://localhost:8081/identity/ws-log'),
             connectHeaders: {
-                    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-                },
+                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            },
             reconnectDelay: 5000,
-            debug: (str) => console.log("STOMP: " + str),
             onConnect: () => {
                 client.subscribe('/topic/logs', (message) => {
                     const newLog = JSON.parse(message.body);
@@ -131,7 +134,12 @@ const SystemLogs = () => {
 
                 <aside className="sidebar-controls">
                     <div className="control-card">
-                        <h4 className="card-title">Bộ lọc Log</h4>
+                        <div className="card-header-flex">
+                            <h4 className="card-title">Bộ lọc Log</h4>
+                            <button className="btn-reset-filter" onClick={handleResetFilters}>
+                                <span className="icon-refresh">↻</span> Đặt lại
+                            </button>
+                        </div>
                         <div className="filter-group">
                             <label>Mức độ</label>
                             <select className="input-field" value={level} onChange={(e) => setLevel(e.target.value)}>
