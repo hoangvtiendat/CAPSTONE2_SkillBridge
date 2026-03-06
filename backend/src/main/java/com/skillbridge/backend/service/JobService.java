@@ -225,7 +225,7 @@ public class JobService {
             });
             String jobDescription = job.getDescription();
             SystemLog log = new SystemLog();
-            job.setStatus(JobStatus.DELETE);
+            job.setIsDeleted(true);
             jobRepository.save(job);
             logsService.logAction(userDetails, "Admin xóa bài đăng tuyển dụng: " + jobDescription + " (ID: " + jobId + ")", LogLevel.WARNING);
 
@@ -262,7 +262,7 @@ public class JobService {
             }
             if (newModStatus == ModerationStatus.GREEN) {
                 job.setStatus(JobStatus.OPEN);
-                System.out.println("Job vi phạm (RED) hoặc đang nghi ngờ (YELLOW) - Tự động đóng bài đăng.");
+                System.out.println("Job an toàn GREEN");
             }
             jobRepository.save(job);
 

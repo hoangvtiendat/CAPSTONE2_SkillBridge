@@ -14,10 +14,11 @@ import java.util.List;
 public interface SystemLogRepository extends JpaRepository<SystemLog,String> {
 
     @Query("SELECT s FROM SystemLog s WHERE " +
+            "s.isDeleted = false AND " +
             "(:level IS NULL OR s.logLevel = :level) AND " +
             "(:cursor IS NULL OR s.id < :cursor) AND " +
             "(:date IS NULL OR FUNCTION('DATE', s.createdAt) = CAST(:date AS date)) " +
-            "ORDER BY s.createdAt DESC, s.id DESC")
+            "ORDER BY s.createdAt DESC")
     List<SystemLog> getLogs(@Param("level") LogLevel level,
                             @Param("cursor") String cursor,
                             @Param("date") String date,
