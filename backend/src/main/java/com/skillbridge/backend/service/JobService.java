@@ -604,7 +604,7 @@ public class JobService {
         if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        job.setStatus(JobStatus.DELETE);
+        job.setIsDeleted(true);
         jobRepository.save(job);
 
         return job;

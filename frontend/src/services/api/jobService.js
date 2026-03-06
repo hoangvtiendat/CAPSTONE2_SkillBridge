@@ -97,12 +97,12 @@ const jobService = {
 
             const result = response.data.result;
 
-            const jobs = (result.adminJobFeedItemResponse || []).map(job => ({
+            const jobs = (result.jobs || []).map(job => ({
                 id: job.jobId,
                 description: job.description,
                 location: job.location,
                 companyName: job.companyName,
-                subscriptionPlanName: job.subscriptionPlanName || "N/A",
+                subscriptionPlanName: job.subscriptionPlanName,
                 categoryName: job.categoryName,
                 skills: job.skills || [],
                 status: job.status,
