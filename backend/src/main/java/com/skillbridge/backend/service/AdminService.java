@@ -43,91 +43,115 @@ public class AdminService {
     private final UserService userService;
     private final CategoryRepository categoryRepository;
 
-    public SystemStatsResponse statsOverview(String token) {
-        System.out.println("token: " + token);
+    public SystemStatsResponse statsOverview(String token, LocalDate startDate, LocalDate endDate) {
         User user = userService.getMe(token);
-        System.out.println("user: " + user.getRole());
         if (!"ADMIN".equals(user.getRole())) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
-        //1.OVERVIEW
+
+        // Chuyển đổi sang LocalDateTime để query DB
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.atTime(23, 59, 59);
+
+        // Tính toán khoảng thời gian tương đương của kỳ trước để tính % tăng trưởng
+        long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        LocalDateTime prevStart = start.minusDays(daysBetween);
+        LocalDateTime prevEnd = start.minusNanos(1);
+
+        // 1. OVERVIEW (Tổng quan - Vẫn giữ tổng tất cả thời gian)
         long totalUsers = userRepository.count();
         long totalCompanies = companyRepository.count();
         long totalJobs = jobRepository.count();
-
         BigDecimal totalRevenue = Optional.ofNullable(subscriptionRepository.sumTotalRevenue()).orElse(BigDecimal.ZERO);
 
-        SystemStatsResponse.OverviewStats overview = SystemStatsResponse.OverviewStats.builder().totalUsers(totalUsers).totalCompanies(totalCompanies).totalJobs(totalJobs).totalRevenue(totalRevenue).build();
+        SystemStatsResponse.OverviewStats overview = SystemStatsResponse.OverviewStats.builder()
+                .totalUsers(totalUsers)
+                .totalCompanies(totalCompanies)
+                .totalJobs(totalJobs)
+                .totalRevenue(totalRevenue)
+                .build();
 
-
-        //2.PENDING
+        // 2. PENDING (Giữ nguyên vì đây là số lượng cần xử lý hiện tại)
         long pendingCompanies = companyRepository.countByStatus(CompanyStatus.PENDING);
-
         long pendingJobs = jobRepository.countByStatus(JobStatus.PENDING);
+        SystemStatsResponse.PendingStats pending = SystemStatsResponse.PendingStats.builder()
+                .pendingCompanies(pendingCompanies)
+                .pendingJobs(pendingJobs)
+                .build();
 
-        SystemStatsResponse.PendingStats pending = SystemStatsResponse.PendingStats.builder().pendingCompanies(pendingCompanies).pendingJobs(pendingJobs).build();
+        // 3. GROWTH (Tăng trưởng: Kỳ này so với kỳ trước)
+        // User Growth
+        long usersThisPeriod = userRepository.countByCreatedAtBetween(start, end);
+        long usersPrevPeriod = userRepository.countByCreatedAtBetween(prevStart, prevEnd);
+        double userGrowth = calculateGrowth(usersPrevPeriod, usersThisPeriod);
 
+        // Company Growth
+        long companiesThisPeriod = companyRepository.countByCreatedAtBetween(start, end);
+        long companiesPrevPeriod = companyRepository.countByCreatedAtBetween(prevStart, prevEnd);
+        double companyGrowth = calculateGrowth(companiesPrevPeriod, companiesThisPeriod);
 
-        LocalDate now = LocalDate.now();
-        LocalDate firstDayThisMonth = now.withDayOfMonth(1);
-        LocalDate firstDayLastMonth = firstDayThisMonth.minusMonths(1);
-        LocalDate firstDayTwoMonthsAgo = firstDayLastMonth.minusMonths(1);
+        // Job Growth
+        long jobsThisPeriod = jobRepository.countByCreatedAtBetween(start, end);
+        long jobsPrevPeriod = jobRepository.countByCreatedAtBetween(prevStart, prevEnd);
+        double jobGrowth = calculateGrowth(jobsPrevPeriod, jobsThisPeriod);
 
-        LocalDateTime thisMonthStart = firstDayThisMonth.atStartOfDay();
-        LocalDateTime lastMonthStart = firstDayLastMonth.atStartOfDay();
-        LocalDateTime twoMonthsAgoStart = firstDayTwoMonthsAgo.atStartOfDay();
+        // Revenue Growth
+        BigDecimal revenueThisPeriod = Optional.ofNullable(subscriptionRepository.sumRevenueBetween(start, end)).orElse(BigDecimal.ZERO);
+        BigDecimal revenuePrevPeriod = Optional.ofNullable(subscriptionRepository.sumRevenueBetween(prevStart, prevEnd)).orElse(BigDecimal.ZERO);
+        double revenueGrowth = calculateRevenueGrowth(revenuePrevPeriod, revenueThisPeriod);
 
-        long usersThisMonth = userRepository.countByCreatedAtAfter(thisMonthStart);
+        SystemStatsResponse.GrowthStats growth = SystemStatsResponse.GrowthStats.builder()
+                .userGrowthPercent(userGrowth)
+                .companyGrowthPercent(companyGrowth)
+                .jobGrowthPercent(jobGrowth)
+                .revenueGrowthPercent(revenueGrowth)
+                .build();
 
-        long usersLastMonth = userRepository.countByCreatedAtBetween(lastMonthStart, thisMonthStart);
+        // 4. CHART DATA (Biểu đồ: Vẽ dựa trên startDate)
+        // Nếu chọn "Năm nay", biểu đồ 6 tháng có vẻ ngắn, nhưng chúng ta sẽ giữ logic 6 tháng tính lùi từ endDate
+        LocalDateTime chartStart = endDate.minusMonths(5).withDayOfMonth(1).atStartOfDay();
 
-        double userGrowth = calculateGrowth(usersLastMonth, usersThisMonth);
+        List<MonthlyRevenueDTO> rawRevenue = subscriptionRepository.revenueLast6Months(chartStart);
+        List<MonthlyJobDTO> rawJobs = jobRepository.jobGrowthLast6Months(chartStart);
 
-
-        // COMPANY GROWTH
-        long companiesThisMonth = companyRepository.countByCreatedAtAfter(thisMonthStart);
-
-        long companiesLastMonth = companyRepository.countByCreatedAtBetween(lastMonthStart, thisMonthStart);
-
-        double companyGrowth = calculateGrowth(companiesLastMonth, companiesThisMonth);
-
-        // JOB GROWTH
-        long jobsThisMonth = jobRepository.countByCreatedAtAfter(thisMonthStart);
-
-        long jobsLastMonth = jobRepository.countByCreatedAtBetween(lastMonthStart, thisMonthStart);
-
-        double jobGrowth = calculateGrowth(jobsLastMonth, jobsThisMonth);
-
-
-        //  REVENUE GROWTH
-        BigDecimal revenueThisMonth = Optional.ofNullable(subscriptionRepository.sumRevenueBetween(thisMonthStart, LocalDateTime.now())).orElse(BigDecimal.ZERO);
-
-        BigDecimal revenueLastMonth = Optional.ofNullable(subscriptionRepository.sumRevenueBetween(lastMonthStart, thisMonthStart)).orElse(BigDecimal.ZERO);
-
-        double revenueGrowth = calculateRevenueGrowth(revenueLastMonth, revenueThisMonth);
-
-
-        SystemStatsResponse.GrowthStats growth = SystemStatsResponse.GrowthStats.builder().userGrowthPercent(userGrowth).companyGrowthPercent(companyGrowth).jobGrowthPercent(jobGrowth).revenueGrowthPercent(revenueGrowth).build();
-
-        //4. CHART DATA
-        LocalDateTime sixMonthsAgo = LocalDate.now().minusMonths(5).withDayOfMonth(1).atStartOfDay();
-
-        List<MonthlyRevenueDTO> rawRevenue = subscriptionRepository.revenueLast6Months(sixMonthsAgo);
-
-        List<MonthlyJobDTO> rawJobs = jobRepository.jobGrowthLast6Months(sixMonthsAgo);
-
-        List<MonthlyRevenueDTO> revenueByMonth = buildFullLast6MonthsRevenueData(rawRevenue);
-
-        List<MonthlyJobDTO> jobGrowthByMonth = buildFullLast6MonthsJobData(rawJobs);
-
-        SystemStatsResponse.ChartSection charts = SystemStatsResponse.ChartSection.builder().revenueByMonth(revenueByMonth).jobGrowthByMonth(jobGrowthByMonth).build();
-
+        SystemStatsResponse.ChartSection charts = SystemStatsResponse.ChartSection.builder()
+                .revenueByMonth(buildFullChartRevenueData(rawRevenue, endDate))
+                .jobGrowthByMonth(buildFullChartJobData(rawJobs, endDate))
+                .build();
 
         // 5. TOP COMPANY
         List<TopCompanyDTO> topCompanies = companyRepository.findTop5ByJobCount(PageRequest.of(0, 5));
 
-
         return new SystemStatsResponse(overview, growth, pending, charts, topCompanies);
+    }
+
+    // Hàm bổ trợ vẽ biểu đồ lùi từ ngày kết thúc được chọn
+    private List<MonthlyJobDTO> buildFullChartJobData(List<MonthlyJobDTO> rawData, LocalDate endDate) {
+        Map<Integer, Long> dataMap = rawData.stream().collect(Collectors.toMap(MonthlyJobDTO::getMonth, MonthlyJobDTO::getTotalJobs));
+        List<MonthlyJobDTO> result = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            int month = endDate.minusMonths(i).getMonthValue();
+            result.add(new MonthlyJobDTO(month, dataMap.getOrDefault(month, 0L)));
+        }
+        return result;
+    }
+
+    private List<MonthlyRevenueDTO> buildFullChartRevenueData(List<MonthlyRevenueDTO> rawData, LocalDate endDate) {
+        // Chuyển rawData thành Map để tra cứu nhanh theo tháng
+        Map<Integer, BigDecimal> dataMap = rawData.stream()
+                .collect(Collectors.toMap(MonthlyRevenueDTO::getMonth, MonthlyRevenueDTO::getRevenue));
+
+        List<MonthlyRevenueDTO> result = new ArrayList<>();
+
+        // Vòng lặp lấy 6 tháng gần nhất tính từ endDate
+        for (int i = 5; i >= 0; i--) {
+            LocalDate targetDate = endDate.minusMonths(i);
+            int month = targetDate.getMonthValue();
+
+            // Nếu không có dữ liệu trong Map thì mặc định là 0
+            result.add(new MonthlyRevenueDTO(month, dataMap.getOrDefault(month, BigDecimal.ZERO)));
+        }
+        return result;
     }
 
     // BUILD FULL 6 MONTHS - JOB
@@ -231,6 +255,7 @@ public class AdminService {
         company.setStatus(CompanyStatus.ACTIVE);
         companyRepository.save(company);
     }
+
     public CompanyResponse getCompanyById(String id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));

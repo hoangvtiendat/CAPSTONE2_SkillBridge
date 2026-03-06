@@ -18,7 +18,6 @@ public class ApiResponse<T> {
         return new ApiResponse<>(0, "SUCCESS", result);
     }
 
-    // 🔥 ERROR – CÁI MÀ MÀY ĐANG THIẾU
     public static ApiResponse<?> error(int code, String message) {
         return new ApiResponse<>(code, message, null);
     }
