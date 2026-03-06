@@ -27,20 +27,21 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
+    const publicPage = ['/login', '/'] 
+    const currentPath = window.location.pathname;
+    if(error.response && error.response.status === 401){
+        if(!publicPage.includes(currentPath)){
+            localStorage.removeItem('user');
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
             localStorage.removeItem('token');
             
-            window.location.href = '/login';
+            window.location.href = '/';
         }
-        
-        if (error.response && error.response.status === 403) {
-            console.error('Không có quyền truy cập tài nguyên này');
-        }
-        
-        return Promise.reject(error);
+    } 
+    if(error.response && error.response.status === 403){
+         console.log('Bạn không có quyền truy cập vào tài nguyên này.');    
+    }
     }
 );
 

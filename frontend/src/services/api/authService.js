@@ -21,12 +21,7 @@ const authService = {
 
     verifyOtp: async (email, otpCode) => {
         try {
-            // Adjust payload based on backend requirement. 
-            // LoginRequest class might be used for verify-otp too if it has 'otp' field?
-            // Looking at AuthController: @PostMapping("/login/verify-otp") -> LoginRequest
-            // LoginRequest usually has email and password. Does it have OTP? 
-            // I'll assume it does or I should check LoginRequest.
-            // For now, I'll send email and otp.
+            
             const response = await api.post('/auth/login/verify-otp', { email, otp: otpCode });
             return response.data;
         } catch (error) {

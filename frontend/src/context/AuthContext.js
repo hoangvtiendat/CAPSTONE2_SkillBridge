@@ -31,7 +31,6 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await userService.getProfile();
             if (response && response.result) {
-                // Merge to preserve role and other fields that might not be in profile response
                 const userStr = localStorage.getItem('user');
                 const existingUser = userStr ? JSON.parse(userStr) : {};
                 const updatedUser = { ...existingUser, ...response.result };
@@ -85,7 +84,6 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('token');
             
-            // Redirect về trang login sau khi logout
             window.location.href = '/login';
         }
     }, []);
@@ -97,7 +95,7 @@ export const AuthProvider = ({ children }) => {
             if (response && response.result) {
                 const updatedUser = response.result;
                 setUser(updatedUser);
-                localStorage.setItem('user', JSON.stringify(updatedUser)); // Update local storage with new profile
+                localStorage.setItem('user', JSON.stringify(updatedUser)); 
                 return updatedUser;
             }
         } catch (err) {
