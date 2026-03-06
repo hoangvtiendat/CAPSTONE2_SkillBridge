@@ -374,10 +374,16 @@
     text-align: left;
 }
 @media (max-width: 1024px) {
+    .header-main-content {
+        flex-direction: column;
+    }
+
     .admin-action-bar.side-panel {
+        width: 100%;
+        min-width: 100%;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        align-items: end;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        align-items: center;
     }
 
     .btn-delete-job {
@@ -385,22 +391,73 @@
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    .admin-job-detail-container {
+        padding: 0.75rem;
+    }
+
+    .company-info-section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .job-title-info h1 {
+        font-size: 1.6rem;
+    }
+
+    .company-and-plan {
+        justify-content: center;
+    }
+}
+
+/* Mobile nhỏ (Dưới 480px) */
+@media (max-width: 480px) {
+    .detail-card {
+        padding: 1.25rem;
+    }
+
     .admin-action-bar.side-panel {
         display: flex;
         flex-direction: column;
     }
 
-    .job-title-info h1 {
-        font-size: 1.5rem;
-    }
-
-    .detail-card {
-        padding: 1.25rem;
+    .job-meta-tags {
+        display: grid;
+        grid-template-columns: 1fr;
     }
 
     .job-meta-tags span {
-        width: 100%;
         justify-content: center;
     }
+
+    .control-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .control-item label {
+        min-width: auto;
+    }
 }
+
+.mod-indicator {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.mod-indicator select {
+    width: 100%;
+    padding: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+.mod-GREEN select { background: #ecfdf5; color: #047857; }
+.mod-YELLOW select { background: #fffbeb; color: #b45309; }
+.mod-RED select { background: #fef2f2; color: #991b1b; }

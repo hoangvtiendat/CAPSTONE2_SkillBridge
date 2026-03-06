@@ -5,11 +5,11 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import {
     MapPin, Banknote, Tag, Clock,
-    Trash2, ChevronLeft
+    Trash2, ChevronLeft, Sparkles
 } from 'lucide-react';
 import './AdminJobDetail.css';
 import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
-import { toast, Toaster } from 'sonner'
+import { toast, Toaster } from 'sonner';
 
 const formatSalary = (amount) => {
     if (!amount && amount !== 0) return "Thỏa thuận";
@@ -20,26 +20,32 @@ const AdminJobDetailPage = () => {
     const { jobId } = useParams();
     const navigate = useNavigate();
     const [job, setJob] = useState(null);
-    const [parsedData, setParsedData] = useState([]);
+    const [sections, setSections] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const fetchJobDetail = useCallback(async () => {
         try {
-            const data = await jobService.getJobDetail(jobId);
+            const data = await jobService.getJobDetailByCandidate(jobId);
             setJob(data);
+            const titleMap = data.title;
 
-            if (data.title) {
-                let rawTitle = data.title;
-                if (typeof rawTitle === 'string') {
-                    try {
-                        rawTitle = JSON.parse(rawTitle);
-                    } catch (e) {
-                        toast.error("Lỗi parse chuỗi title");
-                        rawTitle = [];
+            if (titleMap && typeof titleMap === 'object') {
+                const formatted = Object.entries(titleMap).map(([key, value]) => {
+                    let itemsArray = [];
+                    if (typeof value === 'string') {
+                        itemsArray = value.split('\n')
+                                         .map(i => i.trim())
+                                         .filter(i => i !== "");
+                    } else if (Array.isArray(value)) {
+                        itemsArray = value;
                     }
-                }
-                setParsedData(Array.isArray(rawTitle) ? rawTitle : []);
+                    return {
+                        name: key,
+                        items: itemsArray
+                    };
+                });
+                setSections(formatted);
             }
         } catch (error) {
             toast.error("Không thể tải chi tiết công việc");
@@ -82,10 +88,10 @@ const AdminJobDetailPage = () => {
     };
 
     const confirmDelete = async () => {
-        const toastId = toast.loading("Đang xoá công việc...");
+        const toastId = toast.loading("Đang xoá bài đăng...");
         try {
             await jobService.deleteJob(jobId);
-            toast.success("Xoá công việc thành công", { id: toastId });
+            toast.success("Xoá bài đăng thành công", { id: toastId });
             navigate('/admin/jobs');
         } catch (error) {
             toast.error("Xoá thất bại", { id: toastId });
@@ -96,9 +102,6 @@ const AdminJobDetailPage = () => {
 
     if (loading) return <div className="admin-loader">Đang tải...</div>;
     if (!job) return <div className="admin-error">Không tìm thấy công việc</div>;
-
-    const headerInfo = parsedData[0] || {};
-    const contentSections = parsedData.slice(1);
 
     return (
         <>
@@ -117,7 +120,7 @@ const AdminJobDetailPage = () => {
                                 className="company-logo-large"
                             />
                             <div className="job-title-info">
-                                <h1>{headerInfo.name || job.jobTitle}</h1>
+                                <h1>{job.jobTitle || "Chi tiết công việc"}</h1>
                                 <div className="company-and-plan">
                                     <p className="company-name-text">{job.companyName}</p>
                                     <span className={`plan-badge plan-${(job.subscriptionPlanName || 'free').toLowerCase()}`}>
@@ -152,9 +155,9 @@ const AdminJobDetailPage = () => {
                                     onChange={(e) => onUpdateStatus(e, e.target.value)}
                                     className={`select-status s-${job.status?.toLowerCase()}`}
                                 >
-                                    <option value="OPEN">OPEN</option>
-                                    <option value="CLOSED">CLOSED</option>
-                                    <option value="PENDING">PENDING</option>
+                                    <option value="OPEN">OPEN (Mở)</option>
+                                    <option value="CLOSED">CLOSED (Đóng)</option>
+                                    <option value="PENDING">PENDING (Đang chờ)</option>
                                 </select>
                             </div>
 
@@ -180,12 +183,19 @@ const AdminJobDetailPage = () => {
                 </div>
 
                 <div className="detail-grid">
-                    {contentSections.map((section, index) => (
-                        <div key={index} className="detail-card section">
-                            <h3>{section.name}</h3>
-                            <ul className="check-list">
-                                {(section.decription || section.Decription)?.map((item, idx) => (
+                    {sections.map((section, index) => (
+                        <div
+                            key={index}
+                            className="detail-card section animate-in"
+                            style={{ animationDelay: `${(index + 1) * 0.1}s` }}
+                        >
+                            <h3 className="section-title">
+                                {section.name}
+                            </h3>
+                            <ul >
+                                {section.items.map((item, idx) => (
                                     <li key={idx}>
+                                        <div className="list-dot"></div>
                                         <span>{item}</span>
                                     </li>
                                 ))}

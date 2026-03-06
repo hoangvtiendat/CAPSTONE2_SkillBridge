@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import companyService from '../../services/api/companyService';
 import './TaxLookup.css';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Search, Database, History, Info,Building } from 'lucide-react';
 
 const TaxLookup = () => {
     const [taxCode, setTaxCode] = useState('');
@@ -66,7 +66,7 @@ const TaxLookup = () => {
             <div className="tax-main-container">
                 <aside className="tax-sidebar">
                     <div className="sidebar-header">
-                        <div className="brand-icon">🏛️</div>
+                        <Building size={32} strokeWidth={1} color="#64748b" />
                         <div className="brand-text">
                             <h3>Cổng Dữ Liệu</h3>
                             <p>Nguồn: tratencongty.com</p>
@@ -83,12 +83,20 @@ const TaxLookup = () => {
                                 onChange={(e) => setTaxCode(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                             />
-                            <button onClick={() => handleSearch()} disabled={loading}>
-                                {loading ? <span className="loader"></span> : "🔍"}
-                            </button>
+                            <button
+                                    onClick={() => handleSearch()}
+                                    disabled={loading}
+                                    className="btn-icon-only-search"
+                                    title="Tìm kiếm"
+                                >
+                                    {loading ? (
+                                        <span className="loader-small-dark"></span>
+                                    ) : (
+                                        <Search size={20} strokeWidth={1.5} color="#64748b" />
+                                    )}
+                                </button>
                         </div>
 
-                        {/* HIỂN THỊ STATUS THẬT TẠI ĐÂY */}
                         <div className="api-status">
                             <span className={`status-pill ${apiOnline ? 'online' : 'offline'}`}>
                                 ● {apiOnline ? 'API Online' : 'API Offline'}
