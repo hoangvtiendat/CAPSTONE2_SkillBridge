@@ -39,11 +39,10 @@ public class JobController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String categoryId,
-            @RequestParam(required = false) String cursor,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Double salary
     ) {
-        Map<String, Object> rs = jobService.getJobFeed(page, cursor, limit, categoryId, location, salary);
+        Map<String, Object> rs = jobService.getJobFeed(page, limit, categoryId, location, salary);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Job Feed",

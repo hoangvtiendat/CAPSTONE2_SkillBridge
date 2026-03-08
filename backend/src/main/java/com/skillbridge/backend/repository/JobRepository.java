@@ -21,31 +21,6 @@ import java.util.Optional;
 public interface JobRepository extends JpaRepository<Job, String> {
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.description, j.location, 
-            j.salaryMin, j.salaryMax, j.createdAt, 
-            c.name, c.imageUrl, sp.name, cat.name
-        )
-        FROM Job j
-        LEFT JOIN j.company c
-        LEFT JOIN j.category cat
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
-        WHERE j.status = :status
-        AND (:categoryId IS NULL OR cat.id = :categoryId)
-        AND (:location IS NULL OR j.location LIKE %:location%)
-        AND (:salary IS NULL OR (
-                        CAST(j.salaryMin AS double) <= :salary
-                        AND CAST(j.salaryMax AS double) >= :salary
-                    ))
-        ORDER BY j.createdAt DESC
-    """)
-    Page<JobFeedItemResponse> getJobFeed(
-            @Param("status") JobStatus status,
-            Pageable pageable
-    );
-
-    @Query("""
-        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
             j.id, j.title,j.description, j.location, 
             j.salaryMin, j.salaryMax, j.createdAt, 
             c.name,c.imageUrl,sp.name, cat.name
@@ -125,4 +100,30 @@ public interface JobRepository extends JpaRepository<Job, String> {
                 ORDER BY MONTH(j.createdAt)
             """)
     List<MonthlyJobDTO> jobGrowthLast6Months(@Param("fromDate") LocalDateTime fromDate);
+
+    @Query("""
+            SELECT new com.skillbridge.backend.dto.respone.AdminJobFeedResponse(
+                j.id, j.title, j.description, j.location, j.salaryMin, 
+                j.salaryMax, j.createdAt, c.name, c.imageUrl, 
+                sp.name, cat.name, j.status, j.moderationStatus
+              )
+              FROM Job j
+              LEFT JOIN j.company c
+              LEFT JOIN J.category cat
+              LEFT JOIN c.subscriptions cs ON cs.isActive = true
+              LEFT JOIN cs.subscriptionPlan sp
+              WHERE j.isDeleted = false 
+              AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
+              AND (
+                :cursor IS NULL OR 
+                j.createAt < (SELECT j2.createAt FROM Job j2 WHERE j2.id = :cursor) OR
+                j.createAt = (SELECT j2.createAt From Job j2 WHERE j2.id = :cursor) 
+              )
+              AND j.status = PENDING
+        """)
+    List<AdminJobFeedItemResponse> adminGetJobPending(
+            @Param("cursor") String cursor,
+            @Param("modStatus") ModerationStatus modStatus,
+            Pageable pageable
+    );
 }

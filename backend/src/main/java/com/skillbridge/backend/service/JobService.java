@@ -48,7 +48,7 @@ public class JobService {
     private final CompanyRepository companyRepository;
 
 
-    public Map<String, Object> getJobFeed(int page, String cursor, int limit, String categoryId, String location, Double salary) {
+    public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
 
         Page<JobFeedItemResponse> jobPage = jobRepository.getJobFeedFiltered(
@@ -64,26 +64,10 @@ public class JobService {
             );
         }
 
-        List<JobFeedItemResponse> resultList = jobPage.getContent();
-
-        List<String> jobIds = resultList.stream()
-                .map(JobFeedItemResponse::getJobId)
-                .toList();
-
-        List<Object[]> skillData = jobRepository.findSkillNamesByJobIds(jobIds);
-
-        Map<String, List<String>> skillsMap = skillData.stream()
-                .collect(Collectors.groupingBy(
-                        obj -> (String) obj[0],
-                        Collectors.mapping(obj -> (String) obj[1], Collectors.toList())
-                ));
-
-        resultList.forEach(item ->
-                item.setSkills(skillsMap.getOrDefault(item.getJobId(), List.of()))
-        );
+        enrichSkills((List<JobFeedItemResponse>) (List<?>) jobPage);
 
         return Map.of(
-                "jobs", resultList,
+                "jobs", jobPage,
                 "totalPages", jobPage.getTotalPages(),
                 "totalElements", jobPage.getTotalElements(),
                 "currentPage", jobPage.getNumber()
@@ -91,14 +75,13 @@ public class JobService {
     }
 
     public Map<String, Object> adminGetJob(int page, String cursor, int limit, String status, String modStatus) {
-        System.out.println("--- ADMIN: BẮT ĐẦU LẤY DANH SÁCH JOB ---");
         try {
             JobStatus newStatus = null;
             if (status != null && !status.isEmpty()) {
                 try {
                     newStatus = JobStatus.valueOf(status.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    System.out.println("Lưu ý: JobStatus sai định dạng [" + status + "], tự động bỏ qua filter status.");
+                    System.out.println("Lưu ý: JobStatus sai định dạng [" + status + "]");
                 }
             }
 
@@ -107,7 +90,7 @@ public class JobService {
                 try {
                     newModStatus = ModerationStatus.valueOf(modStatus.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    System.out.println("Lưu ý: ModerationStatus sai định dạng [" + modStatus + "], tự động bỏ qua filter modStatus.");
+                    System.out.println("Lưu ý: ModerationStatus sai định dạng [" + modStatus + "]");
                 }
             }
 
@@ -125,10 +108,6 @@ public class JobService {
 
             enrichSkills((List<JobFeedItemResponse>) (List<?>) jobs);
 
-            // Vì repo adminGetJobs trả về List, chúng ta không có tổng số bản ghi dễ dàng nếu không dùng Page.
-            // Nhưng hiện tại để demo/vẩy lỗi, tôi sẽ tạm thời trả về Map đơn giản.
-            // Nếu muốn chuẩn 1, 2, 3 thì Repo nên trả về Page<AdminJobFeedItemResponse>.
-
             return Map.of(
                     "jobs", jobs,
                     "currentPage", page
@@ -139,6 +118,28 @@ public class JobService {
             System.err.println("Lỗi khi admin lấy danh sách job: " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
+    }
+
+    public List<AdminJobFeedItemResponse> adminGetJobPending(int page, String cursor, int limit, String modStatus){
+        try{
+            ModerationStatus newModStatus = null;
+            if (modStatus != null && !modStatus.isEmpty()) {
+                try {
+                    newModStatus = ModerationStatus.valueOf(modStatus.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Lưu ý: ModerationStatus sai định dạng [" + modStatus + "]");
+                }
+            }
+
+            Pageable pageable = PageRequest.of(page,limit);
+
+            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobPending(cursor,newModStatus,pageable);
+
+
+
+        }
+
+
     }
 
     private void enrichSkills(List<JobFeedItemResponse> items) {
