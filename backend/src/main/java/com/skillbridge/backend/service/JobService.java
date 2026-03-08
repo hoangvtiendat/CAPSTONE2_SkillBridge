@@ -74,7 +74,7 @@ public class JobService {
         );
     }
 
-    public Map<String, Object> adminGetJob(int page, String cursor, int limit, String status, String modStatus) {
+    public AdminJobFeedResponse adminGetJob(String cursor, int limit, String status, String modStatus) {
         try {
             JobStatus newStatus = null;
             if (status != null && !status.isEmpty()) {
@@ -84,7 +84,6 @@ public class JobService {
                     System.out.println("Lưu ý: JobStatus sai định dạng [" + status + "]");
                 }
             }
-
             ModerationStatus newModStatus = null;
             if (modStatus != null && !modStatus.isEmpty()) {
                 try {
@@ -94,33 +93,29 @@ public class JobService {
                 }
             }
 
-            Pageable pageable = PageRequest.of(page, limit);
+            Pageable pageable = PageRequest.of(0, limit + 1);
             List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobs(cursor, newStatus, newModStatus, pageable);
 
             if (jobs.isEmpty()) {
-                return Map.of(
-                        "jobs", List.of(),
-                        "totalPages", 0,
-                        "totalElements", 0,
-                        "currentPage", page
-                );
+                return new AdminJobFeedResponse(List.of(), null, false);
             }
 
-            enrichSkills((List<JobFeedItemResponse>) (List<?>) jobs);
+            boolean hasMore = jobs.size() > limit;
+            List<AdminJobFeedItemResponse> resultList = hasMore ? jobs.subList(0, limit) : jobs;
 
-            return Map.of(
-                    "jobs", jobs,
-                    "currentPage", page
-            );
+            enrichSkills((List<JobFeedItemResponse>) (List<?>) resultList);
+
+            String nextCursor = hasMore ? jobs.get(limit).getJobId() : null;
+
+            return new AdminJobFeedResponse(resultList, nextCursor, hasMore);
 
         } catch (Exception e) {
-            e.printStackTrace();
             System.err.println("Lỗi khi admin lấy danh sách job: " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
-    public List<AdminJobFeedItemResponse> adminGetJobPending(int page, String cursor, int limit, String modStatus){
+    public AdminJobFeedResponse adminGetJobPending(String cursor, int limit, String modStatus){
         try{
             ModerationStatus newModStatus = null;
             if (modStatus != null && !modStatus.isEmpty()) {
@@ -131,15 +126,26 @@ public class JobService {
                 }
             }
 
-            Pageable pageable = PageRequest.of(page,limit);
+            Pageable pageable = PageRequest.of(0,limit+1);
 
-            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobPending(cursor,newModStatus,pageable);
+            JobStatus pending = JobStatus.PENDING;
+            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobs(cursor,pending,newModStatus,pageable);
 
+            if(jobs.isEmpty()){
+                return new AdminJobFeedResponse(List.of(), null, false);
+            }
 
+            boolean hasMore = jobs.size() > limit;
+            List<AdminJobFeedItemResponse> resultList = hasMore ? jobs.subList(0, limit) : jobs;
+            enrichSkills((List<JobFeedItemResponse>) (List<?>) resultList);
 
+            String nextCursor = hasMore ? jobs.get(limit).getJobId() : null;
+
+            return new AdminJobFeedResponse(resultList, nextCursor, hasMore);
+        }catch(Exception e){
+            System.err.println("Lỗi khi admin lấy danh sách job đang chờ: " + e.getMessage());
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-
-
     }
 
     private void enrichSkills(List<JobFeedItemResponse> items) {

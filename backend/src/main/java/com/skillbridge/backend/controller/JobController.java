@@ -61,15 +61,26 @@ public class JobController {
     }
 
     @GetMapping("/feedAdmin")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllJobsForAdmin(
-            @RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getAllJobsForAdmin(
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String modStatus) {
+            @RequestParam(required = false) String modStatus
+    ) {
+        AdminJobFeedResponse result = jobService.adminGetJob(cursor, limit, status, modStatus);
+        ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
 
-        Map<String, Object> result = jobService.adminGetJob(page, cursor, limit, status, modStatus);
-        ApiResponse<Map<String, Object>> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/feedAdminPending")
+    public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getPendingJobsForAdmin(
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String modStatus
+    ){
+        AdminJobFeedResponse result = jobService.adminGetJobPending(cursor,limit,modStatus);
+        ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Pending Job Feed",result);
 
         return ResponseEntity.ok(response);
     }
