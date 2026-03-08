@@ -28,7 +28,7 @@ const AdminJobPage = () => {
             });
 
             setJobs(prev => {
-                const newJobs = data.jobs || [];
+                const newJobs = data.jobs;
                 if (!isMore) return newJobs;
                 const existingIds = new Set(prev.map(j => j.id));
                 const uniqueNewJobs = newJobs.filter(j => !existingIds.has(j.id));

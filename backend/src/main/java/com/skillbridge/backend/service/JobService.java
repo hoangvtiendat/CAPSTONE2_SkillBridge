@@ -605,6 +605,7 @@ public class JobService {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
         job.setStatus(JobStatus.CLOCK);
+        job.setIsDeleted(true);
         jobRepository.save(job);
 
         return job;
