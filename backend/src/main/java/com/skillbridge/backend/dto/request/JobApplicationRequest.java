@@ -7,15 +7,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class JobApplicationRequest {
-    @NotBlank(message = "Vui lòng đính kèm CV của bạn")
-    private String cvUrl;
-
     @NotBlank(message = "Tên không được để trống")
     private String name;
 

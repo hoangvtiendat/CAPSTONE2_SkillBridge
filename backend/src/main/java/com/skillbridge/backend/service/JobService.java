@@ -1,4 +1,5 @@
 package com.skillbridge.backend.service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
@@ -16,7 +17,8 @@ import com.skillbridge.backend.repository.JobRepository;
 import lombok.Builder;
 import org.springframework.data.domain.Page;
 import com.skillbridge.backend.repository.SystemLogRepository;
-import jakarta.transaction.Transactional;
+//import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import com.skillbridge.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -24,18 +26,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class JobService {
+    private final String UPLOAD_DIR = "uploads/";
     private final JobRepository jobRepository;
     private final SystemLogRepository systemLogRepository;
     private final SystemLogService logsService;
@@ -47,6 +54,8 @@ public class JobService {
     private final CandidateRepository candidateRepository;
     private final ApplicationRepository applicationRepository;
     private final ObjectMapper objectMapper;
+    private final FileStorageService fileStorageService;
+
 
 
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
@@ -632,9 +641,8 @@ public class JobService {
         throw new AppException(ErrorCode.JOB_STATUS_EXITS);
     }
 
-    @Transactional
-    public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId)
-    {
+    @Transactional(rollbackFor = Exception.class)
+    public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId, MultipartFile cv) throws IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -645,6 +653,9 @@ public class JobService {
 
         Candidate candidate = candidateRepository.findByUser_Id(userId).orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
         Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+
+
         if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
             throw new AppException(ErrorCode.ALREADY_APPLIED);
         }
@@ -655,13 +666,14 @@ public class JobService {
         } catch (JsonProcessingException e) {
             log.error("Lỗi parse qualifications: {}", e.getMessage());
         }
+        String cvUrl = fileStorageService.saveFile(cv, "CVs");
         Application application = Application.builder()
                 .job(job)
                 .candidate(candidate)
                 .fullName(request.getName())
                 .email(request.getEmail())
                 .phoneNumber(request.getNumberPhone())
-                .cvUrl(request.getCvUrl())
+                .cvUrl(cvUrl)
                 .recommendationLetter(request.getRecommendationLetter())
                 .qualifications(qualificationsSnapshot)
                 .status(ApplicationStatus.PENDING)

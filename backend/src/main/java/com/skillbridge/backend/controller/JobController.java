@@ -18,6 +18,7 @@ import com.skillbridge.backend.service.JobService;
 import jakarta.validation.Valid;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -176,23 +177,29 @@ public class JobController {
     public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
         Job rePost = jobService.repost(id);
         return ResponseEntity.ok(
-                new ApiResponse<>(200, "Đăng lại bài đăng thành ", rePost)
+                new ApiResponse<>(200, "Đăng lại bài đăng thành công ", rePost)
         );
     }
 
-    @PostMapping("/{jobId/apply}")
-    public ResponseEntity<ApiResponse<JobApplicationRequest>> applyJob(@RequestBody JobApplicationRequest request, @PathVariable String jobId) {
+    @PostMapping(value = "/{jobId}/apply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<JobApplicationRequest>> applyJob(
+            @PathVariable String jobId,
+            @RequestPart("request") @Valid JobApplicationRequest request,
+            @RequestPart("cv") MultipartFile cv
+    ) {
         try {
-            JobApplicationRequest rs = jobService.applyJob(request, jobId);
+            JobApplicationRequest rs = jobService.applyJob(request, jobId, cv);
 
             ApiResponse<JobApplicationRequest> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Lấy dữ liệu cá nhân thành công", rs
+                    HttpStatus.OK.value(), "Nộp hồ sơ ứng tuyển thành công", rs
             );
             return ResponseEntity.ok(response);
         } catch (AppException ex) {
-            System.out.println("[APPLY-JOB] AppException occurred");
-            System.out.println("[APPLY-JOB] ErrorCode: " + ex.getErrorCode());
+            ex.printStackTrace();
             throw ex;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
