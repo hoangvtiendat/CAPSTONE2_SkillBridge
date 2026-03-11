@@ -1,3 +1,4 @@
+import { ca } from 'date-fns/locale';
 import api from '../../config/axiosConfig';
  
 const subscriptionService = {
@@ -67,6 +68,21 @@ const subscriptionService = {
             console.error('Error:', error);
             throw error;
         }
+    },
+    // Tao goi thanh toan 
+    postPayment: async (id, token) => {
+        try {
+        const response = await api.post(`/subscription/create-oder/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
     }
-};
+    catch (error) {
+        console.error('Error creating payment:', error);
+        throw error;
+    }
+    }
+}
 export default subscriptionService; 
