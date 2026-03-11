@@ -21,11 +21,13 @@ public enum ErrorCode {
     EMAIL_ALREADY_REGISTERED_BY_PASSWORD(2007, "Email đã được đăng ký bằng tài khoản LOCAL"),
     INVALID_OTP(2005,"Mã OTP SAI"),
     INVALID_INPUT(2006, "Dữ liệu đầu vào không hợp lệ"),
+
     FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),
     USER_STATUS(3003,"Tài khoản đã bị khóa"),
     USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),
     CATEGORY_NOT_FOUND(3005, "Không tìm thấy danh mục lĩnh vực"),
     CANDIDATE_NOT_FOUND(3006, "Không tìm thấy thông tin ứng viên"),
+
     // ===== AUTH / SECURITY =====
     TOKEN_EXPIRED(402,"Token đã hết hạn, vui lòng đăng nhập lại"),
     UNAUTHORIZED(401, "Bạn chưa đăng nhập"),
@@ -72,12 +74,15 @@ public enum ErrorCode {
     INVALID_CUSTOM_LIMITS(916, "Số lượng phải lớn hơn 0"),
     ACCESS_DENIED(917, "Bạn chỉ có thể xóa gói cước của công ty bạn"),
 
-        ///  ===== Other ======
+    //CATEGORY
+    CATEGORY_EXIST(2008, "Ngành nghề này đã tồn tại"),
+
+    //  DEGREE
     DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
     INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
     INVALID_CERTIFICATE(5003, "Chứng chỉ không hợp lệ hoặc đã hết hạn"),
     INVALID_DEGREE_TYPE(5004, "Loại bằng cấp không hỗ trợ"),
-    CATEGORY_EXIST(2008, "Ngành nghề này đã tồn tại"),
+
 
     //COMPANIES
     COMPANY_EXIST(6001,"Công ty đã được đăng ký"),
@@ -95,10 +100,13 @@ public enum ErrorCode {
     JOIN_REQUEST_NOT_FOUND(7003, "Không tìm thấy yêu cầu tham gia"),
     INVALID_JOIN_REQUEST(7004, "Yêu cầu tham gia không hợp lệ"),
     JOIN_REQUEST_ALREADY_PROCESSED(7005, "Yêu cầu này đã được xử lý"),
-    JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text"),
+    JSON_TO_TEXT_EXIT(7006, "lỗi biến đổi Json sang Text"),
 
     //JOB
-    ALREADY_APPLIED(6001, "Hồ sơ ứng tuyển đã tồn tại cho bài đăng tuyển này")
+    ALREADY_APPLIED(8001, "Hồ sơ ứng tuyển đã tồn tại cho bài đăng tuyển này"),
+
+    //APPLICATION
+    APPLICATION_NOT_FOUND(9001, "Không tìm thấy hồ sơ ứng tuyển")
     ;
     private int code;
     private String message;

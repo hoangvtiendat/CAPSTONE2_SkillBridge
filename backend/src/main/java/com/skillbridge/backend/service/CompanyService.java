@@ -231,21 +231,6 @@ public class CompanyService {
         );
     }
 
-//    private String saveFile(MultipartFile file, String subFolder) throws IOException {
-//        if (file == null || file.isEmpty()) return null;
-//
-//        Path uploadPath = Paths.get(UPLOAD_DIR + subFolder);
-//        if (!Files.exists(uploadPath)) {
-//            Files.createDirectories(uploadPath);
-//        }
-//
-//        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-//        Path filePath = uploadPath.resolve(fileName);
-//        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-//
-//        return "/" + subFolder + "/" + fileName;
-//    }
-
     public String joinCompany(String companyId, String token) {
         User user = userService.getMe(token);
         Company company = companyRepository.findById(companyId).orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
