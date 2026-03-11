@@ -11,7 +11,8 @@ import {
     ShieldCheck,
     ChevronDown,
     ChevronRight,
-    ClipboardList
+    ClipboardList,
+    Search
 } from 'lucide-react';
 import '../admin/Admin.css';
 
@@ -38,7 +39,7 @@ const Sidebar = () => {
         },
         {
             title: 'Gói cước & Giá',
-            path: '/admin/pricing',
+            path: '/admin/subscriptions',
             icon: <CreditCard size={20} />
         },
         {
@@ -52,7 +53,8 @@ const Sidebar = () => {
         { title: 'Quản lí người dùng', path: '/admin/management/users', icon: <Users size={18} /> },
         { title: 'Quản lí công ty', path: '/admin/management/companies', icon: <Building2 size={18} /> },
         { title: 'Quản lí ngành nghề', path: '/admin/management/industries', icon: <Briefcase size={18} /> },
-        { title: 'Quản lí Kĩ năng', path: '/admin/management/skills', icon: <Settings size={18} /> }
+        { title: 'Quản lí tin đăng', path: '/admin/jobs', icon: <FileText size={18} /> },
+        { title: 'Tra cứu mã số thuế', path: '/admin/tax-lookup', icon: <Search size={18} /> }
     ];
 
     const isActive = (path) => location.pathname === path;

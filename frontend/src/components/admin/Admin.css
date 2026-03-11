@@ -862,3 +862,47 @@
     font-weight: 600 !important;
     border-radius: 12px !important;
 }
+
+.industry-name-link:hover {
+    color: var(--admin-primary) !important;
+    text-decoration: underline;
+}
+/* Subscription Plan Badges */
+.plan-badge-mini,
+.plan-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.plan-free {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.plan-standard {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+.plan-premium {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+}
+
+.plan-customize {
+    background: #eef2ff;
+    color: #4f46e5;
+    border-color: #c7d2fe;
+}

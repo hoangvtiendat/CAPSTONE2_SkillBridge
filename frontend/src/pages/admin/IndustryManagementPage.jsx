@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import {
     Plus,
@@ -18,6 +19,7 @@ import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
 
 const IndustryManagementPage = () => {
+    const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -163,13 +165,18 @@ const IndustryManagementPage = () => {
                                 categories.map((cat) => (
                                     <tr key={cat.id} className="table-row-hover">
                                         <td>
-                                            <div className="user-info-cell">
+                                            <div
+                                                className="user-info-cell"
+                                                onClick={() => navigate(`/admin/category/${cat.id}/skills`)}
+                                                style={{ cursor: 'pointer' }}
+                                                title={`Xem danh sách kỹ năng của ${cat.name}`}
+                                            >
                                                 <div className="user-avatar-wrapper" style={{ width: '40px', height: '40px', borderRadius: '10px' }}>
                                                     <div className="user-avatar-placeholder" style={{ background: '#f1f5f9', color: '#64748b' }}>
                                                         <Briefcase size={18} />
                                                     </div>
                                                 </div>
-                                                <span style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b' }}>{cat.name}</span>
+                                                <span className="industry-name-link" style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b' }}>{cat.name}</span>
                                             </div>
                                         </td>
                                         <td>
