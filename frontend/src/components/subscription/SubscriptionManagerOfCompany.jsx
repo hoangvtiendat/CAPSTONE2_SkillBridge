@@ -92,7 +92,6 @@ const getListSubscriptionOfCompany = async () => {
             
             const pending = subscriptionList.find(sub => sub.status === 'PENDING_PAYMENT');
             
-            // TH1: Quay lại từ payment gateway với URL params
             if (returnFromPayment && paymentStatus !== '1' && pending) {
                 toast.info('Thanh toán chưa hoàn tất. Giao dịch đã bị hủy.', {
                     description: 'Bạn có thể tạo đơn mới nếu muốn thanh toán lại.',
@@ -108,13 +107,10 @@ const getListSubscriptionOfCompany = async () => {
                 return; 
             }
             
-            // TH2: Thanh toán thành công - clear sessionStorage
             if (returnFromPayment && paymentStatus === '1') {
                 sessionStorage.removeItem('pendingPayment');
             }
-            
-            // TH3: Có sessionStorage (đã sang ZaloPay) nhưng không có return params
-            // Nghĩa là user ấn Back hoặc đóng tab ZaloPay
+  
             if (pendingPaymentId && !returnFromPayment && pending && pending.id === pendingPaymentId) {
                 toast.info('Thanh toán chưa hoàn tất. Giao dịch đã bị hủy.', {
                     description: 'Bạn có thể tạo đơn mới nếu muốn thanh toán lại.',
@@ -176,7 +172,6 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
             setShowNotification(false);
         }
         
-        // Chỉ fetch lại data nếu không phải auto-delete (vì auto-delete đã được gọi từ fetch)
         if (!isAutoDelete) {
             getListSubscriptionOfCompany();
         } 
@@ -245,9 +240,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
     if (loading) return <div className="loading">Đang tải...</div>;
 
     const currentSubscription = subscriptions.find(sub => sub.status === 'OPEN');
-    const allHistorySubscriptions = subscriptions.filter(sub => sub.status === 'CLOSE');
-    
-    const historySubscriptions = allHistorySubscriptions.filter(sub => sub.status === 'CLOSE');
+    const historySubscriptions = subscriptions.filter(sub => sub.status === 'CLOSE');
     const premiumPkg = systemPackages.length > 0 ? systemPackages[0] : null;
     return (
         <div className="sub-manager-container">
@@ -476,7 +469,13 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                                 Đã hoàn thành
                                             </span>
                                         </td>
-                                        <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(sub.price)}</td>
+                                        <td>
+                                            {sub.price === 0 || sub.price === null ? (
+                                                <span style={{color: '#10b981', fontWeight: '600'}}>Miễn phí</span>
+                                            ) : (
+                                                new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(sub.price)
+                                            )}
+                                        </td>
                                     </tr>
                                 ))
                             ) : (

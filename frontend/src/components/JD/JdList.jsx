@@ -101,7 +101,7 @@ const JdList = () => {
         ALL: jdList.length,
         OPEN: jdList.filter(jd => jd.status === 'OPEN').length,
         PENDING: jdList.filter(jd => jd.status === 'PENDING').length,
-        DELETE: jdList.filter(jd => jd.status === 'DELETE').length,
+        DELETE: jdList.filter(jd => jd.status === 'LOCK').length,
         CLOSED: jdList.filter(jd => jd.status === 'CLOSED').length
     };
   
