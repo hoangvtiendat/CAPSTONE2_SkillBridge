@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import subscriptionService from '../../services/api/subscriptionService';
 import { toast } from 'sonner';
-import { Check, Edit, Calendar, Info, Plus, X, MoreVertical, Trash2, CreditCard, Bell, Clock } from 'lucide-react';
+import { Check, Edit, Calendar, Info, Plus, X, MoreVertical, Trash2, CreditCard, Bell, Clock, Package, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import CreateSubscriptionForm from './CreateSubscriptionForm';
 import './SubscriptionManagerOfCompany.css';
+import { ca } from 'date-fns/locale';
 
 const SubscriptionManagerOfCompany = () => {
     const { token } = useAuth();
+    const navigate = useNavigate();
     const [subscriptions, setSubscriptions] = useState([]); 
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -17,14 +20,35 @@ const SubscriptionManagerOfCompany = () => {
     const [pendingTransaction, setPendingTransaction] = useState(null);
     const [countdown, setCountdown] = useState(0);
     const [showNotification, setShowNotification] = useState(false);
+    const [systemPackages, setSystemPackages] = useState([]);
 
-
-const postPayment = async (id) => {
+const fetchSystemPackages = async () => {
+    try {
+        const response = await subscriptionService.getlistSubscription();
+        const data = response?.result || response?.data || response || [];
+        console.log('Fetched system packages:', data);
+        
+        const packages = Array.isArray(data) ? data : [];
+        
+        const premiumPackage = packages.find(pkg => 
+            pkg.name && pkg.name.toLowerCase() === "premium"
+        );
+        
+        console.log('Premium package found:', premiumPackage);
+        setSystemPackages(premiumPackage ? [premiumPackage] : []);
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || 'Lỗi khi tải danh sách gói đăng ký';
+        console.error(errorMessage, error);
+        toast.error('Không thể tải gói Premium', { description: errorMessage });
+    }
+}
+const postPayment = async (id, type) => {
     try {
         setLoading(true);
-        const res = await subscriptionService.postPayment(id, token);
+        const res = await subscriptionService.postPayment(id, token, type);
         const orderURL = res.result?.orderurl;
         if (orderURL) {
+            sessionStorage.setItem('pendingPayment', id);
             window.location.href = orderURL;
         }
     } catch (error) {
@@ -42,6 +66,17 @@ const getListSubscriptionOfCompany = async () => {
        
         try {
             setLoading(true);
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const paymentStatus = urlParams.get('status');
+            const returnFromPayment = urlParams.get('apptransid') || urlParams.get('return');
+            
+            const pendingPaymentId = sessionStorage.getItem('pendingPayment');
+            
+            if (returnFromPayment) {
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+            
             const data = await subscriptionService.listSubcriftionOfCompany(token);
             
             let subscriptionList = [];
@@ -57,6 +92,44 @@ const getListSubscriptionOfCompany = async () => {
             
             const pending = subscriptionList.find(sub => sub.status === 'PENDING_PAYMENT');
             
+            // TH1: Quay lại từ payment gateway với URL params
+            if (returnFromPayment && paymentStatus !== '1' && pending) {
+                toast.info('Thanh toán chưa hoàn tất. Giao dịch đã bị hủy.', {
+                    description: 'Bạn có thể tạo đơn mới nếu muốn thanh toán lại.',
+                    duration: 5000
+                });
+                
+                setPendingTransaction(null);
+                setCountdown(0);
+                setShowNotification(false);
+                sessionStorage.removeItem('pendingPayment');
+                
+                await handleDeleteSubscription(pending.id, true);
+                return; 
+            }
+            
+            // TH2: Thanh toán thành công - clear sessionStorage
+            if (returnFromPayment && paymentStatus === '1') {
+                sessionStorage.removeItem('pendingPayment');
+            }
+            
+            // TH3: Có sessionStorage (đã sang ZaloPay) nhưng không có return params
+            // Nghĩa là user ấn Back hoặc đóng tab ZaloPay
+            if (pendingPaymentId && !returnFromPayment && pending && pending.id === pendingPaymentId) {
+                toast.info('Thanh toán chưa hoàn tất. Giao dịch đã bị hủy.', {
+                    description: 'Bạn có thể tạo đơn mới nếu muốn thanh toán lại.',
+                    duration: 5000
+                });
+                
+                setPendingTransaction(null);
+                setCountdown(0);
+                setShowNotification(false);
+                sessionStorage.removeItem('pendingPayment');
+                
+                await handleDeleteSubscription(pending.id, true);
+                return;
+            }
+            
             if (pending && (!pendingTransaction || pendingTransaction.id !== pending.id)) {
                 setPendingTransaction(pending);
                 
@@ -64,7 +137,7 @@ const getListSubscriptionOfCompany = async () => {
                     const createdTime = new Date(pending.createdAt).getTime();
                     const now = Date.now();
                     const elapsed = Math.floor((now - createdTime) / 1000);
-                    const remaining = Math.max(900 - elapsed, 0); // 900 seconds = 15 minutes
+                    const remaining = Math.max(900 - elapsed, 0); 
                     setCountdown(remaining);
                 } else {
                     setCountdown(900); 
@@ -97,15 +170,18 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
             toast.success('Xóa gói đăng ký thành công');
         }
         
-        // Clear pending transaction if it's the one being deleted
         if (pendingTransaction && pendingTransaction.id === id) {
             setPendingTransaction(null);
             setCountdown(0);
+            setShowNotification(false);
         }
         
-        getListSubscriptionOfCompany(); 
+        // Chỉ fetch lại data nếu không phải auto-delete (vì auto-delete đã được gọi từ fetch)
+        if (!isAutoDelete) {
+            getListSubscriptionOfCompany();
+        } 
     } catch (error) {
-        console.error('❌ Lỗi khi xóa:', error);
+        console.error(' Lỗi khi xóa:', error);
         console.error('Error response:', error.response);
         console.error('Error data:', error.response?.data);
         
@@ -118,6 +194,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
 
     useEffect(() => {
         getListSubscriptionOfCompany();
+        fetchSystemPackages();
     }, [token]);
 
     useEffect(() => {
@@ -171,7 +248,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
     const allHistorySubscriptions = subscriptions.filter(sub => sub.status === 'CLOSE');
     
     const historySubscriptions = allHistorySubscriptions.filter(sub => sub.status === 'CLOSE');
-
+    const premiumPkg = systemPackages.length > 0 ? systemPackages[0] : null;
     return (
         <div className="sub-manager-container">
             {pendingTransaction && countdown > 0 && (
@@ -194,7 +271,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                             <div className="notification-header">
                                 <div>
                                     <h4>Giao dịch chờ thanh toán</h4>
-                                    <span className="transaction-id">Mã GD: {pendingTransaction.id.substring(0, 16)}...</span>
+                                    <span className="transaction-id">Mã GD: {pendingTransaction.id.substring(0, 12)}...</span>
                                 </div>
                                 <span className={`countdown-text ${countdown <= 180 ? 'urgent' : ''}`}>
                                     <Clock size={16} />
@@ -228,7 +305,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                     className="notification-btn btn-payment"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        postPayment(pendingTransaction.id);
+                                        postPayment(pendingTransaction.id, 1);
                                     }}
                                 >
                                     <CreditCard size={16} />
@@ -269,13 +346,8 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                             </span>
                         </div>
                         <div className="sub-title-row">
-                            <h2 className="sub-name">{currentSubscription?.name || 'Standard'}</h2>
-                            <div className="sub-price">
-                                <strong>{currentSubscription ? 
-                                    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(currentSubscription.price) 
-                                    : 'Free'
-                                }</strong>
-                            </div>
+                            <h2 className="sub-name">{currentSubscription?.name || "Đang xác thực"}</h2>
+                          
                         </div>
                     </div>
 
@@ -308,15 +380,8 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                             </div>
 
                             <div className="sub-actions mt-4">
-                                <button className="btn-sub-outline">
                                     Đang sử dụng
-                                </button>
-                                <button 
-                                    className="btn-sub-text text-danger"
-                                    onClick={() => handleDeleteSubscription(currentSubscription.id)}
-                                >
-                                    Hủy gói cước
-                                </button>
+                         
                             </div>
                         </>
                     ) : (
@@ -327,46 +392,58 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                 </div>
 
                 <div className="sub-card theme-dark">
-                    <div className="sub-card-header">
-                        <div className="sub-subtitle">
-                            <span className="subtitle-text">NÂNG CẤP LÊN</span>
-                            <span className="sub-badge badge-yellow">Khuyến dùng</span>
-                        </div>
-                        <div className="sub-title-row">
-                            <h2 className="sub-name">Premium</h2>
-                            <div className="sub-price">
-                                <strong>2tr</strong>/tháng
-                            </div>
-                        </div>
+                <div className="sub-card-header">
+                    <div className="sub-subtitle">
+                        <span className="subtitle-text">NÂNG CẤP LÊN</span>
+                        <span className="sub-badge badge-yellow">Khuyến dùng</span>
                     </div>
-
-                    <ul className="sub-features">
-                        <li>
-                            <Check size={18} className="icon-check" />
-                            Đăng 30 tin/tháng
-                        </li>
-                        <li>
-                            <Check size={18} className="icon-check" />
-                            Tìm 60 nhân tài/tháng
-                        </li>
-                        <li>
-                            <Check size={18} className="icon-check" />
-                            Duyệt tin ưu tiên (Đen xanh)
-                        </li>
-                    </ul>
-
-                    <div className="sub-actions mt-4">
-                        <button 
-                            className="btn-sub-yellow"
-                            onClick={() => setShowUpgradeModal(true)}
-                        >
-                            Nâng cấp ngay
-                        </button>
+                    <div className="sub-title-row">
+                        <h2 className="sub-name">{premiumPkg?.name }</h2>
+                        <div className="sub-price">
+                            <strong>
+                                {premiumPkg 
+                                    ? new Intl.NumberFormat('vi-VN').format(premiumPkg.price)
+                                    : "loading..."}
+                            </strong>
+                            /tháng
+                        </div>
                     </div>
                 </div>
+
+                <ul className="sub-features">
+                    <li>
+                        <Check size={18} className="icon-check" />
+                        Đăng {premiumPkg?.jobLimit } tin/tháng
+                    </li>
+                    <li>
+                        <Check size={18} className="icon-check" />
+                        Tìm {premiumPkg?.candidateViewLimit } nhân tài/tháng
+                    </li>
+                    <li>
+                        <Check size={18} className="icon-check" />
+                        {premiumPkg?.hasPriorityDisplay || premiumPkg?.has_priority_display 
+                            ? 'Duyệt tin ưu tiên (SkillBridge)' 
+                            : 'Thời hạn: ' + (premiumPkg?.postingDuration || premiumPkg?.posting_duration) + ' tháng'}
+                    </li>
+                    {(premiumPkg?.hasPriorityDisplay || premiumPkg?.has_priority_display) && (
+                        <li>
+                            <Check size={18} className="icon-check" />
+                            Hiển thị ưu tiên trong danh sách
+                        </li>
+                    )}
+                </ul>
+
+                <div className="sub-actions mt-4">
+                    <button 
+                        className="btn-sub-yellow"
+                        onClick={() => setShowUpgradeModal(true)}
+                    >
+                        Nâng cấp ngay
+                    </button>
+                </div>
+            </div>
             </div>
 
-            {/* Lịch sử giao dịch */}
             <div className="transaction-history-box">
                 <div className="history-header">
                     <h3 className="history-title">Lịch sử giao dịch</h3>
@@ -427,22 +504,31 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                             </button>
                         </div>
                         <div className="upgrade-modal-body">
-                            <button className="upgrade-option-btn disabled" disabled>
-                                <div className="upgrade-option-icon">📦</div>
+                            <button 
+                                className="upgrade-option-btn"
+                                onClick={() => {
+                                    setShowUpgradeModal(false);
+                                    navigate('/company/subscriptions/register?type=system');
+                                }}
+                            >
+                                <div className="upgrade-option-icon">
+                                    <Package size={28} />
+                                </div>
                                 <div className="upgrade-option-text">
                                     <h4>Đăng ký gói cước hệ thống</h4>
                                     <p>Chọn từ các gói có sẵn của SkillBridge</p>
                                 </div>
-                                <span className="coming-soon-badge">Sắp ra mắt</span>
                             </button>
                             <button 
                                 className="upgrade-option-btn"
                                 onClick={() => {
                                     setShowUpgradeModal(false);
-                                    setShowCreateForm(true);
+                                    navigate('/company/subscriptions/register?type=custom');
                                 }}
                             >
-                                <div className="upgrade-option-icon">✨</div>
+                                <div className="upgrade-option-icon">
+                                    <Sparkles size={28} />
+                                </div>
                                 <div className="upgrade-option-text">
                                     <h4>Đăng ký gói cước theo nhu cầu</h4>
                                     <p>Tùy chỉnh gói cước phù hợp với nhu cầu của bạn</p>

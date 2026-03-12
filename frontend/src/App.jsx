@@ -18,6 +18,7 @@ import AdminJobPage from './pages/admin/AdminJobPage';
 import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
 import SubscriptionOfCompanyPage from './pages/Subscription.jsx/SubscriftionOfCompany';
+import RegisterSubscriptionPage from './pages/Subscription.jsx/RegisterSubscriptionPage'
 import {Toaster} from 'sonner';
 import BusinessIdentity from './pages/recruiter/BusinessIdentity'
 // Admin Components & Pages
@@ -82,6 +83,7 @@ function App() {
                     <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
                     <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
                     <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage/>}/>
+                    <Route path='/company/subscriptions/register' element={<RegisterSubscriptionPage/>}/>
                     
                     <Route path="/admin" element={<AdminLayout/>}>
                         <Route index element={<AdminDashboardPage/>}/>
