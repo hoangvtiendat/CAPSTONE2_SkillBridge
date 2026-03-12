@@ -1,5 +1,6 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.dto.request.RespondToApplicationRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.RegisterResponse;
 import com.skillbridge.backend.entity.Application;
@@ -67,14 +68,27 @@ public class ApplicationController {
         }
     }
 
-//    @PostMapping
-//    public ResponseEntity<ApiResponse<?>> respondToApplication(
-//
-//    ) {
-//        try {
-//
-//        } catch (AppException ex) {
-//        }
-//    }
+    @PostMapping("/{id}/respond")
+    public ResponseEntity<ApiResponse<String>> respondToApplication(
+            @PathVariable String id, @Valid @RequestHeader(value = "Authorization") String token, @RequestBody RespondToApplicationRequest request
+            ) {
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            String jwt = token.substring(7);
+
+            String rs = applicationService.respondToApplication(id, jwt, request);
+
+            ApiResponse<String> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Lấy đơn ứng tuyển theo tin tuyển dụng thành công", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[GET APPLICATION BY COMPANY ID] AppException occurred");
+            System.out.println("[GET APPLICATION BY COMPANY ID] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
 
 }

@@ -86,12 +86,6 @@ public class JwtService {
     }
 
     public boolean validateToken(String token) {
-//        try {
-//            extractClaims(token);
-//            return true;
-//        } catch (JwtException e) {
-//            return false;
-//        }
         try {
             Claims claims = extractClaims(token);
             String jti = claims.getId(); // Lấy ID duy nhất của token

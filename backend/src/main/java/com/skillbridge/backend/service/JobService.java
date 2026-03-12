@@ -18,6 +18,7 @@ import lombok.Builder;
 import org.springframework.data.domain.Page;
 import com.skillbridge.backend.repository.SystemLogRepository;
 //import jakarta.transaction.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import com.skillbridge.backend.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +56,8 @@ public class JobService {
     private final ApplicationRepository applicationRepository;
     private final ObjectMapper objectMapper;
     private final FileStorageService fileStorageService;
-
+    private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
@@ -680,8 +682,36 @@ public class JobService {
                 .aiMatchingScore(0.0f)
                 .build();
 
-        applicationRepository.save(application);
+        Application savedApp = applicationRepository.save(application);
+        List<CompanyMember> recruiters = companyMemberRepository.findByCompany_Id(job.getCompany().getId());
+        String title = "Ứng tuyển mới: " + job.getTitle();
+        String content = "Ứng viên " + request.getName() + " vừa nộp hồ sơ cho vị trí " + job.getTitle();
+        String link = "/recruiter/applications/" + savedApp.getId(); // Link FE cho nhà tuyển dụng
 
+        for (CompanyMember recruiterMember : recruiters) {
+            User recruiter = recruiterMember.getUser();
+            System.out.println("recruiter auuu: " + recruiter.getId());
+            // A. Lưu thông báo vào DB cho từng người
+            Notification notification = Notification.builder()
+                    .user(recruiter)
+                    .title(title)
+                    .content(content)
+                    .isRead(false)
+                    .type("NEW_APPLICATION")
+                    .link(link)
+                    .build();
+            notificationRepository.save(notification);
+
+            try {
+                messagingTemplate.convertAndSendToUser(
+                        recruiter.getId(),
+                        "/queue/notifications",
+                        notification
+                );
+            } catch (Exception e) {
+                log.error("Lỗi bắn WebSocket cho recruiter {}: {}", recruiter.getId(), e.getMessage());
+            }
+        }
         return request;
     }
 }
