@@ -37,6 +37,7 @@ public enum ErrorCode {
     DUPLICATE_JOB_SKILL(504, "Hiện tại kĩ năng đang được sử dụng"),
     /// Company
     EXIT_STATUS_COMPANY(601, "Hiện tại trạng thái của công ty bạn không cho phép"),
+
     /// Comapany_member
     MEMBER_NOT_FOUND(701,"Bạn chưa là nhân viên của công ty nào cả"),
     // Jobs
@@ -44,6 +45,8 @@ public enum ErrorCode {
     EXITS_JD_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
     EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền để thực hiện chức năng này"),
     JOB_STATUS_EXITS(804,"Hiện tại JD đang được sử dụng vui lòng đăng lại khi bài đăng đóng"),
+    SUBCRIFTION_OF_COMPANY(805, "Không tìm thấy gói cước của Công ty "),
+    EXIR_SUBSCRIFTION(806,"Hiện tại ban đã sử dụng hết dịch vụ gói cước"),
     ///  ===== SUBSCRIPTTION
     // Thêm vào Enum ErrorCode của bạn
     NOT_FOUND_SUBSCRIPTION(901, "Không tìm thấy gói đăng ký"),

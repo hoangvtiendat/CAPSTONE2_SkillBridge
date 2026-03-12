@@ -169,7 +169,7 @@ public class JobController {
                 new ApiResponse<>(200, "Xóa bài đăng thành công", updatedJob)
         );
     }
-
+///  chưa làm nha
     @PostMapping("/repost/{id}")
     public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
         Job rePost = jobService.repost(id);
