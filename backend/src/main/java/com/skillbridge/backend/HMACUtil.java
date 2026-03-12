@@ -1,9 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
+package com.skillbridge.backend;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -48,20 +43,6 @@ public class HMACUtil {
         return macGenerator.doFinal(dataByte);
     }
 
-    /**
-     * Calculating a message authentication code (MAC) involving a cryptographic
-     * hash function in combination with a secret cryptographic key.
-     *
-     * The result will be represented base64-encoded string.
-     *
-     * @param algorithm A cryptographic hash function (such as MD5 or SHA-1)
-     *
-     * @param key A secret cryptographic key
-     *
-     * @param data The message to be authenticated
-     *
-     * @return Base64-encoded HMAC String
-     */
     public static String HMacBase64Encode(final String algorithm, final String key, final String data) {
         byte[] hmacEncodeBytes = HMacEncode(algorithm, key, data);
         if (hmacEncodeBytes == null) {
@@ -70,25 +51,17 @@ public class HMACUtil {
         return Base64.getEncoder().encodeToString(hmacEncodeBytes);
     }
 
-    /**
-     * Calculating a message authentication code (MAC) involving a cryptographic
-     * hash function in combination with a secret cryptographic key.
-     *
-     * The result will be represented hex string.
-     *
-     * @param algorithm A cryptographic hash function (such as MD5 or SHA-1)
-     *
-     * @param key A secret cryptographic key
-     *
-     * @param data The message to be authenticated
-     *
-     * @return Hex HMAC String
-     */
     public static String HMacHexStringEncode(final String algorithm, final String key, final String data) {
         byte[] hmacEncodeBytes = HMacEncode(algorithm, key, data);
         if (hmacEncodeBytes == null) {
             return null;
         }
-        return HexStringUtil.byteArrayToHexString(hmacEncodeBytes);
+
+        // ĐOẠN ĐÃ SỬA: Thay thế HexStringUtil bằng code Java chuẩn để hết báo lỗi đỏ
+        StringBuilder sb = new StringBuilder(hmacEncodeBytes.length * 2);
+        for (byte b : hmacEncodeBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }

@@ -8,12 +8,14 @@ import com.skillbridge.backend.entity.SubcriptionOfCompany;
 import com.skillbridge.backend.entity.SubscriptionPlan;
 import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
 import com.skillbridge.backend.service.SubscriptionService;
+import com.skillbridge.backend.service.ZaloPayService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/subscription")
@@ -21,10 +23,11 @@ import java.util.List;
 public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
+    private final ZaloPayService zaloPayService;
 
-
-    public SubscriptionController(SubscriptionService subscriptionService) {
+    public SubscriptionController(SubscriptionService subscriptionService, ZaloPayService zaloPayService) {
         this.subscriptionService = subscriptionService;
+        this.zaloPayService = zaloPayService;
     }
 
     @GetMapping("/list")
@@ -66,6 +69,26 @@ public class SubscriptionController {
     @GetMapping("/company/list")
     public ResponseEntity<List<SubcriptionOfCompany>> getAllSubscriptionPlans() {
         return ResponseEntity.ok(subscriptionService.getMyCompanySubscriptions());
+    }
+    @PostMapping("/create-oder/{idSub}/{type}")
+    public ResponseEntity<?> createOder(@PathVariable("idSub") String idSub, @PathVariable("type") int type) {
+        try{
+            Map<String, Object> response = zaloPayService.createOder(idSub, type);
+            return ResponseEntity.ok(
+                    new ApiResponse<>(200, "Tạo gói cước thành công", response)
+            );
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @PostMapping("/callback")
+    public String callback(@RequestBody String jsonStr, @RequestHeader Map<String, String> headers) {
+        System.out.println("---------- ZALOPAY CALLBACK DETECTED ----------");
+        System.out.println("Headers: " + headers);
+        System.out.println("Body: " + jsonStr);
+        return zaloPayService.procssCallBack(jsonStr);
     }
 
 }
