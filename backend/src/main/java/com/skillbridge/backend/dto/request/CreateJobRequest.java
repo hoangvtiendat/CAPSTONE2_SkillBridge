@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +25,8 @@ public class CreateJobRequest {
     @NotBlank(message = "Danh mục không được để trống")
     private String categoryId;
 
-    private String salaryMin;
-    private String salaryMax;
+    private BigDecimal salaryMin;
+    private BigDecimal salaryMax;
     private String location;
     @NotEmpty(message = "Danh sách kĩ năng không được để trống")
     private List<JobSkillRequest> skills;

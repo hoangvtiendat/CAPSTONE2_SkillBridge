@@ -1,5 +1,6 @@
 package com.skillbridge.backend.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,8 +10,8 @@ public class JobDetailResponse {
     private String description;
     private String position;
     private String location;
-    private String salaryMin;
-    private String salaryMax;
+    private BigDecimal salaryMin;
+    private BigDecimal salaryMax;
     private String status;
     private String moderationStatus;
     private String companyId;
@@ -20,7 +21,7 @@ public class JobDetailResponse {
     private List<String> skills;
     private LocalDateTime createdAt;
 
-    public JobDetailResponse(String jobId, Object title, String description, String position, String location, String salaryMin, String salaryMax, String status, String moderationStatus, String companyId, String companyName, String companyImageUrl, String categoryName, List<String> skills, LocalDateTime createdAt) {
+    public JobDetailResponse(String jobId, Object title, String description, String position, String location, BigDecimal salaryMin, BigDecimal salaryMax, String status, String moderationStatus, String companyId, String companyName, String companyImageUrl, String categoryName, List<String> skills, LocalDateTime createdAt) {
         this.jobId = jobId;
         this.title = title;
         this.description = description;
@@ -78,19 +79,19 @@ public class JobDetailResponse {
         this.location = location;
     }
 
-    public String getSalaryMin() {
+    public BigDecimal getSalaryMin() {
         return salaryMin;
     }
 
-    public void setSalaryMin(String salaryMin) {
+    public void setSalaryMin(BigDecimal salaryMin) {
         this.salaryMin = salaryMin;
     }
 
-    public String getSalaryMax() {
+    public BigDecimal getSalaryMax() {
         return salaryMax;
     }
 
-    public void setSalaryMax(String salaryMax) {
+    public void setSalaryMax(BigDecimal salaryMax) {
         this.salaryMax = salaryMax;
     }
 

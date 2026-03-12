@@ -1,5 +1,6 @@
 package com.skillbridge.backend.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,13 +13,13 @@ public class JobFeedItemResponse {
     private Object subscriptionPlanName;
     private String location;
     private String categoryName;
-    private String salaryMin;
-    private String salaryMax;
+    private BigDecimal salaryMin;
+    private BigDecimal salaryMax;
     List<String> skills;
     private LocalDateTime createdAt;
 
     public JobFeedItemResponse(String jobId, Object title, String description, String location,
-                               String salaryMin, String salaryMax, LocalDateTime createdAt,
+                               BigDecimal salaryMin, BigDecimal salaryMax, LocalDateTime createdAt,
                                String companyName, String companyImageUrl, Object subscriptionPlanName, String categoryName) {
         this.jobId = jobId;
         this.title = title;
@@ -103,19 +104,19 @@ public class JobFeedItemResponse {
         this.categoryName = categoryName;
     }
 
-    public String getSalaryMin() {
+    public BigDecimal getSalaryMin() {
         return salaryMin;
     }
 
-    public void setSalaryMin(String salaryMin) {
+    public void setSalaryMin(BigDecimal salaryMin) {
         this.salaryMin = salaryMin;
     }
 
-    public String getSalaryMax() {
+    public BigDecimal getSalaryMax() {
         return salaryMax;
     }
 
-    public void setSalaryMax(String salaryMax) {
+    public void setSalaryMax(BigDecimal salaryMax) {
         this.salaryMax = salaryMax;
     }
 

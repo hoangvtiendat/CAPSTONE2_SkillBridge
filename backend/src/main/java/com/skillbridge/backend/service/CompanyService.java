@@ -50,13 +50,15 @@ public class CompanyService {
     private final CompanyRepository companyRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final CompanyJoinRequestRepository companyJoinRequestRepository;
+    private final FileStorageService fileStorageService;
 
-    public CompanyService(CompanyRepository companyRepository, SubscriptionPlanRepository subscriptionPlanRepository, CompanyMemberRepository companyMemberRepository, UserService userService, CompanyJoinRequestRepository companyJoinRequestRepository) {
+    public CompanyService(FileStorageService fileStorageService, CompanyRepository companyRepository, SubscriptionPlanRepository subscriptionPlanRepository, CompanyMemberRepository companyMemberRepository, UserService userService, CompanyJoinRequestRepository companyJoinRequestRepository) {
         this.companyRepository = companyRepository;
         this.subscriptionPlanRepository = subscriptionPlanRepository;
         this.companyMemberRepository = companyMemberRepository;
         this.userService = userService;
         this.companyJoinRequestRepository = companyJoinRequestRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     public Map<String, Object> getCompanies(int page,String cursor , CompanyStatus status, int limit) {
@@ -202,15 +204,16 @@ public class CompanyService {
             throw new AppException(ErrorCode.COMPANY_EXIST);
         }
 
-        String logoUrl = saveFile(logo, "logos");
-        String licenseUrl = saveFile(license, "licenses");
+        // 2. Xử lý lưu File
+        String logoUrl = fileStorageService.saveFile(logo, "logos");
+        String licenseUrl = fileStorageService.saveFile(license, "licenses");
 
         // 3. Lưu vào Database
         Company company = new Company();
         company.setName(request.getName());
         company.setTaxId(request.getTaxcode());
-        company.setBusinessLicenseUrl(licenseUrl); // Lưu path/url
-        company.setImageUrl(logoUrl);              // Lưu path/url
+        company.setBusinessLicenseUrl(licenseUrl);
+        company.setImageUrl(logoUrl);
         company.setDescription(request.getDescription());
         company.setAddress(request.getAddress());
         company.setWebsiteUrl(request.getWebsiteUrl());
@@ -225,24 +228,6 @@ public class CompanyService {
                 company.getDescription(), company.getAddress(),
                 company.getWebsiteUrl(), company.getStatus(), planName
         );
-    }
-
-    // Helper: Hàm lưu file vào ổ đĩa
-    private String saveFile(MultipartFile file, String subFolder) throws IOException {
-        if (file == null || file.isEmpty()) return null;
-
-        Path uploadPath = Paths.get(UPLOAD_DIR + subFolder);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        // Tạo tên file duy nhất để tránh trùng lặp
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        // Trả về đường dẫn để lưu vào DB (Sau này có thể là URL của Cloudinary)
-        return "/" + subFolder + "/" + fileName;
     }
 
     public String joinCompany(String companyId, String token) {

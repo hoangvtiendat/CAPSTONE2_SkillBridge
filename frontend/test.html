@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge - Test Realtime Notification</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; }
+        button:hover { background-color: #0056b3; }
+        #status { font-weight: bold; margin-bottom: 20px; }
+        .online { color: green; } .offline { color: red; }
+        #log { list-style: none; padding: 0; }
+        .notif-item { background: #e9ecef; padding: 10px; margin-bottom: 10px; border-left: 4px solid #007bff; border-radius: 4px; }
+        .notif-title { font-weight: bold; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>SkillBridge Real-time Test</h2>
+
+    <div id="status" class="offline">Trạng thái: Đang ngắt kết nối</div>
+
+    <label>Dán JWT Token của Candidate vào đây:</label>
+    <input type="text" id="token" placeholder="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+
+    <button onclick="connect()">Kết nối WebSocket</button>
+
+    <hr>
+    <h4>Danh sách thông báo nhận được:</h4>
+    <ul id="log">
+        <li style="color: #888;">Chưa có thông báo nào...</li>
+    </ul>
+</div>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const token = document.getElementById('token').value.trim();
+        if (!token) {
+            alert("Ông Đạt ơi, dán cái Token của Candidate vào đã!");
+            return;
+        }
+
+        // 1. Cấu hình đúng Endpoint từ WebSocketConfig của ông
+        // URL = http://localhost:8081 + context-path(/identity) + endpoint(/ws-log)
+        const socket = new SockJS('http://localhost:8081/identity/ws-log');
+        stompClient = Stomp.over(socket);
+
+        // Chuẩn bị header chứa JWT Token để Spring Security xác thực
+        const headers = {
+            'Authorization': token.startsWith('Bearer ') ? token : 'Bearer ' + token
+        };
+
+        stompClient.connect(headers, function (frame) {
+            updateStatus(true);
+            console.log('Connected: ' + frame);
+
+            // 2. SUBSCRIBE: Lắng nghe tại kênh riêng tư
+            // Trong Service ông gửi vào "/queue/notifications"
+            // Thì ở đây phải nghe tại "/user/queue/notifications"
+            stompClient.subscribe('/user/queue/notifications', function (message) {
+                const notification = JSON.parse(message.body);
+                showNotification(notification);
+            });
+
+        }, function (error) {
+            console.error('Lỗi kết nối rồi:', error);
+            updateStatus(false);
+            alert("Kết nối thất bại! Kiểm tra console hoặc xem server đã chạy chưa.");
+        });
+    }
+
+    function updateStatus(isOnline) {
+        const statusEl = document.getElementById('status');
+        if (isOnline) {
+            statusEl.innerText = "Trạng thái: Đã kết nối (Online)";
+            statusEl.className = "online";
+        } else {
+            statusEl.innerText = "Trạng thái: Đang ngắt kết nối";
+            statusEl.className = "offline";
+        }
+    }
+
+    function showNotification(notif) {
+        const logEl = document.getElementById('log');
+        // Xóa dòng thông báo trống nếu có
+        if (logEl.children.length === 1 && logEl.innerText.includes("Chưa có")) {
+            logEl.innerHTML = '';
+        }
+
+        const li = document.createElement('li');
+        li.className = 'notif-item';
+        li.innerHTML = `
+            <span class="notif-title">${notif.title}</span>
+            <span>${notif.content}</span>
+            <br><small style="color: #666;">Type: ${notif.type} | Link: ${notif.link}</small>
+        `;
+        logEl.insertBefore(li, logEl.firstChild); // Hiện thông báo mới nhất lên đầu
+
+        // Hiện thông báo hệ thống của trình duyệt cho nó "real"
+        if (Notification.permission === "granted") {
+            new Notification(notif.title, { body: notif.content });
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+    }
+</script>
+
+</body>
+</html>

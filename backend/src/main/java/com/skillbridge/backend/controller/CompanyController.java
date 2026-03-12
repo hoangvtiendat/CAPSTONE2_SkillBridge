@@ -89,9 +89,9 @@ public class CompanyController {
 
     @PostMapping(value = "/identification", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> identifyCompany(
-            @RequestPart("request") @Valid CompanyIdentificationRequest request, // Dữ liệu text
-            @RequestPart("logo") MultipartFile logoFile,                         // File ảnh logo
-            @RequestPart("license") MultipartFile licenseFile                      // File GPKD
+            @RequestPart("request") @Valid CompanyIdentificationRequest request,
+            @RequestPart("logo") MultipartFile logoFile,
+            @RequestPart("license") MultipartFile licenseFile
     ) {
         try {
             CompanyFeedItemResponse rs = companyService.identifyCompany(request, logoFile, licenseFile);

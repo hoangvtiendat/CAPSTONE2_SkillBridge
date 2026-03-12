@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -17,8 +18,8 @@ public class JobResponse {
     private String description;
     private String location;
     private String status;
-    private String salaryMin;
-    private String salaryMax;
+    private BigDecimal salaryMin;
+    private BigDecimal salaryMax;
 
     private CategoryDTO category;
 

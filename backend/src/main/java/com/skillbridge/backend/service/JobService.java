@@ -1,42 +1,52 @@
 package com.skillbridge.backend.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
-import com.skillbridge.backend.config.CustomUserDetails;
+
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
-import com.skillbridge.backend.dto.response.JobFeedResponse;
 import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.*;
 import com.skillbridge.backend.enums.ModerationStatus;
+
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.JobRepository;
+import lombok.Builder;
 import org.springframework.data.domain.Page;
 import com.skillbridge.backend.repository.SystemLogRepository;
-import jakarta.transaction.Transactional;
+//import jakarta.transaction.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import com.skillbridge.backend.repository.*;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class JobService {
+    private final String UPLOAD_DIR = "uploads/";
     private final JobRepository jobRepository;
     private final SystemLogRepository systemLogRepository;
     private final SystemLogService logsService;
@@ -47,6 +57,12 @@ public class JobService {
     private final EmbeddingService embeddingService;
     private final CompanyRepository companyRepository;
 
+    private final CandidateRepository candidateRepository;
+    private final ApplicationRepository applicationRepository;
+    private final ObjectMapper objectMapper;
+    private final FileStorageService fileStorageService;
+    private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public Map<String, Object> getJobFeed(int page, String cursor, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -449,7 +465,6 @@ public class JobService {
         return mapToJobResponse(job);
     }
 
-
     public JobResponse mapToJobResponse(Job job) {
         return JobResponse.builder()
                 .id(job.getId())
@@ -642,5 +657,77 @@ public class JobService {
             return newJob;
         }
         throw new AppException(ErrorCode.JOB_STATUS_EXITS);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId, MultipartFile cv) throws IOException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String userId = userDetails.getUserId();
+
+        Candidate candidate = candidateRepository.findByUser_Id(userId).orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+
+
+        if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
+            throw new AppException(ErrorCode.ALREADY_APPLIED);
+        }
+
+        String qualificationsSnapshot = null;
+        try {
+            qualificationsSnapshot = objectMapper.writeValueAsString(candidate.getDegree());
+        } catch (JsonProcessingException e) {
+            log.error("Lỗi parse qualifications: {}", e.getMessage());
+        }
+        String cvUrl = fileStorageService.saveFile(cv, "CVs");
+        Application application = Application.builder()
+                .job(job)
+                .candidate(candidate)
+                .fullName(request.getName())
+                .email(request.getEmail())
+                .phoneNumber(request.getNumberPhone())
+                .cvUrl(cvUrl)
+                .recommendationLetter(request.getRecommendationLetter())
+                .qualifications(qualificationsSnapshot)
+                .status(ApplicationStatus.PENDING)
+                .aiMatchingScore(0.0f)
+                .build();
+
+        Application savedApp = applicationRepository.save(application);
+        List<CompanyMember> recruiters = companyMemberRepository.findByCompany_Id(job.getCompany().getId());
+        String title = "Ứng tuyển mới: " + job.getTitle();
+        String content = "Ứng viên " + request.getName() + " vừa nộp hồ sơ cho vị trí " + job.getTitle();
+        String link = "/recruiter/applications/" + savedApp.getId(); // Link FE cho nhà tuyển dụng
+
+        for (CompanyMember recruiterMember : recruiters) {
+            User recruiter = recruiterMember.getUser();
+            System.out.println("recruiter auuu: " + recruiter.getId());
+            // A. Lưu thông báo vào DB cho từng người
+            Notification notification = Notification.builder()
+                    .user(recruiter)
+                    .title(title)
+                    .content(content)
+                    .isRead(false)
+                    .type("NEW_APPLICATION")
+                    .link(link)
+                    .build();
+            notificationRepository.save(notification);
+
+            try {
+                messagingTemplate.convertAndSendToUser(
+                        recruiter.getId(),
+                        "/queue/notifications",
+                        notification
+                );
+            } catch (Exception e) {
+                log.error("Lỗi bắn WebSocket cho recruiter {}: {}", recruiter.getId(), e.getMessage());
+            }
+        }
+        return request;
     }
 }
