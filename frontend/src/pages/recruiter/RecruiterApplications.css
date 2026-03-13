@@ -1,0 +1,238 @@
+/* RecruiterApplications.css */
+.recruiter-apps-container {
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.table-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+}
+
+.apps-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.apps-table th {
+    background: #f8fafc;
+    padding: 16px;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+}
+
+.apps-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.apps-table tr:last-child td {
+    border-bottom: none;
+}
+
+.apps-table tr:hover {
+    background: #fdfdfd;
+}
+
+.candidate-name {
+    font-weight: 600;
+    color: #2563eb;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.candidate-name:hover {
+    text-decoration: underline;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Status Colors */
+.status-pending { background: #fef9c3; color: #854d0e; }
+.status-accepted { background: #dcfce7; color: #166534; }
+.status-rejected { background: #fee2e2; color: #991b1b; }
+.status-interview { background: #dbeafe; color: #1e40af; }
+
+.ai-score-tag {
+    background: #f5f3ff;
+    color: #7c3aed;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-view-detail {
+    background: transparent;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.btn-view-detail:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+/* Sử dụng selector cụ thể hơn để tránh bị class global đè */
+.apps-table .status-badge {
+    /* ÉP BUỘC nó phải nằm im trong ô table */
+    position: static !important;
+    display: inline-flex !important;
+
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    min-width: 100px;
+    white-space: nowrap; /* Không cho chữ xuống dòng */
+}
+
+/* Fix màu sắc bằng cách đánh thẳng vào hàng của table */
+.apps-table td .status-pending {
+    background-color: #fef9c3 !important;
+    color: #854d0e !important;
+    border: 1px solid #fde047 !important;
+}
+
+.apps-table td .status-accepted,
+.apps-table td .status-offer {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+    border: 1px solid #86efac !important;
+}
+
+.apps-table td .status-rejected {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5 !important;
+}
+
+.apps-table td .status-interview,
+.apps-table td .status-reviewing {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+    border: 1px solid #93c5fd !important;
+}
+.app-detail-wrapper {
+    padding: 24px;
+    max-width: 1400px; /* Tăng chiều rộng tổng thể */
+    margin: 0 auto;
+}
+
+/* Ép Grid chia đúng tỉ lệ */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr; /* Cố định sidebar, còn lại cho content */
+    gap: 24px;
+    align-items: start;
+}
+
+.main-content-area {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Quan trọng: Ép các card thông tin giãn hết chiều ngang của cột phải */
+.info-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* Thanh Header của PDF */
+.cv-viewer-header {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ép Iframe chiếm trọn không gian */
+.cv-iframe-responsive {
+    width: 100% !important;
+    height: 850px !important;
+    border: none;
+    display: block;
+}
+
+/* Sidebar Styling */
+.sidebar-card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 24px;
+}
+
+.btn-accept {
+    background-color: #16a34a;
+    color: white;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.btn-reject {
+    background-color: #fee2e2;
+    color: #dc2626;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    .sidebar-card {
+        position: relative;
+        top: 0;
+    }
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

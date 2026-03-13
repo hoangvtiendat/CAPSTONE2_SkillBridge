@@ -42,9 +42,8 @@ const JobCard = ({ job, featured = false }) => {
 
       <div className="job-actions">
         <Link to={`/jobs/${id}`} className="btn-apply">
-          Apply Now
+          Ứng tuyển ngay
         </Link>
-        <button className="btn-check">Self-Check</button>
       </div>
     </div>
   );

@@ -48,7 +48,7 @@ const CompanyGrid = () => {
     return (
         <section className="company-grid-section" id="company-grid">
             <div className="company-grid-header">
-                <h2>Top Companies Hiring</h2>
+                <h2>Các công ty hàng đầu</h2>
             </div>
 
             {loading ? (

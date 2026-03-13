@@ -4,6 +4,8 @@ import './App.css';
 import Header from './components/home/Header';
 
 // Pages
+import RecruiterApplications from './pages/recruiter/RecruiterApplications';
+import ApplicationDetailPage from './pages/recruiter/ApplicationDetailPage';
 import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
@@ -18,7 +20,7 @@ import AdminJobPage from './pages/admin/AdminJobPage';
 import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
 import SubscriptionOfCompanyPage from './pages/Subscription.jsx/SubscriftionOfCompany';
-import {Toaster} from 'sonner';
+import {Toaster, toast} from 'sonner';
 import BusinessIdentity from './pages/recruiter/BusinessIdentity'
 // Admin Components & Pages
 import AdminLayout from './components/admin/AdminLayout';
@@ -27,6 +29,9 @@ import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 import IndustryManagementPage from './pages/admin/IndustryManagementPage';
 import SkillManagementPage from './pages/admin/SkillManagementPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+
+import {Client} from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 import {useAuth} from './context/AuthContext';
 import {useEffect} from 'react';
@@ -45,6 +50,56 @@ function App() {
     const isAdminPath = location.pathname.startsWith('/admin');
 
     useEffect(() => {
+        let stompClient = null;
+
+        if (user) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+
+            // 2. Khởi tạo Client theo cách hiện đại
+            stompClient = new Client({
+                // Nếu Backend dùng SockJS, ông dùng webSocketFactory
+                webSocketFactory: () => new SockJS('http://localhost:8081/identity/ws-log'),
+                connectHeaders: {
+                    Authorization: `Bearer ${token}`
+                },
+                debug: (str) => {
+                    // console.log(str); // Mở ra nếu muốn debug
+                },
+                reconnectDelay: 5000, // Tự động kết nối lại sau 5s nếu rớt mạng
+                heartbeatIncoming: 4000,
+                heartbeatOutgoing: 4000,
+            });
+
+            stompClient.onConnect = (frame) => {
+                console.log('Connected to SkillBridge WebSocket (Modern)');
+
+                // 3. Subscribe
+                stompClient.subscribe('/user/queue/notifications', (message) => {
+                    const notification = JSON.parse(message.body);
+                    toast.info(notification.title, {
+                        description: notification.content,
+                        action: {
+                            label: 'Xem ngay',
+                            onClick: () => notification.link && navigate(notification.link)
+                        },
+                    });
+                });
+            };
+
+            stompClient.onStompError = (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
+            };
+
+            stompClient.activate(); // Kích hoạt kết nối
+        }
+
+        return () => {
+            if (stompClient) stompClient.deactivate(); // Ngắt kết nối an toàn
+        };
+    }, [user, navigate]);
+
+    useEffect(() => {
         if (user) {
             if (user.role === 'ADMIN') {
                 if (!isAdminPath && (location.pathname === '/' || location.pathname === '/login')) {
@@ -59,50 +114,66 @@ function App() {
     }, [user, isAdminPath, location.pathname, navigate]);
 
     return (<>
-            <Toaster position="top-right" richColors visibleToasts={1} expand={false}/>
-            {!isAdminPath && <Header/>}
-            <div
-                className={!isAdminPath ? "content-with-header" : ""}> 
-                <Routes>
-                    <Route path="/" element={<HomePage/>}/>
-                    <Route path="/login" element={<LoginPage/>}/>
-                    <Route path='/forgot-password' element={<ForgotPasswordPage/>}/>
-                    <Route path="/otp-verification" element={<OTPVerification/>}/>
-                    <Route path="/profile" element={<ProfilePage/>}/>
-                    <Route path="/oauth-success" element={<OAuthSuccess/>}/>
-                    <Route path='/set-password' element={<SetPass/>}/>
-                    <Route path='/auth/complete-profile' element={<UpdateProfileDetail/>}/>
-                    <Route path="recruiter/identity" element={<BusinessIdentity/>}/>
-                    <Route path="/admin/logs" element={<SystemLogs/>}/>
-                    <Route path="/company/TaxLookup" element={<TaxLookup/>}/>
-                    <Route path="/admin/jobs" element={<AdminJobPage/>}/>
-                    <Route path="/admin/jobs/:jobId" element={<AdminJobDetailPage/>}/>
-                    <Route path="/jobs/:jobId" element={<JobDetailPage/>}/>
-                    <Route path='/create-jd' element={<CreateJd/>}/>
-                    <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
-                    <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
-                    <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage/>}/>
-                    
-                    <Route path="/admin" element={<AdminLayout/>}>
-                        <Route index element={<AdminDashboardPage/>}/>
-                        <Route path="dashboard" element={<AdminDashboardPage/>}/>
-                        <Route path="logs" element={<SystemLogs/>}/>
-                        <Route path="jobs" element={<AdminJobPage/>}/>
-                        <Route path="jobs/:jobId" element={<AdminJobDetailPage/>}/>
+        <Toaster
+            position="top-right"
+            richColors
+            visibleToasts={5}
+            expand={true}
+            toastOptions={{
+                duration: 8000,
+                style: {
+                    padding: '16px',
+                    fontSize: '15px'
+                }
+            }}
+            closeButton
+        />
+        {!isAdminPath && <Header/>}
+        <div
+            className={!isAdminPath ? "content-with-header" : ""}>
+            <Routes>
+                <Route path="/" element={<HomePage/>}/>
+                <Route path="/login" element={<LoginPage/>}/>
+                <Route path='/forgot-password' element={<ForgotPasswordPage/>}/>
+                <Route path="/otp-verification" element={<OTPVerification/>}/>
+                <Route path="/profile" element={<ProfilePage/>}/>
+                <Route path="/oauth-success" element={<OAuthSuccess/>}/>
+                <Route path='/set-password' element={<SetPass/>}/>
+                <Route path='/auth/complete-profile' element={<UpdateProfileDetail/>}/>
+                <Route path="recruiter/identity" element={<BusinessIdentity/>}/>
+                <Route path="/admin/logs" element={<SystemLogs/>}/>
+                <Route path="/company/TaxLookup" element={<TaxLookup/>}/>
+                <Route path="/admin/jobs" element={<AdminJobPage/>}/>
+                <Route path="/admin/jobs/:jobId" element={<AdminJobDetailPage/>}/>
+                <Route path="/jobs/:jobId" element={<JobDetailPage/>}/>
+                <Route path='/create-jd' element={<CreateJd/>}/>
+                <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
+                <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
+                <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage/>}/>
+                <Route path="/recruiter/jobs/:jobId/applications" element={<RecruiterApplications />} />
+                <Route path="/recruiter/applications/:id" element={<ApplicationDetailPage />} />
+                <Route path="/admin" element={<AdminLayout/>}>
+                    <Route index element={<AdminDashboardPage/>}/>
+                    <Route path="dashboard" element={<AdminDashboardPage/>}/>
+                    <Route path="logs" element={<SystemLogs/>}/>
+                    <Route path="jobs" element={<AdminJobPage/>}/>
+                    <Route path="jobs/:jobId" element={<AdminJobDetailPage/>}/>
 
-                        <Route path="management/users" element={<UserManagementPage/>}/>
-                        <Route path="management/companies" element={<CompanyManagementPage/>}/>
-                        <Route path="management/industries" element={<IndustryManagementPage/>}/>
-                        <Route path="management/skills" element={<SkillManagementPage/>}/>
+                    <Route path="management/users" element={<UserManagementPage/>}/>
+                    <Route path="management/companies" element={<CompanyManagementPage/>}/>
+                    <Route path="management/industries" element={<IndustryManagementPage/>}/>
+                    <Route path="management/skills" element={<SkillManagementPage/>}/>
 
-                        <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer/></AdminRoute>}/>
-                        <Route path='subscriptions' element={<AdminRoute><SubscriptionManagerPage/></AdminRoute>}/>
+                    <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer/></AdminRoute>}/>
+                    <Route path='subscriptions' element={<AdminRoute><SubscriptionManagerPage/></AdminRoute>}/>
 
-                        <Route path="*" element={<div style={{padding: '32px', textAlign: 'center', color: '#64748b'}}>Feature Coming Soon</div>}/>
-                    </Route>
-                </Routes>
-            </div>
-        </>);
+                    <Route path="*"
+                           element={<div style={{padding: '32px', textAlign: 'center', color: '#64748b'}}>Feature Coming
+                               Soon</div>}/>
+                </Route>
+            </Routes>
+        </div>
+    </>);
 }
 
 export default App;

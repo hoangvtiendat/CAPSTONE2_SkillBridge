@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -669,15 +670,14 @@ public class JobService {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String userId = userDetails.getUserId();
 
-        Candidate candidate = candidateRepository.findByUser_Id(userId).orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-
-
+        Candidate candidate = candidateRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
         if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
             throw new AppException(ErrorCode.ALREADY_APPLIED);
         }
-
         String qualificationsSnapshot = null;
         try {
             qualificationsSnapshot = objectMapper.writeValueAsString(candidate.getDegree());
@@ -685,6 +685,7 @@ public class JobService {
             log.error("Lỗi parse qualifications: {}", e.getMessage());
         }
         String cvUrl = fileStorageService.saveFile(cv, "CVs");
+
         Application application = Application.builder()
                 .job(job)
                 .candidate(candidate)
@@ -698,16 +699,23 @@ public class JobService {
                 .aiMatchingScore(0.0f)
                 .build();
 
-        Application savedApp = applicationRepository.save(application);
-        List<CompanyMember> recruiters = companyMemberRepository.findByCompany_Id(job.getCompany().getId());
-        String title = "Ứng tuyển mới: " + job.getTitle();
-        String content = "Ứng viên " + request.getName() + " vừa nộp hồ sơ cho vị trí " + job.getTitle();
-        String link = "/recruiter/applications/" + savedApp.getId(); // Link FE cho nhà tuyển dụng
+        Application savedApp = applicationRepository.saveAndFlush(application);
 
-        for (CompanyMember recruiterMember : recruiters) {
-            User recruiter = recruiterMember.getUser();
-            System.out.println("recruiter auuu: " + recruiter.getId());
-            // A. Lưu thông báo vào DB cho từng người
+        Map<String, Object> jobTitleMap = job.getTitle();
+        String cleanJobTitle = jobTitleMap.getOrDefault("vi", jobTitleMap.getOrDefault("en", "N/A")).toString();
+
+        String title = "Ứng tuyển mới: " + cleanJobTitle;
+        String content = String.format("Ứng viên %s vừa nộp hồ sơ vào vị trí %s. Kiểm tra ngay để không bỏ lỡ tài năng!",
+                request.getName(), cleanJobTitle);
+        String link = "/recruiter/applications/" + savedApp.getId();
+
+        Set<User> distinctRecruiters = companyMemberRepository.findByCompany_Id(job.getCompany().getId())
+                .stream()
+                .map(CompanyMember::getUser)
+                .collect(Collectors.toSet());
+
+        for (User recruiter : distinctRecruiters) {
+            // A. Lưu vào Database
             Notification notification = Notification.builder()
                     .user(recruiter)
                     .title(title)
@@ -724,10 +732,12 @@ public class JobService {
                         "/queue/notifications",
                         notification
                 );
+                log.info("Đã bắn tin nhắn ứng tuyển mới cho Recruiter: {}", recruiter.getEmail());
             } catch (Exception e) {
-                log.error("Lỗi bắn WebSocket cho recruiter {}: {}", recruiter.getId(), e.getMessage());
+                log.error("Lỗi WebSocket cho recruiter {}: {}", recruiter.getId(), e.getMessage());
             }
         }
+
         return request;
     }
 }
