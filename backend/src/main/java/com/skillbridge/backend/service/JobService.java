@@ -675,6 +675,13 @@ public class JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
+        if(!job.getStatus().equals(JobStatus.OPEN)) {
+            throw new AppException(ErrorCode.JOB_NO_GREEN);
+        }
+        if(!job.getModerationStatus().equals(ModerationStatus.GREEN)) {
+            throw new AppException(ErrorCode.JOB_NO_GREEN);
+        }
+
         if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
             throw new AppException(ErrorCode.ALREADY_APPLIED);
         }

@@ -1,5 +1,9 @@
 import api from '../../config/axiosConfig';
 
+const getAuthHeader = () => {
+    const token = localStorage.getItem('accessToken');
+    return token ? {Authorization: `Bearer ${token}`} : {};
+};
 const jobService = {
     getFeed: async (params = {}) => {
         try {
@@ -16,16 +20,16 @@ const jobService = {
             const result = response.data.result;
             const jobs = (result.jobs || []).map(job => ({
                 id: job.jobId,
-                position: job.title?.en || job.title?.vi || 'Unknown Position', 
+                position: job.title?.en || job.title?.vi || 'Unknown Position',
                 company: job.companyName,
                 location: job.location,
                 salary: {
-                    min: parseInt(job.salaryMin) / 1000, 
+                    min: parseInt(job.salaryMin) / 1000,
                     max: parseInt(job.salaryMax) / 1000
                 },
-                tags: (job.skills || []).map(s => s.skillName || s), 
+                tags: (job.skills || []).map(s => s.skillName || s),
                 logo: job.companyImageUrl,
-                featured: false 
+                featured: false
             }));
 
             return {
@@ -59,6 +63,18 @@ const jobService = {
             throw error;
         }
     },
+
+    getMyCompanyJobs: async () => {
+        try {
+            const response = await api.get('/jobs/my-company', {
+                headers: getAuthHeader()
+            });
+            return response.data; // Trả về { message, result: [...] }
+        } catch (error) {
+            console.error('getMyCompanyJobs Error:', error);
+            throw error;
+        }
+    },
     getDetailJd: async (id) => {
         try {
             const response = await api.get(`/jobs/my-company/${id}`);
@@ -71,17 +87,17 @@ const jobService = {
     createJd: async (jdData) => {
         try {
             const response = await api.post('/jobs/postJD', jdData);
-            
+
             if (!response) {
                 throw new Error("Không nhận được phản hồi từ server");
             }
-            
-            return response.data;       
+
+            return response.data;
         } catch (error) {
             console.error(' Error creating JD:', error);
             console.error('Backend response:', error.response?.data);
-            
-            throw error; 
+
+            throw error;
         }
     },
     updateJd: async (id, jdData) => {

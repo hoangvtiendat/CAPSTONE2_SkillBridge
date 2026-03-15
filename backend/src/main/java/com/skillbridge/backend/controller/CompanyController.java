@@ -133,7 +133,7 @@ public class CompanyController {
         }
     }
 
-    @PostMapping("/join-request/{requestId}")
+    @PostMapping("/join-request/{requestId}/respond")
     public ResponseEntity<ApiResponse<?>> joinCompanyByRequestId(@Valid @RequestHeader(value = "Authorization") String token, @PathVariable String requestId, @RequestBody respondToJoinRequestRequest request) {
         try {
             System.out.println("token: " + token);
