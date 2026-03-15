@@ -91,8 +91,11 @@ export function OTPVerification() {
                     const finalUser = data.result || userData;
                     if (finalUser) login(finalUser);
 
-                    if (finalUser?.role === 'ADMIN') {
+                    const role = finalUser?.role?.toUpperCase();
+                    if (role === 'ADMIN') {
                         navigate("/admin");
+                    } else if (role === 'RECRUITER') {
+                        navigate("/recruiter");
                     } else {
                         navigate("/");
                     }

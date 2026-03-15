@@ -82,7 +82,11 @@ const handleDeleteSubscription = async (id) => {
                                     <div className="plan-name-section">
                                         <h3 className="plan-name">{sub.name || 'Standard'}</h3>
                                     </div>
-                                    <span className={`status-badge ${sub.status}`}>{sub.status}</span>
+                                    <span className={`status-badge ${sub.status}`}>
+                                        {sub.status === 'ACTIVE' ? 'Đang hoạt động' : 
+                                         sub.status === 'EXPIRED' ? 'Hết hạn' : 
+                                         sub.status === 'PENDING' ? 'Chở duyệt' : sub.status}
+                                    </span>
                                 </div>
                                 <div className="plan-price-box">
                                     <span className="price-value">

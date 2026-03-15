@@ -7,8 +7,10 @@ import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -105,6 +107,16 @@ public interface JobRepository extends JpaRepository<Job, String> {
             @Param("modStatus") ModerationStatus modStatus,
             Pageable pageable
     );
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Job j SET j.status = :newStatus WHERE j.company.id = :companyId AND j.status = :oldStatus")
+    void updateStatusByCompanyIdAndCurrentStatus(@Param("companyId") String companyId, @Param("oldStatus") JobStatus oldStatus, @Param("newStatus") JobStatus newStatus);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Job j SET j.status = :status WHERE j.company.id = :companyId")
+    void updateStatusByCompanyId(@Param("companyId") String companyId, @Param("status") JobStatus status);
 
     List<Job>findJobsByCompanyId(@Param("companyId") String companyId);
 

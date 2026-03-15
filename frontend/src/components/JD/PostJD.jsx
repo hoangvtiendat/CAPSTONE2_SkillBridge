@@ -204,18 +204,18 @@ const PostJD = () => {
                         <h3 className="card-title">Thông tin cơ bản</h3>
                         <div className="input-group-grid">
                             <div className="input-item">
-                                <label>Vị trí (Position)</label>
+                                <label>Vị trí công việc</label>
                                 <input
                                     type="text"
                                     name="position"
                                     value={formData.position}
                                     onChange={handleChange}
                                     required
-                                    placeholder="VD: Marketing Executive..."
+                                    placeholder="VD: Nhân viên Marketing..."
                                 />
                             </div>
                             <div className="input-item">
-                                <label>Danh mục (Category)</label>
+                                <label>Danh mục kỹ năng</label>
                                 <select
                                     value={formData.categoryId}
                                     onChange={handleCategoryChange}
@@ -233,10 +233,10 @@ const PostJD = () => {
                     </section>
 
                     <section className="form-card">
-                        <h3 className="card-title">Mô tả công việc</h3>
+                        <h3 className="card-title">Chi tiết công việc</h3>
                         
                         <div className="input-item full-width">
-                            <label>Mô tả chung (Description)</label>
+                            <label>Mô tả công việc</label>
                             <textarea
                                 name="description"
                                 value={formData.description}
@@ -295,7 +295,7 @@ const PostJD = () => {
                         <h3 className="card-title">Yêu cầu & Quyền lợi</h3>
                         
                         <div className="input-item full-width">
-                            <label>Địa điểm (Location)</label>
+                            <label>Địa điểm</label>
                             <input
                                 type="text"
                                 name="location"
@@ -308,7 +308,7 @@ const PostJD = () => {
 
                         <div className="salary-group">
                             <div className="input-item">
-                                <label>Lương Tối thiểu (VND)</label>
+                                <label>Lương tối thiểu (VNĐ)</label>
                                 <input
                                     type="text"
                                     name="salaryMin"
@@ -323,7 +323,7 @@ const PostJD = () => {
                                 />
                             </div>
                             <div className="input-item">
-                                <label>Lương Tối đa (VND)</label>
+                                <label>Lương tối đa (VNĐ)</label>
                                 <input
                                     type="text"
                                     name="salaryMax"

@@ -1,6 +1,7 @@
 package com.skillbridge.backend.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Transient;
 
 import java.time.LocalDateTime;
 
@@ -58,6 +59,21 @@ public class User {
 
     @Column
     private String provider;
+
+    @Transient
+    private String companyName;
+
+    @Transient
+    private String companyId;
+
+    @Transient
+    private String companyTaxId;
+
+    @Transient
+    private String companyStatus;
+
+    @Transient
+    private String companyRole;
 
 
     public String getName() {
@@ -137,5 +153,45 @@ public class User {
     }
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(String companyId) {
+        this.companyId = companyId;
+    }
+
+    public String getCompanyTaxId() {
+        return companyTaxId;
+    }
+
+    public void setCompanyTaxId(String companyTaxId) {
+        this.companyTaxId = companyTaxId;
+    }
+
+    public String getCompanyStatus() {
+        return companyStatus;
+    }
+
+    public void setCompanyStatus(String companyStatus) {
+        this.companyStatus = companyStatus;
+    }
+
+    public String getCompanyRole() {
+        return companyRole;
+    }
+
+    public void setCompanyRole(String companyRole) {
+        this.companyRole = companyRole;
     }
 }

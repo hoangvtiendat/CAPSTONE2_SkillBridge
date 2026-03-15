@@ -5,6 +5,7 @@ import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.request.RegisterRequest;
 import com.skillbridge.backend.dto.request.respondToJoinRequestRequest;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
+import com.skillbridge.backend.dto.request.DeactivateRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
@@ -154,6 +155,27 @@ public class CompanyController {
             System.out.println("[JOIN REQUEST] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
+    }
+
+    @PostMapping("/{companyId}/deactivate")
+    public ResponseEntity<ApiResponse<String>> deactivateCompany(
+            @PathVariable String companyId,
+            @Valid @RequestBody DeactivateRequest request,
+            @RequestHeader("Authorization") String token
+    ) {
+        String jwt = token.substring(7);
+        String rs = companyService.deactivateCompany(companyId, request, jwt);
+        return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Success", rs));
+    }
+
+    @PostMapping("/{companyId}/reactivate")
+    public ResponseEntity<ApiResponse<String>> reactivateCompany(
+            @PathVariable String companyId,
+            @RequestHeader("Authorization") String token
+    ) {
+        String jwt = token.substring(7);
+        String rs = companyService.reactivateCompany(companyId, jwt);
+        return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Success", rs));
     }
 
 }

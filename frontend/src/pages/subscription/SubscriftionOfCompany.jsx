@@ -1,17 +1,11 @@
 import SubscriptionManagerOfCompany from "../../components/subscription/SubscriptionManagerOfCompany";
+
 const SubscriptionOfCompanyPage = () => {
     return (
-            <div className="home-page">
-    
-                <div className="home-container">
-                    <main className="card-main">
-                        <SubscriptionManagerOfCompany />
-                    </main>
-                </div>
-            </div>
-    
-    
-        );
+        <div className="recruiter-page-container">
+            <SubscriptionManagerOfCompany />
+        </div>
+    );
 }
 
 export default SubscriptionOfCompanyPage;

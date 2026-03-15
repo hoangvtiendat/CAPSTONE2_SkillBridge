@@ -127,8 +127,11 @@ export function LoginForm() {
           login(userData);
           toast.success("Đăng nhập thành công");
           setTimeout(() => {
-            if (userData.role === 'ADMIN') {
+            const role = userData.role;
+            if (role === 'ADMIN') {
               navigate("/admin");
+            } else if (role === 'RECRUITER') {
+              navigate("/recruiter");
             } else {
               navigate("/");
             }

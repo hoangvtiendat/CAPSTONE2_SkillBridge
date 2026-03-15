@@ -27,30 +27,41 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-    const publicPage = ['/login', '/'] 
-    const currentPath = window.location.pathname;
-    
-    if(error.response && error.response.status === 401){
-        if(!publicPage.includes(currentPath)){
-            localStorage.removeItem('user');
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('token');
-            
-            window.location.href = '/';
+        const publicPage = ['/login', '/']
+        const currentPath = window.location.pathname;
+
+        if (error.response && error.response.status === 401) {
+            if (!publicPage.includes(currentPath)) {
+                localStorage.removeItem('user');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('token');
+
+                window.location.href = '/';
+            }
         }
-    } 
-    if(error.response && error.response.status === 403){
-         console.log('Bạn không có quyền truy cập vào tài nguyên này.');    
-    }
-    
-    if (error.response && error.response.data) {
-        const errorData = error.response.data;
-        error.backendError = errorData;
-        console.log('Backend error response:', errorData);
-    }
-    
-    return Promise.reject(error);
+        if (error.response && error.response.status === 403) {
+            console.log('Bạn không có quyền truy cập vào tài nguyên này.');
+
+            const errorData = error.response.data;
+            if (errorData && errorData.code === 6011) {
+                // Company deactivated for member -> logout and redirect home
+                localStorage.removeItem('user');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('token');
+                window.location.href = '/';
+                return Promise.reject(error);
+            }
+        }
+
+        if (error.response && error.response.data) {
+            const errorData = error.response.data;
+            error.backendError = errorData;
+            console.log('Backend error response:', errorData);
+        }
+
+        return Promise.reject(error);
     }
 );
 

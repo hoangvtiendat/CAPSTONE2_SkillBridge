@@ -88,6 +88,8 @@ public enum ErrorCode {
     HAS_NO_ADMIN(6005, "Công ty không có ADMIN nào"),
     NOT_COMPANY_MEMBER(6006, "Bạn không phải là thành viên của công ty"),
     NOT_COMPANY_ADMIN(6007, "Bạn không phải là admin của công ty"),
+    INVALID_CONFIRMATION_CODE(6008, "Mã xác nhận không đúng (Yêu cầu: DEACTIVATE)"),
+    COMPANY_ALREADY_DEACTIVATED(6009, "Công ty đã bị vô hiệu hóa từ trước"),
 
 
     //REQUEST
@@ -96,7 +98,8 @@ public enum ErrorCode {
     JOIN_REQUEST_NOT_FOUND(7003, "Không tìm thấy yêu cầu tham gia"),
     INVALID_JOIN_REQUEST(7004, "Yêu cầu tham gia không hợp lệ"),
     JOIN_REQUEST_ALREADY_PROCESSED(7005, "Yêu cầu này đã được xử lý"),
-    JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text")
+    JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text"),
+    COMPANY_DEACTIVATED_MEMBER(6011, "Công ty của bạn đã bị vô hiệu hóa. Bạn tạm thời không thể truy cập quyền nhà tuyển dụng."),
     ;
     private int code;
     private String message;

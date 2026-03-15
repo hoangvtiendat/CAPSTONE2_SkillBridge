@@ -38,11 +38,6 @@ const Sidebar = () => {
             icon: <FileText size={20} />
         },
         {
-            title: 'Gói cước & Giá',
-            path: '/admin/subscriptions',
-            icon: <CreditCard size={20} />
-        },
-        {
             title: 'System Logs',
             path: '/admin/logs',
             icon: <ClipboardList size={20} />
@@ -53,6 +48,7 @@ const Sidebar = () => {
         { title: 'Quản lí người dùng', path: '/admin/management/users', icon: <Users size={18} /> },
         { title: 'Quản lí công ty', path: '/admin/management/companies', icon: <Building2 size={18} /> },
         { title: 'Quản lí ngành nghề', path: '/admin/management/industries', icon: <Briefcase size={18} /> },
+        { title: 'Quản lí gói cước', path: '/admin/management/subscriptions', icon: <CreditCard size={18} /> },
         { title: 'Quản lí tin đăng', path: '/admin/jobs', icon: <FileText size={18} /> },
         { title: 'Tra cứu mã số thuế', path: '/admin/tax-lookup', icon: <Search size={18} /> }
     ];

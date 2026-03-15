@@ -7,7 +7,6 @@ import com.skillbridge.backend.dto.request.CategoryRequest;
 import com.skillbridge.backend.dto.response.CategoryResponse;
 import com.skillbridge.backend.dto.response.CompanyResponse;
 import com.skillbridge.backend.dto.response.SystemStatsResponse;
-import com.skillbridge.backend.dto.response.UserResponse;
 import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.entity.User;
@@ -205,14 +204,14 @@ public class AdminService {
         return newValue.subtract(oldValue).divide(oldValue, 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue();
     }
 
-    public Page<UserResponse> getUsers(String name, String email, String role, String status, Pageable pageable) {
+    public Page<User> getUsers(String name, String email, String role, String status, Pageable pageable) {
         Specification<User> spec = Specification.where(UserSpecification.hasName(name))
                 .and(UserSpecification.hasEmail(email))
                 .and(UserSpecification.hasRole(role))
                 .and(UserSpecification.hasStatus(status))
                 .and(UserSpecification.isNotAdmin());
 
-        return userRepository.findAll(spec, pageable).map(this::mapToUserResponse);
+        return userRepository.findAll(spec, pageable);
     }
 
     @Transactional
@@ -302,20 +301,6 @@ public class AdminService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         categoryRepository.delete(category);
-    }
-
-    private UserResponse mapToUserResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .address(user.getAddress())
-                .role(user.getRole())
-                .status(user.getStatus())
-                .is2faEnabled(user.getIs2faEnabled())
-                .createdAt(user.getCreatedAt())
-                .build();
     }
 
     private CompanyResponse mapToCompanyResponse(Company company) {

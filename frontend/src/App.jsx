@@ -37,18 +37,33 @@ import DetailJD_Page from './pages/JD/detailJD';
 import SubscriptionManagerPage from './pages/subscription/SubscriptionManager';
 
 import AdminRoute from './components/admin/AdminRoute';
+import RecruiterLayout from './components/recruiter/RecruiterLayout';
+import RecruiterRoute from './components/recruiter/RecruiterRoute';
+import RecruiterDashboardPage from './pages/recruiter/RecruiterDashboardPage';
+import CompanySettings from './pages/recruiter/CompanySettings';
 
 function App() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAuth();
     const isAdminPath = location.pathname.startsWith('/admin');
+    const isRecruiterPath = location.pathname.startsWith('/recruiter') ||
+        location.pathname === '/create-jd' ||
+        location.pathname.startsWith('/detail-jd') ||
+        location.pathname.startsWith('/company/jd-list') ||
+        location.pathname.startsWith('/company/subscriptions');
+
+    const isDashboardLayout = isAdminPath || isRecruiterPath;
 
     useEffect(() => {
         if (user) {
             if (user.role === 'ADMIN') {
                 if (!isAdminPath && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/admin/dashboard', { replace: true });
+                }
+            } else if (user.role === 'RECRUITER') {
+                if (!location.pathname.startsWith('/recruiter') && (location.pathname === '/' || location.pathname === '/login')) {
+                    navigate('/recruiter/dashboard', { replace: true });
                 }
             } else {
                 if (location.pathname === '/login') {
@@ -60,9 +75,9 @@ function App() {
 
     return (<>
         <Toaster position="top-right" richColors visibleToasts={1} expand={false} />
-        {!isAdminPath && <Header />}
+        {!isDashboardLayout && <Header />}
         <div
-            className={!isAdminPath ? "content-with-header" : ""}>
+            className={!isDashboardLayout ? "content-with-header" : ""}>
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
@@ -74,10 +89,22 @@ function App() {
                 <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
                 <Route path="recruiter/identity" element={<BusinessIdentity />} />
                 <Route path="/jobs/:jobId" element={<JobDetailPage />} />
-                <Route path='/create-jd' element={<CreateJd />} />
-                <Route path='/detail-jd/:id' element={<DetailJD_Page />} />
-                <Route path='/company/jd-list' element={<ListJdOfCompany />} />
-                <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage />} />
+
+                <Route element={<RecruiterRoute><RecruiterLayout /></RecruiterRoute>}>
+                    <Route path='/create-jd' element={<CreateJd />} />
+                    <Route path='/detail-jd/:id' element={<DetailJD_Page />} />
+                    <Route path='/company/jd-list' element={<ListJdOfCompany />} />
+                    <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage />} />
+
+                    <Route path="/recruiter" >
+                        <Route index element={<RecruiterDashboardPage />} />
+                        <Route path="dashboard" element={<RecruiterDashboardPage />} />
+                        <Route path="settings" element={<CompanySettings />} />
+                        <Route path="candidates" element={<div className="p-8 text-center text-slate-500">Quản lý ứng viên - Tính năng đang phát triển</div>} />
+                        <Route path="analytics" element={<div className="p-8 text-center text-slate-500">Bảng phân tích - Tính năng đang phát triển</div>} />
+                        <Route path="*" element={<div className="p-8 text-center text-slate-500">Tính năng đang phát triển</div>} />
+                    </Route>
+                </Route>
 
                 <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<AdminDashboardPage />} />
@@ -92,7 +119,7 @@ function App() {
 
 
                     <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer /></AdminRoute>} />
-                    <Route path='subscriptions' element={<SubscriptionManagerPage />} />
+                    <Route path="management/subscriptions" element={<AdminRoute><SubscriptionManagerPage /></AdminRoute>} />
 
                     <Route path="*" element={<div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Feature Coming Soon</div>} />
                 </Route>

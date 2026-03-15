@@ -1,36 +1,36 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { toast, Toaster } from "sonner";
-import { useNavigate, useParams } from "react-router-dom"; 
-import { ArrowLeft, Search, Plus } from "lucide-react"; 
-import apiSkill from "../../services/api/skillService"; 
-import "./SkillPage.css"; 
-
-const toastStyles = {
-    warning: { borderRadius: '8px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
-    success: { borderRadius: '8px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
-    error: { borderRadius: '8px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
-};
+import { toast } from "sonner";
+import { useNavigate, useParams } from "react-router-dom";
+import { ChevronLeft, Search, Plus, Edit2, Trash2, Check, X, Sparkles } from "lucide-react";
+import apiSkill from "../../services/api/skillService";
+import Swal from 'sweetalert2';
+import "../../components/admin/Admin.css";
+import "./SkillPage.css";
 
 export function SkillPage() {
     const navigate = useNavigate();
-    const { categoryId } = useParams(); 
-    
+    const { categoryId } = useParams();
+
     const [skills, setSkills] = useState([]);
     const [newSkillName, setNewSkillName] = useState("");
     const [isAdding, setIsAdding] = useState(false);
     const [editingSkillId, setEditingSkillId] = useState(null);
     const [editSkillName, setEditSkillName] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const getListSkillsOfCategory = useCallback(async (id) => {
         if (!id) return;
+        setLoading(true);
         try {
             const response = await apiSkill.getListSkillsOfCategory(id);
-            setSkills(response.result || []); 
+            setSkills(response.result || []);
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Lỗi khi tải danh sách kỹ năng";
-            toast.error(errorMessage, { style: toastStyles.error });
-            }
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
     useEffect(() => {
@@ -39,18 +39,18 @@ export function SkillPage() {
 
     const handleCreateSkill = async () => {
         if (!newSkillName.trim()) {
-            toast.error("Vui lòng nhập tên kỹ năng", { style: toastStyles.warning });
+            toast.warning("Vui lòng nhập tên kỹ năng");
             return;
         }
         try {
             await apiSkill.createSkill({ name: newSkillName, category_id: categoryId });
-            toast.success("Thêm thành công", { style: toastStyles.success });
-            setNewSkillName(""); 
+            toast.success("Đã thêm kỹ năng mới");
+            setNewSkillName("");
             setIsAdding(false);
             getListSkillsOfCategory(categoryId);
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Lỗi khi thêm kỹ năng";
-            toast.error(errorMessage, { style: toastStyles.error });
+            toast.error(errorMessage);
         }
     };
 
@@ -58,137 +58,216 @@ export function SkillPage() {
         if (!editSkillName.trim()) return;
         try {
             await apiSkill.upDateSkill(id, { name: editSkillName, category_id: categoryId });
-            toast.success("Cập nhật thành công", { style: toastStyles.success });
+            toast.success("Cập nhật kỹ năng thành công");
             setEditingSkillId(null);
             getListSkillsOfCategory(categoryId);
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Lỗi khi cập nhật kỹ năng";
-            toast.error(errorMessage, { style: toastStyles.error });
+            toast.error(errorMessage);
         }
     };
 
-    const handleDeleteSkill = async (id) => {
-        if (!window.confirm("Bạn có chắc chắn muốn xóa kỹ năng này?")) return;
-        try {
-            await apiSkill.deleteSkill(id);
-            toast.success("Đã xóa kỹ năng", { style: toastStyles.success });
-            getListSkillsOfCategory(categoryId);
-        } catch (error) {
-            const errorMessage = error.response?.data?.message || "Lỗi khi xóa kỹ năng";
-            toast.error(errorMessage, { style: toastStyles.error });
+    const handleDeleteSkill = async (id, name) => {
+        const result = await Swal.fire({
+            title: 'Xóa kỹ năng?',
+            html: `Bạn có chắc chắn muốn xóa kỹ năng <b>${name}</b> không?<br/>Hành động này không thể hoàn tác!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Đồng ý xóa',
+            cancelButtonText: 'Hủy',
+            background: '#ffffff',
+            borderRadius: '24px',
+            customClass: {
+                popup: 'premium-swal-popup',
+                title: 'premium-swal-title',
+                confirmButton: 'premium-swal-confirm',
+                cancelButton: 'premium-swal-cancel'
+            }
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang thực hiện xóa...");
+            try {
+                await apiSkill.deleteSkill(id);
+                toast.success("Đã xóa kỹ năng thành công", { id: toastId });
+                getListSkillsOfCategory(categoryId);
+            } catch (error) {
+                const errorMessage = error.response?.data?.message || "Lỗi khi xóa kỹ năng";
+                toast.error(errorMessage, { id: toastId });
+            }
         }
     };
 
-    const filteredSkills = skills.filter(skill => 
+    const filteredSkills = skills.filter(skill =>
         skill.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
-        <div className="page-wrapper">
-            <Toaster position="top-right" expand={false} richColors />
-            
-            <div className="header-card">
-                <div className="header-left">
-                    <button onClick={() => navigate(-1)} className="btn-back">
-                        <ArrowLeft size={20} />
-                    </button>
-                    <h1 className="page-title">Quản lý kỹ năng</h1>
-                </div>
+        <div className="admin-skill-management animate-fade-in">
+            {/* Nav Header */}
+            <button className="btn-back-nav" onClick={() => navigate(-1)}>
+                <ChevronLeft size={20} /> Quay lại
+            </button>
 
-                <div className="header-right-stacked">
-                 
-                
-                    <div className="search-box">
-                        <Search className="search-icon" size={16} />
-                        <input 
+            {/* Premium Header Section */}
+            <div className="dashboard-header-section" style={{ padding: '24px 32px', marginBottom: '24px' }}>
+                <div className="flex-between">
+                    <div>
+                        <p className="text-overline"><Sparkles size={14} style={{ marginBottom: '-2px', marginRight: '4px' }} /> Kỹ năng chuyên môn</p>
+                        <h1 className="page-title" style={{ fontSize: '28px' }}>Quản lý kỹ năng</h1>
+                        <p className="page-subtitle">Danh sách các kỹ năng đo lường năng lực cho ngành nghề này.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="modern-card">
+                {/* Search and Integrated Actions Bar */}
+                <div className="filters-bar" style={{ background: 'white' }}>
+                    <div className="search-wrapper" style={{ maxWidth: '400px' }}>
+                        <Search className="search-icon" size={18} />
+                        <input
                             type="text"
-                            placeholder="Tìm theo tên kỹ năng..."
+                            className="modern-input"
+                            placeholder="Tìm kiếm nhanh kỹ năng..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    
+
+                    <div className="filters-group" style={{ gap: '16px' }}>
+                        <div className="flex-between gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                            <span>{filteredSkills.length} kỹ năng</span>
+                        </div>
+                        <button
+                            className={`btn-add-skill-integrated ${isAdding ? 'cancel' : ''}`}
+                            onClick={() => setIsAdding(!isAdding)}
+                        >
+                            {isAdding ? <X size={18} /> : <Plus size={18} />}
+                            <span>{isAdding ? "Hủy" : "Thêm mới"}</span>
+                        </button>
+                    </div>
                 </div>
-                
-            </div>
 
-            <div className="mid-Header">
-                <button className="btn-add" onClick={() => setIsAdding(!isAdding)}>
-                        <Plus size={16} /> {isAdding ? "Hủy Thêm" : "Thêm Kỹ Năng"}
-                    </button>
-            </div>
-            {/* Box Table Trắng */}
-            <div className="table-card">
-                <table className="skill-table">
-                    <thead>
-                        <tr>
-                            <th>TÊN KỸ NĂNG</th>
-                            <th className="text-right">HÀNH ĐỘNG</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {isAdding && (
-                            <tr className="adding-row">
-                                <td>
-                                    <input 
-                                        autoFocus
-                                        type="text" 
-                                        value={newSkillName} 
-                                        onChange={(e) => setNewSkillName(e.target.value)}
-                                        placeholder="Nhập tên kỹ năng..." 
-                                        className="inline-input"
-                                        onKeyDown={(e) => e.key === 'Enter' && handleCreateSkill()}
-                                    />
-                                </td>
-                                <td className="action-cell">
-                                    <button onClick={handleCreateSkill} className="btn-outline-blue">Lưu</button>
-                                    <button onClick={() => {setIsAdding(false); setNewSkillName("");}} className="btn-outline-red">Hủy</button>
-                                </td>
-                            </tr>
-                        )}
-
-                        {filteredSkills.length === 0 && !isAdding ? (
+                {/* Table implementation */}
+                <div className="table-container">
+                    <table className="modern-table">
+                        <thead>
                             <tr>
-                                <td colSpan="2" className="text-center py-8 text-gray-500">Không có dữ liệu.</td>
+                                <th style={{ width: '60%', paddingLeft: '32px' }}>TÊN KỸ NĂNG</th>
+                                <th style={{ width: '40%', textAlign: 'right', paddingRight: '32px' }}>THAO TÁC</th>
                             </tr>
-                        ) : (
-                            filteredSkills.map((skill) => (
-                                <tr key={skill.id}>
-                                    <td>
-                                        {editingSkillId === skill.id ? (
-                                            <input 
+                        </thead>
+                        <tbody>
+                            {isAdding && (
+                                <tr className="adding-row-modern shadow-sm">
+                                    <td style={{ paddingLeft: '32px' }}>
+                                        <div className="input-with-focus-ring">
+                                            <input
                                                 autoFocus
-                                                className="inline-input"
-                                                value={editSkillName}
-                                                onChange={(e) => setEditSkillName(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleUpdateSkill(skill.id)}
+                                                type="text"
+                                                value={newSkillName}
+                                                onChange={(e) => setNewSkillName(e.target.value)}
+                                                placeholder="Nhập tên kỹ năng..."
+                                                className="skill-inline-edit-input"
+                                                onKeyDown={(e) => e.key === 'Enter' && handleCreateSkill()}
                                             />
-                                        ) : (
-                                            skill.name
-                                        )}
+                                        </div>
                                     </td>
-                                    <td className="action-cell">
-                                        {editingSkillId === skill.id ? (
-                                            <>
-                                                <button onClick={() => handleUpdateSkill(skill.id)} className="btn-outline-blue">Lưu</button>
-                                                <button onClick={() => setEditingSkillId(null)} className="btn-outline-red">Hủy</button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <button onClick={() => { setEditingSkillId(skill.id); setEditSkillName(skill.name); }} className="btn-outline-blue">Sửa</button>
-                                                <button onClick={() => handleDeleteSkill(skill.id)} className="btn-outline-red">Xóa</button>
-                                            </>
-                                        )}
+                                    <td style={{ textAlign: 'right', paddingRight: '32px' }}>
+                                        <div className="flex-actions-end">
+                                            <button onClick={handleCreateSkill} className="btn-action-save" title="Lưu">
+                                                <Check size={18} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            )}
 
-            {/* Phân trang */}
-           
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="2" style={{ padding: '64px 0', textAlign: 'center' }}>
+                                        <div className="loading-spinner" style={{ margin: '0 auto' }}></div>
+                                        <p style={{ marginTop: '16px', color: '#64748b' }}>Đang tải danh sách...</p>
+                                    </td>
+                                </tr>
+                            ) : filteredSkills.length === 0 && !isAdding ? (
+                                <tr>
+                                    <td colSpan="2" style={{ padding: '64px 0', textAlign: 'center' }}>
+                                        <div style={{ color: '#94a3b8', marginBottom: '16px' }}>
+                                            <Search size={48} strokeWidth={1} />
+                                        </div>
+                                        <p style={{ color: '#64748b' }}>Không tìm thấy kỹ năng nào phù hợp.</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredSkills.map((skill) => (
+                                    <tr key={skill.id} className="table-row-modern">
+                                        <td style={{ paddingLeft: '32px' }}>
+                                            {editingSkillId === skill.id ? (
+                                                <div className="input-with-focus-ring">
+                                                    <input
+                                                        autoFocus
+                                                        className="skill-inline-edit-input"
+                                                        value={editSkillName}
+                                                        onChange={(e) => setEditSkillName(e.target.value)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleUpdateSkill(skill.id)}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="skill-name-display">
+                                                    <div className="skill-dot"></div>
+                                                    <span>{skill.name}</span>
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td style={{ textAlign: 'right', paddingRight: '32px' }}>
+                                            <div className="flex-actions-end">
+                                                {editingSkillId === skill.id ? (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleUpdateSkill(skill.id)}
+                                                            className="btn-action-save"
+                                                            title="Cập nhật"
+                                                        >
+                                                            <Check size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditingSkillId(null)}
+                                                            className="btn-action-cancel"
+                                                            title="Hủy"
+                                                        >
+                                                            <X size={18} />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button
+                                                            onClick={() => { setEditingSkillId(skill.id); setEditSkillName(skill.name); }}
+                                                            className="btn-action-edit"
+                                                            title="Chỉnh sửa"
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteSkill(skill.id, skill.name)}
+                                                            className="btn-action-delete"
+                                                            title="Xóa kỹ năng"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }

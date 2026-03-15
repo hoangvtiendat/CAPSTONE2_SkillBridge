@@ -29,7 +29,7 @@ public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/users")
-    public ResponseEntity<ApiResponse<Page<UserResponse>>> getUsers(
+    public ResponseEntity<ApiResponse<Page<User>>> getUsers(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String role,
@@ -42,9 +42,9 @@ public class AdminController {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<UserResponse> users = adminService.getUsers(name, email, role, status, pageable);
+        Page<User> users = adminService.getUsers(name, email, role, status, pageable);
 
-        ApiResponse<Page<UserResponse>> response = new ApiResponse<>(
+        ApiResponse<Page<User>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Lấy danh sách người dùng thành công",
                 users

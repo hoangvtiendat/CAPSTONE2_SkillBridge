@@ -54,6 +54,14 @@ const companyService = {
 
     getCompanyById: (id) => {
         return api.get(`/companies/${id}`);
+    },
+
+    deactivate: (id, data) => {
+        return api.post(`/companies/${id}/deactivate`, data);
+    },
+
+    reactivate: (id) => {
+        return api.post(`/companies/${id}/reactivate`);
     }
 };
 
