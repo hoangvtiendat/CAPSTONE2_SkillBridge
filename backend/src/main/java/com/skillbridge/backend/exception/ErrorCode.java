@@ -51,6 +51,8 @@ public enum ErrorCode {
     // Thêm vào Enum ErrorCode của bạn
     NOT_FOUND_SUBSCRIPTION(901, "Không tìm thấy gói đăng ký"),
     NOT_FOUND_SUBSCRIPTION_PRENIUM(902, "Hiện tại không có gói cước prenium vui lòng thử lại sau"),
+    CLOSE_OLD_SUBSCRIPTION(903, "Lỗi thay đổi trạng thái gói cước cũ"),
+    CHECK_STATUS_SUB(904, "Không nhận được thông báo báo từ bên PayOS"),
     // 1. Ràng buộc về Giá (Price)
     FREE_PRICE_CANNOT_BE_CHANGED(902, "Gói FREE không được phép sửa giá"),
     STANDARD_PRICE_MUST_BE_GREATER_THAN_ZERO(903, "Giá của gói STANDARD bắt buộc phải lớn hơn 0"),

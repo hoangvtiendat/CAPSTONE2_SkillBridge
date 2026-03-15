@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,8 @@ public interface SubcriptionOfCompanyRepository extends JpaRepository<Subcriptio
     List<SubcriptionOfCompany> findAllByEndDateBeforeAndStatusAndNameNot(LocalDateTime date, SubscriptionOfCompanyStatus status, SubscriptionPlanStatus name);
 
     List<SubcriptionOfCompany> findAllByEndDateBeforeAndStatusAndName(LocalDateTime date, SubscriptionOfCompanyStatus status, SubscriptionPlanStatus name);
+
+    Optional<SubcriptionOfCompany> findById(String id);
 
     Optional<SubcriptionOfCompany> findByCompanyIdAndName(String companyId, SubscriptionPlanStatus name);
 }

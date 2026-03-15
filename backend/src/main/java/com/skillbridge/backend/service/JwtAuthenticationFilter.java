@@ -24,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
     }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
@@ -39,19 +40,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (request.getServletPath().contains("/auth") || request.getServletPath().contains("/public")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String header = request.getHeader("Authorization");
-
-        if (header == null || !header.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token = header.substring(7);
+        String token = authHeader.substring(7);
 
         if (!jwtService.validateToken(token)) {
             filterChain.doFilter(request, response);
@@ -60,7 +61,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String userId = jwtService.getUserId(token);
 
-        // Kiểm tra status người dùng trong database
         var userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty() || !"ACTIVE".equals(userOptional.get().getStatus())) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
