@@ -26,7 +26,17 @@ const RegisterSubscription = () => {
     try {
         setLoading(true);
         const res = await subscriptionService.postPayment(id, token, type);
-        const orderURL = res.result?.orderurl;
+        const orderURL =
+            res?.checkoutUrl ||
+            res?.result?.checkoutUrl ||
+            res?.data?.checkoutUrl ||
+            res?.postPayment;
+
+        if (!orderURL) {
+            throw new Error('Không nhận được checkoutUrl từ hệ thống thanh toán');
+        }
+
+        sessionStorage.setItem('pendingPayment', id);
         if (orderURL) {
             window.location.href = orderURL;
         }

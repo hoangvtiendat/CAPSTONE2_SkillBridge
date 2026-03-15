@@ -75,7 +75,6 @@ body {
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
 }
 
-/* Nút Đăng ký gói dịch vụ */
 .subscription-button {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #ffffff;

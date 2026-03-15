@@ -72,11 +72,15 @@ const subscriptionService = {
     // Tao goi thanh toan 
     postPayment: async (id, token, type) => {
         try {
-        const response = await api.post(`/subscription/create-oder/${id}/${type}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
+        const config = token
+            ? {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             }
-        });
+            : {};
+
+        const response = await api.post(`/payments/create-link/${id}/${type}`, null, config);
         return response.data;
     }
     catch (error) {

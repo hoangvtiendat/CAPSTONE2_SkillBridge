@@ -42,13 +42,22 @@ const fetchSystemPackages = async () => {
         toast.error('Không thể tải gói Premium', { description: errorMessage });
     }
 }
-const postPayment = async (id, type) => {
+   const postPayment = async (id, type) => {
     try {
         setLoading(true);
         const res = await subscriptionService.postPayment(id, token, type);
-        const orderURL = res.result?.orderurl;
+        const orderURL =
+            res?.checkoutUrl ||
+            res?.result?.checkoutUrl ||
+            res?.data?.checkoutUrl ||
+            res?.postPayment;
+
+        if (!orderURL) {
+            throw new Error('Không nhận được checkoutUrl từ hệ thống thanh toán');
+        }
+
+        sessionStorage.setItem('pendingPayment', id);
         if (orderURL) {
-            sessionStorage.setItem('pendingPayment', id);
             window.location.href = orderURL;
         }
     } catch (error) {
@@ -61,7 +70,7 @@ const postPayment = async (id, type) => {
     } finally {
         setLoading(false);
     }
-};
+}; 
 const getListSubscriptionOfCompany = async () => {
        
         try {

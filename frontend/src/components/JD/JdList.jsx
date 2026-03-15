@@ -133,7 +133,6 @@ const JdList = () => {
                 </div>
             </div>
 
-            {/* Search và Filter */}
             <div className="jd-filter-section">
                 <div className="search-box">
                     <input
