@@ -3,11 +3,9 @@ package com.skillbridge.backend.service;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
-import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
-import com.skillbridge.backend.dto.response.JobFeedResponse;
 import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.*;
@@ -19,7 +17,6 @@ import org.springframework.data.domain.Page;
 import com.skillbridge.backend.repository.SystemLogRepository;
 import jakarta.transaction.Transactional;
 import com.skillbridge.backend.repository.*;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +26,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -660,7 +656,7 @@ public class JobService {
         if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        job.setStatus(JobStatus.CLOCK);
+        job.setStatus(JobStatus.LOCK);
         job.setIsDeleted(true);
         jobRepository.save(job);
 

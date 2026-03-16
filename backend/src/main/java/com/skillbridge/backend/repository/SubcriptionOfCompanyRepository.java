@@ -1,11 +1,14 @@
 package com.skillbridge.backend.repository;
 
 import com.skillbridge.backend.entity.SubcriptionOfCompany;
+import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
 import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import jakarta.persistence.LockModeType;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -30,4 +33,7 @@ public interface SubcriptionOfCompanyRepository extends JpaRepository<Subcriptio
     Optional<SubcriptionOfCompany> findById(String id);
 
     Optional<SubcriptionOfCompany> findByCompanyIdAndName(String companyId, SubscriptionPlanStatus name);
+
+    ///  update thời gian sau khi đăng kys gói
+
 }

@@ -1,4 +1,6 @@
 package com.skillbridge.backend.service;
+import com.skillbridge.backend.dto.response.JobResponse;
+import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.exception.AppException;
 
 import com.skillbridge.backend.config.CustomUserDetails;
@@ -25,6 +27,7 @@ import vn.payos.model.webhooks.WebhookData;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -36,16 +39,19 @@ public class PaymentService {
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final CompanyRepository companyRepository;
+    private final JobRepository jobRepository;
 
     public PaymentService(PayOS payOS, CompanyMemberRepository companyMemberRepository, SubcriptionOfCompanyRepository subcriptionOfCompanyRepository,
                           SubscriptionPlanRepository subscriptionPlanRepository,
-                          PaymentTransactionRepository paymentTransactionReposit, CompanyRepository companyRepository) {
+                          PaymentTransactionRepository paymentTransactionReposit, CompanyRepository companyRepository
+            , JobRepository jobRepository) {
         this.payOS = payOS;
         this.companyMemberRepository = companyMemberRepository;
         this.subcriptionOfCompanyRepository = subcriptionOfCompanyRepository;
         this.subscriptionPlanRepository = subscriptionPlanRepository;
         this.paymentTransactionRepository = paymentTransactionReposit;
         this.companyRepository = companyRepository;
+        this.jobRepository = jobRepository;
     }
 
 
@@ -66,17 +72,15 @@ public class PaymentService {
         BigDecimal amount = BigDecimal.ZERO;
         String description = "";
         String idOfSubcriptionOfCompany = "";
-        if(type == 0) {
+        if (type == 0) {
             SubscriptionPlan getDetailSub = subscriptionPlanRepository.getReferenceById(id_ofBill);
             idOfSubcriptionOfCompany = getDetailSub.getId();
             amount = getDetailSub.getPrice();
-        }
-        else if(type == 1) {
+        } else if (type == 1) {
             SubcriptionOfCompany getDetailSub = subcriptionOfCompanyRepository.getReferenceById(id_ofBill);
             idOfSubcriptionOfCompany = getDetailSub.getId();
             amount = getDetailSub.getPrice();
-        }
-        else {
+        } else {
             throw new Exception("Loại hóa đơn không hợp lệ, không thể xác định số tiền!");
         }
         Map<String, Object> dataOfSubcription = new HashMap<>();
@@ -118,10 +122,13 @@ public class PaymentService {
             System.out.println("Số tiền nhận được: " + amount);
             System.out.println("data: " + data);
 
+            if (orderCode == 123) {
+                return;
+            }
+
             if ("00".equals(code)) {
                 PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(orderCode)
                         .orElseThrow(() -> new Exception("Không tìm thấy giao dịch với mã: " + orderCode));
-
 
                 subcriptionOfCompanyRepository.findByCompanyIdAndStatus(paymentTransaction.getCompanyId(), SubscriptionOfCompanyStatus.OPEN)
                         .ifPresent(closeSub -> {
@@ -129,16 +136,14 @@ public class PaymentService {
                             subcriptionOfCompanyRepository.save(closeSub);
                         });
 
-                if(paymentTransaction.getType() == 0){
+                if (paymentTransaction.getType() == 0) {
                     SubscriptionPlan getSub = subscriptionPlanRepository.getReferenceById(paymentTransaction.getSubscription_id());
                     String companyId = paymentTransaction.getCompanyId();
                     SubcriptionOfCompany newSubscription = new SubcriptionOfCompany();
                     Company company = companyRepository.getReferenceById(companyId);
 
                     newSubscription.setCompany(company);
-
                     newSubscription.setName(getSub.getName());
-
                     newSubscription.setJobLimit(getSub.getJobLimit());
                     newSubscription.setCandidateViewLimit(getSub.getCandidateViewLimit());
                     newSubscription.setHasPriorityDisplay(getSub.getHasPriorityDisplay());
@@ -149,18 +154,29 @@ public class PaymentService {
                     newSubscription.setEndDate(LocalDateTime.now().plusMonths(getSub.getPostingDuration() != null ? getSub.getPostingDuration() : 1));
                     newSubscription.setIsActive(true);
 
-
+                    jobRepository.updateDurationForOldJobs(
+                            paymentTransaction.getCompanyId(),
+                            getSub.getPostingDuration(),
+                            List.of(
+                                    JobStatus.OPEN, JobStatus.PENDING
+                            )
+                    );
 
                     subcriptionOfCompanyRepository.save(newSubscription);
-
                 }
 
-                if(paymentTransaction.getType() == 1){
+                if (paymentTransaction.getType() == 1) {
                     SubcriptionOfCompany getSub = subcriptionOfCompanyRepository.getReferenceById(paymentTransaction.getSubscription_id());
                     getSub.setStatus(SubscriptionOfCompanyStatus.OPEN);
                     getSub.setStartDate(LocalDateTime.now());
                     getSub.setEndDate(LocalDateTime.now().plusMonths(getSub.getPostingDuration() != null ? getSub.getPostingDuration() : 1));
-
+                    jobRepository.updateDurationForOldJobs(
+                            paymentTransaction.getCompanyId(),
+                            getSub.getPostingDuration(),
+                            List.of(
+                                    JobStatus.OPEN, JobStatus.PENDING
+                            )
+                    );
                     subcriptionOfCompanyRepository.save(getSub);
                 }
 

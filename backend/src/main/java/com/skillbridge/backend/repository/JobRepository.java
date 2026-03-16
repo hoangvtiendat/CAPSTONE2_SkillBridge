@@ -6,7 +6,9 @@ import com.skillbridge.backend.dto.response.JobFeedItemResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Page;
@@ -125,4 +127,17 @@ public interface JobRepository extends JpaRepository<Job, String> {
                 ORDER BY MONTH(j.createdAt)
             """)
     List<MonthlyJobDTO> jobGrowthLast6Months(@Param("fromDate") LocalDateTime fromDate);
+    @Modifying
+    @Transactional
+    @Query("""
+        UPDATE Job j 
+        SET j.PostingDay = :days 
+        WHERE j.company.id = :companyId 
+        AND j.status IN :statuses
+    """)
+    int updateDurationForOldJobs(
+            @Param("companyId") String companyId,
+            @Param("days") int days,
+            @Param("statuses") List<JobStatus> statuses
+    );
 }
