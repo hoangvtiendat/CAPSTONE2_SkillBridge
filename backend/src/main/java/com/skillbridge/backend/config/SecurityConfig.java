@@ -71,7 +71,10 @@ public class SecurityConfig {
                                 "/identity/v3/api-docs/**",
                                 "/jobs/feed/**",
                                 "/jobs/{id}",
-                                "/ws-log/**"
+                                "/ws-log/**",
+                                "/identity/subscription/**",
+                                "/payments/webhook"
+
                         ).permitAll()
                         .requestMatchers(
                                 "/CategoryProfession/Create",

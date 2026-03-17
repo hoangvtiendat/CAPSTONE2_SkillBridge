@@ -1,5 +1,5 @@
 package com.skillbridge.backend.enums;
 
 public enum JobStatus {
-    OPEN, CLOSED, PENDING, CLOCK
+    OPEN, CLOSED, PENDING, LOCK
 }

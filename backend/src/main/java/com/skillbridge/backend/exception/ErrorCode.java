@@ -21,13 +21,11 @@ public enum ErrorCode {
     EMAIL_ALREADY_REGISTERED_BY_PASSWORD(2007, "Email đã được đăng ký bằng tài khoản LOCAL"),
     INVALID_OTP(2005,"Mã OTP SAI"),
     INVALID_INPUT(2006, "Dữ liệu đầu vào không hợp lệ"),
-
     FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),
     USER_STATUS(3003,"Tài khoản đã bị khóa"),
     USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),
     CATEGORY_NOT_FOUND(3005, "Không tìm thấy danh mục lĩnh vực"),
     CANDIDATE_NOT_FOUND(3006, "Không tìm thấy thông tin ứng viên"),
-
     // ===== AUTH / SECURITY =====
     TOKEN_EXPIRED(402,"Token đã hết hạn, vui lòng đăng nhập lại"),
     UNAUTHORIZED(401, "Bạn chưa đăng nhập"),
@@ -39,6 +37,7 @@ public enum ErrorCode {
     DUPLICATE_JOB_SKILL(504, "Hiện tại kĩ năng đang được sử dụng"),
     /// Company
     EXIT_STATUS_COMPANY(601, "Hiện tại trạng thái của công ty bạn không cho phép"),
+
     /// Comapany_member
     MEMBER_NOT_FOUND(701,"Bạn chưa là nhân viên của công ty nào cả"),
     // Jobs
@@ -48,10 +47,14 @@ public enum ErrorCode {
     JOB_STATUS_EXITS(804,"Hiện tại JD đang được sử dụng vui lòng đăng lại khi bài đăng đóng"),
     JOB_NO_OPEN(805, "Bài tuyển dụng hiện chưa được mở"),
     JOB_NO_GREEN(806, "Bài tuyển dụng này chưa được duyệt trên hệ thống"),
+    SUBCRIFTION_OF_COMPANY(805, "Không tìm thấy gói cước của Công ty "),
+    EXIR_SUBSCRIFTION(806,"Hiện tại ban đã sử dụng hết dịch vụ gói cước"),
     ///  ===== SUBSCRIPTTION
     // Thêm vào Enum ErrorCode của bạn
     NOT_FOUND_SUBSCRIPTION(901, "Không tìm thấy gói đăng ký"),
-
+    NOT_FOUND_SUBSCRIPTION_PRENIUM(902, "Hiện tại không có gói cước prenium vui lòng thử lại sau"),
+    CLOSE_OLD_SUBSCRIPTION(903, "Lỗi thay đổi trạng thái gói cước cũ"),
+    CHECK_STATUS_SUB(904, "Không nhận được thông báo báo từ bên PayOS"),
     // 1. Ràng buộc về Giá (Price)
     FREE_PRICE_CANNOT_BE_CHANGED(902, "Gói FREE không được phép sửa giá"),
     STANDARD_PRICE_MUST_BE_GREATER_THAN_ZERO(903, "Giá của gói STANDARD bắt buộc phải lớn hơn 0"),

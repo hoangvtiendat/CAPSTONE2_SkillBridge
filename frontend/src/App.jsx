@@ -20,6 +20,7 @@ import AdminJobPage from './pages/admin/AdminJobPage';
 import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
 import SubscriptionOfCompanyPage from './pages/Subscription.jsx/SubscriftionOfCompany';
+import RegisterSubscriptionPage from './pages/Subscription.jsx/RegisterSubscriptionPage'
 import {Toaster, toast} from 'sonner';
 import BusinessIdentity from './pages/recruiter/BusinessIdentity'
 import MyJobsPage from './pages/recruiter/MyJobsPage';
@@ -157,12 +158,12 @@ function App() {
                 <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
                 <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
                 <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage/>}/>
+                <Route path='/company/subscriptions/register' element={<RegisterSubscriptionPage/>}/>
 
                 {/*đó phải bỏ vào role của nhà tuyển dụng*/}
-                <Route path="/recruiter/my-jobs" element={<MyJobsPage />} />
+                <Route path="/recruiter/my-jobs" element={<MyJobsPage/>}/>
                 <Route path="/recruiter/jobs/:jobId/applications" element={<RecruiterApplications/>}/>
                 <Route path="/recruiter/applications/:id" element={<ApplicationDetailPage/>}/>
-
 
                 <Route path="/admin" element={<AdminLayout/>}>
                     <Route index element={<AdminDashboardPage/>}/>
@@ -180,7 +181,7 @@ function App() {
                     <Route path='subscriptions' element={<AdminRoute><SubscriptionManagerPage/></AdminRoute>}/>
 
                     <Route path="*"
-                           element={<div style={{padding: '32px', textAlign: 'center', color: '#64748b'}}>Feature Coming
+                           element={<div style={{padding: '32px', textAlign: 'center', color: '#64748b'}}>Tính năng sắp ra mắt
                                Soon</div>}/>
                 </Route>
             </Routes>

@@ -27,15 +27,19 @@ import com.skillbridge.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,6 +68,8 @@ public class JobService {
     private final FileStorageService fileStorageService;
     private final NotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final SubscriptionPlanRepository subscriptionPlanRepository;
+    private final SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
 
     public Map<String, Object> getJobFeed(int page, String cursor, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -350,6 +356,14 @@ public class JobService {
             throw new AppException(ErrorCode.EXIT_STATUS_COMPANY);
         }
 
+        SubcriptionOfCompany getSubcriptionOfCompany = subcriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(),SubscriptionOfCompanyStatus.OPEN)
+                .orElseThrow(() -> new AppException(ErrorCode.SUBCRIFTION_OF_COMPANY));
+
+    if(getSubcriptionOfCompany.getCurrentJobCount() > getSubcriptionOfCompany.getJobLimit())
+    {
+        throw new AppException(ErrorCode.EXIR_SUBSCRIFTION);
+    }
+
         List<JobSkill> jobSkills = new ArrayList<>();
         StringBuilder textBuilder = new StringBuilder();
         StringBuilder skillBuilder = new StringBuilder();
@@ -366,7 +380,9 @@ public class JobService {
         job.setLocation(request.getLocation());
         job.setSalaryMin(request.getSalaryMin());
         job.setSalaryMax(request.getSalaryMax());
-
+        job.setEndDate(null);
+        job.setStartDate(null);
+        job.setPostingDay(getSubcriptionOfCompany.getPostingDuration());
         Job savedJob = jobRepository.save(job);
         job.setViewCount(0);
         job.setModerationScore(0f);
@@ -409,7 +425,8 @@ public class JobService {
             textBuilder.append(skillBuilder.substring(0, skillBuilder.length() - 2));
         }
         String textFinal = textBuilder.toString();
-
+        getSubcriptionOfCompany.setCurrentJobCount(getSubcriptionOfCompany.getCurrentJobCount()+1);
+        subcriptionOfCompanyRepository.save(getSubcriptionOfCompany);
         //  Text > Vector
         try {
             float[] vector = embeddingService.createEmbedding(textFinal);
@@ -423,6 +440,46 @@ public class JobService {
         jobSkillRepository.saveAll(jobSkills);
         jobRepository.save(job);
         return savedJob;
+    }
+    @Scheduled(cron = "0 0 0 * * *") // Tự động chạy vào 00:00 mỗi ngày
+    @Transactional
+    public void handleExpiredSubscriptions() {
+        LocalDateTime now = LocalDateTime.now();
+
+
+        List<SubcriptionOfCompany> expiredPremiumSubs = subcriptionOfCompanyRepository
+                .findAllByEndDateBeforeAndStatusAndNameNot(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
+
+        for (SubcriptionOfCompany expiredSub : expiredPremiumSubs) {
+            expiredSub.setStatus(SubscriptionOfCompanyStatus.CLOSE);
+            subcriptionOfCompanyRepository.save(expiredSub);
+
+            Optional<SubcriptionOfCompany> oldFreeSubOpt = subcriptionOfCompanyRepository
+                    .findByCompanyIdAndName(expiredSub.getCompany().getId(), SubscriptionPlanStatus.FREE);
+
+            if (oldFreeSubOpt.isPresent()) {
+                SubcriptionOfCompany freeSub = oldFreeSubOpt.get();
+
+                freeSub.setStatus(SubscriptionOfCompanyStatus.OPEN);
+                freeSub.setCurrentJobCount(0);
+                freeSub.setStartDate(now);
+                freeSub.setEndDate(now.plusMonths(1));
+
+                subcriptionOfCompanyRepository.save(freeSub);
+                System.out.println("Doanh nghiệp " + expiredSub.getCompany().getName() + " đã quay lại dùng gói FREE cũ.");
+            }
+        }
+
+        List<SubcriptionOfCompany> expiredFreeSubs = subcriptionOfCompanyRepository
+                .findAllByEndDateBeforeAndStatusAndName(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
+
+        for (SubcriptionOfCompany freeSub : expiredFreeSubs) {
+            freeSub.setCurrentJobCount(0);
+            freeSub.setStartDate(now);
+            freeSub.setEndDate(now.plusMonths(1));
+            subcriptionOfCompanyRepository.save(freeSub);
+            System.out.println("Đã tự động gia hạn chu kỳ FREE mới cho doanh nghiệp: " + freeSub.getCompany().getName());
+        }
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
@@ -620,7 +677,7 @@ public class JobService {
         if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        job.setStatus(JobStatus.CLOCK);
+        job.setStatus(JobStatus.LOCK);
         job.setIsDeleted(true);
         jobRepository.save(job);
 

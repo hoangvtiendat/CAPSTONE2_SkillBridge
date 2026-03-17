@@ -131,7 +131,7 @@ public class SubscriptionService {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
         SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION_PRENIUM));
 
         Company currentCompany = recruiter.getCompany();
 

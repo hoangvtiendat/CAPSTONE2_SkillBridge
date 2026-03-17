@@ -9,6 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +66,14 @@ public class Job extends BaseEntity{
     private BigDecimal salaryMax;
 
     private String location;
+    private Integer PostingDay;
+    @Column(name = "start_date")
+    private LocalDateTime startDate ;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
+
 
     public String getId() {
         return id;
