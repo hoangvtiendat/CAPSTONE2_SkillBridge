@@ -19,10 +19,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final com.skillbridge.backend.repository.UserRepository userRepository;
+    private final com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService, com.skillbridge.backend.repository.UserRepository userRepository) {
+    public JwtAuthenticationFilter(JwtService jwtService, 
+                                 com.skillbridge.backend.repository.UserRepository userRepository,
+                                 com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.companyMemberRepository = companyMemberRepository;
     }
 
     @Override
@@ -68,6 +72,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write("{\"code\": 3003, \"message\": \"Tài khoản đã bị khóa\"}");
             return;
+        }
+
+        // US09: Kiểm tra nếu công ty bị vô hiệu hóa
+        var memberOptional = companyMemberRepository.findByUser_Id(userId);
+        if (memberOptional.isPresent()) {
+            var member = memberOptional.get();
+            var company = member.getCompany();
+            if ("DEACTIVATED".equals(company.getStatus().name())) {
+                // Chỉ cho phép Company ADMIN truy cập các endpoint liên quan đến identity/reactivate
+                if (!"ADMIN".equals(member.getRole().name())) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write("{\"code\": 6011, \"message\": \"Công ty của bạn đã bị vô hiệu hóa. Bạn tạm thời không thể truy cập quyền nhà tuyển dụng.\"}");
+                    return;
+                }
+                
+                // Admin vẫn được vào nhưng có thể bị hạn chế ở các API khác ngoài reactivate (tùy logic Controller)
+                // Ở đây ta cho phép Admin đi tiếp để họ có thể gọi API reactivate hoặc xem profile
+            }
         }
 
         User user = userOptional.get();

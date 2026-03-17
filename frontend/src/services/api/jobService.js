@@ -7,7 +7,7 @@ const getAuthHeader = () => {
 const jobService = {
     getFeed: async (params = {}) => {
         try {
-            const {page = 0, limit = 6, categoryId, location, salary} = params;
+            const { page = 0, limit = 6, categoryId, location, salary } = params;
             const queryParams = new URLSearchParams();
             queryParams.append('page', page);
             queryParams.append('limit', limit);
@@ -39,6 +39,46 @@ const jobService = {
                 currentPage: result.currentPage || 0
             };
         } catch (error) {
+            throw error;
+        }
+    },
+    getJobsByCompany: async (companyId, params = {}) => {
+        try {
+            const { page = 0, limit = 6, categoryIds } = params;
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page);
+            queryParams.append('limit', limit);
+
+            if (categoryIds && categoryIds.length > 0) {
+                categoryIds.forEach(id => queryParams.append('categoryIds', id));
+            }
+
+            const response = await api.get(`/jobs/company/${companyId}?${queryParams.toString()}`);
+
+            const result = response.data.result;
+            const jobs = (result.jobs || []).map(job => ({
+                id: job.jobId,
+                position: job.title?.en || job.title?.vi || 'Unknown Position',
+                company: job.companyName,
+                location: job.location,
+                salary: {
+                    min: parseInt(job.salaryMin) / 1000,
+                    max: parseInt(job.salaryMax) / 1000
+                },
+                tags: (job.skills || []).map(s => s.skillName || s),
+                logo: job.companyImageUrl,
+                categoryName: job.categoryName,
+                featured: false
+            }));
+
+            return {
+                jobs,
+                totalPages: result.totalPages || 0,
+                totalElements: result.totalElements || 0,
+                currentPage: result.currentPage || 0
+            };
+        } catch (error) {
+            console.error('Error fetching jobs by company:', error);
             throw error;
         }
     },
@@ -109,12 +149,11 @@ const jobService = {
             throw error;
         }
     },
-
     getAdminJobs: async (params = {}) => {
         try {
-            const {cursor, limit = 10, status, modStatus} = params;
+            const { cursor, limit = 10, status, modStatus } = params;
             const response = await api.get(`/jobs/feedAdmin`, {
-                params: {cursor, limit, status, modStatus}
+                params: { cursor, limit, status, modStatus }
             });
 
             const result = response.data.result;
@@ -175,31 +214,26 @@ const jobService = {
         const response = await api.get(`/jobs/${jobId}`);
         return response.data.result;
     },
-
     getJobDetail: async (jobId) => {
         const response = await api.get(`/jobs/feedAdmin/${jobId}`);
         return response.data.result;
     },
-
     deleteJob: async (jobId) => {
         const response = await api.delete(`/jobs/feedAdmin/${jobId}`);
         return response.data;
     },
-
     changeModerationStatus: async (jobId, status) => {
         const response = await api.patch(`/jobs/feedAdmin/${jobId}/moderation`, null, {
-            params: {status}
+            params: { status }
         });
         return response.data;
     },
-
     changeStatus: async (jobId, status) => {
         const response = await api.patch(`/jobs/feedAdmin/${jobId}/status`, null, {
-            params: {status}
+            params: { status }
         });
         return response.data;
     }
-
 };
 
 export default jobService;

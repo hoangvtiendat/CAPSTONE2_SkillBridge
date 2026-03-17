@@ -31,9 +31,24 @@ public class UserResponse {
     @JsonProperty("createdAt")
     private LocalDateTime createdAt;
 
+    @JsonProperty("companyName")
+    private String companyName;
+
+    @JsonProperty("companyId")
+    private String companyId;
+
+    @JsonProperty("companyTaxId")
+    private String companyTaxId;
+
+    @JsonProperty("companyStatus")
+    private String companyStatus;
+
+    @JsonProperty("companyRole")
+    private String companyRole;
+
     public UserResponse() {}
 
-    public UserResponse(String id, String name, String email, String phoneNumber, String address, String role, String status, String is2faEnabled, LocalDateTime createdAt) {
+    public UserResponse(String id, String name, String email, String phoneNumber, String address, String role, String status, String is2faEnabled, LocalDateTime createdAt, String companyName, String companyId, String companyTaxId, String companyStatus, String companyRole) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -43,6 +58,11 @@ public class UserResponse {
         this.status = status;
         this.is2faEnabled = is2faEnabled;
         this.createdAt = createdAt;
+        this.companyName = companyName;
+        this.companyId = companyId;
+        this.companyTaxId = companyTaxId;
+        this.companyStatus = companyStatus;
+        this.companyRole = companyRole;
     }
 
     public String getId() { return id; }
@@ -72,6 +92,21 @@ public class UserResponse {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
+
+    public String getCompanyId() { return companyId; }
+    public void setCompanyId(String companyId) { this.companyId = companyId; }
+
+    public String getCompanyTaxId() { return companyTaxId; }
+    public void setCompanyTaxId(String companyTaxId) { this.companyTaxId = companyTaxId; }
+
+    public String getCompanyStatus() { return companyStatus; }
+    public void setCompanyStatus(String companyStatus) { this.companyStatus = companyStatus; }
+
+    public String getCompanyRole() { return companyRole; }
+    public void setCompanyRole(String companyRole) { this.companyRole = companyRole; }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -86,6 +121,11 @@ public class UserResponse {
         private String status;
         private String is2faEnabled;
         private LocalDateTime createdAt;
+        private String companyName;
+        private String companyId;
+        private String companyTaxId;
+        private String companyStatus;
+        private String companyRole;
 
         public Builder id(String id) { this.id = id; return this; }
         public Builder name(String name) { this.name = name; return this; }
@@ -96,9 +136,14 @@ public class UserResponse {
         public Builder status(String status) { this.status = status; return this; }
         public Builder is2faEnabled(String is2faEnabled) { this.is2faEnabled = is2faEnabled; return this; }
         public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
+        public Builder companyName(String companyName) { this.companyName = companyName; return this; }
+        public Builder companyId(String companyId) { this.companyId = companyId; return this; }
+        public Builder companyTaxId(String companyTaxId) { this.companyTaxId = companyTaxId; return this; }
+        public Builder companyStatus(String companyStatus) { this.companyStatus = companyStatus; return this; }
+        public Builder companyRole(String companyRole) { this.companyRole = companyRole; return this; }
 
         public UserResponse build() {
-            return new UserResponse(id, name, email, phoneNumber, address, role, status, is2faEnabled, createdAt);
+            return new UserResponse(id, name, email, phoneNumber, address, role, status, is2faEnabled, createdAt, companyName, companyId, companyTaxId, companyStatus, companyRole);
         }
     }
 }

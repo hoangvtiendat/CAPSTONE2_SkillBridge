@@ -28,6 +28,8 @@ public class AuthService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private OtpService otpService;
@@ -180,7 +182,7 @@ public class AuthService {
                     "</div>";
             otpService.sendOtpEmail(user.getEmail(), subject, content);
 
-            return new LoginResponse("1", null, null);
+            return new LoginResponse("1", null, null, null);
         }
         //
         return issueToken(user);
@@ -211,13 +213,24 @@ public class AuthService {
 
     @Transactional
     public LoginResponse issueToken(User user) {
+        // Check if user is a member of a deactivated company
+        var memberOptional = companyMemberRepository.findByUser_Id(user.getId());
+        if (memberOptional.isPresent()) {
+            var member = memberOptional.get();
+            if ("DEACTIVATED".equals(member.getCompany().getStatus().name())) {
+                // If company is deactivated, only COMPANY ADMIN is allowed to log in (to reactivate)
+                if (!"ADMIN".equals(member.getRole().name())) {
+                    throw new AppException(ErrorCode.COMPANY_DEACTIVATED_MEMBER);
+                }
+            }
+        }
 
         String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
-        return new LoginResponse("0", accessToken, refreshToken);
+        return new LoginResponse("0", accessToken, refreshToken, user.getRole());
     }
 
     public String forgotPassword(ForgotPasswordRequest request) {
@@ -256,7 +269,7 @@ public class AuthService {
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new LoginResponse(user.getIs2faEnabled(), accessToken, refreshToken);
+        return new LoginResponse(user.getIs2faEnabled(), accessToken, refreshToken, user.getRole());
     }
 
     public User toggleTwoFactor(boolean is2faEnabled, String token) {

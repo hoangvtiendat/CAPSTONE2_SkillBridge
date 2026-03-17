@@ -1,18 +1,29 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import jobService from '../../services/api/jobService';
+import '../../components/admin/Admin.css';
 import './AdminJob.css';
-import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
 import { useNavigate } from 'react-router-dom';
-import { toast, Toaster } from "sonner";
-import { MapPin, RotateCcw } from 'lucide-react';
+import { toast } from "sonner";
+import Swal from 'sweetalert2';
+import {
+    MapPin,
+    RotateCcw,
+    Search,
+    Briefcase,
+    Filter,
+    CheckCircle2,
+    AlertCircle,
+    Clock,
+    Trash2,
+    Eye,
+    Loader2
+} from 'lucide-react';
 
 const AdminJobPage = () => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(false);
     const [cursor, setCursor] = useState(null);
     const [filters, setFilters] = useState({ status: '', modStatus: '' });
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [jobToDelete, setJobToDelete] = useState(null);
     const navigate = useNavigate();
 
     const observerTarget = useRef(null);
@@ -67,11 +78,6 @@ const AdminJobPage = () => {
     };
 
     const handleAction = async (id, type, value) => {
-        if (type === 'delete') {
-            setJobToDelete(id);
-            setShowDeleteModal(true);
-            return;
-        }
         const toastId = toast.loading("Đang cập nhật...");
         try {
             if (type === 'moderate') {
@@ -89,144 +95,239 @@ const AdminJobPage = () => {
                 toast.success("Cập nhật trạng thái thành công", { id: toastId });
             }
         } catch (err) {
-            toast.error("Thất bại!", { id: toastId });
+            toast.error("Thao tác thất bại", { id: toastId });
         }
     };
 
-    const confirmDelete = async () => {
-        if (!jobToDelete) return;
-        const toastId = toast.loading("Đang xóa...");
-        try {
-            await jobService.deleteJob(jobToDelete);
-            setJobs(prev => prev.filter(j => j.id !== jobToDelete));
-            setShowDeleteModal(false);
-            setJobToDelete(null);
-            toast.success("Xóa bài đăng thành công", { id: toastId });
-        } catch (err) {
-            toast.error("Xóa bài đăng thất bại!");
+    const handleDelete = async (id, companyName) => {
+        const result = await Swal.fire({
+            title: 'Xác nhận xóa?',
+            text: `Bạn có chắc chắn muốn xóa tin tuyển dụng của "${companyName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Có, xóa ngay',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                popup: 'premium-swal-popup',
+                title: 'premium-swal-title',
+                confirmButton: 'premium-swal-confirm',
+                cancelButton: 'premium-swal-cancel'
+            }
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang xóa...");
+            try {
+                await jobService.deleteJob(id);
+                setJobs(prev => prev.filter(j => j.id !== id));
+                toast.success("Xóa bài đăng thành công", { id: toastId });
+            } catch (error) {
+                toast.error("Xóa bài đăng thất bại", { id: toastId });
+            }
         }
     };
 
     return (
-        <div className="admin-container">
-            <Toaster position="top-right" richColors closeButton />
-            <header className="admin-header">
-                <div className="header-title">
-                    <h2>Quản lý Tuyển dụng</h2>
-                    <span className="count-tag">{jobs.length} hiển thị</span>
+        <div className="admin-job-management animate-fade-in">
+
+            <div className="flex-between" style={{ marginBottom: '32px' }}>
+                <div>
+                    <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0 }}>Quản lý tin đăng tuyển dụng</h1>
+                    <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Duyệt và kiểm soát các bài tuyển dụng từ doanh nghiệp.</p>
+                </div>
+            </div>
+
+            <div className="modern-card">
+                <div className="filters-bar">
+                    <div className="filters-group" style={{ flex: 1 }}>
+                        <div className="filter-item" style={{ minWidth: '200px' }}>
+                            <Filter size={14} className="filter-icon" />
+                            <select
+                                className="modern-select"
+                                value={filters.status}
+                                onChange={e => setFilters({ ...filters, status: e.target.value })}
+                            >
+                                <option value="">Tất cả trạng thái bài đăng</option>
+                                <option value="OPEN">Mở</option>
+                                <option value="CLOSED">Đóng</option>
+                                <option value="PENDING">Đang chờ</option>
+                            </select>
+                        </div>
+
+                        <div className="filter-item" style={{ minWidth: '200px' }}>
+                            <CheckCircle2 size={14} className="filter-icon" />
+                            <select
+                                className="modern-select"
+                                value={filters.modStatus}
+                                onChange={e => setFilters({ ...filters, modStatus: e.target.value })}
+                            >
+                                <option value="">Tất cả mức kiểm duyệt</option>
+                                <option value="GREEN">Đã duyệt</option>
+                                <option value="YELLOW">Chờ duyệt</option>
+                                <option value="RED">Vi phạm</option>
+                            </select>
+                        </div>
+
+                        <button
+                            className="action-btn info-btn"
+                            onClick={handleResetFilters}
+                            title="Xóa bộ lọc"
+                            style={{ width: '40px', height: '40px' }}
+                        >
+                            <RotateCcw size={18} />
+                        </button>
+                    </div>
                 </div>
 
-                <div className="filter-shelf">
-                    <div className="filter-item">
-                        <label>Trạng thái bài đăng:</label>
-                        <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})}>
-                            <option value="">Tất cả</option>
-                            <option value="OPEN">Mở</option>
-                            <option value="CLOSED">Đóng</option>
-                            <option value="PENDING">Đang chờ</option>
-                        </select>
-                    </div>
+                <div className="table-container">
+                    {loading && jobs.length === 0 && (
+                        <div className="table-loader-overlay">
+                            <Loader2 className="spinning-icon" size={40} />
+                        </div>
+                    )}
 
-                    <div className="filter-item">
-                        <label>Kiểm duyệt:</label>
-                        <select value={filters.modStatus} onChange={e => setFilters({...filters, modStatus: e.target.value})}>
-                            <option value="">Tất cả</option>
-                            <option value="GREEN">Duyệt</option>
-                            <option value="YELLOW">Chờ</option>
-                            <option value="RED">Vi phạm</option>
-                        </select>
-                    </div>
-
-                    <button className="btn-reset-filter" onClick={handleResetFilters} title="Xóa bộ lọc">
-                        <RotateCcw size={18} />
-                        <span>Reset</span>
-                    </button>
-                </div>
-            </header>
-
-            <div className="table-card">
-                <div className="admin-table-wrapper">
-                    <table className="admin-table">
+                    <table className="modern-table">
                         <thead>
                             <tr>
-                                <th style={{ width: '40%' }}>Chi tiết Công việc</th>
-                                <th>Kĩ năng</th>
-                                <th>Phân loại</th>
+                                <th style={{ width: '35%' }}>Tin tuyển dụng</th>
+                                <th>Chi tiết</th>
                                 <th>Trạng thái</th>
                                 <th>Kiểm duyệt</th>
-                                <th>Thao tác</th>
+                                <th style={{ textAlign: 'right' }}>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {jobs.map(job => (
-                                <tr key={job.id} className="job-row-card">
-                                    <td className="clickable-cell" onClick={() => navigate(`/admin/jobs/${job.id}`)}>
-                                        <div className="company-row">
-                                            <span className="comp-name">{job.companyName}</span>
-                                            <span className={`plan-badge-mini plan-${(job.subscriptionPlanName && job.subscriptionPlanName !== 'N/A' ? job.subscriptionPlanName : 'FREE').toLowerCase()}`}>
-                                                {job.subscriptionPlanName && job.subscriptionPlanName !== 'N/A' ? job.subscriptionPlanName : 'FREE'}
-                                            </span>
-                                        </div>
-                                        <div className="job-desc">{job.description}</div>
-                                        <div className="loc-tag"><MapPin size={14} />{job.location}</div>
-                                    </td>
+                            {jobs.length > 0 ? (
+                                jobs.map(job => (
+                                    <tr key={job.id} className="table-row-hover">
+                                        <td>
+                                            <div className="user-info-cell">
+                                                <div className="user-avatar-wrapper" style={{ width: '44px', height: '44px', borderRadius: '12px' }}>
+                                                    <div className="user-avatar-placeholder" style={{ background: '#f1f5f9', color: '#64748b' }}>
+                                                        <Briefcase size={20} />
+                                                    </div>
+                                                </div>
+                                                <div className="user-details" style={{ cursor: 'pointer' }} onClick={() => navigate(`/admin/jobs/${job.id}`)}>
+                                                    <p className="user-name" style={{ color: 'var(--admin-primary)', textDecoration: 'none' }}>
+                                                        {job.companyName}
+                                                        <span className={`plan-badge-mini plan-${(job.subscriptionPlanName && job.subscriptionPlanName !== 'N/A' ? job.subscriptionPlanName : 'FREE').toLowerCase()}`} style={{ marginLeft: '8px' }}>
+                                                            {job.subscriptionPlanName && job.subscriptionPlanName !== 'N/A' ? job.subscriptionPlanName : 'FREE'}
+                                                        </span>
+                                                    </p>
+                                                    <p className="user-email" style={{
+                                                        maxWidth: '300px',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap',
+                                                        display: 'block'
+                                                    }}>
+                                                        {job.description}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
 
-                                    <td onClick={() => navigate(`/admin/jobs/${job.id}`)}>
-                                        <div className="skills-list">
-                                            {job.skills && job.skills.length > 0 ? (
-                                                job.skills.map((skill, index) => (
-                                                    <span key={index} className="skill-tag-mini">{skill}</span>
-                                                ))
-                                            ) : <span className="na-text">Không có kĩ năng</span>}
-                                        </div>
-                                    </td>
+                                        <td>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <div className="date-cell">
+                                                    <MapPin size={14} />
+                                                    <span>{job.location}</span>
+                                                </div>
+                                                <div className="date-cell">
+                                                    <AlertCircle size={14} />
+                                                    <span className="cat-badge" style={{ padding: '2px 8px', fontSize: '11px' }}>{job.categoryName}</span>
+                                                </div>
+                                            </div>
+                                        </td>
 
-                                    <td><span className="cat-badge">{job.categoryName}</span></td>
-
-                                    <td>
-                                        <select
-                                            className={`select-status s-${job.status?.toLowerCase()}`}
-                                            value={job.status}
-                                            onChange={(e) => handleAction(job.id, 'status', e.target.value)}
-                                        >
-                                            <option value="OPEN">Mở</option>
-                                            <option value="CLOSED">Đóng</option>
-                                            <option value="PENDING">Chờ</option>
-                                        </select>
-                                    </td>
-
-                                    <td>
-                                        <div className={`mod-indicator mod-${(job.moderationStatus || 'GREEN').toUpperCase()}`}>
+                                        <td>
                                             <select
-                                                value={job.moderationStatus}
+                                                className="modern-select"
+                                                style={{
+                                                    padding: '6px 30px 6px 12px',
+                                                    fontSize: '13px',
+                                                    height: '36px',
+                                                    width: 'auto',
+                                                    borderColor: job.status === 'OPEN' ? '#10b981' : job.status === 'CLOSED' ? '#ef4444' : '#f59e0b',
+                                                    color: job.status === 'OPEN' ? '#059669' : job.status === 'CLOSED' ? '#dc2626' : '#d97706',
+                                                    backgroundColor: job.status === 'OPEN' ? '#ecfdf5' : job.status === 'CLOSED' ? '#fef2f2' : '#fffbeb'
+                                                }}
+                                                value={job.status}
+                                                onChange={(e) => handleAction(job.id, 'status', e.target.value)}
+                                            >
+                                                <option value="OPEN">Mở</option>
+                                                <option value="CLOSED">Đóng</option>
+                                                <option value="PENDING">Chờ</option>
+                                            </select>
+                                        </td>
+
+                                        <td>
+                                            <select
+                                                className="modern-select"
+                                                style={{
+                                                    padding: '6px 30px 6px 12px',
+                                                    fontSize: '13px',
+                                                    height: '36px',
+                                                    width: 'auto',
+                                                    borderColor: (job.moderationStatus || 'YELLOW') === 'GREEN' ? '#10b981' : (job.moderationStatus || 'YELLOW') === 'RED' ? '#ef4444' : '#f59e0b',
+                                                    color: (job.moderationStatus || 'YELLOW') === 'GREEN' ? '#059669' : (job.moderationStatus || 'YELLOW') === 'RED' ? '#dc2626' : '#d97706',
+                                                    backgroundColor: (job.moderationStatus || 'YELLOW') === 'GREEN' ? '#ecfdf5' : (job.moderationStatus || 'YELLOW') === 'RED' ? '#fef2f2' : '#fffbeb'
+                                                }}
+                                                value={job.moderationStatus || 'YELLOW'}
                                                 onChange={(e) => handleAction(job.id, 'moderate', e.target.value)}
                                             >
-                                                <option value="YELLOW">Chờ</option>
-                                                <option value="GREEN">Duyệt</option>
+                                                <option value="YELLOW">Chờ duyệt</option>
+                                                <option value="GREEN">Đã duyệt</option>
                                                 <option value="RED">Vi phạm</option>
                                             </select>
+                                        </td>
+
+                                        <td style={{ textAlign: 'right' }}>
+                                            <div className="actions-wrapper">
+                                                <button
+                                                    onClick={() => navigate(`/admin/jobs/${job.id}`)}
+                                                    className="action-btn info-btn"
+                                                    title="Xem chi tiết"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(job.id, job.companyName)}
+                                                    className="action-btn ban-btn"
+                                                    title="Xoá bài đăng"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : !loading && (
+                                <tr>
+                                    <td colSpan="5" className="empty-table-state">
+                                        <div className="empty-content">
+                                            <Briefcase size={48} />
+                                            <p>Không tìm thấy tin tuyển dụng nào</p>
                                         </div>
                                     </td>
-
-                                    <td className="action-cell">
-                                        <button className="btn-action-delete" onClick={() => handleAction(job.id, 'delete')}>
-                                            Xoá
-                                        </button>
-                                    </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
-                    <div ref={observerTarget} className="infinite-scroll-trigger">
-                        {loading && <div className="loader-dots">...</div>}
+
+                    <div ref={observerTarget} style={{ height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {loading && jobs.length > 0 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px' }}>
+                                <Loader2 className="spinning-icon" size={18} />
+                                <span>Đang tải thêm...</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-            <DeleteConfirmPage
-                isOpen={showDeleteModal}
-                onCancel={() => setShowDeleteModal(false)}
-                onConfirm={confirmDelete}
-            />
+
         </div>
     );
 };

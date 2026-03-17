@@ -27,7 +27,8 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
 
-        setLoading(true);
+        // Chỉ hiện loading nếu chưa có dữ liệu user (tránh loop khi sync ngầm)
+        if (!user) setLoading(true);
         try {
             const response = await userService.getProfile();
             if (response && response.result) {
@@ -39,13 +40,13 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (err) {
             console.error('Failed to fetch profile:', err);
-            
-           
+
+
             if (err.response && err.response.status === 401) {
                 setUser(null);
                 setToken(null);
             }
-            
+
             setError(err);
         } finally {
             setLoading(false);
@@ -83,7 +84,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('token');
-            
+
             window.location.href = '/login';
         }
     }, []);
@@ -95,7 +96,7 @@ export const AuthProvider = ({ children }) => {
             if (response && response.result) {
                 const updatedUser = response.result;
                 setUser(updatedUser);
-                localStorage.setItem('user', JSON.stringify(updatedUser)); 
+                localStorage.setItem('user', JSON.stringify(updatedUser));
                 return updatedUser;
             }
         } catch (err) {

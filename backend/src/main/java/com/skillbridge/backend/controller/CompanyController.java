@@ -4,6 +4,14 @@ import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.request.respondToJoinRequestRequest;
 import com.skillbridge.backend.dto.response.*;
+import com.skillbridge.backend.dto.request.CreateJobRequest;
+import com.skillbridge.backend.dto.request.DeactivateRequest;
+import com.skillbridge.backend.dto.response.ApiResponse;
+import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
+import com.skillbridge.backend.dto.response.CompanyFeedResponse;
+import com.skillbridge.backend.dto.response.JobFeedResponse;
+import com.skillbridge.backend.entity.Job;
+import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -33,15 +41,29 @@ public class CompanyController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCompanyFeed(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "status", required = false) CompanyStatus status,
-            @RequestParam(value = "limit", defaultValue = "10") int limit
+            @RequestParam(value = "limit", defaultValue = "10") int limit,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String categoryId
     ) {
         CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
-        Map<String, Object> rs = companyService.getCompanies(page ,searchStatus, limit);
+        Map<String, Object> rs = companyService.getCompanies(page, cursor, searchStatus, limit, keyword, categoryId);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Company Feed",
                 rs
         );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> getCompanyDetail(@PathVariable String id) {
+        CompanyFeedItemResponse result = companyService.getCompanyDetail(id);
+
+        ApiResponse<CompanyFeedItemResponse> response = new ApiResponse<>();
+        response.setCode(HttpStatus.OK.value());
+        response.setResult(result);
+        response.setMessage("Chi tiết công ty");
+
         return ResponseEntity.ok(response);
     }
 
@@ -150,7 +172,7 @@ public class CompanyController {
         }
     }
 
-    @PostMapping("/join-request/{requestId}/respond")
+    @PostMapping("/join-request/{requestId}")
     public ResponseEntity<ApiResponse<?>> joinCompanyByRequestId(@Valid @RequestHeader(value = "Authorization") String token, @PathVariable String requestId, @RequestBody respondToJoinRequestRequest request) {
         try {
             System.out.println("token: " + token);
@@ -171,6 +193,27 @@ public class CompanyController {
             System.out.println("[RESPOND REQUEST] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
+    }
+
+    @PostMapping("/{companyId}/deactivate")
+    public ResponseEntity<ApiResponse<String>> deactivateCompany(
+            @PathVariable String companyId,
+            @Valid @RequestBody DeactivateRequest request,
+            @RequestHeader("Authorization") String token
+    ) {
+        String jwt = token.substring(7);
+        String rs = companyService.deactivateCompany(companyId, request, jwt);
+        return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Success", rs));
+    }
+
+    @PostMapping("/{companyId}/reactivate")
+    public ResponseEntity<ApiResponse<String>> reactivateCompany(
+            @PathVariable String companyId,
+            @RequestHeader("Authorization") String token
+    ) {
+        String jwt = token.substring(7);
+        String rs = companyService.reactivateCompany(companyId, jwt);
+        return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Success", rs));
     }
 
 }

@@ -1,0 +1,438 @@
+.company-detail-page {
+    min-height: 100vh;
+    background-color: #f1f5f9;
+    /* Lighter modern background */
+    padding-bottom: 64px;
+}
+
+/* NEW BANNER STRUCTURE */
+.company-header-banner {
+    background-color: #0c2340;
+    /* Dark navy blue from image */
+    padding: 32px 0 48px 0;
+    color: white;
+}
+
+.company-banner-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.btn-banner-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    align-self: flex-start;
+}
+
+.btn-banner-back:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.company-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.company-banner-logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 12px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.company-banner-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.company-banner-logo span {
+    font-size: 48px;
+    font-weight: 800;
+    color: #0c2340;
+}
+
+.company-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.company-banner-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.company-verified-icon-white {
+    color: #3b82f6;
+    /* Blue checkmark */
+    background: white;
+    border-radius: 50%;
+}
+
+.company-banner-tags {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.banner-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* CARDS STRUCTURE */
+.company-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    top: -24px;
+}
+
+.company-info-cards-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.info-card-modern {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.info-icon.blue {
+    color: #3b82f6;
+}
+
+.info-card-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.info-card-value.link {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.info-card-value.link:hover {
+    text-decoration: underline;
+}
+
+.company-content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+}
+
+.company-section {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    margin-bottom: 24px;
+}
+
+.company-jobs-layout {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+.company-jobs-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+}
+
+.company-jobs-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.filter-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+}
+
+.filter-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.filter-checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.filter-checkbox-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-checkbox-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.filter-checkbox-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 10px;
+}
+
+.filter-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #475569;
+    transition: all 0.2s;
+}
+
+.filter-checkbox-label:hover {
+    color: #0f172a;
+}
+
+.filter-checkbox {
+    width: 18px;
+    height: 18px;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    background-color: white;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.filter-checkbox:focus {
+    box-shadow: 0 0 0 2px rgba(0, 177, 79, 0.2);
+}
+
+.filter-checkbox:checked {
+    background-color: #00b14f;
+    border-color: #00b14f;
+}
+
+.filter-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.filter-checkbox-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 24px 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-icon.blue {
+    color: #3b82f6;
+}
+
+.company-description-html {
+    color: #475569;
+    line-height: 1.8;
+    font-size: 16px;
+}
+
+.company-description-html p {
+    margin-bottom: 16px;
+}
+
+.company-description-html strong {
+    color: #1e293b;
+}
+
+.empty-text {
+    color: #94a3b8;
+    font-style: italic;
+    margin: 0;
+}
+
+.company-jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.jobs-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 0;
+    color: #64748b;
+    gap: 16px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 0;
+    color: #94a3b8;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px dashed #e2e8f0;
+}
+
+.empty-icon {
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.company-detail-loading,
+.company-detail-error {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: #64748b;
+    gap: 16px;
+}
+
+.company-detail-error {
+    color: #475569;
+}
+
+.company-detail-error h3 {
+    font-size: 24px;
+    color: #0f172a;
+    margin: 0;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 1024px) {
+    .company-jobs-layout {
+        flex-direction: column;
+    }
+
+    .company-jobs-sidebar {
+        width: 100%;
+    }
+
+    .company-jobs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .company-header-info {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .company-meta-tags {
+        justify-content: center;
+    }
+
+    .company-title {
+        justify-content: center;
+    }
+
+    .btn-back-top {
+        top: -60px;
+    }
+}

@@ -10,7 +10,7 @@ const Footer = () => {
           <ul>
             <li><a href="#about">Giới thiệu</a></li>
             <li><a href="#blog">Blog</a></li>
-            <li><a href="#press">Press</a></li>
+            <li><a href="#press">Báo Chí</a></li>
             <li><a href="#careers">Tuyển dụng</a></li>
           </ul>
         </div>
@@ -47,7 +47,7 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; 2026 SkillBridge. All rights reserved.</p>
+        <p>&copy; 2026 SkillBridge. Mọi quyền được bảo lưu.</p>
         <div className="social-links">
           <a href="#facebook">Facebook</a>
           <a href="#twitter">Twitter</a>

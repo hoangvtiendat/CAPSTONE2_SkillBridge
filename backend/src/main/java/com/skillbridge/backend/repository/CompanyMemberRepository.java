@@ -13,13 +13,14 @@ import java.util.Optional;
 public interface CompanyMemberRepository extends JpaRepository<CompanyMember, String> {
 
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"company"})
     Optional<CompanyMember> findByUser_Id(String userId);
 
-    List<CompanyMember> findByCompany_IdAndRole(String companyId, CompanyRole role);
-
-    Optional<CompanyMember> findByCompany_IdAndUser_Id(String companyId, String userId);
-
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user"})
     List<CompanyMember> findByCompany_Id(String companyId);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"company"})
+    Optional<CompanyMember> findByCompany_IdAndUser_Id(String companyId, String userId);
 
     @Query("""
            SELECT new com.skillbridge.backend.dto.response.CompanyMemberResponse(

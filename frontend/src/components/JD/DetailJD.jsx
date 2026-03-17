@@ -331,7 +331,7 @@ const DetailJD = () => {
                     <div className="modal-container-modern">
                         
                         <div className="modal-header-modern">
-                            <h2>Cập nhật Job Description</h2>
+                            <h2>Cập nhật mô tả công việc (JD)</h2>
                             <button onClick={handleCloseModal} className="btn-close-icon"><X size={24} /></button>
                         </div>
 
@@ -344,25 +344,25 @@ const DetailJD = () => {
                                         <h3 className="card-title">Thông tin cơ bản</h3>
                                         <div className="input-group-grid">
                                             <div className="input-item">
-                                                <label>Vị trí (Position)</label>
+                                                <label>Vị trí công việc</label>
                                                 <input type="text" name="position" value={editForm.position} onChange={handleChange} required />
                                             </div>
                                             <div className="input-item">
-                                                <label>Danh mục (Category)</label>
+                                                <label>Lĩnh vực / Danh mục</label>
                                                 <select value={editForm.categoryId} onChange={handleCategoryChange} required>
                                                     <option value="">-- Chọn --</option>
                                                     {categories.map(cat => (
                                                         <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name || cat.categoryName}</option>
-                                                    ))}
+                                                     ))}
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="form-card">
-                                        <h3 className="card-title">Mô tả công việc</h3>
+                                        <h3 className="card-title">Chi tiết công việc</h3>
                                         <div className="input-item full-width">
-                                            <label>Mô tả chung (Description)</label>
+                                            <label>Mô tả công việc</label>
                                             <textarea name="description" value={editForm.description} onChange={handleChange} required rows="3"></textarea>
                                         </div>
 
@@ -380,7 +380,7 @@ const DetailJD = () => {
                                                             type="text"
                                                             value={item.key}
                                                             onChange={(e) => handleDynamicTitleChange(index, "key", e.target.value)}
-                                                            placeholder="Tiêu đề (VD: Quyền lợi)"
+                                                            placeholder="Tiêu đề (Ví dụ: Quyền lợi)"
                                                             className="dynamic-input-key"
                                                         />
                                                         <textarea
@@ -411,7 +411,7 @@ const DetailJD = () => {
                                     <div className="form-card sidebar-card">
                                         <h3 className="card-title">Yêu cầu & Lương</h3>
                                         <div className="input-item full-width">
-                                            <label>Địa điểm (Location)</label>
+                                            <label>Địa điểm làm việc</label>
                                             <input type="text" name="location" value={editForm.location} onChange={handleChange} required />
                                         </div>
                                         <div className="salary-group">

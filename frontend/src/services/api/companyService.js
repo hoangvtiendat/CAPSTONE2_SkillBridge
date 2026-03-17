@@ -3,11 +3,12 @@ import api from '../../config/axiosConfig';
 const companyService = {
     getFeed: async (params = {}) => {
         try {
-            const { page = 0, limit = 6, search } = params;
+            const { page = 0, limit = 6, keyword, categoryId } = params;
             const queryParams = new URLSearchParams();
             queryParams.append('page', page);
             queryParams.append('limit', limit);
-            if (search) queryParams.append('search', search);
+            if (keyword) queryParams.append('keyword', keyword);
+            if (categoryId) queryParams.append('categoryId', categoryId);
 
             const response = await api.get(`/companies/feed?${queryParams.toString()}`);
             const result = response.data.result;
@@ -113,6 +114,14 @@ const companyService = {
 
     getCompanyById: (id) => {
         return api.get(`/companies/${id}`);
+    },
+
+    deactivate: (id, data) => {
+        return api.post(`/companies/${id}/deactivate`, data);
+    },
+
+    reactivate: (id) => {
+        return api.post(`/companies/${id}/reactivate`);
     }
 };
 

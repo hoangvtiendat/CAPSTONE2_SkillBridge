@@ -60,6 +60,8 @@ spring:
           auth: true
           starttls:
             enable: true
+          ssl:
+            trust: "*"
 
 server:
   port: ${SERVER_PORT:8081}

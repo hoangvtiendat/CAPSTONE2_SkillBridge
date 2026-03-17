@@ -25,7 +25,7 @@ const SubscriptionManager = () => {
         try {
             const response = await subscriptionService.getlistSubscription();
             const data = response?.result || response?.data || response || [];
-            
+
             const sortedData = Array.isArray(data) ? data.sort((a, b) => a.price - b.price) : [];
             setSubscriptions(sortedData);
         } catch (error) {
@@ -66,8 +66,8 @@ const SubscriptionManager = () => {
             const token = localStorage.getItem('token');
             await subscriptionService.UpdateSubcription(selectedSubscription.id, editForm, token);
             toast.success('Cập nhật gói đăng ký thành công', { style: toastStyles.success });
-            setSelectedSubscription(null); 
-            fetchSubscriptions(); 
+            setSelectedSubscription(null);
+            fetchSubscriptions();
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Lỗi khi cập nhật gói đăng ký';
             toast.error(errorMessage, { style: toastStyles.error });
@@ -85,9 +85,8 @@ const SubscriptionManager = () => {
 
     return (
         <div className="subscription-admin-manager">
-            <Toaster position="top-right" />
-            
-            <div className="admin-header">
+
+            <div className="sub-manager-header">
                 <h1>Quản lý Cấu hình Gói cước</h1>
             </div>
 
@@ -99,8 +98,8 @@ const SubscriptionManager = () => {
                         const themeClass = getThemeClass(sub.name);
                         return (
                             <div key={sub.id} className={`admin-plan-card ${themeClass}`}>
-                                {themeClass === 'theme-premium' }
-                                
+                                {themeClass === 'theme-premium'}
+
                                 <div className="plan-header">
                                     <h2 className="plan-name">{sub.name}</h2>
                                     <div className="plan-price-box">
@@ -133,7 +132,7 @@ const SubscriptionManager = () => {
                                 </div>
 
                                 <div className="plan-footer">
-                                    <button 
+                                    <button
                                         className="btn-edit-plan"
                                         onClick={() => handDetailSubscription(sub.id)}
                                     >
@@ -157,38 +156,38 @@ const SubscriptionManager = () => {
                         </div>
 
                         <form onSubmit={handleUpdateSubscription} className="modal-body">
-                          
+
                             {editForm.name?.toUpperCase().includes('FREE') ? (
                                 <div className="form-group">
-                                        <label>Giá tiền (VND)</label>
-                                        <input
-                                            type="text"
-                                            value="Miễn phí"
-                                            disabled
-                                            className="form-control bg-light"
-                                        />
-                                    </div>
-                            ) : ( 
+                                    <label>Giá tiền (VND)</label>
+                                    <input
+                                        type="text"
+                                        value="Miễn phí"
+                                        disabled
+                                        className="form-control bg-light"
+                                    />
+                                </div>
+                            ) : (
                                 <div className="form-group">
-                                <label>Giá tiền (VND)</label>
-                                <input
-                                    type="text"
-                                    name="price"
-                                    value={editForm.price ? Number(editForm.price).toLocaleString('vi-VN') : ''}
-                                    onChange={(e) => {
-                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
-                                        const numValue = rawValue ? Number(rawValue) : 0;
-                                        setEditForm(prev => ({ ...prev, price: numValue }));
-                                    }}
-                                    required
-                                    className="form-control"
-                                    placeholder="Ví dụ: 1.000.000"
-                                />
-                            </div>
+                                    <label>Giá tiền (VND)</label>
+                                    <input
+                                        type="text"
+                                        name="price"
+                                        value={editForm.price ? Number(editForm.price).toLocaleString('vi-VN') : ''}
+                                        onChange={(e) => {
+                                            const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                            const numValue = rawValue ? Number(rawValue) : 0;
+                                            setEditForm(prev => ({ ...prev, price: numValue }));
+                                        }}
+                                        required
+                                        className="form-control"
+                                        placeholder="Ví dụ: 1.000.000"
+                                    />
+                                </div>
                             )}
-                              
-                            
-                         
+
+
+
 
                             <div className="form-row">
                                 <div className="form-group">
@@ -232,7 +231,7 @@ const SubscriptionManager = () => {
                                 />
                             </div>
 
-                       <div className="form-group">
+                            <div className="form-group">
                                 {!editForm.name?.toUpperCase().includes('FREE') && (
                                     <label className="checkbox-wrapper">
                                         <input

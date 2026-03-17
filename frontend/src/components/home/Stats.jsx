@@ -21,7 +21,7 @@ const Stats = () => {
     {
       id: 4,
       number: '95%',
-      label: 'Satisfaction'
+      label: 'Hài Lòng'
     }
   ];
 

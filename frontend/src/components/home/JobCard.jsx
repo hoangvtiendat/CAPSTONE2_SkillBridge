@@ -7,7 +7,7 @@ const JobCard = ({ job, featured = false }) => {
 
   return (
     <div className={`job-card ${featured ? 'featured' : ''}`}>
-      {featured && <div className="featured-badge">Featured</div>}
+      {featured && <div className="featured-badge">Nổi bật</div>}
 
       <div className="job-card-header">
         <div className="company-logo">
@@ -36,7 +36,7 @@ const JobCard = ({ job, featured = false }) => {
             </span>
           ))
         ) : (
-          <span className="tag-placeholder">None</span>
+          <span className="tag-placeholder">Không có</span>
         )}
       </div>
 

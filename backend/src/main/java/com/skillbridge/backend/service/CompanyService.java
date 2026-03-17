@@ -1,5 +1,6 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.dto.request.DeactivateRequest;
 import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
@@ -13,11 +14,13 @@ import com.skillbridge.backend.enums.CompanyRole;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.enums.JoinRequestStatus;
 import com.skillbridge.backend.enums.SubscriptionPlanStatus;
+import com.skillbridge.backend.entity.*;
+import com.skillbridge.backend.enums.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
-import com.skillbridge.backend.repository.CompanyJoinRequestRepository;
-import com.skillbridge.backend.repository.CompanyRepository;
+import com.skillbridge.backend.repository.*;
 import org.springframework.data.domain.Page;
+import org.springframework.transaction.annotation.Transactional;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -43,8 +46,7 @@ import java.util.UUID;
 @Service
 public class CompanyService {
     private final String UPLOAD_DIR = "uploads/";
-    @Autowired
-    private OtpService otpService;
+    private final OtpService otpService;
 
     private final com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository;
     private final UserService userService;
@@ -52,19 +54,45 @@ public class CompanyService {
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final CompanyJoinRequestRepository companyJoinRequestRepository;
     private final FileStorageService fileStorageService;
+    private final JobRepository jobRepository;
+    private final SystemLogRepository systemLogRepository;
+    private final com.skillbridge.backend.repository.UserRepository userRepository;
 
-    public CompanyService(FileStorageService fileStorageService, CompanyRepository companyRepository, SubscriptionPlanRepository subscriptionPlanRepository, CompanyMemberRepository companyMemberRepository, UserService userService, CompanyJoinRequestRepository companyJoinRequestRepository) {
+    public CompanyService(
+            FileStorageService fileStorageService,
+            CompanyRepository companyRepository,
+            SubscriptionPlanRepository subscriptionPlanRepository,
+            CompanyMemberRepository companyMemberRepository,
+            UserService userService,
+            CompanyJoinRequestRepository companyJoinRequestRepository,
+            JobRepository jobRepository,
+            SystemLogRepository systemLogRepository,
+            OtpService otpService,
+            com.skillbridge.backend.repository.UserRepository userRepository) {
         this.companyRepository = companyRepository;
         this.subscriptionPlanRepository = subscriptionPlanRepository;
         this.companyMemberRepository = companyMemberRepository;
         this.userService = userService;
         this.companyJoinRequestRepository = companyJoinRequestRepository;
+        this.jobRepository = jobRepository;
+        this.systemLogRepository = systemLogRepository;
+        this.otpService = otpService;
+        this.userRepository = userRepository;
         this.fileStorageService = fileStorageService;
     }
 
-    public Map<String, Object> getCompanies(int page, CompanyStatus status, int limit) {
+    public Map<String, Object> getCompanies(int page, String cursor, CompanyStatus status, int limit, String keyword, String categoryId) {
         Pageable pageable = PageRequest.of(page, limit);
-        Page<CompanyFeedItemResponse> companyPage = companyRepository.getCompanyFeed(status, pageable);
+        Page<CompanyFeedItemResponse> companyPage;
+
+        if ((keyword != null && !keyword.trim().isEmpty()) || (categoryId != null && !categoryId.trim().isEmpty())) {
+            String searchKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+            String searchCategoryId = (categoryId != null && !categoryId.trim().isEmpty()) ? categoryId.trim() : null;
+            companyPage = companyRepository.getCompanyFeedSearch(status, searchKeyword, searchCategoryId, pageable);
+        } else {
+            companyPage = companyRepository.getCompanyFeed(status, cursor, pageable);
+        }
+
         return Map.of(
                 "companies", companyPage.getContent(),
                 "totalPages", companyPage.getTotalPages(),
@@ -111,6 +139,19 @@ public class CompanyService {
             System.out.println("Loi" + e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
+    }
+
+    public CompanyFeedItemResponse getCompanyDetail(String id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
+        return new CompanyFeedItemResponse(
+                company.getId(), company.getName(), company.getTaxId(),
+                company.getBusinessLicenseUrl(), company.getImageUrl(),
+                company.getDescription(), company.getAddress(),
+                company.getWebsiteUrl(), company.getStatus(), planName
+        );
     }
 
     public CompanyDTO lookupByTaxCode(String mst) {
@@ -365,5 +406,159 @@ public class CompanyService {
         otpService.sendOtpEmail(requestUser.getEmail(), subject, content);
 
         return "Xử lý yêu cầu thành công";
+    }
+
+    @Transactional
+    public String deactivateCompany(String companyId, DeactivateRequest request, String token) {
+        User currentUser = userService.getMe(token);
+
+        // 1. Kiểm tra Permission (Phải là Admin của công ty)
+        CompanyMember adminMember = companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+
+        if (adminMember.getRole() != CompanyRole.ADMIN) {
+            throw new AppException(ErrorCode.NOT_COMPANY_ADMIN);
+        }
+
+        // 2. Kiểm tra Confirmation Code
+        if (!"DEACTIVATE".equals(request.getConfirmationCode())) {
+            throw new AppException(ErrorCode.INVALID_CONFIRMATION_CODE);
+        }
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        if (company.getStatus() == CompanyStatus.DEACTIVATED) {
+            throw new AppException(ErrorCode.COMPANY_ALREADY_DEACTIVATED);
+        }
+
+        // 3. Thực hiện vô hiệu hóa
+        company.setStatus(CompanyStatus.DEACTIVATED);
+        companyRepository.save(company);
+
+        // 4. Ẩn tất cả Jobs
+        jobRepository.updateStatusByCompanyId(companyId, JobStatus.HIDDEN);
+
+        // 5. Audit Log
+        SystemLog log = new SystemLog();
+        log.setUser(currentUser);
+        log.setAction("DEACTIVATE_COMPANY: " + company.getName());
+        log.setLogLevel(LogLevel.INFO);
+        systemLogRepository.save(log);
+
+        // 6. Gửi Email thông báo cho tất cả thành viên (trừ người thực hiện nếu cần, nhưng thường gửi hết)
+        List<CompanyMember> members = companyMemberRepository.findByCompany_Id(companyId);
+        String subject = "[SkillBridge] Thông báo vô hiệu hóa tài khoản công ty";
+
+        for (CompanyMember member : members) {
+            User u = member.getUser();
+            if (u == null) continue;
+
+            // Invalidate session
+            u.setRefreshToken(null);
+            userRepository.save(u);
+
+            // Gửi email thông báo
+            if (u.getEmail() != null) {
+                String content =
+                    "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
+                    "    <h2 style=\"color: #ef4444; text-align: center; margin-top: 0;\">Thông báo vô hiệu hóa</h2>" +
+                    "    <p style=\"font-size: 15px; color: #555;\">Chào <b>" + u.getName() + "</b>,</p>" +
+                    "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Chúng tôi xin thông báo rằng tài khoản công ty <b>" + company.getName() + "</b> đã bị tạm thời <b style=\"color: #ef4444;\">vô hiệu hóa</b> bởi Quản trị viên của công ty.</p>" +
+                    "    " +
+                    "    <div style=\"background: #fff5f5; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px;\">" +
+                    "        <p style=\"margin: 0; font-size: 14px; color: #c53030;\">" +
+                    "            <b>Ảnh hưởng:</b><br/>" +
+                    "            • Tất cả các tin tuyển dụng liên quan đã bị ẩn.<br/>" +
+                    "            • Các thành viên (không phải Admin) sẽ không thể đăng nhập vào giao diện nhà tuyển dụng.<br/>" +
+                    "            • Phiên đăng nhập hiện tại của bạn đã bị hủy." +
+                    "        </p>" +
+                    "    </div>" +
+                    "    " +
+                    "    <p style=\"font-size: 14px; color: #666;\">Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với Quản trị viên công ty của bạn hoặc bộ phận hỗ trợ SkillBridge.</p>" +
+                    "    " +
+                    "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
+                    "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br/>Đội ngũ SkillBridge</p>" +
+                    "    </div>" +
+                    "</div>";
+
+                try {
+                    otpService.sendOtpEmail(u.getEmail(), subject, content);
+                } catch (Exception e) {
+                    System.err.println("Failed to send deactivation email to " + u.getEmail() + ": " + e.getMessage());
+                }
+            }
+        }
+
+        return "Vô hiệu hóa công ty thành công. Tất cả phiên đăng nhập sẽ sớm bị hủy.";
+    }
+
+    @Transactional
+    public String reactivateCompany(String companyId, String token) {
+        User currentUser = userService.getMe(token);
+
+        CompanyMember adminMember = companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+
+        if (adminMember.getRole() != CompanyRole.ADMIN) {
+            throw new AppException(ErrorCode.NOT_COMPANY_ADMIN);
+        }
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        if (company.getStatus() != CompanyStatus.DEACTIVATED) {
+            return "Công ty đang ở trạng thái " + company.getStatus();
+        }
+
+        company.setStatus(CompanyStatus.ACTIVE);
+        companyRepository.save(company);
+
+        // US09: Tự động mở lại các Jobs đã bị ẩn khi vô hiệu hóa
+        jobRepository.updateStatusByCompanyIdAndCurrentStatus(companyId, JobStatus.HIDDEN, JobStatus.OPEN);
+
+        // Gửi thông báo kích hoạt lại cho các thành viên
+        List<CompanyMember> members = companyMemberRepository.findByCompany_Id(companyId);
+        String subject = "[SkillBridge] Thông báo kích hoạt lại tài khoản công ty";
+
+        for (CompanyMember member : members) {
+            User u = member.getUser();
+            if (u == null || u.getEmail() == null) continue;
+
+            String content =
+                "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
+                "    <h2 style=\"color: #10b981; text-align: center; margin-top: 0;\">Kích hoạt tài khoản</h2>" +
+                "    <p style=\"font-size: 15px; color: #555;\">Chào <b>" + u.getName() + "</b>,</p>" +
+                "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Chúng tôi vui mừng thông báo rằng tài khoản công ty <b>" + company.getName() + "</b> đã được <b style=\"color: #10b981;\">kích hoạt trở lại</b> bởi Quản trị viên.</p>" +
+                "    " +
+                "    <div style=\"background: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px;\">" +
+                "        <p style=\"margin: 0; font-size: 14px; color: #15803d;\">" +
+                "            <b>Thông tin:<br/>" +
+                "            • Bạn hiện đã có thể đăng nhập lại vào hệ thống.<br/>" +
+                "            • Các tin tuyển dụng đã được hiển thị công khai trở lại." +
+                "        </p>" +
+                "    </div>" +
+                "    " +
+                "    <p style=\"font-size: 14px; color: #666;\">Cảm ơn bạn đã lựa chọn SkillBridge.</p>" +
+                "    " +
+                "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
+                "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br/>Đội ngũ SkillBridge</p>" +
+                "    </div>" +
+                "</div>";
+
+            try {
+                otpService.sendOtpEmail(u.getEmail(), subject, content);
+            } catch (Exception e) {
+                System.err.println("Failed to send reactivation email to " + u.getEmail() + ": " + e.getMessage());
+            }
+        }
+
+        SystemLog log = new SystemLog();
+        log.setUser(currentUser);
+        log.setAction("REACTIVATE_COMPANY: " + company.getName());
+        log.setLogLevel(LogLevel.INFO);
+        systemLogRepository.save(log);
+
+        return "Kích hoạt lại công ty thành công. Các bài đăng tuyển dụng đã được hiển thị lại.";
     }
 }

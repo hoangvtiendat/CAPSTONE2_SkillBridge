@@ -3,6 +3,7 @@ package com.skillbridge.backend.controller;
 import com.skillbridge.backend.dto.request.UserCreationRequest;
 import com.skillbridge.backend.dto.request.UserUpdateRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
+import com.skillbridge.backend.dto.response.UserResponse;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -53,17 +54,17 @@ public class UserController {
         return "User deleted";
     }
 
-    // Personal Information
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<User>> getMe(@Valid @RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<ApiResponse<UserResponse>> getMe(@Valid @RequestHeader(value = "Authorization") String token) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             String jwt = token.substring(7);
 
-            User rs = userService.getMe(jwt);
-            ApiResponse<User> response = new ApiResponse<>(
+            User user = userService.getMe(jwt);
+            UserResponse rs = userService.mapToUserResponse(user);
+            ApiResponse<UserResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Lấy dữ liệu cá nhân thành công", rs
             );
             return ResponseEntity.ok(response);
@@ -76,15 +77,16 @@ public class UserController {
     }
 
     @PatchMapping("/me")
-    public ResponseEntity<ApiResponse<User>> updateMe(@Valid @RequestHeader(value = "Authorization") String token, @RequestBody UserUpdateRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> updateMe(@Valid @RequestHeader(value = "Authorization") String token, @RequestBody UserUpdateRequest request) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             String jwt = token.substring(7);
 
-            User rs = userService.updateMe(jwt, request);
-            ApiResponse<User> response = new ApiResponse<>(
+            User user = userService.updateMe(jwt, request);
+            UserResponse rs = userService.mapToUserResponse(user);
+            ApiResponse<UserResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Chỉnh sửa thông tin cá nhân thành công", rs
             );
             return ResponseEntity.ok(response);

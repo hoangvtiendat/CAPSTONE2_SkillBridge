@@ -12,11 +12,13 @@ public class LoginResponse {
     private String is2faEnabled;
     private String accessToken;
     private String refreshToken;
+    private String role;
 
-    public LoginResponse(String is2faEnabled, String accessToken, String refreshToken) {
+    public LoginResponse(String is2faEnabled, String accessToken, String refreshToken, String role) {
         this.is2faEnabled = is2faEnabled;
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
+        this.role = role;
     }
 
     public String getIs2faEnabled() {

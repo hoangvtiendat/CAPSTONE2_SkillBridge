@@ -1,7 +1,8 @@
 package com.skillbridge.backend.exception;
+
 public enum ErrorCode {
     // ===== SYSTEM =====
-    UNCATEGORIZED_EXCEPTION(9999,"Lỗi hệ thống"),
+    UNCATEGORIZED_EXCEPTION(9999, "Lỗi hệ thống"),
     INVALID_KEY(1001, "Invalid enum key"),
     INVALID_JSON_FORMAT(1002, "Định dạng JSON không hợp lệ"),
     INVALID_FILE_FORMAT(1010, "Định dạng file không hợp lệ. Chỉ chấp nhận .pdf, .jpg, .png"),
@@ -19,36 +20,36 @@ public enum ErrorCode {
     PASSWORD_INVALID(2003, "Mật khẩu không hơp lệ"),
     EMAIL_EXIST(2004, "Email đã tồn tại"),
     EMAIL_ALREADY_REGISTERED_BY_PASSWORD(2007, "Email đã được đăng ký bằng tài khoản LOCAL"),
-    INVALID_OTP(2005,"Mã OTP SAI"),
+    INVALID_OTP(2005, "Mã OTP SAI"),
     INVALID_INPUT(2006, "Dữ liệu đầu vào không hợp lệ"),
-    FORBIDDEN(3002,"Bạn không có quyền truy cập chức năng này"),
-    USER_STATUS(3003,"Tài khoản đã bị khóa"),
-    USER_NOT_FOUND(3004,"Không tìm thấy ngưười dùng"),
+    FORBIDDEN(3002, "Bạn không có quyền truy cập chức năng này"),
+    USER_STATUS(3003, "Tài khoản đã bị khóa"),
+    USER_NOT_FOUND(3004, "Không tìm thấy ngưười dùng"),
     CATEGORY_NOT_FOUND(3005, "Không tìm thấy danh mục lĩnh vực"),
     CANDIDATE_NOT_FOUND(3006, "Không tìm thấy thông tin ứng viên"),
     // ===== AUTH / SECURITY =====
-    TOKEN_EXPIRED(402,"Token đã hết hạn, vui lòng đăng nhập lại"),
+    TOKEN_EXPIRED(402, "Token đã hết hạn, vui lòng đăng nhập lại"),
     UNAUTHORIZED(401, "Bạn chưa đăng nhập"),
     // ===== Category/ SKilll ====
     CATEGORY_PROFESSION(501, "Tên lĩnh vữc bị trùng vui lòng đổi tên khác"),
 
     SKILL_EXITS_NAME(502, "Tên kỹ năng đã tồn tại trước đó"),
-    SKILL_NOT_FOUND(503,"Không tìm thấy kĩ năng"),
+    SKILL_NOT_FOUND(503, "Không tìm thấy kĩ năng"),
     DUPLICATE_JOB_SKILL(504, "Hiện tại kĩ năng đang được sử dụng"),
     /// Company
     EXIT_STATUS_COMPANY(601, "Hiện tại trạng thái của công ty bạn không cho phép"),
 
     /// Comapany_member
-    MEMBER_NOT_FOUND(701,"Bạn chưa là nhân viên của công ty nào cả"),
+    MEMBER_NOT_FOUND(701, "Bạn chưa là nhân viên của công ty nào cả"),
     // Jobs
     JD_NOT_FOUND(801, "Không tìm thấy bài đăng"),
-    EXITS_JD_STATUS(802,"Hiện tại bạn không thể thay đổi thông tin bài đăng"),
+    EXITS_JD_STATUS(802, "Hiện tại bạn không thể thay đổi thông tin bài đăng"),
     EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền để thực hiện chức năng này"),
-    JOB_STATUS_EXITS(804,"Hiện tại JD đang được sử dụng vui lòng đăng lại khi bài đăng đóng"),
+    JOB_STATUS_EXITS(804, "Hiện tại JD đang được sử dụng vui lòng đăng lại khi bài đăng đóng"),
     JOB_NO_OPEN(805, "Bài tuyển dụng hiện chưa được mở"),
     JOB_NO_GREEN(806, "Bài tuyển dụng này chưa được duyệt trên hệ thống"),
     SUBCRIFTION_OF_COMPANY(805, "Không tìm thấy gói cước của Công ty "),
-    EXIR_SUBSCRIFTION(806,"Hiện tại ban đã sử dụng hết dịch vụ gói cước"),
+    EXIR_SUBSCRIFTION(806, "Hiện tại ban đã sử dụng hết dịch vụ gói cước"),
     ///  ===== SUBSCRIPTTION
     // Thêm vào Enum ErrorCode của bạn
     NOT_FOUND_SUBSCRIPTION(901, "Không tìm thấy gói đăng ký"),
@@ -76,7 +77,7 @@ public enum ErrorCode {
 
     // 4. Ràng buộc về Hiển thị ưu tiên (Priority Display)
     FREE_HAS_PRIORITY_DISPLAY_NOT_ALLOWED(914, "Gói FREE không được phép bật hiển thị ưu tiên"),
-    UNBALANCED_CUSTOM_PLAN(915,  "Tỷ lệ Job và View không cân bằng"),
+    UNBALANCED_CUSTOM_PLAN(915, "Tỷ lệ Job và View không cân bằng"),
     INVALID_CUSTOM_LIMITS(916, "Số lượng phải lớn hơn 0"),
     ACCESS_DENIED(917, "Bạn chỉ có thể xóa gói cước của công ty bạn"),
 
@@ -91,13 +92,15 @@ public enum ErrorCode {
 
 
     //COMPANIES
-    COMPANY_EXIST(6001,"Công ty đã được đăng ký"),
+    COMPANY_EXIST(6001, "Công ty đã được đăng ký"),
     COMPANY_NOT_FOUND(6002, "Không tìm thấy công ty"),
     YOU_ARE_ADMIN(6003, "Bạn đã là ADMIN của công ty này"),
     YOU_ARE_MEMBER(6004, "Bạn đã là thành viên của công ty này"),
     HAS_NO_ADMIN(6005, "Công ty không có ADMIN nào"),
     NOT_COMPANY_MEMBER(6006, "Bạn không phải là thành viên của công ty"),
     NOT_COMPANY_ADMIN(6007, "Bạn không phải là admin của công ty"),
+    INVALID_CONFIRMATION_CODE(6008, "Mã xác nhận không đúng (Yêu cầu: DEACTIVATE)"),
+    COMPANY_ALREADY_DEACTIVATED(6009, "Công ty đã bị vô hiệu hóa từ trước"),
 
 
     //REQUEST
@@ -106,13 +109,14 @@ public enum ErrorCode {
     JOIN_REQUEST_NOT_FOUND(7003, "Không tìm thấy yêu cầu tham gia"),
     INVALID_JOIN_REQUEST(7004, "Yêu cầu tham gia không hợp lệ"),
     JOIN_REQUEST_ALREADY_PROCESSED(7005, "Yêu cầu này đã được xử lý"),
-    JSON_TO_TEXT_EXIT(7006, "lỗi biến đổi Json sang Text"),
 
     //JOB
     ALREADY_APPLIED(8001, "Hồ sơ ứng tuyển đã tồn tại cho bài đăng tuyển này"),
 
     //APPLICATION
-    APPLICATION_NOT_FOUND(9001, "Không tìm thấy hồ sơ ứng tuyển")
+    APPLICATION_NOT_FOUND(9001, "Không tìm thấy hồ sơ ứng tuyển"),
+    JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text"),
+    COMPANY_DEACTIVATED_MEMBER(6011, "Công ty của bạn đã bị vô hiệu hóa. Bạn tạm thời không thể truy cập quyền nhà tuyển dụng."),
     ;
     private int code;
     private String message;
