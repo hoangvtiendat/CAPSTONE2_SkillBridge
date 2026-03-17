@@ -13,6 +13,7 @@ import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.service.JobService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/jobs")
 public class JobController {
-
+    @Autowired
     private final JobService jobService;
 
     public JobController(JobService jobService) {
@@ -122,7 +123,6 @@ public class JobController {
                 "Đã cập nhật trạng thái kiểm duyệt thành " + status,
                 null
         );
-
         return ResponseEntity.ok(response);
     }
 
@@ -138,7 +138,21 @@ public class JobController {
                 "Đã cập nhật trạng thái job thành " + status,
                 null
         );
+        return ResponseEntity.ok(response);
+    }
 
+    @PatchMapping("/feedAdmin/{jobId}/response")
+    public ResponseEntity<ApiResponse<Void>> responseJobPending(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam String status,
+            @PathVariable String jobId
+    ) {
+        jobService.responseJobPending(user, jobId,status);
+        ApiResponse<Void> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Đã chấp nhận bài đăng thành công",
+                null
+        );
         return ResponseEntity.ok(response);
     }
 

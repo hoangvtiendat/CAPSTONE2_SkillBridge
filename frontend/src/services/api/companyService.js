@@ -22,6 +22,65 @@ const companyService = {
         }
     },
 
+    getCompanyFeedPending: async (cursor = null, limit = 10) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (cursor) queryParams.append('cursor', cursor);
+            queryParams.append('limit', limit);
+
+            const response = await api.get(`/companies/feedPending?${queryParams.toString()}`);
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi lấy danh sách công ty chờ duyệt:", error);
+            throw error;
+        }
+    },
+
+    responseCompanyPending: async (companyId, status) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (status) queryParams.append('status', status);
+
+            const response = await api.patch(`/companies/feedPending/${companyId}/response?${queryParams.toString()}`);
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi khi phản hồi yêu cầu công ty", error);
+            throw error;
+        }
+    },
+
+    getMembers: async () => {
+        try {
+            const response = await api.get('/company-member/getMember');
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi lấy danh sách nhân viên:", error);
+            throw error;
+        }
+    },
+
+    getMemberPending: async () => {
+        try {
+            const response = await api.get('/company-member/memberPending');
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi lấy danh sách thành viên chờ duyệt:", error);
+            throw error;
+        }
+    },
+
+    respondJoinRequest: async (requestId, status) => {
+        try {
+            const response = await api.post(`/companies/join-request/${requestId}`, {
+                status: status
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi xử lý yêu cầu:", error);
+            throw error;
+        }
+    },
+
     lookupTaxCode: async (taxCode) => {
         try {
             const response = await api.get('/companies/taxLook', {

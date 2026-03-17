@@ -2,6 +2,7 @@ package com.skillbridge.backend.repository;
 
 import com.skillbridge.backend.dto.TopCompanyDTO;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
+import com.skillbridge.backend.dto.response.CompanyFeedResponse;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.CompanyStatus;
@@ -28,8 +29,8 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
         FROM Company c
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
         LEFT JOIN cs.subscriptionPlan sp
-        WHERE (:status IS NULL OR c.status = :status) 
-        AND c.isDeleted = false
+        WHERE c.isDeleted = false
+        AND (:status IS NULL OR c.status = :status)
         ORDER BY c.createdAt DESC
     """)
     Page<CompanyFeedItemResponse> getCompanyFeed(
@@ -53,6 +54,28 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
                 ORDER BY COUNT(j) DESC
             """)
     List<TopCompanyDTO> findTop5ByJobCount(Pageable pageable);
+
+    @Query("""
+        SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
+            c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
+            c.description, c.address, c.websiteUrl, c.status, sp.name
+        )
+        FROM Company c
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
+        WHERE c.isDeleted = false
+        AND c.status = CompanyStatus.PENDING
+        AND (
+            :cursor IS NULL OR 
+            c.createdAt > (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) OR
+            (c.createdAt = (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) AND c.id > :cursor)
+        )
+        ORDER BY c.createdAt ASC
+    """)
+    List<CompanyFeedItemResponse> getCompanyFeedPending(
+            @Param("cursor") String cursor,
+            Pageable pageable
+    );
 
     long countByCreatedAtAfter(LocalDateTime createdAtAfter);
 

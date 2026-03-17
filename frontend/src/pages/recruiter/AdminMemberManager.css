@@ -1,0 +1,218 @@
+.member-manager-container {
+    padding: 24px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.manager-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.btn-invite {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-invite:hover {
+    background: #4338ca;
+}
+
+/* Section Cards */
+.section-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.pending-section {
+    border-left: 4px solid #f59e0b;
+}
+
+.section-title {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #334155;
+}
+
+/* Table styling */
+.member-table-wrapper {
+    overflow-x: auto;
+}
+
+.member-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.member-table th {
+    background: #f8fafc;
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.member-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+/* User Info & Avatar */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-small {
+    width: 40px;
+    height: 40px;
+    background: #6366f1;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    font-size: 16px;
+}
+
+.name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.email-sub {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* Contact Info Section - Quynh's update */
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #475569;
+}
+
+.address-text {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    color: #64748b;
+}
+
+/* Badges & Roles */
+.badge-role {
+    padding: 4px 10px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.role-admin {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Actions */
+.action-cell {
+    text-align: right;
+}
+
+.action-btns-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-approve-icon, .btn-reject-icon {
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 4px;
+}
+
+.btn-approve-icon:hover {
+    transform: scale(1.15);
+    color: #059669;
+}
+
+.btn-reject-icon:hover {
+    transform: scale(1.15);
+    color: #dc2626;
+}
+
+.btn-delete-text {
+    color: #ef4444;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-delete-text:hover {
+    background: #fecaca;
+}
+
+.owner-text {
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 12px;
+    padding-right: 10px;
+}
+
+.text-center {
+    text-align: center;
+}

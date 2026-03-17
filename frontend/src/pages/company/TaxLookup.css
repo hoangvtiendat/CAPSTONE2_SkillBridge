@@ -21,7 +21,6 @@
   min-height: 700px;
 }
 
-/* SIDEBAR */
 .tax-sidebar {
   width: 320px;
   background-color: var(--sidebar-bg);
@@ -178,7 +177,6 @@
   border-radius: 8px;
 }
 
-/* CONTENT AREA */
 .tax-content { flex: 1; background: white; }
 
 .company-banner {
@@ -206,7 +204,7 @@
     font-size: 10px !important;
     font-weight: 800;
     letter-spacing: 2px;
-    color: #cbd5e1; /* Màu xám sáng */
+    color: #cbd5e1;
     margin: 0 0 8px 0 !important;
     text-transform: uppercase;
 }
@@ -214,21 +212,15 @@
     margin: 0;
     font-size: 28px;
     font-weight: 800;
-    /* Dùng font chữ đơn cách tạo cảm giác số liệu chính xác */
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     letter-spacing: 2px;
     color: #ffffff;
-
-    /* Hiệu ứng đổ bóng đa lớp giúp chữ cực kỳ sắc nét trên mọi nền ảnh */
     text-shadow: 0 2px 10px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.1);
-
-    /* Thêm một chút background nhẹ để tạo khối */
     background: rgba(255, 255, 255, 0.1);
     padding: 5px 15px;
     border-radius: 8px;
-    backdrop-filter: blur(4px); /* Làm mờ nhẹ nền phía sau chữ */
+    backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-
     display: inline-block;
     transition: all 0.3s ease;
 }
@@ -275,7 +267,7 @@
 }
 .info-row-v {
   display: grid;
-  grid-template-columns: 220px 1fr; /* Cố định độ rộng label để căn lề thẳng hàng */
+  grid-template-columns: 220px 1fr;
   align-items: start;
   padding: 18px 0;
   border-bottom: 1px solid #f8fafc;
@@ -283,14 +275,13 @@
 }
 
 .info-row-v:hover {
-  background-color: #fafbff; /* Hiệu ứng nhẹ khi rê chuột vào */
+  background-color: #fafbff;
 }
 
 .info-row-v:last-child {
   border-bottom: none;
 }
 
-/* Nhãn (Label) */
 .info-row-v label {
   font-size: 12px;
   color: #94a3b8;
@@ -298,7 +289,6 @@
   padding-top: 2px;
 }
 
-/* Nội dung (Value) */
 .info-row-v p {
   margin: 0;
   font-size: 15px;
@@ -307,13 +297,11 @@
   font-weight: 500;
 }
 
-/* Chữ in đậm cho người đại diện */
 .info-row-v p strong {
   color: #0f172a;
   font-weight: 700;
 }
 
-/* Xử lý ảnh Số điện thoại */
 .phone-container {
   display: flex;
   align-items: center;
@@ -326,9 +314,8 @@
   filter: contrast(110%) saturate(120%);
 }
 
-/* Trạng thái hoạt động nổi bật */
 .status-highlight {
-  color: #10b981 !important; /* Màu xanh lá thương hiệu */
+  color: #10b981 !important;
   font-weight: 700 !important;
   display: inline-flex;
   align-items: center;
@@ -339,7 +326,6 @@
   width: fit-content;
 }
 
-/* Responsive cho màn hình nhỏ */
 @media (max-width: 768px) {
   .info-row-v {
     grid-template-columns: 1fr;
@@ -356,7 +342,6 @@
 .grid-item p { margin: 0; font-size: 14px; color: #1e293b; font-weight: 500; }
 .grid-item.full { width: 100%; margin-bottom: 20px; }
 
-/* FOOTER */
 .detail-footer {
   padding: 20px 40px;
   border-top: 1px solid var(--border-color);
@@ -393,7 +378,6 @@
   cursor: pointer;
 }
 
-/* EMPTY STATE */
 .empty-view {
   height: 100%;
   display: flex;
@@ -405,7 +389,6 @@
 
 .empty-view h3 { color: #475569; margin-bottom: 8px; }
 
-/* LOADER */
 .loader {
   width: 18px;
   height: 18px;

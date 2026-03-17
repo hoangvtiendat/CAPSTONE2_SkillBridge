@@ -17,6 +17,7 @@ import TaxLookup from './pages/company/TaxLookup';
 import AdminJobPage from './pages/admin/AdminJobPage';
 import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
+import AdminMemberManager from './pages/recruiter/AdminMemberManager';
 import SubscriptionOfCompanyPage from './pages/Subscription.jsx/SubscriftionOfCompany';
 import {Toaster} from 'sonner';
 import BusinessIdentity from './pages/recruiter/BusinessIdentity'
@@ -27,7 +28,8 @@ import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 import IndustryManagementPage from './pages/admin/IndustryManagementPage';
 import SkillManagementPage from './pages/admin/SkillManagementPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-
+import AdminPendingJobs from './pages/admin/AdminPendingJobs';
+import AdminCompanyPending from './pages/admin/AdminCompanyPending'
 import {useAuth} from './context/AuthContext';
 import {useEffect} from 'react';
 import SkillPageContainer from './pages/Skill/SkillPage';
@@ -82,16 +84,19 @@ function App() {
                     <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
                     <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
                     <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage/>}/>
-                    
+                    <Route path='company/member' element={<AdminMemberManager/>}/>
+
                     <Route path="/admin" element={<AdminLayout/>}>
                         <Route index element={<AdminDashboardPage/>}/>
                         <Route path="dashboard" element={<AdminDashboardPage/>}/>
                         <Route path="logs" element={<SystemLogs/>}/>
                         <Route path="jobs" element={<AdminJobPage/>}/>
+                        <Route path="approve-jobs" element={<AdminPendingJobs />} />
                         <Route path="jobs/:jobId" element={<AdminJobDetailPage/>}/>
 
                         <Route path="management/users" element={<UserManagementPage/>}/>
                         <Route path="management/companies" element={<CompanyManagementPage/>}/>
+                        <Route path="approve-companies" element={<AdminCompanyPending/>}/>
                         <Route path="management/industries" element={<IndustryManagementPage/>}/>
                         <Route path="management/skills" element={<SkillManagementPage/>}/>
 

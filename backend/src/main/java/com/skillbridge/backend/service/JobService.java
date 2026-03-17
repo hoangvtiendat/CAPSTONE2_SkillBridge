@@ -47,7 +47,6 @@ public class JobService {
     private final EmbeddingService embeddingService;
     private final CompanyRepository companyRepository;
 
-
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -64,10 +63,11 @@ public class JobService {
             );
         }
 
-        enrichSkills((List<JobFeedItemResponse>) (List<?>) jobPage);
+        List<JobFeedItemResponse> jobList = jobPage.getContent();
+        enrichSkills(jobList);
 
         return Map.of(
-                "jobs", jobPage,
+                "jobs", jobList,
                 "totalPages", jobPage.getTotalPages(),
                 "totalElements", jobPage.getTotalElements(),
                 "currentPage", jobPage.getNumber()
@@ -92,23 +92,16 @@ public class JobService {
                     System.out.println("Lưu ý: ModerationStatus sai định dạng [" + modStatus + "]");
                 }
             }
-
             Pageable pageable = PageRequest.of(0, limit + 1);
             List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobs(cursor, newStatus, newModStatus, pageable);
-
             if (jobs.isEmpty()) {
                 return new AdminJobFeedResponse(List.of(), null, false);
             }
-
             boolean hasMore = jobs.size() > limit;
             List<AdminJobFeedItemResponse> resultList = hasMore ? jobs.subList(0, limit) : jobs;
-
             enrichSkills((List<JobFeedItemResponse>) (List<?>) resultList);
-
             String nextCursor = hasMore ? jobs.get(limit).getJobId() : null;
-
             return new AdminJobFeedResponse(resultList, nextCursor, hasMore);
-
         } catch (Exception e) {
             System.err.println("Lỗi khi admin lấy danh sách job: " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
@@ -125,22 +118,15 @@ public class JobService {
                     System.out.println("Lưu ý: ModerationStatus sai định dạng [" + modStatus + "]");
                 }
             }
-
             Pageable pageable = PageRequest.of(0,limit+1);
-
-            JobStatus pending = JobStatus.PENDING;
-            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobs(cursor,pending,newModStatus,pageable);
-
+            List<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobPending(cursor,newModStatus,pageable);
             if(jobs.isEmpty()){
                 return new AdminJobFeedResponse(List.of(), null, false);
             }
-
             boolean hasMore = jobs.size() > limit;
             List<AdminJobFeedItemResponse> resultList = hasMore ? jobs.subList(0, limit) : jobs;
             enrichSkills((List<JobFeedItemResponse>) (List<?>) resultList);
-
             String nextCursor = hasMore ? jobs.get(limit).getJobId() : null;
-
             return new AdminJobFeedResponse(resultList, nextCursor, hasMore);
         }catch(Exception e){
             System.err.println("Lỗi khi admin lấy danh sách job đang chờ: " + e.getMessage());
@@ -150,31 +136,22 @@ public class JobService {
 
     private void enrichSkills(List<JobFeedItemResponse> items) {
         if (items == null || items.isEmpty()) {
-            System.out.println("enrichSkills: Danh sách trống, bỏ qua mapping.");
             return;
         }
-
         try {
             List<String> jobIds = items.stream()
                     .map(JobFeedItemResponse::getJobId)
                     .toList();
-
-            System.out.println("enrichSkills: Đang lấy Skill cho " + jobIds.size() + " Jobs.");
-
             List<Object[]> skillData = jobRepository.findSkillNamesByJobIds(jobIds);
-
             Map<String, List<String>> skillsMap = skillData.stream()
                     .collect(Collectors.groupingBy(
                             obj -> (String) obj[0],
                             Collectors.mapping(obj -> (String) obj[1], Collectors.toList())
                     ));
-
             items.forEach(item -> {
                 List<String> skills = skillsMap.getOrDefault(item.getJobId(), List.of());
                 item.setSkills(skills);
             });
-
-            System.out.println("enrichSkills: Mapping thành công.");
         } catch (Exception e) {
             System.err.println("Lỗi xảy ra trong quá trình enrichSkills!");
             e.printStackTrace();
@@ -183,19 +160,13 @@ public class JobService {
 
     public JobDetailResponse getJobDetail(String jobId) {
         try {
-            System.out.println("--- XEM CHI TIẾT JOB ID: " + jobId + " ---");
-
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-
             List<Object[]> skillData = jobRepository.findSkillNamesByJobIds(List.of(jobId));
-
             List<String> skills = skillData.stream()
                     .map(obj -> (String) obj[1])
                     .collect(Collectors.toList());
-
             Object titleData = job.getTitle();
-
             JobDetailResponse detail = new JobDetailResponse(
                     job.getId(),
                     titleData,
@@ -214,7 +185,6 @@ public class JobService {
                     job.getCreatedAt()
             );
             return detail;
-
         } catch (Exception e) {
             System.err.println("LỖI HỆ THỐNG : " + e.getMessage());
             e.printStackTrace();
@@ -224,22 +194,13 @@ public class JobService {
 
     @Transactional
     public void deleteJob(CustomUserDetails userDetails, String jobId) {
-
-        System.out.println("BẮT ĐẦU XÓA JOB");
-        System.out.println("ID: " + jobId);
         try {
-            Job job = jobRepository.findById(jobId).orElseThrow(() -> {
-                System.out.println("Không tìm thấy Job ID " + jobId + " trong cơ sở dữ liệu.");
-                return new AppException(ErrorCode.JOB_NOT_FOUND);
-            });
+            Job job = jobRepository.findById(jobId).orElseThrow(
+                    ()-> new AppException(ErrorCode.JOB_NOT_FOUND));
             String jobDescription = job.getDescription();
-            SystemLog log = new SystemLog();
             job.setIsDeleted(true);
             jobRepository.save(job);
             logsService.logAction(userDetails, "Admin xóa bài đăng tuyển dụng: " + jobDescription + " (ID: " + jobId + ")", LogLevel.WARNING);
-
-            System.out.println("Đã xóa thành công Job ID: " + jobId);
-
         } catch (Exception e) {
             System.err.println("Lỗi khi xóa job: " + e.getMessage());
             logsService.logAction(userDetails, "Lỗi hệ thống khi xóa Job ID " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
@@ -249,7 +210,6 @@ public class JobService {
 
     @Transactional
     public void changeModerationStatus(CustomUserDetails userDetails, String jobId, String modStatus) {
-        System.out.println("--- CẬP NHẬT TRẠNG THÁI KIỂM DUYỆT ---");
         try {
             ModerationStatus newModStatus;
             try {
@@ -258,28 +218,18 @@ public class JobService {
                 logsService.logAction(userDetails, "Admin nhập sai trạng thái kiểm duyệt: " + modStatus, LogLevel.WARNING);
                 throw new AppException(ErrorCode.INVALID_INPUT);
             }
-
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-
             ModerationStatus oldStatus = job.getModerationStatus();
             job.setModerationStatus(newModStatus);
-
             if (newModStatus == ModerationStatus.RED || newModStatus == ModerationStatus.YELLOW) {
                 job.setStatus(JobStatus.PENDING);
-                System.out.println("Job vi phạm (RED) hoặc đang nghi ngờ (YELLOW) - Tự động đóng bài đăng.");
             }
             if (newModStatus == ModerationStatus.GREEN) {
                 job.setStatus(JobStatus.OPEN);
-                System.out.println("Job an toàn GREEN");
             }
             jobRepository.save(job);
-
-            SystemLog log = new SystemLog();
             logsService.logAction(userDetails, "Thay đổi kiểm duyệt Job ID: " + jobId + " [" + oldStatus + " -> " + newModStatus + "]", LogLevel.WARNING);
-
-            System.out.println("Đã cập nhật ModerationStatus sang " + newModStatus);
-
         } catch (Exception e) {
             System.err.println("Lỗi hệ thống khi cập nhật Moderation: " + e.getMessage());
             logsService.logAction(userDetails, "Lỗi hệ thống khi cập nhật Moderation Job ID " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
@@ -289,7 +239,6 @@ public class JobService {
 
     @Transactional
     public void changeStatus(CustomUserDetails userDetails, String jobId, String status) {
-        System.out.println("--- CẬP NHẬT TRẠNG THÁI KIỂM DUYỆT ---");
         try {
             JobStatus newStatus;
             try {
@@ -298,24 +247,43 @@ public class JobService {
                 logsService.logAction(userDetails, "Admin nhập sai trạng thái kiểm duyệt: " + status, LogLevel.WARNING);
                 throw new AppException(ErrorCode.INVALID_INPUT);
             }
-
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
             JobStatus oldStatus = job.getStatus();
             job.setStatus(newStatus);
-
-
             jobRepository.save(job);
-
-            SystemLog log = new SystemLog();
             logsService.logAction(userDetails, "Thay đổi trạng thái Job ID: " + jobId + " [" + oldStatus + " -> " + newStatus + "]", LogLevel.WARNING);
-
-            System.out.println("Đã cập nhật status sang " + newStatus);
-
         } catch (Exception e) {
             System.err.println("Lỗi hệ thống khi cập nhật status: " + e.getMessage());
             logsService.logAction(userDetails, "Lỗi hệ thống khi cập nhật status Job ID " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    @Transactional
+    public void responseJobPending(CustomUserDetails userDetails, String jobId, String status) {
+        try {
+            Job job = jobRepository.findById(jobId)
+                    .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+            if(!"OPEN".equals(status)&&!"CLOCK".equals(status)){
+                System.out.println("Khoong the thay doi");
+            }
+            if("OPEN".equals(status)){
+                JobStatus open = JobStatus.OPEN;
+                ModerationStatus green = ModerationStatus.GREEN;
+                job.setModerationStatus(green);
+                job.setStatus(open);
+            }
+            if("CLOCK".equals(status)){
+                JobStatus clock = JobStatus.CLOCK;
+                job.setStatus(clock);
+            }
+            jobRepository.save(job);
+            logsService.logAction(userDetails, "Admin đã chấp nhận bài đăng ", LogLevel.WARNING);
+        } catch (Exception e) {
+            System.err.println("Lỗi khi duyệt bài đăng: " + e.getMessage());
+            logsService.logAction(userDetails, "Lỗi duyệt bài đăng " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
@@ -529,7 +497,6 @@ public class JobService {
         job.setStatus(JobStatus.PENDING);
         job.setModerationStatus(ModerationStatus.YELLOW);
         job.setModerationScore(0f);
-
 
         jobSkillRepository.deleteByJobId(jobId);
 

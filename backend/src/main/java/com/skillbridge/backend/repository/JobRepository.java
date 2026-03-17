@@ -81,6 +81,33 @@ public interface JobRepository extends JpaRepository<Job, String> {
             Pageable pageable
     );
 
+    @Query("""
+        SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
+            j.id, j.title, j.description, j.location, j.salaryMin, 
+            j.salaryMax, j.createdAt, c.name, c.imageUrl, 
+            sp.name, cat.name, j.status, j.moderationStatus
+        )
+        FROM Job j
+        LEFT JOIN j.company c
+        LEFT JOIN j.category cat
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
+        WHERE j.isDeleted = false
+        AND j.status = JobStatus.PENDING
+        AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
+        AND (
+            :cursor IS NULL OR 
+            j.createdAt > (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
+            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id > :cursor)
+        )
+        ORDER BY j.createdAt ASC
+    """)
+    List<AdminJobFeedItemResponse> adminGetJobPending(
+            @Param("cursor") String cursor,
+            @Param("modStatus") ModerationStatus modStatus,
+            Pageable pageable
+    );
+
     List<Job>findJobsByCompanyId(@Param("companyId") String companyId);
 
     long countByStatus(JobStatus status);

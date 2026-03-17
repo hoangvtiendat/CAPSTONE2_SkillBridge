@@ -3,6 +3,8 @@ import systemLogService from '../../services/api/systemLogService';
 import './SystemLogs.css';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, Search, Database, History, Info,Building } from 'lucide-react';
 
 const SystemLogs = () => {
     const [logs, setLogs] = useState([]);
@@ -11,7 +13,8 @@ const SystemLogs = () => {
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const consoleBodyRef = useRef(null);
-
+    const navigate = useNavigate();
+    
     const handleResetFilters = () => {
         setLevel('');
         setFilterDate('');
@@ -90,6 +93,9 @@ const SystemLogs = () => {
 
     return (
         <div className="system-logs-container">
+            <button className="btn-back-nav" onClick={() => navigate(-1)}>
+                <ChevronLeft size={20} /> Quay lại
+            </button>
             <div className="main-layout">
                 <div className="console-section">
                     <div className="console-wrapper resizable-console">
