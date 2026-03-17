@@ -119,7 +119,7 @@ const jobService = {
 
             const result = response.data.result;
 
-            const jobs = (result.jobs || []).map(job => ({
+            const jobs = (result.adminJobFeedItemResponse || []).map(job => ({
                 id: job.jobId,
                 description: job.description,
                 location: job.location,
@@ -141,6 +141,35 @@ const jobService = {
         }
     },
 
+    getPendingJobs: async (params = {}) => {
+        try {
+            const { cursor, limit = 10, modStatus } = params;
+            const response = await api.get(`/jobs/feedAdminPending`, {
+                params: { cursor, limit, modStatus }
+            });
+            const result = response.data.result;
+            return {
+                result: result.adminJobFeedItemResponse || [],
+                nextCursor: result.nextCursor,
+                hasMore: result.hasMore
+            };
+        } catch (error) {
+            console.error('Error fetching pending jobs:', error);
+            throw error;
+        }
+    },
+
+    responseJobPending: async (jobId, status) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (status) queryParams.append('status', status);
+            const response = await api.patch(`/jobs/feedAdmin/${jobId}/response?${queryParams.toString()}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error approving JD:', error);
+            throw error;
+        }
+    },
 
     getJobDetailByCandidate: async (jobId) => {
         const response = await api.get(`/jobs/${jobId}`);

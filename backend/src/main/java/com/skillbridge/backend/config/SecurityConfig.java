@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/jobs/feed",
+                                "/companies/feed",
                                 "/admin/**",
                                 "/auth/**",
                                 "/users/**",
@@ -69,7 +70,6 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/identity/swagger-ui/**",
                                 "/identity/v3/api-docs/**",
-                                "/jobs/feed/**",
                                 "/jobs/{id}",
                                 "/ws-log/**",
                                 "/identity/subscription/**",
@@ -82,9 +82,16 @@ public class SecurityConfig {
                                 "/CategoryProfession/Update/**",
                                 "/skill/set/**",
                                 "/jobs/feedAdmin/**",
+                                "/jobs/feedAdminPending/**",
+                                "/companies/feedPending/**",
                                 "/Logs/**",
                                 "/companies/taxLook"
                                 ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                        "/company-member/**"
+                        ).authenticated()
+
                         .anyRequest().authenticated()
                 )
 

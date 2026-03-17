@@ -1,0 +1,193 @@
+:root {
+    --primary-navy: #0f172a;
+    --navy-light: #1e293b;
+    --danger-red: #ef4444;
+    --danger-soft: #fef2f2;
+    --warning-yellow: #f59e0b;
+    --warning-soft: #fffbeb;
+    --success-green: #10b981;
+    --text-main: #1e293b;
+    --text-sub: #64748b;
+    --border-color: #e2e8f0;
+    --bg-main: #f8fafc;
+    --white: #ffffff;
+}
+
+.admin-pending-container {
+    padding: 24px;
+    background-color: var(--bg-main);
+    height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Header */
+.admin-pending-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-icon-box {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: var(--danger-red); color: white;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.title-group h1 { font-size: 1.5rem; font-weight: 800; color: var(--primary-navy); margin: 0; }
+.title-group p { font-size: 0.9rem; color: var(--text-sub); margin: 0; }
+.title-group p span { color: var(--danger-red); font-weight: 600; }
+
+/* Filters */
+.filter-wrapper { display: flex; align-items: center; gap: 12px; }
+
+.custom-select-box {
+    position: relative; display: flex; align-items: center;
+    background: white; border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 0 12px; transition: all 0.2s;
+    color: var(--text-sub);
+}
+
+.custom-select-box:focus-within { border-color: var(--primary-navy); box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); }
+
+.custom-select-box select {
+    border: none; outline: none; padding: 10px 32px 10px 8px;
+    font-size: 0.85rem; font-weight: 600; color: var(--text-main);
+    background: transparent; appearance: none; cursor: pointer;
+}
+
+.custom-select-box .arrow { position: absolute; right: 12px; pointer-events: none; }
+
+.btn-refresh {
+    width: 42px; height: 42px; border-radius: 10px;
+    border: 1px solid var(--border-color); background: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-sub); transition: all 0.2s;
+}
+
+.btn-refresh:hover { background: #f1f5f9; color: var(--primary-navy); border-color: var(--primary-navy); }
+.spinning { animation: spin 1s linear infinite; }
+
+/* Table Card */
+.pending-content-card {
+    background: white; border-radius: 16px;
+    border: 1px solid var(--border-color);
+    flex: 1; display: flex; flex-direction: column;
+    min-height: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+
+.table-scroll-container { flex: 1; overflow-y: auto; min-height: 0; }
+
+.pending-table-core { width: 100%; border-collapse: separate; border-spacing: 0; }
+.pending-table-core thead { position: sticky; top: 0; z-index: 10; }
+
+.pending-table-core th {
+    background: #f8fafc; padding: 16px 24px;
+    font-size: 0.7rem; font-weight: 800; color: var(--text-sub);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.pending-table-core td { padding: 18px 24px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+
+/* Job Detail Cells */
+.job-row-item { cursor: pointer; transition: background 0.2s; }
+.job-row-item:hover { background: #fbfcfe; }
+
+.job-detail-box { display: flex; flex-direction: column; gap: 4px; }
+.job-name { text-align: left; font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+.job-loc { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: var(--text-sub); }
+
+.comp-box { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--navy-light); font-size: 0.85rem; }
+
+.timestamp { font-size: 0.85rem; color: var(--text-sub); font-family: monospace; }
+
+/* Status Pills */
+.status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800;
+}
+.pill-RED { background: var(--danger-soft); color: var(--danger-red); border: 1px solid #fee2e2; }
+.pill-YELLOW { background: var(--warning-soft); color: var(--warning-yellow); border: 1px solid #fef3c7; }
+
+.status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Buttons */
+.action-btns-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Khoảng cách vừa phải */
+}
+
+/* Nút Duyệt Tin (Nhỏ & Gọn) */
+.btn-action-approve {
+    background: var(--primary-navy);
+    color: white;
+    border: none;
+    padding: 6px 14px; /* Giảm padding để nút nhỏ lại */
+    border-radius: 8px; /* Bo góc hiện đại */
+    font-size: 0.8rem; /* Font nhỏ gọn */
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
+}
+
+.btn-action-approve:hover {
+    background: #000;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-approve:active {
+    transform: translateY(0);
+}
+
+/* Nút Từ Chối (Mảnh & Tinh tế) */
+.btn-action-reject {
+    background: transparent;
+    color: var(--text-sub); /* Màu mặc định nhẹ nhàng */
+    border: 1px solid var(--border-color); /* Viền mảnh */
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-action-reject:hover {
+    color: var(--danger-red);
+    border-color: var(--danger-red);
+    background: var(--danger-soft); /* Hiện nền đỏ nhạt khi hover */
+}
+
+/* Căn lại độ rộng cột thao tác để không bị thừa diện tích */
+.pending-table-core th:last-child,
+.pending-table-core td:last-child {
+    width: 180px !important; /* Thu hẹp cột hành động */
+    text-align: center;
+}
+
+/* Helpers */
+.center { text-align: center; }
+.empty-state { padding: 80px 0; text-align: center; }
+.empty-box { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); gap: 16px; }
+.empty-box p { font-weight: 600; font-size: 1.1rem; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Custom Scrollbar */
+.table-scroll-container::-webkit-scrollbar { width: 6px; }
+.table-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }

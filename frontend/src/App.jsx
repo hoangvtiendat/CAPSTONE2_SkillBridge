@@ -19,6 +19,7 @@ import TaxLookup from './pages/company/TaxLookup';
 import AdminJobPage from './pages/admin/AdminJobPage';
 import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
+import AdminMemberManager from './pages/recruiter/AdminMemberManager';
 import SubscriptionOfCompanyPage from './pages/Subscription.jsx/SubscriftionOfCompany';
 import RegisterSubscriptionPage from './pages/Subscription.jsx/RegisterSubscriptionPage'
 import {Toaster, toast} from 'sonner';
@@ -31,6 +32,8 @@ import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 import IndustryManagementPage from './pages/admin/IndustryManagementPage';
 import SkillManagementPage from './pages/admin/SkillManagementPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminPendingJobs from './pages/admin/AdminPendingJobs';
+import AdminCompanyPending from './pages/admin/AdminCompanyPending'
 
 import {Client} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -136,46 +139,48 @@ function App() {
             }}
             closeButton
         />
-        {!isAdminPath && <Header/>}
-        <div
-            className={!isAdminPath ? "content-with-header" : ""}>
-            <Routes>
-                <Route path="/" element={<HomePage/>}/>
-                <Route path="/login" element={<LoginPage/>}/>
-                <Route path='/forgot-password' element={<ForgotPasswordPage/>}/>
-                <Route path="/otp-verification" element={<OTPVerification/>}/>
-                <Route path="/profile" element={<ProfilePage/>}/>
-                <Route path="/oauth-success" element={<OAuthSuccess/>}/>
-                <Route path='/set-password' element={<SetPass/>}/>
-                <Route path='/auth/complete-profile' element={<UpdateProfileDetail/>}/>
-                <Route path="recruiter/identity" element={<BusinessIdentity/>}/>
-                <Route path="/admin/logs" element={<SystemLogs/>}/>
-                <Route path="/company/TaxLookup" element={<TaxLookup/>}/>
-                <Route path="/admin/jobs" element={<AdminJobPage/>}/>
-                <Route path="/admin/jobs/:jobId" element={<AdminJobDetailPage/>}/>
-                <Route path="/jobs/:jobId" element={<JobDetailPage/>}/>
-                <Route path='/create-jd' element={<CreateJd/>}/>
-                <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
-                <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
-                <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage/>}/>
-                <Route path='/company/subscriptions/register' element={<RegisterSubscriptionPage/>}/>
+            {!isAdminPath && <Header/>}
+            <div
+                className={!isAdminPath ? "content-with-header" : ""}> 
+                <Routes>
+                    <Route path="/" element={<HomePage/>}/>
+                    <Route path="/login" element={<LoginPage/>}/>
+                    <Route path='/forgot-password' element={<ForgotPasswordPage/>}/>
+                    <Route path="/otp-verification" element={<OTPVerification/>}/>
+                    <Route path="/profile" element={<ProfilePage/>}/>
+                    <Route path="/oauth-success" element={<OAuthSuccess/>}/>
+                    <Route path='/set-password' element={<SetPass/>}/>
+                    <Route path='/auth/complete-profile' element={<UpdateProfileDetail/>}/>
+                    <Route path="recruiter/identity" element={<BusinessIdentity/>}/>
+                    <Route path="/admin/logs" element={<SystemLogs/>}/>
+                    <Route path="/company/TaxLookup" element={<TaxLookup/>}/>
+                    <Route path="/admin/jobs" element={<AdminJobPage/>}/>
+                    <Route path="/admin/jobs/:jobId" element={<AdminJobDetailPage/>}/>
+                    <Route path="/jobs/:jobId" element={<JobDetailPage/>}/>
+                    <Route path='/create-jd' element={<CreateJd/>}/>
+                    <Route path='/detail-jd/:id' element={<DetailJD_Page/>}/>
+                    <Route path='/company/jd-list' element={<ListJdOfCompany/>}/>
+                    <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage/>}/>
+                    <Route path='/company/subscriptions/register' element={<RegisterSubscriptionPage/>}/>
 
-                {/*đó phải bỏ vào role của nhà tuyển dụng*/}
-                <Route path="/recruiter/my-jobs" element={<MyJobsPage/>}/>
-                <Route path="/recruiter/jobs/:jobId/applications" element={<RecruiterApplications/>}/>
-                <Route path="/recruiter/applications/:id" element={<ApplicationDetailPage/>}/>
+                    {/*đó phải bỏ vào role của nhà tuyển dụng*/}
+                    <Route path="/recruiter/my-jobs" element={<MyJobsPage/>}/>
+                    <Route path="/recruiter/jobs/:jobId/applications" element={<RecruiterApplications/>}/>
+                    <Route path="/recruiter/applications/:id" element={<ApplicationDetailPage/>}/>
+                    <Route path='company/member' element={<AdminMemberManager/>}/>
+                    <Route path="/admin" element={<AdminLayout/>}>
+                        <Route index element={<AdminDashboardPage/>}/>
+                        <Route path="dashboard" element={<AdminDashboardPage/>}/>
+                        <Route path="logs" element={<SystemLogs/>}/>
+                        <Route path="jobs" element={<AdminJobPage/>}/>
+                        <Route path="approve-jobs" element={<AdminPendingJobs />} />
+                        <Route path="jobs/:jobId" element={<AdminJobDetailPage/>}/>
 
-                <Route path="/admin" element={<AdminLayout/>}>
-                    <Route index element={<AdminDashboardPage/>}/>
-                    <Route path="dashboard" element={<AdminDashboardPage/>}/>
-                    <Route path="logs" element={<SystemLogs/>}/>
-                    <Route path="jobs" element={<AdminJobPage/>}/>
-                    <Route path="jobs/:jobId" element={<AdminJobDetailPage/>}/>
-
-                    <Route path="management/users" element={<UserManagementPage/>}/>
-                    <Route path="management/companies" element={<CompanyManagementPage/>}/>
-                    <Route path="management/industries" element={<IndustryManagementPage/>}/>
-                    <Route path="management/skills" element={<SkillManagementPage/>}/>
+                        <Route path="management/users" element={<UserManagementPage/>}/>
+                        <Route path="management/companies" element={<CompanyManagementPage/>}/>
+                        <Route path="approve-companies" element={<AdminCompanyPending/>}/>
+                        <Route path="management/industries" element={<IndustryManagementPage/>}/>
+                        <Route path="management/skills" element={<SkillManagementPage/>}/>
 
                     <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer/></AdminRoute>}/>
                     <Route path='subscriptions' element={<AdminRoute><SubscriptionManagerPage/></AdminRoute>}/>

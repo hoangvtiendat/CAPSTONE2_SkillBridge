@@ -16,6 +16,7 @@ import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.JobService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,7 +32,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/jobs")
 public class JobController {
-
+    @Autowired
     private final JobService jobService;
 
     public JobController(JobService jobService) {
@@ -43,11 +44,10 @@ public class JobController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String categoryId,
-            @RequestParam(required = false) String cursor,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Double salary
     ) {
-        Map<String, Object> rs = jobService.getJobFeed(page, cursor, limit, categoryId, location, salary);
+        Map<String, Object> rs = jobService.getJobFeed(page, limit, categoryId, location, salary);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Job Feed",
@@ -65,15 +65,26 @@ public class JobController {
     }
 
     @GetMapping("/feedAdmin")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllJobsForAdmin(
-            @RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getAllJobsForAdmin(
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String modStatus) {
+            @RequestParam(required = false) String modStatus
+    ) {
+        AdminJobFeedResponse result = jobService.adminGetJob(cursor, limit, status, modStatus);
+        ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
 
-        Map<String, Object> result = jobService.adminGetJob(page, cursor, limit, status, modStatus);
-        ApiResponse<Map<String, Object>> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/feedAdminPending")
+    public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getPendingJobsForAdmin(
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String modStatus
+    ){
+        AdminJobFeedResponse result = jobService.adminGetJobPending(cursor,limit,modStatus);
+        ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Pending Job Feed",result);
 
         return ResponseEntity.ok(response);
     }
@@ -114,7 +125,6 @@ public class JobController {
                 "Đã cập nhật trạng thái kiểm duyệt thành " + status,
                 null
         );
-
         return ResponseEntity.ok(response);
     }
 
@@ -130,7 +140,21 @@ public class JobController {
                 "Đã cập nhật trạng thái job thành " + status,
                 null
         );
+        return ResponseEntity.ok(response);
+    }
 
+    @PatchMapping("/feedAdmin/{jobId}/response")
+    public ResponseEntity<ApiResponse<Void>> responseJobPending(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam String status,
+            @PathVariable String jobId
+    ) {
+        jobService.responseJobPending(user, jobId,status);
+        ApiResponse<Void> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Đã chấp nhận bài đăng thành công",
+                null
+        );
         return ResponseEntity.ok(response);
     }
 

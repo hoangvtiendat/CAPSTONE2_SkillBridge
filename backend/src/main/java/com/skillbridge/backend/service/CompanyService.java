@@ -4,6 +4,7 @@ import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
+import com.skillbridge.backend.dto.response.CompanyMemberResponse;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.entity.CompanyJoinRequest;
 import com.skillbridge.backend.entity.CompanyMember;
@@ -61,9 +62,9 @@ public class CompanyService {
         this.fileStorageService = fileStorageService;
     }
 
-    public Map<String, Object> getCompanies(int page,String cursor , CompanyStatus status, int limit) {
+    public Map<String, Object> getCompanies(int page, CompanyStatus status, int limit) {
         Pageable pageable = PageRequest.of(page, limit);
-        Page<CompanyFeedItemResponse> companyPage = companyRepository.getCompanyFeed(status, cursor, pageable);
+        Page<CompanyFeedItemResponse> companyPage = companyRepository.getCompanyFeed(status, pageable);
         return Map.of(
                 "companies", companyPage.getContent(),
                 "totalPages", companyPage.getTotalPages(),
@@ -72,66 +73,86 @@ public class CompanyService {
         );
     }
 
+    public CompanyFeedResponse getCompanyPending(String cursor, int limit){
+        try{
+            Pageable pageable = PageRequest.of(0,limit+1);
+
+            List<CompanyFeedItemResponse> companies = companyRepository.getCompanyFeedPending(cursor,pageable);
+
+            if(companies.isEmpty()){
+                return new CompanyFeedResponse(List.of(), null, false);
+            }
+            Boolean hasMore = companies.size() > limit;
+            List<CompanyFeedItemResponse> result = hasMore ? companies.subList(0,limit):companies;
+            String nextCursor = hasMore ? companies.get(limit).getId():null;
+
+            return new CompanyFeedResponse(result, nextCursor,hasMore);
+        }catch(Exception e){
+            System.out.println("Loi" + e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    public String responseCompanies(String id,String status){
+        try{
+            Company company = companyRepository.findById(id)
+                    .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+            if("ACTIVE".equals(status)){
+                company.setStatus(CompanyStatus.ACTIVE);
+                System.out.println("Admin đã chấp nhận công ty này");
+            }else{
+                company.setStatus(CompanyStatus.BAN);
+                System.out.println("Admin đã ban công ty này");
+            }
+            companyRepository.save(company);
+            return "Duyệt yêu cầu tạo công ty thành công";
+        }catch(Exception e){
+            System.out.println("Loi" + e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
     public CompanyDTO lookupByTaxCode(String mst) {
         String cleanMst = mst.trim();
-        System.out.println("\n" + "=".repeat(50));
-        System.out.println("BẮT ĐẦU KIỂM TRA MST: [" + cleanMst + "]");
-        System.out.println("===========================================");
-
         try {
             String searchUrl = "https://www.tratencongty.com/search/" + cleanMst;
-            System.out.println("-> Đang gửi POST request tới: " + searchUrl);
 
             Document searchDoc = Jsoup.connect(searchUrl)
                     .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
                     .header("Content-Type", "application/x-www-form-urlencoded")
-                    .data("q", cleanMst) // 'q' là name của input trong image_342b92.png
+                    .data("q", cleanMst)
                     .method(org.jsoup.Connection.Method.POST)
                     .timeout(15000)
                     .followRedirects(true)
                     .post();
 
-            System.out.println("-> Tiêu đề trang sau POST: " + searchDoc.title());
-            System.out.println("-> URL thực tế: " + searchDoc.location());
-
             if (searchDoc.location().contains("/company/")) {
-                System.out.println("=> TRÌNH DUYỆT TỰ REDIRECT THẲNG VÀO TRANG CHI TIẾT.");
                 return parseTraTenCongTy(searchDoc, cleanMst);
             }
 
             Element searchResults = searchDoc.selectFirst(".search-results");
             if (searchResults == null) {
-                System.out.println("!!! KHÔNG THẤY KHỐI .search-results");
-                String bodyText = searchDoc.body().text();
-                System.out.println("-> Nội dung Body (snippet): " + (bodyText.length() > 300 ? bodyText.substring(0, 300) : bodyText));
                 return null;
             }
             Element firstLink = searchDoc.selectFirst(".search-results a[href*='/company/']");
 
             if (firstLink != null) {
                 String detailUrl = firstLink.absUrl("href");
-                System.out.println("=> LẤY KẾT QUẢ ĐẦU TIÊN: " + detailUrl);
 
                 Document detailDoc = Jsoup.connect(detailUrl)
                         .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
                         .get();
                 return parseTraTenCongTy(detailDoc, cleanMst);
-            } else {
-                System.out.println("!!! KHÔNG TÌM THẤY BẤT KỲ KẾT QUẢ NÀO TRÊN TRANG.");
-                String bodySnippet = searchDoc.body().text();
-                System.out.println("-> Nội dung hiển thị: " + (bodySnippet.length() > 200 ? bodySnippet.substring(0, 200) : bodySnippet));
             }
         } catch (Exception e) {
             System.err.println("!!! LỖI TRONG QUÁ TRÌNH TRA CỨU: " + e.getMessage());
         }
-        System.out.println("=".repeat(50) + "\n");
         return null;
     }
 
     private CompanyDTO parseTraTenCongTy(Document doc, String mst) {
-        System.out.println("-> Bắt đầu bóc tách dữ liệu chính xác...");
         CompanyDTO dto = new CompanyDTO();
-
         dto.setTaxCode(mst);
 
         Element jumbotron = doc.selectFirst(".jumbotron");
@@ -146,7 +167,6 @@ public class CompanyService {
             if (phoneLabel != null && allBase64Imgs.size() >= 2) {
                 String phoneSrc = allBase64Imgs.get(1).attr("src");
                 dto.setPhoneImg(phoneSrc);
-                System.out.println("Đã trích xuất ảnh SĐT");
             }
 
             String rawHtml = jumbotron.html();
@@ -173,13 +193,6 @@ public class CompanyService {
                 }
             }
         }
-        System.out.println("Tên Công ty: " + dto.getName());
-        System.out.println("Địa chỉ: " + dto.getAddress());
-        System.out.println("Đại diện: " + dto.getRepresentative());
-        System.out.println("Ngày cấp giấy phép: " + dto.getLicenseDate());
-        System.out.println("Ngày hoạt động: " + dto.getStartDate());
-        System.out.println("Trạng thái: " + dto.getStatus());
-
         return dto;
     }
 
@@ -278,7 +291,7 @@ public class CompanyService {
 
         return "Yêu cầu tham gia đã được gửi đến admin công ty";
     }
-
+    //ADmin công ty duyệt thành viên vào công ty
     public String respondToJoinRequest(String requestId, String status, String token) {
         System.out.println("Status: " + status);
         User currentUser = userService.getMe(token);

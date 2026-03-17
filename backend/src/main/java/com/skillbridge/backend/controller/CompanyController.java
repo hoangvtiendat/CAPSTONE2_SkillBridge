@@ -2,15 +2,8 @@ package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
-import com.skillbridge.backend.dto.request.RegisterRequest;
 import com.skillbridge.backend.dto.request.respondToJoinRequestRequest;
-import com.skillbridge.backend.dto.request.CreateJobRequest;
-import com.skillbridge.backend.dto.response.ApiResponse;
-import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
-import com.skillbridge.backend.dto.response.CompanyFeedResponse;
-import com.skillbridge.backend.dto.response.JobFeedResponse;
-import com.skillbridge.backend.entity.Job;
-import com.skillbridge.backend.entity.User;
+import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -21,9 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -41,15 +32,41 @@ public class CompanyController {
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCompanyFeed(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(required = false) String cursor,
             @RequestParam(value = "status", required = false) CompanyStatus status,
             @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
         CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
-        Map<String, Object> rs = companyService.getCompanies(page,cursor ,searchStatus, limit);
+        Map<String, Object> rs = companyService.getCompanies(page ,searchStatus, limit);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Company Feed",
+                rs
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/feedPending")
+    public ResponseEntity<ApiResponse<CompanyFeedResponse>> getCompanyFeedPending(
+            @RequestParam(value = "cursor", required = false) String cursor,
+            @RequestParam(value = "limit", defaultValue = "10") int limit
+    ){
+        CompanyFeedResponse rs = companyService.getCompanyPending(cursor,limit);
+        ApiResponse<CompanyFeedResponse> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Pending Company",
+                rs);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/feedPending/{companyId}/response")
+    public ResponseEntity<ApiResponse<String>> response(
+            @PathVariable String companyId,
+            @RequestParam(value = "status") String status
+    ){
+        String rs = companyService.responseCompanies(companyId,status);
+        ApiResponse<String> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Phản hồi yêu cầu " + status,
                 rs
         );
         return ResponseEntity.ok(response);
@@ -150,8 +167,8 @@ public class CompanyController {
             );
             return ResponseEntity.ok(response);
         } catch (AppException ex) {
-            System.out.println("[JOIN REQUEST] AppException occurred");
-            System.out.println("[JOIN REQUEST] ErrorCode: " + ex.getErrorCode());
+            System.out.println("[RESPOND REQUEST] AppException occurred");
+            System.out.println("[RESPOND REQUEST] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
     }
