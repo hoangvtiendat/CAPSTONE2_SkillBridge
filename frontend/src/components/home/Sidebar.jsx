@@ -7,7 +7,7 @@ const Sidebar = ({onScrollToSection}) => {
         <aside className="sidebar">
             <nav className="sidebar-nav">
                 <div className="sidebar-section">
-                    <h4>MENU</h4>
+                    <h4>DANH MỤC</h4>
                     <ul>
                         <li>
                             <a
@@ -57,7 +57,7 @@ const Sidebar = ({onScrollToSection}) => {
                 </div>
 
                 <div className="sidebar-section">
-                    <h4>RECRUITER</h4>
+                    <h4>DÀNH CHO NHÀ TUYỂN DỤNG</h4>
                     <ul>
                         <li>
                             <Link to="/recruiter/identity" className="sidebar-link">

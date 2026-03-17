@@ -2,7 +2,7 @@ import React from 'react';
 import {Routes, Route, useNavigate, useLocation, Link} from 'react-router-dom';
 import './App.css';
 import Header from './components/home/Header';
-
+import NotificationCard from './components/notifications/NotificationCard';
 // Pages
 import RecruiterApplications from './pages/recruiter/RecruiterApplications';
 import ApplicationDetailPage from './pages/recruiter/ApplicationDetailPage';
@@ -78,12 +78,18 @@ function App() {
                 // 3. Subscribe
                 stompClient.subscribe('/user/queue/notifications', (message) => {
                     const notification = JSON.parse(message.body);
-                    toast.info(notification.title, {
-                        description: notification.content,
-                        action: {
-                            label: 'Xem ngay',
-                            onClick: () => notification.link && navigate(notification.link)
-                        },
+
+                    // Sử dụng toast.custom của Sonner để render component mình tự viết
+                    toast.custom((t) => (
+                        <NotificationCard
+                            t={t}
+                            title={notification.title}
+                            content={notification.content}
+                            link={notification.link}
+                            navigate={navigate}
+                        />
+                    ), {
+                        duration: 10000, // Để 10s cho người dùng kịp đọc
                     });
                 });
             };

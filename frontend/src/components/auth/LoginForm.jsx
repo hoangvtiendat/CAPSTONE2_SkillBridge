@@ -23,7 +23,6 @@ export function LoginForm() {
       toast.error("Lỗi đăng nhập", {
         description: errorMessage,
       });
-
       const newUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }

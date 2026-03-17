@@ -731,7 +731,7 @@ public class JobService {
                     .type("NEW_APPLICATION")
                     .link(link)
                     .build();
-            notificationRepository.save(notification);
+            notificationRepository.saveAndFlush(notification);
 
             try {
                 messagingTemplate.convertAndSendToUser(

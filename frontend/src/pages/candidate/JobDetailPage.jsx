@@ -98,7 +98,6 @@ const JobDetailPage = () => {
         data.append('cv', cvFile);
 
         try {
-            // ĐỔI LẠI THÀNH accessToken cho khớp với AuthContext của ông
             const token = localStorage.getItem('accessToken');
 
             const response = await axios.post(

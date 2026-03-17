@@ -2,150 +2,70 @@ package com.skillbridge.backend.entity;
 
 import com.skillbridge.backend.enums.ApplicationStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "applications")
 public class Application extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @NotNull(message = "Công việc không được để trống")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id")
+    @JoinColumn(name = "job_id", nullable = false) // DB không cho phép null
     private Job job;
 
+    @NotNull(message = "Ứng viên không được để trống")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "candidate_id")
+    @JoinColumn(name = "candidate_id", nullable = false)
     private Candidate candidate;
 
-    @Column(name = "full_name")
+    @NotBlank(message = "Họ tên không được để trống")
+    @Size(max = 100, message = "Tên quá dài (tối đa 100 ký tự)")
+    @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(name = "email")
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Định dạng email không hợp lệ")
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "phone_number")
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Pattern(regexp = "^[0-9]{10,11}$", message = "Số điện thoại phải từ 10-11 số")
+    @Column(name = "phone_number", nullable = false, length = 15)
     private String phoneNumber;
 
-    @Column(name = "cv_url")
+    @NotBlank(message = "Vui lòng đính kèm CV")
+    @Column(name = "cv_url", nullable = false)
     private String cvUrl;
 
     @Column(name = "recommendation_letter", columnDefinition = "TEXT")
     private String recommendationLetter;
 
+    @Min(value = 0, message = "Điểm AI không thể nhỏ hơn 0")
+    @Max(value = 100, message = "Điểm AI không thể lớn hơn 100")
     @Column(name = "ai_matching_score")
     private Float aiMatchingScore;
 
     @Column(name = "ai_analysis", columnDefinition = "TEXT")
-    private String aiAnalysis; // Lưu nhận xét của AI về độ phù hợp
+    private String aiAnalysis;
 
+    // Nếu ông dùng Hibernate 6+, nên dùng @JdbcTypeCode(SqlTypes.JSON)
+    // để DB hiểu đây là cột JSON thực thụ (nếu dùng PostgreSQL/MySQL)
     @Column(name = "qualifications", columnDefinition = "JSON")
     private String qualifications;
 
+    @NotNull(message = "Trạng thái hồ sơ không được để trống")
     @Enumerated(EnumType.STRING)
-    private ApplicationStatus status;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Job getJob() {
-        return job;
-    }
-
-    public void setJob(Job job) {
-        this.job = job;
-    }
-
-    public Candidate getCandidate() {
-        return candidate;
-    }
-
-    public void setCandidate(Candidate candidate) {
-        this.candidate = candidate;
-    }
-
-    public Float getAiMatchingScore() {
-        return aiMatchingScore;
-    }
-
-    public void setAiMatchingScore(Float aiMatchingScore) {
-        this.aiMatchingScore = aiMatchingScore;
-    }
-
-    public ApplicationStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ApplicationStatus status) {
-        this.status = status;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getCvUrl() {
-        return cvUrl;
-    }
-
-    public void setCvUrl(String cvUrl) {
-        this.cvUrl = cvUrl;
-    }
-
-    public String getRecommendationLetter() {
-        return recommendationLetter;
-    }
-
-    public void setRecommendationLetter(String recommendationLetter) {
-        this.recommendationLetter = recommendationLetter;
-    }
-
-    public String getAiAnalysis() {
-        return aiAnalysis;
-    }
-
-    public void setAiAnalysis(String aiAnalysis) {
-        this.aiAnalysis = aiAnalysis;
-    }
-
-    public String getQualifications() {
-        return qualifications;
-    }
-
-    public void setQualifications(String qualifications) {
-        this.qualifications = qualifications;
-    }
+    @Column(nullable = false)
+    @Builder.Default // Giúp Builder mặc định là PENDING nếu không set
+    private ApplicationStatus status = ApplicationStatus.PENDING;
 }
 
