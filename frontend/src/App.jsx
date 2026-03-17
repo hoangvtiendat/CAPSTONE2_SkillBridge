@@ -17,6 +17,7 @@ import TaxLookup from './pages/company/TaxLookup';
 import AdminJobPage from './pages/admin/AdminJobPage';
 import AdminJobDetailPage from './pages/admin/AdminJobDetailPage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
+import CompanyDetailPage from './pages/candidate/CompanyDetailPage';
 import SubscriptionOfCompanyPage from './pages/subscription/SubscriftionOfCompany';
 import { Toaster } from 'sonner';
 import BusinessIdentity from './pages/recruiter/BusinessIdentity'
@@ -89,6 +90,7 @@ function App() {
                 <Route path='/auth/complete-profile' element={<UpdateProfileDetail />} />
                 <Route path="recruiter/identity" element={<BusinessIdentity />} />
                 <Route path="/jobs/:jobId" element={<JobDetailPage />} />
+                <Route path="/companies/:id" element={<CompanyDetailPage />} />
 
                 <Route element={<RecruiterRoute><RecruiterLayout /></RecruiterRoute>}>
                     <Route path='/create-jd' element={<CreateJd />} />

@@ -7,7 +7,7 @@ const JobCard = ({ job, featured = false }) => {
 
   return (
     <div className={`job-card ${featured ? 'featured' : ''}`}>
-      {featured && <div className="featured-badge">Featured</div>}
+      {featured && <div className="featured-badge">Nổi bật</div>}
 
       <div className="job-card-header">
         <div className="company-logo">
@@ -36,15 +36,15 @@ const JobCard = ({ job, featured = false }) => {
             </span>
           ))
         ) : (
-          <span className="tag-placeholder">None</span>
+          <span className="tag-placeholder">Không có</span>
         )}
       </div>
 
       <div className="job-actions">
         <Link to={`/jobs/${id}`} className="btn-apply">
-          Apply Now
+          Ứng tuyển ngay
         </Link>
-        <button className="btn-check">Self-Check</button>
+        <button className="btn-check">Đánh giá phù hợp</button>
       </div>
     </div>
   );

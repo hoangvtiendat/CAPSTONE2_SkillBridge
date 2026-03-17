@@ -68,14 +68,36 @@ public class CompanyService {
         this.userRepository = userRepository;
     }
 
-    public Map<String, Object> getCompanies(int page,String cursor , CompanyStatus status, int limit) {
+    public Map<String, Object> getCompanies(int page, String cursor, CompanyStatus status, int limit, String keyword, String categoryId) {
         Pageable pageable = PageRequest.of(page, limit);
-        Page<CompanyFeedItemResponse> companyPage = companyRepository.getCompanyFeed(status, cursor, pageable);
+        Page<CompanyFeedItemResponse> companyPage;
+        
+        if ((keyword != null && !keyword.trim().isEmpty()) || (categoryId != null && !categoryId.trim().isEmpty())) {
+            String searchKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+            String searchCategoryId = (categoryId != null && !categoryId.trim().isEmpty()) ? categoryId.trim() : null;
+            companyPage = companyRepository.getCompanyFeedSearch(status, searchKeyword, searchCategoryId, pageable);
+        } else {
+            companyPage = companyRepository.getCompanyFeed(status, cursor, pageable);
+        }
+        
         return Map.of(
                 "companies", companyPage.getContent(),
                 "totalPages", companyPage.getTotalPages(),
                 "totalElements", companyPage.getTotalElements(),
                 "currentPage", companyPage.getNumber()
+        );
+    }
+
+    public CompanyFeedItemResponse getCompanyDetail(String id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
+        return new CompanyFeedItemResponse(
+                company.getId(), company.getName(), company.getTaxId(),
+                company.getBusinessLicenseUrl(), company.getImageUrl(),
+                company.getDescription(), company.getAddress(),
+                company.getWebsiteUrl(), company.getStatus(), planName
         );
     }
 

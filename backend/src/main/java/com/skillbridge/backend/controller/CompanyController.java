@@ -44,15 +44,29 @@ public class CompanyController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(required = false) String cursor,
             @RequestParam(value = "status", required = false) CompanyStatus status,
-            @RequestParam(value = "limit", defaultValue = "10") int limit
+            @RequestParam(value = "limit", defaultValue = "10") int limit,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String categoryId
     ) {
         CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
-        Map<String, Object> rs = companyService.getCompanies(page,cursor ,searchStatus, limit);
+        Map<String, Object> rs = companyService.getCompanies(page, cursor, searchStatus, limit, keyword, categoryId);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Company Feed",
                 rs
         );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> getCompanyDetail(@PathVariable String id) {
+        CompanyFeedItemResponse result = companyService.getCompanyDetail(id);
+
+        ApiResponse<CompanyFeedItemResponse> response = new ApiResponse<>();
+        response.setCode(HttpStatus.OK.value());
+        response.setResult(result);
+        response.setMessage("Chi tiết công ty");
+
         return ResponseEntity.ok(response);
     }
 

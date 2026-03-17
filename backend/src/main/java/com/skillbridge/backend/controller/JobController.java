@@ -52,6 +52,22 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getJobsByCompany(
+            @PathVariable String companyId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) List<String> categoryIds
+    ) {
+        Map<String, Object> rs = jobService.getJobsByCompany(companyId, page, limit, categoryIds);
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Danh sách việc làm của công ty",
+                rs
+        );
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetailByCandidate(@PathVariable String id) {
 

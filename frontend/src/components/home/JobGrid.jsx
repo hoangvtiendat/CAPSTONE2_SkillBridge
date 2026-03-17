@@ -67,17 +67,17 @@ const JobGrid = () => {
   return (
     <section className="job-grid-section" id="job-grid">
       <div className="job-grid-header">
-        <h2>Featured & Latest Jobs</h2>
+        <h2>Việc Làm Mới Nhất & Nổi Bật</h2>
         <div className="search-filter">
           <div className="search-wrap">
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#666666"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" /></svg>
             <input
               type="search"
               className="job-search"
-              placeholder="Search for jobs, companies..."
+              placeholder="Tìm kiếm việc làm, công ty..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              aria-label="Search jobs"
+              aria-label="Tìm kiếm việc làm"
             />
           </div>
         </div>
@@ -86,7 +86,7 @@ const JobGrid = () => {
       <div className="job-grid">
         {loading ? (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0' }}>
-            <p>Loading jobs...</p>
+            <p>Đang tải việc làm...</p>
           </div>
         ) : filteredJobs.length > 0 ? (
           filteredJobs.map((job) => (
@@ -94,7 +94,7 @@ const JobGrid = () => {
           ))
         ) : (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0' }}>
-            <p>No jobs found.</p>
+            <p>Không tìm thấy việc làm nào.</p>
           </div>
         )}
       </div>

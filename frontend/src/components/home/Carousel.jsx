@@ -58,7 +58,7 @@ const Carousel = ({ items, autoSlideInterval = 3000 }) => {
                 <h1 className="slide-title">{item.title}</h1>
                 <p className="slide-subtitle">{item.subtitle}</p>
                 <p className="slide-description">{item.description}</p>
-                <Link to={item.cta.url} className="btn btn-primary btn-slide">
+                <Link to={item.cta.url} className="btn-slide">
                   {item.cta.text}
                 </Link>
               </div>

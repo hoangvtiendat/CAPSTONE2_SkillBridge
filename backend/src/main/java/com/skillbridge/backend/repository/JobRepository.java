@@ -74,6 +74,30 @@ public interface JobRepository extends JpaRepository<Job, String> {
             Pageable pageable
     );
 
+    @Query("""
+        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
+            j.id, j.title, j.description, j.location, 
+            j.salaryMin, j.salaryMax, j.createdAt, 
+            c.name, c.imageUrl, sp.name, cat.name
+        )
+        FROM Job j
+        LEFT JOIN j.company c
+        LEFT JOIN j.category cat
+        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN cs.subscriptionPlan sp
+        WHERE j.status = :status
+        AND j.company.id = :companyId
+        AND j.isDeleted = false
+        AND (:categoryIds IS NULL OR (cat.id IN :categoryIds))
+        ORDER BY j.createdAt DESC
+    """)
+    Page<JobFeedItemResponse> findJobsByCompanyIdWithPagination(
+            @Param("companyId") String companyId,
+            @Param("status") JobStatus status,
+            @Param("categoryIds") List<String> categoryIds,
+            Pageable pageable
+    );
+
     @Query("SELECT js.job.id, s.name " +
             "FROM JobSkill js " +
             "LEFT JOIN js.skill s " +

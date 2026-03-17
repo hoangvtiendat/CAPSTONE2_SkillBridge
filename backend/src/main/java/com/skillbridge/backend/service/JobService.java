@@ -90,6 +90,50 @@ public class JobService {
         );
     }
 
+    public Map<String, Object> getJobsByCompany(String companyId, int page, int limit, List<String> categoryIds) {
+        Pageable pageable = PageRequest.of(page, limit);
+
+        List<String> validCategoryIds = (categoryIds != null && !categoryIds.isEmpty()) ? categoryIds : null;
+
+        Page<JobFeedItemResponse> jobPage = jobRepository.findJobsByCompanyIdWithPagination(
+                companyId, JobStatus.OPEN, validCategoryIds, pageable
+        );
+
+        if (jobPage.isEmpty()) {
+            return Map.of(
+                    "jobs", List.of(),
+                    "totalPages", 0,
+                    "totalElements", 0,
+                    "currentPage", page
+            );
+        }
+
+        List<JobFeedItemResponse> resultList = jobPage.getContent();
+
+        List<String> jobIds = resultList.stream()
+                .map(JobFeedItemResponse::getJobId)
+                .toList();
+
+        List<Object[]> skillData = jobRepository.findSkillNamesByJobIds(jobIds);
+
+        Map<String, List<String>> skillsMap = skillData.stream()
+                .collect(Collectors.groupingBy(
+                        obj -> (String) obj[0],
+                        Collectors.mapping(obj -> (String) obj[1], Collectors.toList())
+                ));
+
+        resultList.forEach(item ->
+                item.setSkills(skillsMap.getOrDefault(item.getJobId(), List.of()))
+        );
+
+        return Map.of(
+                "jobs", resultList,
+                "totalPages", jobPage.getTotalPages(),
+                "totalElements", jobPage.getTotalElements(),
+                "currentPage", jobPage.getNumber()
+        );
+    }
+
     public Map<String, Object> adminGetJob(int page, String cursor, int limit, String status, String modStatus) {
         System.out.println("--- ADMIN: BẮT ĐẦU LẤY DANH SÁCH JOB ---");
         try {
