@@ -266,7 +266,7 @@ public class JobService {
         try {
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-            if(!"OPEN".equals(status)&&!"CLOCK".equals(status)){
+            if(!"OPEN".equals(status)&&!"LOCK".equals(status)){
                 System.out.println("Khoong the thay doi");
             }
             if("OPEN".equals(status)){
@@ -275,9 +275,9 @@ public class JobService {
                 job.setModerationStatus(green);
                 job.setStatus(open);
             }
-            if("CLOCK".equals(status)){
-                JobStatus clock = JobStatus.CLOCK;
-                job.setStatus(clock);
+            if("LOCK".equals(status)){
+                JobStatus lock = JobStatus.LOCK;
+                job.setStatus(lock);
             }
             jobRepository.save(job);
             logsService.logAction(userDetails, "Admin đã chấp nhận bài đăng ", LogLevel.WARNING);
@@ -578,7 +578,7 @@ public class JobService {
         if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        job.setStatus(JobStatus.CLOCK);
+        job.setStatus(JobStatus.LOCK);
         job.setIsDeleted(true);
         jobRepository.save(job);
 
