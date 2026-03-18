@@ -9,7 +9,6 @@ function OAuthSuccess() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    console.log("Dữ liệu nhận được từ URL:", window.location.search);
 
     const error = params.get("error");
     const message = params.get("message");

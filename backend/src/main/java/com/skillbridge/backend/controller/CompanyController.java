@@ -46,7 +46,7 @@ public class CompanyController {
             @RequestParam(required = false) String categoryId
     ) {
         CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
-        Map<String, Object> rs = companyService.getCompanies(page, cursor, searchStatus, limit, keyword, categoryId);
+        Map<String, Object> rs = companyService.getCompanies(page, searchStatus, limit, keyword, categoryId);
         ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Company Feed",

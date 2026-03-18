@@ -81,7 +81,7 @@ public class CompanyService {
         this.fileStorageService = fileStorageService;
     }
 
-    public Map<String, Object> getCompanies(int page, String cursor, CompanyStatus status, int limit, String keyword, String categoryId) {
+    public Map<String, Object> getCompanies(int page, CompanyStatus status, int limit, String keyword, String categoryId) {
         Pageable pageable = PageRequest.of(page, limit);
         Page<CompanyFeedItemResponse> companyPage;
 
@@ -90,7 +90,7 @@ public class CompanyService {
             String searchCategoryId = (categoryId != null && !categoryId.trim().isEmpty()) ? categoryId.trim() : null;
             companyPage = companyRepository.getCompanyFeedSearch(status, searchKeyword, searchCategoryId, pageable);
         } else {
-            companyPage = companyRepository.getCompanyFeed(status, cursor, pageable);
+            companyPage = companyRepository.getCompanyFeed(status, pageable);
         }
 
         return Map.of(

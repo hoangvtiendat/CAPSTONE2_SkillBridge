@@ -1,6 +1,6 @@
 import SubscriptionManagerOfCompany from "../../components/subscription/SubscriptionManagerOfCompany";
 
-const SubscriptionOfCompanyPage = () => {
+const SubscriptionOfCompany = () => {
     return (
         <div className="recruiter-page-container">
             <SubscriptionManagerOfCompany />
@@ -8,4 +8,4 @@ const SubscriptionOfCompanyPage = () => {
     );
 }
 
-export default SubscriptionOfCompanyPage;
+export default SubscriptionOfCompany;

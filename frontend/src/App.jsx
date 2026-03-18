@@ -43,8 +43,8 @@ import AdminMemberManager from './pages/recruiter/AdminMemberManager';
 import ListJdOfCompany from './pages/JD/list_jd_of_company';
 import CreateJd from './pages/JD/PostJDPage';
 import DetailJD_Page from './pages/JD/detailJD';
-import SubscriptionOfCompanyPage from './pages/Subscription.jsx/SubscriftionOfCompany';
-import RegisterSubscriptionPage from './pages/Subscription.jsx/RegisterSubscriptionPage';
+import SubscriptionOfCompany from "./pages/subscription/SubscriptionOfCompany";
+import RegisterSubscriptionPage from "./pages/subscription/RegisterSubscriptionPage";
 
 // Pages: Admin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -58,7 +58,7 @@ import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 import IndustryManagementPage from './pages/admin/IndustryManagementPage';
 import SkillManagementPage from './pages/admin/SkillManagementPage';
 import SkillPageContainer from './pages/Skill/SkillPage';
-import SubscriptionManagerPage from './pages/Subscription.jsx/SubscriptionManager';
+import SubscriptionManager from "./pages/subscription/SubscriptionManager";
 
 function App() {
     const location = useLocation();
@@ -187,7 +187,7 @@ function App() {
                         <Route path='/detail-jd/:id' element={<DetailJD_Page />} />
                         <Route path='/company/jd-list' element={<ListJdOfCompany />} />
                         <Route path='company/member' element={<AdminMemberManager />} />
-                        <Route path='/company/subscriptions' element={<SubscriptionOfCompanyPage />} />
+                        <Route path='/company/subscriptions' element={<SubscriptionOfCompany />} />
                         <Route path='/company/subscriptions/register' element={<RegisterSubscriptionPage />} />
                     </Route>
 
@@ -208,8 +208,8 @@ function App() {
                         <Route path="management/skills" element={<SkillManagementPage />} />
 
                         <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer /></AdminRoute>} />
-                        <Route path="subscriptions" element={<AdminRoute><SubscriptionManagerPage /></AdminRoute>} />
-                        <Route path="management/subscriptions" element={<AdminRoute><SubscriptionManagerPage /></AdminRoute>} />
+                        <Route path="subscriptions" element={<AdminRoute><SubscriptionManager /></AdminRoute>} />
+                        <Route path="management/subscriptions" element={<AdminRoute><SubscriptionManager /></AdminRoute>} />
 
                         <Route path="*" element={<div className="p-8 text-center text-slate-500">Feature Coming Soon</div>} />
                     </Route>

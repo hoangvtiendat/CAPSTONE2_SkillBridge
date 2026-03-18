@@ -38,4 +38,7 @@ public interface CompanyMemberRepository extends JpaRepository<CompanyMember, St
     )List<CompanyMemberResponse> getMemeber(
             @Param("userId") String userID
     );
+
+
+    List<CompanyMember> findByCompany_IdAndRole(String companyId, CompanyRole role);
 }
