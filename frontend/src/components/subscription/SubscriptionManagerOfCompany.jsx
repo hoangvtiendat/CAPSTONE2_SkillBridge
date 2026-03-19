@@ -285,10 +285,10 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                     <span className="detail-label">Gói cước:</span>
                                     <span className="detail-value"><strong>{pendingTransaction.name}</strong></span>
                                 </div>
-                                <div className="detail-row">
+                                {/* <div className="detail-row">
                                     <span className="detail-label">Thời hạn:</span>
                                     <span className="detail-value">{pendingTransaction.postingDuration} tháng</span>
-                                </div>
+                                </div> */}
                                 <div className="detail-row price-row">
                                     <span className="detail-label">Tổng tiền:</span>
                                     <span className="notification-price">
