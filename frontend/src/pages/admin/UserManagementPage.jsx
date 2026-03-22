@@ -18,6 +18,7 @@ import adminService from '../../services/api/adminService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
+import '../../components/admin/UserManagementPage.css'
 
 const UserManagementPage = () => {
     const [users, setUsers] = useState([]);

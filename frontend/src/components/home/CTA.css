@@ -1,14 +1,61 @@
 .cta {
+  position: relative;
+  overflow: hidden;
   padding: 120px 50px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   text-align: center;
+  color: white;
+  isolation: isolate;
+
+  background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 24%),
+          radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.08), transparent 26%),
+          linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border-radius: 36px;
+  pointer-events: none;
+
+  background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.18),
+          rgba(255, 255, 255, 0.08)
+  );
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          0 18px 40px rgba(31, 38, 135, 0.14);
+}
+
+.cta::after {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border-radius: 36px;
+  pointer-events: none;
+  background:
+          linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02)),
+          radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 28%);
+}
+
+.cta-content {
+  position: relative;
+  z-index: 1;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .cta-content h2 {
   font-size: 56px;
   font-weight: 700;
   margin-bottom: 25px;
+  letter-spacing: -0.03em;
 }
 
 .cta-content p {
@@ -18,9 +65,12 @@
   max-width: 650px;
   margin-left: auto;
   margin-right: auto;
+  line-height: 1.7;
 }
 
 .cta-buttons {
+  position: relative;
+  z-index: 1;
   display: flex;
   gap: 20px;
   justify-content: center;
@@ -29,6 +79,8 @@
 }
 
 .btn-home-lg {
+  position: relative;
+  overflow: hidden;
   padding: 16px 40px;
   font-size: 18px;
   display: inline-flex;
@@ -36,12 +88,73 @@
   justify-content: center;
   width: fit-content !important;
   white-space: nowrap;
+  border-radius: 18px;
+  transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease,
+          background 0.25s ease,
+          border-color 0.25s ease;
+}
+
+.btn-home-lg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
+}
+
+/* Nút chính: giữ vibe tím gốc */
+.btn-home-lg.primary,
+.btn-home-lg:first-child {
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.18),
+          0 10px 24px rgba(31, 38, 135, 0.16);
+}
+
+.btn-home-lg.primary:hover,
+.btn-home-lg:first-child:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.22),
+          0 14px 30px rgba(31, 38, 135, 0.22);
+}
+
+/* Nút phụ */
+.btn-home-lg.secondary,
+.btn-home-lg:last-child {
+  background: rgba(255, 255, 255, 0.10);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.14),
+          0 8px 18px rgba(31, 38, 135, 0.10);
+}
+
+.btn-home-lg.secondary:hover,
+.btn-home-lg:last-child:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .cta {
     padding: 60px 20px;
+  }
+
+  .cta::before,
+  .cta::after {
+    inset: 12px;
+    border-radius: 24px;
   }
 
   .cta-content h2 {

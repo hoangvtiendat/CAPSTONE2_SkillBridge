@@ -2,8 +2,9 @@ import api from '../../config/axiosConfig';
 
 const getAuthHeader = () => {
     const token = localStorage.getItem('accessToken');
-    return token ? {Authorization: `Bearer ${token}`} : {};
+    return token ? { Authorization: `Bearer ${token}` } : {};
 };
+
 const jobService = {
     getFeed: async (params = {}) => {
         try {
@@ -24,8 +25,8 @@ const jobService = {
                 company: job.companyName,
                 location: job.location,
                 salary: {
-                    min: parseInt(job.salaryMin) / 1000,
-                    max: parseInt(job.salaryMax) / 1000
+                    min: Number(job.salaryMin),
+                    max: Number(job.salaryMax)
                 },
                 tags: (job.skills || []).map(s => s.skillName || s),
                 logo: job.companyImageUrl,
@@ -42,6 +43,7 @@ const jobService = {
             throw error;
         }
     },
+
     getJobsByCompany: async (companyId, params = {}) => {
         try {
             const { page = 0, limit = 6, categoryIds } = params;
@@ -62,8 +64,8 @@ const jobService = {
                 company: job.companyName,
                 location: job.location,
                 salary: {
-                    min: parseInt(job.salaryMin) / 1000,
-                    max: parseInt(job.salaryMax) / 1000
+                    min: Number(job.salaryMin),
+                    max: Number(job.salaryMax)
                 },
                 tags: (job.skills || []).map(s => s.skillName || s),
                 logo: job.companyImageUrl,
@@ -82,6 +84,7 @@ const jobService = {
             throw error;
         }
     },
+
     getMyJd_of_Company: async (token) => {
         try {
             const response = await api.get(`/jobs/my-company`, {
@@ -95,6 +98,7 @@ const jobService = {
             throw error;
         }
     },
+
     deleteJd: async (jdId) => {
         try {
             await api.delete(`/jobs/my-company/delete/${jdId}`);
@@ -109,12 +113,13 @@ const jobService = {
             const response = await api.get('/jobs/my-company', {
                 headers: getAuthHeader()
             });
-            return response.data; // Trả về { message, result: [...] }
+            return response.data;
         } catch (error) {
             console.error('getMyCompanyJobs Error:', error);
             throw error;
         }
     },
+
     getDetailJd: async (id) => {
         try {
             const response = await api.get(`/jobs/my-company/${id}`);
@@ -124,6 +129,7 @@ const jobService = {
             throw error;
         }
     },
+
     createJd: async (jdData) => {
         try {
             const response = await api.post('/jobs/postJD', jdData);
@@ -140,6 +146,7 @@ const jobService = {
             throw error;
         }
     },
+
     updateJd: async (id, jdData) => {
         try {
             const response = await api.put(`/jobs/my-company/Update/${id}`, jdData);
@@ -149,6 +156,7 @@ const jobService = {
             throw error;
         }
     },
+
     getAdminJobs: async (params = {}) => {
         try {
             const { cursor, limit = 10, status, modStatus } = params;
@@ -214,20 +222,24 @@ const jobService = {
         const response = await api.get(`/jobs/${jobId}`);
         return response.data.result;
     },
+
     getJobDetail: async (jobId) => {
         const response = await api.get(`/jobs/feedAdmin/${jobId}`);
         return response.data.result;
     },
+
     deleteJob: async (jobId) => {
         const response = await api.delete(`/jobs/feedAdmin/${jobId}`);
         return response.data;
     },
+
     changeModerationStatus: async (jobId, status) => {
         const response = await api.patch(`/jobs/feedAdmin/${jobId}/moderation`, null, {
             params: { status }
         });
         return response.data;
     },
+
     changeStatus: async (jobId, status) => {
         const response = await api.patch(`/jobs/feedAdmin/${jobId}/status`, null, {
             params: { status }

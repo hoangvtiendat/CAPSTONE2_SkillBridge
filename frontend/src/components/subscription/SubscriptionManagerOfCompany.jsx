@@ -11,7 +11,7 @@ import { ca } from 'date-fns/locale';
 const SubscriptionManagerOfCompany = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
-    const [subscriptions, setSubscriptions] = useState([]); 
+    const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -27,13 +27,13 @@ const fetchSystemPackages = async () => {
         const response = await subscriptionService.getlistSubscription();
         const data = response?.result || response?.data || response || [];
         console.log('Fetched system packages:', data);
-        
+
         const packages = Array.isArray(data) ? data : [];
-        
-        const premiumPackage = packages.find(pkg => 
+
+        const premiumPackage = packages.find(pkg =>
             pkg.name && pkg.name.toLowerCase() === "premium"
         );
-        
+
         console.log('Premium package found:', premiumPackage);
         setSystemPackages(premiumPackage ? [premiumPackage] : []);
     } catch (error) {
@@ -70,24 +70,24 @@ const fetchSystemPackages = async () => {
     } finally {
         setLoading(false);
     }
-}; 
+};
 const getListSubscriptionOfCompany = async () => {
-       
+
         try {
             setLoading(true);
-            
+
             const urlParams = new URLSearchParams(window.location.search);
             const paymentStatus = urlParams.get('status');
             const returnFromPayment = urlParams.get('apptransid') || urlParams.get('return');
-            
+
             const pendingPaymentId = sessionStorage.getItem('pendingPayment');
-            
+
             if (returnFromPayment) {
                 window.history.replaceState({}, '', window.location.pathname);
             }
-            
+
             const data = await subscriptionService.listSubcriftionOfCompany(token);
-            
+
             let subscriptionList = [];
             if (Array.isArray(data)) {
                 subscriptionList = data;
@@ -96,56 +96,56 @@ const getListSubscriptionOfCompany = async () => {
             } else {
                 subscriptionList = [];
             }
-            
+
             setSubscriptions(subscriptionList);
-            
+
             const pending = subscriptionList.find(sub => sub.status === 'PENDING_PAYMENT');
-            
+
             if (returnFromPayment && paymentStatus !== '1' && pending) {
                 toast.info('Thanh toán chưa hoàn tất. Giao dịch đã bị hủy.', {
                     description: 'Bạn có thể tạo đơn mới nếu muốn thanh toán lại.',
                     duration: 5000
                 });
-                
+
                 setPendingTransaction(null);
                 setCountdown(0);
                 setShowNotification(false);
                 sessionStorage.removeItem('pendingPayment');
-                
+
                 await handleDeleteSubscription(pending.id, true);
-                return; 
+                return;
             }
-            
+
             if (returnFromPayment && paymentStatus === '1') {
                 sessionStorage.removeItem('pendingPayment');
             }
-  
+
             if (pendingPaymentId && !returnFromPayment && pending && pending.id === pendingPaymentId) {
                 toast.info('Thanh toán chưa hoàn tất. Giao dịch đã bị hủy.', {
                     description: 'Bạn có thể tạo đơn mới nếu muốn thanh toán lại.',
                     duration: 5000
                 });
-                
+
                 setPendingTransaction(null);
                 setCountdown(0);
                 setShowNotification(false);
                 sessionStorage.removeItem('pendingPayment');
-                
+
                 await handleDeleteSubscription(pending.id, true);
                 return;
             }
-            
+
             if (pending && (!pendingTransaction || pendingTransaction.id !== pending.id)) {
                 setPendingTransaction(pending);
-                
+
                 if (pending.createdAt) {
                     const createdTime = new Date(pending.createdAt).getTime();
                     const now = Date.now();
                     const elapsed = Math.floor((now - createdTime) / 1000);
-                    const remaining = Math.max(900 - elapsed, 0); 
+                    const remaining = Math.max(900 - elapsed, 0);
                     setCountdown(remaining);
                 } else {
-                    setCountdown(900); 
+                    setCountdown(900);
                 }
             } else if (!pending && pendingTransaction) {
                 setPendingTransaction(null);
@@ -155,7 +155,7 @@ const getListSubscriptionOfCompany = async () => {
             console.error("Lỗi khi fetch:", error);
             const errorMessage = error.response?.data?.message || 'Không thể tải danh sách';
             toast.error("Lỗi dữ liệu", { description: errorMessage });
-            setSubscriptions([]); 
+            setSubscriptions([]);
         } finally {
             setLoading(false);
         }
@@ -163,32 +163,32 @@ const getListSubscriptionOfCompany = async () => {
 const handleDeleteSubscription = async (id, isAutoDelete = false) => {
     console.log(' Attempting to delete subscription:', id);
     console.log('isAutoDelete:', isAutoDelete);
-    
+
     if (!isAutoDelete && !window.confirm('Bạn có chắc muốn xóa gói đăng ký này?')) return;
-    
+
     try {
         console.log(' Calling API to delete subscription:', id);
         const response = await subscriptionService.deleteSubscriptionOfCompany(id, token);
         console.log(' Delete response:', response);
-        
+
         if (!isAutoDelete) {
             toast.success('Xóa gói đăng ký thành công');
         }
-        
+
         if (pendingTransaction && pendingTransaction.id === id) {
             setPendingTransaction(null);
             setCountdown(0);
             setShowNotification(false);
         }
-        
+
         if (!isAutoDelete) {
             getListSubscriptionOfCompany();
-        } 
+        }
     } catch (error) {
         console.error(' Lỗi khi xóa:', error);
         console.error('Error response:', error.response);
         console.error('Error data:', error.response?.data);
-        
+
         if (!isAutoDelete) {
             const errorMessage = error.response?.data?.message || 'Không thể xóa gói đăng ký';
             toast.error("Lỗi xóa", { description: errorMessage });
@@ -205,9 +205,9 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
         const handleClickOutside = (event) => {
             const isClickInsideDropdown = event.target.closest('.action-dropdown-menu-wrapper');
             const isClickOnRow = event.target.closest('tr.clickable-row');
-            const isClickOnNotification = event.target.closest('.pending-notification-fixed') || 
+            const isClickOnNotification = event.target.closest('.pending-notification-fixed') ||
                                          event.target.closest('.notification-dropdown');
-            
+
             if (openDropdownId && !isClickInsideDropdown && !isClickOnRow && !isClickOnNotification) {
                 setOpenDropdownId(null);
             }
@@ -303,7 +303,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                 </div>
                             )}
                             <div className="notification-actions">
-                                <button 
+                                <button
                                     className="notification-btn btn-payment"
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -313,7 +313,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                     <CreditCard size={16} />
                                     Thanh toán ngay
                                 </button>
-                                <button 
+                                <button
                                     className="notification-btn btn-delete"
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -333,7 +333,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
             {/* Banner */}
             <div className="sub-promo-banner">
                 <div className="banner-text">
-                    <h1>SKILLBRIDGE:<br/>NẠP TIỀN & PHÁT TRIỂN</h1>
+                    <h1 >SKILLBRIDGE:<br/>NẠP TIỀN & PHÁT TRIỂN</h1>
                     <p>Thanh toán an toàn, học ngay, nhận ưu đãi đặc biệt.</p>
                 </div>
             </div>
@@ -349,7 +349,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                         </div>
                         <div className="sub-title-row">
                             <h2 className="sub-name">{currentSubscription?.name || "Đang xác thực"}</h2>
-                          
+
                         </div>
                     </div>
 
@@ -361,8 +361,8 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                     <span>{currentSubscription.currentJobCount}/{currentSubscription.jobLimit}</span>
                                 </div>
                                 <div className="progress-track">
-                                    <div 
-                                        className="progress-fill fill-dark" 
+                                    <div
+                                        className="progress-fill fill-dark"
                                         style={{width: `${(currentSubscription.currentJobCount / currentSubscription.jobLimit) * 100}%`}}
                                     ></div>
                                 </div>
@@ -374,8 +374,8 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                     <span>{currentSubscription.currentViewCount}/{currentSubscription.candidateViewLimit}</span>
                                 </div>
                                 <div className="progress-track">
-                                    <div 
-                                        className="progress-fill fill-green" 
+                                    <div
+                                        className="progress-fill fill-green"
                                         style={{width: `${(currentSubscription.currentViewCount / currentSubscription.candidateViewLimit) * 100}%`}}
                                     ></div>
                                 </div>
@@ -383,7 +383,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
 
                             <div className="sub-actions mt-4">
                                     Đang sử dụng
-                         
+
                             </div>
                         </>
                     ) : (
@@ -403,7 +403,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                         <h2 className="sub-name">{premiumPkg?.name }</h2>
                         <div className="sub-price">
                             <strong>
-                                {premiumPkg 
+                                {premiumPkg
                                     ? new Intl.NumberFormat('vi-VN').format(premiumPkg.price)
                                     : "loading..."}
                             </strong>
@@ -423,8 +423,8 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                     </li>
                     <li>
                         <Check size={18} className="icon-check" />
-                        {premiumPkg?.hasPriorityDisplay || premiumPkg?.has_priority_display 
-                            ? 'Duyệt tin ưu tiên (SkillBridge)' 
+                        {premiumPkg?.hasPriorityDisplay || premiumPkg?.has_priority_display
+                            ? 'Duyệt tin ưu tiên (SkillBridge)'
                             : 'Thời hạn: ' + (premiumPkg?.postingDuration || premiumPkg?.posting_duration) + ' tháng'}
                     </li>
                     {(premiumPkg?.hasPriorityDisplay || premiumPkg?.has_priority_display) && (
@@ -436,7 +436,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                 </ul>
 
                 <div className="sub-actions mt-4">
-                    <button 
+                    <button
                         className="btn-sub-yellow"
                         onClick={() => setShowUpgradeModal(true)}
                     >
@@ -504,7 +504,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                     <div className="upgrade-modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="upgrade-modal-header">
                             <h3>Chọn hình thức đăng ký</h3>
-                            <button 
+                            <button
                                 className="close-modal-btn"
                                 onClick={() => setShowUpgradeModal(false)}
                             >
@@ -512,7 +512,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                             </button>
                         </div>
                         <div className="upgrade-modal-body">
-                            <button 
+                            <button
                                 className="upgrade-option-btn"
                                 onClick={() => {
                                     setShowUpgradeModal(false);
@@ -527,7 +527,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                     <p>Chọn từ các gói có sẵn của SkillBridge</p>
                                 </div>
                             </button>
-                            <button 
+                            <button
                                 className="upgrade-option-btn"
                                 onClick={() => {
                                     setShowUpgradeModal(false);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import subscriptionService from '../../services/api/subscriptionService';
-import { toast, Toaster } from 'sonner';
-import { Check, Edit, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { Check, Edit, X, ShieldCheck, Zap, Star, Crown } from 'lucide-react';
 import './SubscriptionManager.css';
 
 const SubscriptionManager = () => {
@@ -10,10 +10,10 @@ const SubscriptionManager = () => {
     const [loading, setLoading] = useState(false);
     const [editForm, setEditForm] = useState({});
 
+    // Cấu hình Toast đồng bộ phong cách kính
     const toastStyles = {
-        warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
-        success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
-        error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
+        success: { borderRadius: '15px', background: 'rgba(52, 199, 89, 0.9)', backdropFilter: 'blur(10px)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' },
+        error: { borderRadius: '15px', background: 'rgba(255, 59, 48, 0.9)', backdropFilter: 'blur(10px)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }
     };
 
     useEffect(() => {
@@ -25,12 +25,11 @@ const SubscriptionManager = () => {
         try {
             const response = await subscriptionService.getlistSubscription();
             const data = response?.result || response?.data || response || [];
-
+            // Sắp xếp theo giá tăng dần
             const sortedData = Array.isArray(data) ? data.sort((a, b) => a.price - b.price) : [];
             setSubscriptions(sortedData);
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Lỗi khi tải danh sách gói đăng ký';
-            toast.error(errorMessage, { style: toastStyles.error });
+            toast.error('Không thể tải danh sách gói', { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
@@ -44,8 +43,7 @@ const SubscriptionManager = () => {
             setSelectedSubscription(data);
             setEditForm(data);
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Lỗi khi tải chi tiết gói đăng ký';
-            toast.error(errorMessage, { style: toastStyles.error });
+            toast.error('Lỗi khi tải chi tiết gói', { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
@@ -65,144 +63,146 @@ const SubscriptionManager = () => {
         try {
             const token = localStorage.getItem('token');
             await subscriptionService.UpdateSubcription(selectedSubscription.id, editForm, token);
-            toast.success('Cập nhật gói đăng ký thành công', { style: toastStyles.success });
+            toast.success('Cập nhật cấu hình thành công!', { style: toastStyles.success });
             setSelectedSubscription(null);
             fetchSubscriptions();
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Lỗi khi cập nhật gói đăng ký';
-            toast.error(errorMessage, { style: toastStyles.error });
+            toast.error('Cập nhật thất bại', { style: toastStyles.error });
         } finally {
             setLoading(false);
         }
     };
 
+    // Hàm lấy Icon tương ứng với từng gói
+    const getPlanIcon = (planName) => {
+        const name = planName?.toUpperCase() || '';
+        if (name.includes('PREMIUM')) return <Crown size={24} />;
+        if (name.includes('STANDARD')) return <Star size={24} />;
+        if (name.includes('CUSTOM')) return <ShieldCheck size={24} />;
+        return <Zap size={24} />;
+    };
+
+    // Hàm đồng bộ Class màu sắc từ CSS
     const getThemeClass = (planName) => {
         const name = planName?.toUpperCase() || '';
-        if (name.includes('PREMIUM')) return 'theme-premium';
-        if (name.includes('STANDARD')) return 'theme-standard';
-        return 'theme-free';
+        if (name.includes('PREMIUM')) return 'plan-card-PREMIUM';
+        if (name.includes('STANDARD')) return 'plan-card-STANDARD';
+        if (name.includes('CUSTOM')) return 'plan-card-CUSTOM';
+        return 'plan-card-FREE';
     };
 
     return (
-        <div className="subscription-admin-manager">
-
+        <div className="subscription-admin-manager animate-in">
             <div className="sub-manager-header">
-                <h1>Quản lý Cấu hình Gói cước</h1>
+                <div className="header-content">
+                    <h1>Quản lý Cấu hình Gói cước</h1>
+                    <p>Thiết lập giới hạn và đặc quyền cho từng phân khúc khách hàng</p>
+                </div>
             </div>
 
-            {loading && !selectedSubscription && <div className="loading-spinner">Đang tải dữ liệu...</div>}
-
-            {!loading && (
+            {loading && !selectedSubscription ? (
+                <div className="loading-spinner">
+                    <div className="spinner"></div>
+                    <p>Đang xử lý dữ liệu...</p>
+                </div>
+            ) : (
                 <div className="admin-plans-grid">
-                    {subscriptions.map((sub) => {
-                        const themeClass = getThemeClass(sub.name);
-                        return (
-                            <div key={sub.id} className={`admin-plan-card ${themeClass}`}>
-                                {themeClass === 'theme-premium'}
-
-                                <div className="plan-header">
-                                    <h2 className="plan-name">{sub.name}</h2>
-                                    <div className="plan-price-box">
-                                        <span className="price-value">
-                                            {sub.price === 0 ? 'Miễn phí' : `${(sub.price / 1000000).toLocaleString()}tr`}
-                                        </span>
-                                        {sub.price > 0 && <span className="price-unit">/tháng</span>}
+                    {subscriptions.map((sub) => (
+                        <div key={sub.id} className={`admin-plan-card ${getThemeClass(sub.name)}`}>
+                            <div className="plan-header">
+                                <div className="plan-header-top">
+                                    <div className="plan-icon-wrapper">
+                                        {getPlanIcon(sub.name)}
                                     </div>
+                                    <h2 className="plan-name">{sub.name}</h2>
                                 </div>
-
-                                <div className="plan-body">
-                                    <ul className="plan-features">
-                                        <li>
-                                            <Check className="check-icon" size={18} />
-                                            <span><strong>{sub.jobLimit}</strong> Tin đăng / tháng</span>
-                                        </li>
-                                        <li>
-                                            <Check className="check-icon" size={18} />
-                                            <span><strong>{sub.candidateViewLimit}</strong> Lượt xem hồ sơ</span>
-                                        </li>
-                                        <li>
-                                            <Check className="check-icon" size={18} />
-                                            <span>Thời hạn đăng: <strong>{sub.postingDuration || 'N/A'} ngày</strong></span>
-                                        </li>
-                                        <li>
-                                            <Check className="check-icon" size={18} />
-                                            <span>Duyệt tin ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span>
-                                        </li>
-                                    </ul>
-                                </div>
-
-                                <div className="plan-footer">
-                                    <button
-                                        className="btn-edit-plan"
-                                        onClick={() => handDetailSubscription(sub.id)}
-                                    >
-                                        <Edit size={16} /> Chỉnh sửa cấu hình
-                                    </button>
+                                <div className="plan-price-box">
+                                    <span className="price-value">
+                                        {sub.price === 0 ? 'Miễn phí' : `${(sub.price / 1000000).toLocaleString()}tr`}
+                                    </span>
+                                    {sub.price > 0 && <span className="price-unit">/ tháng</span>}
                                 </div>
                             </div>
-                        );
-                    })}
+
+                            <div className="plan-body">
+                                <ul className="plan-features">
+                                    <li>
+                                        <Check size={18} />
+                                        <span><strong>{sub.jobLimit}</strong> Tin đăng tối đa</span>
+                                    </li>
+                                    <li>
+                                        <Check size={18} />
+                                        <span><strong>{sub.candidateViewLimit}</strong> Lượt xem hồ sơ</span>
+                                    </li>
+                                    <li>
+                                        <Check size={18} />
+                                        <span>Hiệu lực tin: <strong>{sub.postingDuration} ngày</strong></span>
+                                    </li>
+                                    <li className={sub.hasPriorityDisplay ? "highlight" : "dimmed"}>
+                                        <Check size={18} />
+                                        <span>Duyệt tin ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="plan-footer">
+                                <button
+                                    className="btn-edit-plan"
+                                    onClick={() => handDetailSubscription(sub.id)}
+                                >
+                                    <Edit size={16} /> Chỉnh sửa cấu hình
+                                </button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 
+            {/* Modal chỉnh sửa phong cách Water Glass */}
             {selectedSubscription && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
+                <div className="modal-overlay animate-in" onClick={() => setSelectedSubscription(null)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>Cập nhật gói: <span className="text-highlight">{selectedSubscription.name}</span></h2>
+                            <h2>Cấu hình gói: <span className="text-highlight">{selectedSubscription.name}</span></h2>
                             <button className="btn-close" onClick={() => setSelectedSubscription(null)}>
-                                <X size={24} />
+                                <X size={20} />
                             </button>
                         </div>
 
                         <form onSubmit={handleUpdateSubscription} className="modal-body">
-
-                            {editForm.name?.toUpperCase().includes('FREE') ? (
-                                <div className="form-group">
-                                    <label>Giá tiền (VND)</label>
-                                    <input
-                                        type="text"
-                                        value="Miễn phí"
-                                        disabled
-                                        className="form-control bg-light"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="form-group">
-                                    <label>Giá tiền (VND)</label>
+                            {/* Input Giá tiền */}
+                            <div className="form-group">
+                                <label>Giá gói cước (VND)</label>
+                                {editForm.name?.toUpperCase().includes('FREE') ? (
+                                    <input type="text" value="Miễn phí" disabled className="form-control readonly" />
+                                ) : (
                                     <input
                                         type="text"
                                         name="price"
                                         value={editForm.price ? Number(editForm.price).toLocaleString('vi-VN') : ''}
                                         onChange={(e) => {
-                                            const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
-                                            const numValue = rawValue ? Number(rawValue) : 0;
-                                            setEditForm(prev => ({ ...prev, price: numValue }));
+                                            const val = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                            handleInputChange({ target: { name: 'price', value: val, type: 'number' } });
                                         }}
                                         required
                                         className="form-control"
-                                        placeholder="Ví dụ: 1.000.000"
+                                        placeholder="Nhập giá tiền..."
                                     />
-                                </div>
-                            )}
-
-
-
+                                )}
+                            </div>
 
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label>Giới hạn Bài đăng</label>
+                                    <label>Giới hạn bài đăng</label>
                                     <input
                                         type="number"
                                         name="jobLimit"
                                         value={editForm.jobLimit ?? ''}
                                         onChange={handleInputChange}
-                                        min="0"
-                                        required
                                         className="form-control"
+                                        required
                                     />
                                 </div>
-
                                 <div className="form-group">
                                     <label>Lượt xem CV</label>
                                     <input
@@ -210,29 +210,26 @@ const SubscriptionManager = () => {
                                         name="candidateViewLimit"
                                         value={editForm.candidateViewLimit ?? ''}
                                         onChange={handleInputChange}
-                                        min="0"
-                                        required
                                         className="form-control"
+                                        required
                                     />
                                 </div>
                             </div>
 
                             <div className="form-group">
-                                <label>Thời hạn đăng tin (ngày)</label>
+                                <label>Thời hạn hiển thị tin (Ngày)</label>
                                 <input
                                     type="number"
                                     name="postingDuration"
                                     value={editForm.postingDuration ?? ''}
                                     onChange={handleInputChange}
-                                    min="1"
-                                    required
                                     className="form-control"
-                                    placeholder="Ví dụ: 30 (ngày)"
+                                    required
                                 />
                             </div>
 
-                            <div className="form-group">
-                                {!editForm.name?.toUpperCase().includes('FREE') && (
+                            {!editForm.name?.toUpperCase().includes('FREE') && (
+                                <div className="form-group" style={{marginTop: '10px'}}>
                                     <label className="checkbox-wrapper">
                                         <input
                                             type="checkbox"
@@ -240,19 +237,17 @@ const SubscriptionManager = () => {
                                             checked={editForm.hasPriorityDisplay || false}
                                             onChange={handleInputChange}
                                         />
-                                        <span className="checkbox-text">
-                                            Kích hoạt tính năng Duyệt tin ưu tiên (Đèn xanh)
-                                        </span>
+                                        <span className="checkbox-text">Kích hoạt Ưu tiên hiển thị (Priority)</span>
                                     </label>
-                                )}
-                            </div>
+                                </div>
+                            )}
 
                             <div className="modal-footer">
                                 <button type="button" className="btn-cancel" onClick={() => setSelectedSubscription(null)}>
-                                    Hủy bỏ
+                                    Đóng
                                 </button>
                                 <button type="submit" className="btn-save" disabled={loading}>
-                                    {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                                    {loading ? 'Đang lưu...' : 'Lưu cấu hình'}
                                 </button>
                             </div>
                         </form>

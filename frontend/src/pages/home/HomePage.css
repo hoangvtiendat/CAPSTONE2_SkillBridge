@@ -1,18 +1,21 @@
-.home-page {
-  width: 100%;
-  overflow-x: hidden;
-}
 
-.home-container {
-  display: flex;
-  min-height: calc(100vh - 70px);
-}
+:root {
+  --home-bg-1: #eef4ff;
+  --home-bg-2: #f7faff;
+  --home-bg-3: #fcf8ff;
 
-.home-main {
-  flex: 1;
-  min-width: 0;
-  /* Prevents flex child from overflowing */
-  overflow-x: hidden;
+  --home-text: #142033;
+  --home-text-soft: #5b6b82;
+
+  --home-glass: rgba(255, 255, 255, 0.42);
+  --home-glass-strong: rgba(255, 255, 255, 0.58);
+  --home-border: rgba(255, 255, 255, 0.38);
+  --home-shadow:
+          0 10px 30px rgba(15, 23, 42, 0.08),
+          0 4px 12px rgba(59, 130, 246, 0.05);
+
+  --home-blur: blur(18px) saturate(160%);
+  --home-radius: 24px;
 }
 
 * {
@@ -21,15 +24,69 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-    Cantarell, 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+  Cantarell, 'Helvetica Neue', sans-serif;
+  color: var(--home-text);
+  background:
+          radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 25%),
+          radial-gradient(circle at top right, rgba(236, 72, 153, 0.10), transparent 22%),
+          radial-gradient(circle at bottom center, rgba(59, 130, 246, 0.08), transparent 28%),
+          linear-gradient(180deg, var(--home-bg-1) 0%, var(--home-bg-2) 55%, var(--home-bg-3) 100%);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-html {
-  scroll-behavior: smooth;
+.home-page {
+  position: relative;
+  width: 100%;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+.home-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 30%),
+          linear-gradient(315deg, rgba(255, 255, 255, 0.10), transparent 35%);
+  opacity: 0.9;
+}
+
+.home-container {
+  position: relative;
+  display: flex;
+  min-height: calc(100vh - 70px);
+  z-index: 1;
+}
+
+.home-main {
+  flex: 1;
+  min-width: 0;
+  min-height: calc(100vh - 70px);
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Optional: nếu muốn phần main có lớp kính nhẹ */
+.home-main::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: var(--home-radius);
+  background: var(--home-glass);
+  border: 1px solid var(--home-border);
+  box-shadow: var(--home-shadow);
+  backdrop-filter: var(--home-blur);
+  -webkit-backdrop-filter: var(--home-blur);
+  pointer-events: none;
+  opacity: 0.35;
 }
 
 /* Responsive */
@@ -40,5 +97,10 @@ html {
 
   .home-main {
     min-height: auto;
+  }
+
+  .home-main::before {
+    inset: 8px;
+    border-radius: 18px;
   }
 }

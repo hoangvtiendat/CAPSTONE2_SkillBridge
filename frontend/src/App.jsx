@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { Toaster, toast } from 'sonner';
@@ -11,6 +11,7 @@ import { useAuth } from './context/AuthContext';
 
 // Components
 import Header from './components/home/Header';
+import Sidebar from './components/home/Sidebar'; // Import Sidebar để dùng cho trang Identity
 import NotificationCard from './components/notifications/NotificationCard';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminRoute from './components/admin/AdminRoute';
@@ -65,21 +66,25 @@ function App() {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    // Xác định layout dựa trên path
+    // 1. Logic xác định Layout
     const isAdminPath = location.pathname.startsWith('/admin');
-    const isRecruiterPath = location.pathname.startsWith('/recruiter') ||
+
+    // Kiểm tra Recruiter Path nhưng LOẠI TRỪ trang Identity để hiện Header Public
+    const isRecruiterPath = (
+        location.pathname.startsWith('/recruiter') ||
         location.pathname === '/create-jd' ||
         location.pathname.startsWith('/detail-jd') ||
         location.pathname.startsWith('/company/jd-list') ||
         location.pathname.startsWith('/company/subscriptions') ||
-        location.pathname.startsWith('/company/member');
+        location.pathname.startsWith('/company/member')
+    );
 
-    const isDashboardLayout = isAdminPath || isRecruiterPath;
+    // Trang Identity sẽ hiển thị Header Public nên ta set false cho DashboardLayout tại đây
+    const isDashboardLayout = (isAdminPath || isRecruiterPath) && location.pathname !== '/recruiter/identity';
 
-    // 1. Quản lý WebSocket cho Thông báo
+    // 2. Quản lý WebSocket cho Thông báo
     useEffect(() => {
         let stompClient = null;
-
         if (user) {
             const token = localStorage.getItem('accessToken');
             if (!token) return;
@@ -93,7 +98,6 @@ function App() {
             });
 
             stompClient.onConnect = (frame) => {
-                console.log('Connected to WebSocket');
                 stompClient.subscribe('/user/queue/notifications', (message) => {
                     const notification = JSON.parse(message.body);
                     toast.custom((t) => (
@@ -107,20 +111,12 @@ function App() {
                     ), { duration: 10000 });
                 });
             };
-
-            stompClient.onStompError = (frame) => {
-                console.error('Broker reported error: ' + frame.headers['message']);
-            };
-
             stompClient.activate();
         }
-
-        return () => {
-            if (stompClient) stompClient.deactivate();
-        };
+        return () => { if (stompClient) stompClient.deactivate(); };
     }, [user, navigate]);
 
-    // 2. Điều hướng dựa trên Role
+    // 3. Điều hướng dựa trên Role
     useEffect(() => {
         if (user) {
             if (user.role === 'ADMIN') {
@@ -128,12 +124,9 @@ function App() {
                     navigate('/admin/dashboard', { replace: true });
                 }
             } else if (user.role === 'RECRUITER') {
-                if (!isRecruiterPath && (location.pathname === '/' || location.pathname === '/login')) {
+                // Cho phép Recruiter ở lại trang identity nếu họ muốn cập nhật lại thông tin
+                if (!isRecruiterPath && location.pathname !== '/recruiter/identity' && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/recruiter/dashboard', { replace: true });
-                }
-            } else {
-                if (location.pathname === '/login') {
-                    navigate('/', { replace: true });
                 }
             }
         }
@@ -147,11 +140,10 @@ function App() {
                 visibleToasts={5}
                 expand={true}
                 closeButton
-                toastOptions={{
-                    style: { padding: '16px', fontSize: '15px' }
-                }}
+                toastOptions={{ style: { padding: '16px', fontSize: '15px' } }}
             />
 
+            {/* Hiển thị Header Public nếu không phải Dashboard Layout */}
             {!isDashboardLayout && <Header />}
 
             <div className={!isDashboardLayout ? "content-with-header" : ""}>
@@ -169,12 +161,30 @@ function App() {
                     <Route path="/companies/:id" element={<CompanyDetailPage />} />
                     <Route path="/company/TaxLookup" element={<TaxLookup />} />
 
+                    {/* ROUTE ĐỊNH DANH: Cấu trúc Sidebar + Header Public + BusinessIdentity */}
+                    <Route
+                        path="/recruiter/identity"
+                        element={
+                            user ? (
+                                <div className="home-page">
+                                    <div className="home-container">
+                                        <Sidebar />
+                                        <main className="home-main">
+                                            <BusinessIdentity />
+                                        </main>
+                                    </div>
+                                </div>
+                            ) : (
+                                <Navigate to="/login" replace />
+                            )
+                        }
+                    />
+
                     {/* Recruiter Routes (Wrapped in Layout & Guard) */}
                     <Route element={<RecruiterRoute><RecruiterLayout /></RecruiterRoute>}>
                         <Route path="/recruiter">
                             <Route index element={<RecruiterDashboardPage />} />
                             <Route path="dashboard" element={<RecruiterDashboardPage />} />
-                            <Route path="identity" element={<BusinessIdentity />} />
                             <Route path="my-jobs" element={<MyJobsPage />} />
                             <Route path="jobs/:jobId/applications" element={<RecruiterApplications />} />
                             <Route path="applications/:id" element={<ApplicationDetailPage />} />
@@ -182,7 +192,6 @@ function App() {
                             <Route path="candidates" element={<div className="p-8 text-center text-slate-500">Quản lý ứng viên - Sắp ra mắt</div>} />
                         </Route>
 
-                        {/* Các route công ty bổ sung */}
                         <Route path='/create-jd' element={<CreateJd />} />
                         <Route path='/detail-jd/:id' element={<DetailJD_Page />} />
                         <Route path='/company/jd-list' element={<ListJdOfCompany />} />
@@ -191,7 +200,7 @@ function App() {
                         <Route path='/company/subscriptions/register' element={<RegisterSubscriptionPage />} />
                     </Route>
 
-                    {/* Admin Routes (Wrapped in Layout) */}
+                    {/* Admin Routes */}
                     <Route path="/admin" element={<AdminLayout />}>
                         <Route index element={<AdminDashboardPage />} />
                         <Route path="dashboard" element={<AdminDashboardPage />} />
@@ -200,21 +209,16 @@ function App() {
                         <Route path="jobs/:jobId" element={<AdminJobDetailPage />} />
                         <Route path="approve-jobs" element={<AdminPendingJobs />} />
                         <Route path="tax-lookup" element={<TaxLookup />} />
-
                         <Route path="management/users" element={<UserManagementPage />} />
                         <Route path="management/companies" element={<CompanyManagementPage />} />
                         <Route path="approve-companies" element={<AdminCompanyPending />} />
                         <Route path="management/industries" element={<IndustryManagementPage />} />
                         <Route path="management/skills" element={<SkillManagementPage />} />
-
                         <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer /></AdminRoute>} />
                         <Route path="subscriptions" element={<AdminRoute><SubscriptionManager /></AdminRoute>} />
                         <Route path="management/subscriptions" element={<AdminRoute><SubscriptionManager /></AdminRoute>} />
-
-                        <Route path="*" element={<div className="p-8 text-center text-slate-500">Feature Coming Soon</div>} />
                     </Route>
 
-                    {/* 404 hoặc Mặc định */}
                     <Route path="*" element={<div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Trang không tồn tại</div>} />
                 </Routes>
             </div>

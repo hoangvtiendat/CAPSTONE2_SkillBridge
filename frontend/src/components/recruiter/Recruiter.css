@@ -1,259 +1,458 @@
-/* Recruiter Layout & Dashboard Styling */
+/* --- HỆ BIẾN SỐ LIQUID GLASS --- */
 :root {
-    --rec-sidebar-bg: #0f172a;
-    /* Deep matching the image's dark sidebar */
-    --rec-sidebar-hover: #1e293b;
-    --rec-primary: #4f46e5;
-    --rec-primary-hover: #4338ca;
-    --rec-bg: #f8fafc;
-    --rec-text-main: #0f172a;
-    --rec-text-muted: #64748b;
-    --rec-card-bg: #ffffff;
-    --rec-border: #e2e8f0;
+    --sidebar-mini: 85px;
+    --sidebar-full: 300px;
+    --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.12) 100%);
+    --glass-border: rgba(255, 255, 255, 0.45);
+    --glass-saturate: blur(30px) saturate(200%);
+    --inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    --sf-blue: #007aff;
+    --sf-green: #34c759;
+    --sf-red: #ff3b30;
+    --text-main: #1d1d1f;
+    --text-mute: #86868b;
+    --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transitionElmt: 0s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* --- TOÀN BỘ LAYOUT --- */
 .recruiter-layout {
     display: flex;
     min-height: 100vh;
-    background-color: var(--rec-bg);
+    background: radial-gradient(circle at top right, rgba(0, 122, 255, 0.05), transparent), #f5f5f7;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Sidebar Styling */
+/* --- SIDEBAR: KÍNH LỎNG MINI-TO-FULL --- */
 .recruiter-sidebar {
-    width: 260px;
-    height: 100vh;
-    background-color: var(--rec-sidebar-bg);
-    color: white;
+    width: var(--sidebar-mini);
     position: fixed;
-    left: 0;
-    top: 0;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    height: 550px;
+    z-index: 1001;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-saturate);
+    -webkit-backdrop-filter: var(--glass-saturate);
+    border: 1px solid var(--glass-border);
+    border-radius: 35px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08), var(--inner-light);
+    transition: width var(--transition), background 0.3s ease;
     display: flex;
     flex-direction: column;
-    z-index: 1000;
+    padding: 25px 12px;
+    overflow: hidden;
 }
 
+.recruiter-sidebar:hover {
+    width: var(--sidebar-full);
+    background: rgba(255, 255, 255, 0.45);
+}
+
+/* Sidebar Brand */
 .sidebar-brand {
-    padding: 28px 24px 36px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
+    padding: 0 10px;
+    margin-bottom: 40px;
 }
 
 .brand-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--rec-primary), #6366f1);
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 18px;
-    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
 }
 
 .brand-name {
+    font-weight: 850;
     font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    background: linear-gradient(to right, #fff, #94a3b8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text-main);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
 }
 
-.sidebar-nav {
-    flex: 1;
-    padding: 0 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    /* Increased gap for better breathing room */
+.recruiter-sidebar:hover .brand-name {
+    opacity: 1;
 }
 
+/* Navigation Items */
 .sidebar-nav .nav-item {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 12px 18px;
-    border-radius: 14px;
-    color: #94a3b8;
+    min-height: 52px;
+    padding: 0 18px;
+    margin-bottom: 8px;
     text-decoration: none;
-    font-weight: 600;
-    font-size: 14.5px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-main);
+    border-radius: 18px;
+    transition: all 0.3s var(--transitionElmt);
     position: relative;
+    white-space: nowrap;
 }
 
-.sidebar-nav .nav-item:hover {
-    background-color: var(--rec-sidebar-hover);
-    color: white;
-    transform: translateX(4px);
+.nav-item svg {
+    flex-shrink: 0;
+    color: #424245;
+    transition: 0.3s;
 }
 
-.sidebar-nav .nav-item.active {
-    background-color: var(--rec-primary);
+.nav-item .nav-label {
+    margin-left: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.recruiter-sidebar:hover .nav-label {
+    opacity: 1;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateX(5px);
+    color: var(--sf-blue);
+}
+
+.nav-item.active {
+    background: var(--sf-blue);
     color: white;
-    box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25);
+    box-shadow: 0 12px 24px rgba(0, 122, 255, 0.25);
+}
+
+.nav-item.active svg {
+    color: white;
 }
 
 .nav-badge {
     position: absolute;
-    top: 1px;
-    /* Moved up to avoid overlapping text */
-    right: 12px;
-    background-color: #f43f5e;
+    right: 15px;
+    background: var(--sf-red);
     color: white;
-    font-size: 9px;
-    /* Slightly smaller for a more "superscript" feel */
+    font-size: 10px;
     font-weight: 800;
-    padding: 1.5px 5px;
-    border-radius: 20px;
-    box-shadow: 0 2px 5px rgba(244, 63, 94, 0.3);
+    padding: 2px 7px;
+    border-radius: 10px;
+    opacity: 0;
 }
 
-.sidebar-footer {
-    padding: 28px 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+.recruiter-sidebar:hover .nav-badge {
+    opacity: 1;
+}
+
+/* --- HEADER FIXED: FLOATING APPLE STYLE --- */
+.recruiter-header-fixed {
+    position: fixed;
+    top: 20px;
+    right: 30px;
+    /* Tính toán left dựa trên Sidebar Mini */
+    left: calc(var(--sidebar-mini) + 50px);
+    height: 75px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-saturate);
+    -webkit-backdrop-filter: var(--glass-saturate);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    z-index: 1000;
+    box-shadow: var(--inner-light), 0 15px 35px rgba(0, 0, 0, 0.05);
+    transition: left var(--transition);
 }
 
-.user-profile {
+/* Đẩy Header khi Sidebar mở rộng */
+.recruiter-sidebar:hover ~ .recruiter-main .recruiter-header-fixed {
+    left: calc(var(--sidebar-full) + 50px);
+}
+
+.header-title {
+    font-size: 26px;
+    font-weight: 850;
+    color: var(--text-main);
+    letter-spacing: -0.04em;
+}
+
+.header-right {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 0 10px;
+    gap: 15px;
 }
 
-.user-avatar {
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, #6366f1, #a855f7);
-    border-radius: 12px;
+/* Search Bar trên Header */
+.header-search-bar {
+    position: relative;
+    width: 260px;
+}
+
+.header-search-bar input {
+    width: 100%;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 100px;
+    padding: 0 15px 0 42px;
+    font-weight: 600;
+    outline: none;
+    transition: 0.3s;
+}
+
+.header-search-bar input:focus {
+    background: white;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.header-search-bar .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-mute);
+}
+
+/* User Profile Pill */
+.header-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 15px 6px 6px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 100px;
+    cursor: pointer;
+    position: relative;
+    transition: 0.3s;
+}
+
+.header-user-profile:hover {
+    background: white;
+}
+
+.user-avatar-mini {
+    width: 36px;
+    height: 36px;
+    background: var(--sf-blue);
+    color: white;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 122, 255, 0.2);
 }
 
-.user-info .user-name {
-    font-size: 14.5px;
+.user-details-mini {
+    display: flex;
+    flex-direction: column;
+}
+
+.u-name {
+    font-size: 14px;
     font-weight: 700;
-    color: white;
-    margin: 0;
+    color: var(--text-main);
+    line-height: 1.2;
 }
 
-.user-info .user-role {
-    font-size: 12px;
-    color: #64748b;
-    margin: 2px 0 0;
+.u-role {
+    font-size: 11px;
+    color: var(--text-mute);
+    font-weight: 600;
 }
 
-.btn-logout {
+/* Dropdown Đăng xuất */
+.user-dropdown-glass {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 170px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 8px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: 0.3s;
+}
+
+.header-user-profile:hover .user-dropdown-glass {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item-logout {
+    width: 100%;
+    padding: 10px 15px;
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--sf-red);
+    border-radius: 14px;
+    border: none;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 18px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    color: #94a3b8;
-    font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
-    border-radius: 14px;
+    transition: 0.2s;
 }
 
-.btn-logout:hover {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: #fb7185;
-    border-color: rgba(239, 68, 68, 0.2);
+.dropdown-item-logout:hover {
+    background: var(--sf-red);
+    color: white;
 }
 
-/* Header Styling */
+/* --- CONTENT AREA --- */
 .recruiter-main {
     flex: 1;
-    margin-left: 260px;
-    padding: 32px;
+    margin-left: var(--sidebar-mini);
+    padding: 40px;
+    transition: margin-left var(--transition);
 }
 
-.recruiter-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
+.recruiter-content {
+    margin-top: 100px; /* Chừa chỗ cho Header Fixed */
+    animation: sf-pop-up 0.6s ease-out;
 }
 
-.header-title {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--rec-text-main);
-}
-
-.btn-create-job {
-    background-color: var(--rec-sidebar-bg);
+/* Nút tạo JD (Pill Style) */
+.btn-create-job-pill {
+    background: var(--sf-blue);
     color: white;
     border: none;
-    padding: 10px 24px;
-    border-radius: 12px;
+    padding: 10px 22px;
+    border-radius: 100px;
     font-weight: 700;
-    font-size: 14px;
     display: flex;
     align-items: center;
     gap: 8px;
+    box-shadow: 0 10px 20px rgba(0, 122, 255, 0.2);
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
 }
 
-.btn-create-job:hover {
-    background-color: #1e293b;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+.btn-create-job-pill:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
 }
 
-/* Dashboard Content */
+/* --- COMPONENTS (Thừa kế từ Admin) --- */
+.stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 25px;
+    box-shadow: var(--inner-light), 0 10px 25px rgba(0, 0, 0, 0.03);
+    transition: 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--sf-blue);
+}
+
+@keyframes sf-pop-up {
+    from {
+        opacity: 0;
+        transform: scale(0.98) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Nút thông báo */
+.header-icon-btn {
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.header-icon-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.notification-dot {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 8px;
+    height: 8px;
+    background: var(--sf-red);
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* --- 1. Dashboard Stats (Thống kê mọng nước) --- */
+.recruiter-dashboard {
+    animation: sf-pop-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 25px;
     margin-bottom: 40px;
 }
 
 .stat-card {
-    background-color: var(--rec-card-bg);
-    padding: 24px;
-    border-radius: 20px;
-    border: 1px solid var(--rec-border);
-    transition: all 0.3s ease;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-saturate);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 25px;
+    box-shadow: var(--inner-light), 0 15px 35px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s var(--transition);
+    position: relative;
+    overflow: hidden;
 }
 
 .stat-card:hover {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.02);
-    transform: translateY(-4px);
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--sf-blue);
+    box-shadow: 0 25px 50px rgba(0, 122, 255, 0.15);
 }
 
 .stat-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--rec-text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-mute);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 1px;
 }
 
 .stat-value {
-    font-size: 32px;
-    font-weight: 800;
-    color: var(--rec-text-main);
+    font-size: 34px;
+    font-weight: 900;
+    color: var(--text-main);
     margin: 8px 0;
+    letter-spacing: -1px;
 }
 
 .stat-change {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -261,182 +460,261 @@
 }
 
 .stat-change.positive {
-    color: #10b981;
+    color: var(--sf-green);
 }
 
 .stat-change.neutral {
-    color: var(--rec-primary);
+    color: var(--sf-blue);
 }
 
-/* Pipeline Section */
+/* --- 2. Pipeline Layout (Phễu ứng viên) --- */
 .dashboard-sections-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 25px;
 }
 
 .dashboard-sections-header h3 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--rec-text-main);
+    font-size: 19px;
+    font-weight: 850;
+    color: var(--text-main);
 }
 
 .btn-view-all {
-    color: var(--rec-primary);
+    color: var(--sf-blue);
     font-size: 14px;
     font-weight: 700;
     text-decoration: none;
+    padding: 8px 16px;
+    background: rgba(0, 122, 255, 0.08);
+    border-radius: 100px;
+    transition: 0.3s;
 }
 
+.btn-view-all:hover {
+    background: var(--sf-blue);
+    color: white;
+}
+
+/* Pipeline Columns - Khay chứa kính mờ */
 .pipeline-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
 }
 
 .pipeline-column {
-    background-color: #f1f5f9;
-    padding: 20px;
-    border-radius: 20px;
-    min-height: 400px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 22px;
+    border-radius: 35px;
+    min-height: 500px;
+    transition: background 0.3s;
+}
+
+.pipeline-column:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .column-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    padding: 0 8px;
+    margin-bottom: 20px;
+    padding: 0 5px;
 }
 
 .column-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--rec-text-main);
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-main);
 }
 
 .column-count {
-    background-color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
+    background: white;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    font-weight: 700;
-    color: var(--rec-text-muted);
+    font-weight: 850;
+    color: var(--sf-blue);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
+/* Candidate Card (Miếng kính mỏng trôi nổi) */
 .candidate-card {
-    background-color: white;
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-    border-left: 4px solid transparent;
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: var(--inner-light), 0 10px 20px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: grab;
+    position: relative;
+    border-left-width: 5px; /* Dùng để phân loại màu */
 }
 
-.candidate-card.applied {
-    border-left-color: #fde68a;
+.candidate-card:hover {
+    transform: scale(1.03);
+    background: white;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+    z-index: 10;
 }
 
-.candidate-card.review {
-    border-left-color: #10b981;
+/* Gỡ bỏ border-left cũ nếu có */
+.candidate-card {
+    border-left: none !important;
+    position: relative;
+    overflow: hidden;
 }
 
-.candidate-card.interview {
-    border-left-color: #4f46e5;
+/* Tạo dải màu dạng viên nang (Pill) */
+.candidate-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 15%; /* Không chạm đỉnh */
+    height: 70%; /* Chiều cao lơ lửng */
+    width: 6px;
+    border-radius: 0 100px 100px 0; /* Bo tròn kiểu giọt nước */
+    transition: all 0.4s var(--bezier);
+    z-index: 2;
 }
 
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+/* 1. Gói APPLIED - Vàng Hổ Phách (Amber Liquid) */
+.candidate-card.applied::before {
+    background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+    box-shadow: 2px 0 15px rgba(245, 158, 11, 0.5);
+}
+.candidate-card.applied:hover {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, white 100%);
 }
 
+/* 2. Gói REVIEW - Xanh Ngọc (Emerald Glass) */
+.candidate-card.review::before {
+    background: linear-gradient(to bottom, #34d399, #10b981);
+    box-shadow: 2px 0 15px rgba(16, 185, 129, 0.5);
+}
+.candidate-card.review:hover {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, white 100%);
+}
+
+/* 3. Gói INTERVIEW - Xanh Dương (Electric Blue) */
+.candidate-card.interview::before {
+    background: linear-gradient(to bottom, #60a5fa, var(--sf-blue));
+    box-shadow: 2px 0 15px rgba(0, 122, 255, 0.5);
+}
+.candidate-card.interview:hover {
+    background: linear-gradient(90deg, rgba(0, 122, 255, 0.08) 0%, white 100%);
+}
+
+/* Hiệu ứng khi Hover: Dải màu "bung" nhẹ ra */
+.candidate-card:hover::before {
+    height: 100%;
+    top: 0;
+    width: 8px;
+    border-radius: 0;
+}
 .candidate-name {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--rec-text-main);
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-main);
     margin: 0;
 }
 
-.unread-dot {
-    width: 8px;
-    height: 8px;
-    background-color: #ef4444;
-    border-radius: 50%;
-}
-
 .candidate-role {
-    font-size: 12px;
-    color: var(--rec-text-muted);
-    margin: 4px 0 12px;
+    font-size: 13px;
+    color: var(--text-mute);
+    font-weight: 600;
+    margin: 5px 0 12px;
 }
 
 .candidate-meta {
     display: flex;
-    gap: 12px;
+    gap: 8px;
 }
 
 .meta-item {
     font-size: 11px;
     font-weight: 700;
-    color: var(--rec-text-muted);
-    background-color: #f8fafc;
+    color: var(--sf-blue);
+    background: rgba(0, 122, 255, 0.08);
     padding: 4px 10px;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
+/* Unread Dot (Pulsing Light) */
+.unread-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--sf-red);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--sf-red);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Nút chi tiết bên trong Card */
 .btn-view-details {
     width: 100%;
-    margin-top: 12px;
-    background: none;
-    border: 1px solid #e2e8f0;
-    padding: 8px;
-    border-radius: 8px;
+    margin-top: 15px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--glass-border);
+    padding: 10px;
+    border-radius: 14px;
     font-size: 12px;
-    font-weight: 600;
-    color: var(--rec-text-main);
+    font-weight: 800;
+    color: var(--text-main);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: 0.2s;
 }
 
 .btn-view-details:hover {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
+    background: var(--sf-blue);
+    color: white;
 }
 
-/* Floating Robot Icon matching the image */
+/* --- 3. Bot Floating Button (Liquid Pearl) --- */
 .bot-floating-btn {
     position: fixed;
-    bottom: 32px;
-    right: 32px;
-    width: 56px;
-    height: 56px;
-    background-color: var(--rec-sidebar-bg);
+    bottom: 35px;
+    right: 35px;
+    width: 65px;
+    height: 65px;
+    background: linear-gradient(135deg, var(--sf-blue), #00c6ff);
     color: white;
-    border-radius: 16px;
+    border-radius: 22px; /* Squircle */
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 15px 35px rgba(0, 122, 255, 0.35), var(--inner-light);
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s;
+    transition: 0.4s var(--bezier);
+    z-index: 1002;
 }
 
 .bot-floating-btn:hover {
-    transform: scale(1.1) rotate(5deg);
-}
-
-/* Page Container for nested routes */
-.recruiter-page-container {
-    background-color: white;
-    padding: 32px;
-    border-radius: 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    min-height: calc(100vh - 160px);
-    margin-top: 10px;
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 20px 45px rgba(0, 122, 255, 0.5);
 }

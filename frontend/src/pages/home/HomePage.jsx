@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import Sidebar from '../../components/home/Sidebar';
 import Hero from '../../components/home/Hero';
 import JobGrid from '../../components/home/JobGrid';
@@ -7,8 +7,20 @@ import Stats from '../../components/home/Stats';
 import CTA from '../../components/home/CTA';
 import Footer from '../../components/home/Footer';
 import './HomePage.css';
- 
+import { useLocation } from 'react-router-dom';
+
 const HomePage = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Nếu trong URL có hash (ví dụ #job-grid)
+    if (location.hash) {
+      const sectionId = location.hash.replace('#', '');
+      setTimeout(() => {
+        handleScrollToSection(sectionId);
+      }, 200);
+    }
+  }, [location]);
 
   const handleScrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);

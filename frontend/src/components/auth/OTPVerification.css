@@ -1,28 +1,115 @@
-/* Updated styles for action-form */
-.action-form {
-    gap: 15px;
-    margin-top: 25px;
-    flex-direction: row;
-    justify-content: center;
+/* OTPVerification.css - Wizard & Stepper Liquid Glass */
+
+.stepper-container {
+    display: flex;
     align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.step-item {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-mute);
+    transition: all 0.4s ease;
+}
+
+.step-item.active {
+    background: var(--sf-blue);
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 122, 255, 0.4);
+    border-color: var(--sf-blue);
+}
+
+.step-line {
+    width: 40px;
+    height: 2px;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* OTP Input Special */
+.otp-group {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.otp-input {
+    letter-spacing: 12px !important;
+    text-align: center !important;
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: var(--sf-blue) !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 2px solid rgba(0, 122, 255, 0.2) !important;
+}
+
+.otp-input:focus {
+    border-color: var(--sf-blue) !important;
+    background: white !important;
+}
+
+/* Group Button cho Wizard */
+.btn-group-dual {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.btn-ghost {
+    flex: 1;
+    height: 52px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-ghost:hover {
+    background: white;
+}
+
+.input-with-icon {
+    position: relative;
     width: 100%;
 }
 
-.action-form button {
-    width: 45%;
-    height: 50px;
-    font-size: 14px;
-    border-radius: 12px;
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-mute);
+    pointer-events: none;
+}
+
+.input-with-icon input {
+    padding-left: 45px !important;
+}
+
+.animate-in {
+    animation: sf-pop-up 0.4s ease-out forwards;
+}
+
+.label-center {
+    display: block;
     text-align: center;
-    border: 1px solid #ccc;
+    width: 100%;
+    padding-left: 0 !important;
 }
 
-.action-form .toggle-btn {
-    background-color: white;
-    color: black;
-}
-
-.action-form .submit-btn {
-    background-color: #001f3f;
-    color: white;
+.auth-form-wrapper {
+    width: 88%;
+    margin: 16px 0px;
 }

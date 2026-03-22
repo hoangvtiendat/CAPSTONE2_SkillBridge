@@ -1,12 +1,24 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
+import {
+    ChevronLeft,
+    User,
+    ShieldCheck,
+    Mail,
+    ArrowRight,
+    Smartphone,
+    MapPin
+} from "lucide-react";
+import "./OTPVerification.css";
+
 export function OTPVerification() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Lấy dữ liệu từ route state
     const { email: initialEmail, flow, userData } = location.state || {};
 
     const [name, setName] = useState("");
@@ -15,61 +27,47 @@ export function OTPVerification() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [otp, setOtp] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
+    // Step 1: Info, Step 2: Security, Step 3: OTP
     const [currentStep, setCurrentStep] = useState(1);
 
     const isRegisterFlow = flow === "register";
     const isLoginFlow = flow === "login";
     const isForgotPasswordFlow = flow === "forgot-password";
 
+    // Chặn truy cập trái phép
+    if (!initialEmail) {
+        return (
+            <main className="welcome-container">
+                <div className="auth-card">
+                    <h2 className="auth-title">Phiên hết hạn</h2>
+                    <p className="auth-subtitle">Vui lòng quay lại trang đăng nhập.</p>
+                    <button onClick={() => navigate("/login")} className="submit-btn">Quay lại</button>
+                </div>
+            </main>
+        );
+    }
+
     const handleVerify = async (e) => {
-        e.preventDefault();
-
-        if (!initialEmail) {
-            toast.error("Lỗi phiên làm việc, không tìm thấy email!");
-            return;
-        }
-
-        if ((isRegisterFlow || isForgotPasswordFlow) && password !== confirmPassword) {
-            toast.error("Mật khẩu xác nhận không khớp!");
-            return;
-        }
+        if (e) e.preventDefault();
+        setIsLoading(true);
 
         let targetEndpoint = "";
         let requestBody = {};
 
         if (isRegisterFlow) {
             targetEndpoint = "http://localhost:8081/identity/auth/register/verify-otp";
-            requestBody = {
-                email: initialEmail,
-                otp: otp.trim(),
-                password: password,
-                name: name,
-                phoneNumber: phoneNumber,
-                address: address
-            };
-        }
-        else if (isLoginFlow) {
+            requestBody = { email: initialEmail, otp: otp.trim(), password, name, phoneNumber, address };
+        } else if (isLoginFlow) {
             targetEndpoint = "http://localhost:8081/identity/auth/login/verify-otp";
-            requestBody = {
-                email: initialEmail,
-                otp: otp.trim()
-            };
-        }
-        else if (isForgotPasswordFlow) {
-
+            requestBody = { email: initialEmail, otp: otp.trim() };
+        } else if (isForgotPasswordFlow) {
             targetEndpoint = "http://localhost:8081/identity/auth/reset-password";
-            requestBody = {
-                email: initialEmail,
-                otp: otp.trim(),
-                password: password
-            };
+            requestBody = { email: initialEmail, otp: otp.trim(), password };
         }
 
         try {
-            console.log("Sending to:", targetEndpoint);
-            console.log("Body:", requestBody);
-
             const res = await fetch(targetEndpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -77,12 +75,9 @@ export function OTPVerification() {
             });
 
             const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Xác thực không thành công");
 
-            if (!res.ok) {
-                throw new Error(data.message || "Xác thực thất bại");
-            }
-
-            toast.success("Thành công!");
+            toast.success("Xác thực thành công!");
 
             setTimeout(() => {
                 if (isRegisterFlow || isForgotPasswordFlow) {
@@ -90,228 +85,129 @@ export function OTPVerification() {
                 } else if (isLoginFlow) {
                     const finalUser = data.result || userData;
                     if (finalUser) login(finalUser);
-
                     const role = finalUser?.role?.toUpperCase();
-                    if (role === 'ADMIN') {
-                        navigate("/admin");
-                    } else if (role === 'RECRUITER') {
-                        navigate("/recruiter");
-                    } else {
-                        navigate("/");
-                    }
+                    navigate(role === 'ADMIN' ? "/admin" : role === 'RECRUITER' ? "/recruiter" : "/");
                 }
             }, 1500);
-
         } catch (err) {
             toast.error(err.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleNextStep = () => {
-        if (currentStep === 1) {
-            if (!name || !phoneNumber || !address) {
-                toast.error("Vui lòng điền đầy đủ thông tin cá nhân");
-                return;
-            }
+    const nextStep = () => {
+        if (currentStep === 1 && (!name || !phoneNumber || !address)) {
+            return toast.warning("Vui lòng điền đủ thông tin cá intelligence");
         }
-        if (currentStep === 2) {
-            if (!password || !confirmPassword) {
-                toast.error("Vui lòng nhập mật khẩu");
-                return;
-            }
-            if (password !== confirmPassword) {
-                toast.error("Mật khẩu xác nhận không khớp");
-                return;
-            }
+        if (currentStep === 2 && (!password || password !== confirmPassword)) {
+            return toast.warning("Mật khẩu không khớp");
         }
-        setCurrentStep((prev) => prev + 1);
+        setCurrentStep(prev => prev + 1);
     };
-
-    const handlePrevStep = () => {
-        setCurrentStep((prev) => prev - 1);
-    };
-
-    if (!initialEmail) {
-        return (
-            <div style={{ padding: "50px", textAlign: "center" }}>
-                <h2>Phiên làm việc không hợp lệ</h2>
-                <button onClick={() => navigate("/login")}>Quay lại đăng nhập</button>
-            </div>
-        );
-    }
 
     return (
         <main className="welcome-container">
+            <button className="btn-back-nav" onClick={() => navigate(-1)}>
+                <ChevronLeft size={18} /> Quay lại
+            </button>
 
             <div className="auth-card">
                 <h1 className="auth-title">
-                    {isRegisterFlow ? "Hoàn tất hồ sơ" :
-                        isForgotPasswordFlow ? "Đặt lại mật khẩu" : "Xác thực OTP"}
+                    {isRegisterFlow ? "Hoàn tất hồ sơ" : isForgotPasswordFlow ? "Đặt lại mật khẩu" : "Xác thực OTP"}
                 </h1>
 
+                {/* Stepper dành cho Đăng ký */}
                 {isRegisterFlow && (
-                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px", gap: "10px" }}>
-                        <span style={{ fontWeight: currentStep === 1 ? "bold" : "normal", color: currentStep >= 1 ? "#2563eb" : "#ccc" }}>1. Thông tin</span>
-                        <span>&rarr;</span>
-                        <span style={{ fontWeight: currentStep === 2 ? "bold" : "normal", color: currentStep >= 2 ? "#2563eb" : "#ccc" }}>2. Bảo mật</span>
-                        <span>&rarr;</span>
-                        <span style={{ fontWeight: currentStep === 3 ? "bold" : "normal", color: currentStep >= 3 ? "#2563eb" : "#ccc" }}>3. Xác thực</span>
+                    <div className="stepper-container">
+                        <div className={`step-item ${currentStep >= 1 ? 'active' : ''}`}><User size={16}/></div>
+                        <div className="step-line"></div>
+                        <div className={`step-item ${currentStep >= 2 ? 'active' : ''}`}><ShieldCheck size={16}/></div>
+                        <div className="step-line"></div>
+                        <div className={`step-item ${currentStep >= 3 ? 'active' : ''}`}><Mail size={16}/></div>
                     </div>
                 )}
 
-                <p style={{ textAlign: "center", marginBottom: 20, color: "#666", fontSize: "0.9rem" }}>
+                <p className="auth-subtitle">
                     {currentStep === 3 || !isRegisterFlow
-                        ? <>Mã xác thực đã được gửi đến <b>{initialEmail}</b></>
-                        : "Vui lòng bổ sung thông tin để hoàn tất đăng ký."
-                    }
+                        ? <>Mã OTP đã được gửi tới <strong>{initialEmail}</strong></>
+                        : "Vui lòng hoàn thiện các bước cuối cùng."}
                 </p>
 
-                <form onSubmit={handleVerify} className="auth-form">
-
+                <div className="auth-form-wrapper">
+                    {/* BƯỚC 1: THÔNG TIN (Chỉ cho Register) */}
                     {isRegisterFlow && currentStep === 1 && (
-                        <div className="step-content animate-fade-in">
+                        <div className="step-content animate-in">
                             <div className="form-group">
                                 <label>Họ và Tên</label>
-                                <input type="text" placeholder="Tên của bạn" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                                <div className="input-with-icon">
+                                    <User className="input-icon" size={18} />
+                                    <input type="text" placeholder="Nguyễn Văn A" value={name} onChange={(e) => setName(e.target.value)} />
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label>Số điện thoại</label>
-                                <input
-                                    type="tel"
-                                    placeholder="09xxx"
-                                    pattern="[0-9]*"
-                                    value={phoneNumber}
-                                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))}
-                                />
+                                <div className="input-with-icon">
+                                    <Smartphone className="input-icon" size={18} />
+                                    <input type="tel" placeholder="09xxxxxxxx" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g,''))} />
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label>Địa chỉ</label>
-                                <input type="text" placeholder="Địa chỉ" value={address} onChange={(e) => setAddress(e.target.value)} />
+                                <div className="input-with-icon">
+                                    <MapPin className="input-icon" size={18} />
+                                    <input type="text" placeholder="TP. Đà Nẵng" value={address} onChange={(e) => setAddress(e.target.value)} />
+                                </div>
                             </div>
-                            <button type="button" onClick={handleNextStep} className="submit-btn" style={{ marginTop: "10px" }}>Tiếp tục &rarr;</button>
+                            <button onClick={nextStep} className="submit-btn">Tiếp tục <ArrowRight size={18}/></button>
                         </div>
                     )}
 
-                    {isRegisterFlow && currentStep === 2 && (
-                        <div className="step-content animate-fade-in">
+                    {/* BƯỚC 2: MẬT KHẨU (Cho Register & Forgot Password) */}
+                    {((isRegisterFlow && currentStep === 2) || isForgotPasswordFlow) && (
+                        <div className="step-content animate-in">
                             <div className="form-group">
-                                <label>Mật khẩu</label>
-                                <input type="password" placeholder="Mật khẩu" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" autoFocus />
+                                <label>Mật khẩu mới</label>
+                                <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
                             </div>
                             <div className="form-group">
                                 <label>Xác nhận mật khẩu</label>
-                                <input type="password" placeholder="Xác nhận mật khẩu" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+                                <input type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             </div>
-                            <div className="navigation-form"></div>
-                            <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexDirection: "row", justifyContent: "center", alignItems: "center", width: "100%" }}>
-                                <button type="button" onClick={handlePrevStep} className="toggle-btn1" style={{ flex: 1, height: "50px", backgroundColor: "white", color: "black", border: "1px solid #ccc", fontSize: "14px", borderRadius: "12px" }}>&larr; Quay lại</button>
-                                <button type="button" onClick={handleNextStep} className="submit-btn1" style={{ flex: 1, height: "50px", backgroundColor: "#001f3f", color: "white", fontSize: "14px", border: "1px solid #ccc", borderRadius: "12px" }}>Tiếp tục &rarr;</button>
-                            </div>
+                            {isRegisterFlow ? (
+                                <div className="btn-group-dual">
+                                    <button onClick={() => setCurrentStep(1)} className="btn-ghost">Quay lại</button>
+                                    <button onClick={nextStep} className="submit-btn" style={{ width: '65%' }}>Tiếp tục</button>
+                                </div>
+                            ) : null}
                         </div>
                     )}
 
+                    {/* BƯỚC 3: OTP (Luồng cuối cùng) */}
                     {((isRegisterFlow && currentStep === 3) || isLoginFlow || isForgotPasswordFlow) && (
-                        <div className="step-content animate-fade-in">
-
-                            {isForgotPasswordFlow && (
-                                <>
-                                    <div className="form-group">
-                                        <label>Mật khẩu mới</label>
-                                        <input
-                                            type="password"
-                                            placeholder="Nhập mật khẩu mới"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            autoComplete="new-password"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Xác nhận mật khẩu</label>
-                                        <input
-                                            type="password"
-                                            placeholder="Nhập lại mật khẩu mới"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            autoComplete="new-password"
-                                            required
-                                        />
-                                    </div>
-                                    <hr style={{ margin: "15px 0", borderTop: "1px dashed #ccc" }} />
-                                </>
-                            )}
-
-                            <div className="form-group">
-                                <label style={{ color: "#2563eb", fontWeight: "bold" }}>Mã OTP</label>
+                        <div className="step-content animate-in">
+                            <div className="form-group otp-group">
+                                <label className="label-center">Mã xác thực 6 số</label>
                                 <input
+                                    className="otp-input"
                                     type="text"
-                                    placeholder="6 số"
+                                    placeholder="000000"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value)}
                                     maxLength={6}
-                                    required
-                                    autoFocus={!isForgotPasswordFlow}
-                                    style={{
-                                        letterSpacing: "5px",
-                                        textAlign: "center",
-                                        fontSize: "1.2rem",
-                                        border: "2px solid #2563eb",
-                                        fontWeight: "bold"
-                                    }}
                                 />
                             </div>
-                            <div className="action-form">
-                                <div style={{ marginTop: "20px", flexDirection: "row", justifyContent: "space-evenly", alignItems: "center", width: "100%" }}>
-                                    {isRegisterFlow && (
-                                        <button
-                                            type="button"
-                                            onClick={handlePrevStep}
-                                            className="toggle-btn"
-                                            style={{
-                                                width: "25%",
-                                                height: "50px",
-                                                backgroundColor: "white",
-                                                color: "black",
-                                                border: "1px solid #ccc",
-                                                fontSize: "14px",
-                                                borderRadius: "12px",
-                                                textAlign: "center"
-                                            }}>
-                                            &larr; Quay lại
-                                        </button>
-                                    )}
-                                    <button
-                                        type="submit"
-                                        className="submit-btn"
-                                        style={{
-                                            width: "100%",
-                                            height: "50px",
-                                            backgroundColor: "#001f3f",
-                                            color: "white",
-                                            fontSize: "14px",
-                                            border: "1px solid #ccc",
-                                            borderRadius: "12px",
-                                            textAlign: "center"
-                                        }}>
-                                        {isRegisterFlow ? "Hoàn tất Đăng ký" : isForgotPasswordFlow ? "Đổi mật khẩu" : "Xác nhận OTP"}
-                                    </button>
-                                </div>
+                            <div className="btn-group-dual">
+                                {isRegisterFlow && <button onClick={() => setCurrentStep(2)} className="btn-ghost">Quay lại</button>}
+                                <button onClick={handleVerify} className="submit-btn" disabled={isLoading}style={{width: '65%'}} >
+                                    {isLoading ? "Đang xác thực..." : isRegisterFlow ? "Hoàn tất" : "Xác nhận"}
+                                </button>
                             </div>
-
                         </div>
                     )}
-
-                </form>
-
-                <div style={{ marginTop: "15px", textAlign: "center" }}>
-                    <button
-                        onClick={() => navigate("/login")}
-                        className="toggle-btn"
-                        style={{ fontSize: "0.9rem", color: "#666" }}
-                    >
-                        Hủy bỏ
-                    </button>
                 </div>
+
+                <button onClick={() => navigate("/login")} className="toggle-btn">Hủy bỏ giao dịch</button>
             </div>
         </main>
     );

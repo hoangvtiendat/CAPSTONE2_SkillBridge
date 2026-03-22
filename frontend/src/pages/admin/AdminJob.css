@@ -1,21 +1,226 @@
-/* Job-specific styles that complement Admin.css */
+/* AdminJob.css - Liquid Water Style for Job Management */
+
+:root {
+    --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.16) 100%);
+    --glass-border: rgba(255, 255, 255, 0.42);
+    --glass-saturate: blur(30px) saturate(185%);
+    --inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.72), inset 0 -1px 0 rgba(255, 255, 255, 0.18);
+    --sf-blue: #2563eb;
+    --text-main: #0f172a;
+    --text-mute: #64748b;
+}
 
 .admin-job-management {
+    min-height: 100vh;
+    padding: 30px;
+    box-sizing: border-box;
+    /* Trừa khoảng trống cho Sidebar Mini (85px) */
+    max-width: calc(100vw - 110px);
+    margin-left: auto;
+    animation: sf-pop-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --- Header Section --- */
+.flex-between h1 {
+    font-size: 28px;
+    font-weight: 850;
+    letter-spacing: -0.03em;
+    color: var(--text-main);
+}
+
+/* --- The Main Modern Card --- */
+.modern-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-saturate);
+    -webkit-backdrop-filter: var(--glass-saturate);
+    border: 1px solid var(--glass-border);
+    border-radius: 35px;
+    padding: 25px;
+    box-shadow:
+            var(--inner-light),
+            0 30px 60px rgba(0, 0, 0, 0.08);
+    position: relative;
     overflow: hidden;
 }
 
-.admin-job-management .table-container {
-    max-height: calc(100vh - 250px);
-    overflow-y: auto;
+/* Hiệu ứng vệt sáng loang mặt nước */
+.modern-card::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -30%; width: 70%; height: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent 100%);
+    filter: blur(20px);
+    transform: rotate(-10deg);
+    pointer-events: none;
 }
 
-.infinite-scroll-trigger {
-    padding: 20px;
-    text-align: center;
+/* --- Filters Bar --- */
+.filters-bar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 2;
 }
 
-.loader-dots {
-    color: var(--admin-primary);
+.filter-item {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    height: 46px;
+    transition: all 0.3s ease;
+}
+
+.filter-item:hover {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: var(--sf-blue);
+}
+
+.modern-select {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    cursor: pointer;
+    width: 100%;
+}
+
+/* --- Table Styling --- */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    position: relative;
+    z-index: 1;
+}
+
+.modern-table th {
+    padding: 15px 20px;
+    text-align: left;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modern-table td {
+    padding: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    vertical-align: middle;
+}
+
+.table-row-hover:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* User/Company Identity Cell */
+.user-avatar-wrapper {
+    background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+}
+
+.user-name {
+    font-weight: 850 !important;
+    font-size: 15px;
+}
+
+.user-email {
+    color: var(--text-mute);
+    line-height: 1.4;
+}
+
+/* --- Plan Badges (Đồng bộ từ Subscription turn) --- */
+.plan-badge-mini {
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+.plan-free { background: rgba(142, 142, 147, 0.15); color: #8e8e93; border: 1px solid rgba(142, 142, 147, 0.2); }
+.plan-standard { background: rgba(0, 122, 255, 0.15); color: #007aff; border: 1px solid rgba(0, 122, 255, 0.2); }
+.plan-custom { background: rgba(52, 199, 89, 0.15); color: #1a7f37; border: 1px solid rgba(52, 199, 89, 0.2); }
+
+/* Gói Premium (Màu Vàng Gold đặc trưng) */
+.plan-premium {
+    background: rgba(251, 191, 36, 0.2) !important;
+    color: #b45309 !important;
+    border: 1px solid rgba(251, 191, 36, 0.4) !important;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+/* --- Status/Moderation Selects (Liquid Capsule style) --- */
+.modern-table select.modern-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 100px; /* Kiểu viên nang */
+    border: 1px solid;
+    padding: 6px 30px 6px 15px !important;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.modern-table select.modern-select:hover {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+}
+
+/* --- Action Buttons --- */
+.action-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.info-btn { background: rgba(255, 255, 255, 0.35); color: var(--sf-blue); }
+.info-btn:hover { background: var(--sf-blue); color: white; transform: translateY(-2px); }
+
+.ban-btn { background: rgba(255, 59, 48, 0.1); color: #ef4444; }
+.ban-btn:hover { background: #ef4444; color: white; transform: translateY(-2px); }
+
+/* Category Badge */
+.cat-badge {
+    background: rgba(148, 163, 184, 0.15);
+    color: #475569;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+/* --- Animations --- */
+@keyframes sf-pop-up {
+    from { opacity: 0; transform: scale(0.98) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinning-icon {
+    animation: spin 1s linear infinite;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .admin-job-management { max-width: 100%; padding: 20px; }
 }

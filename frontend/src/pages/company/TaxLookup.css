@@ -1,404 +1,360 @@
+/* --- Root Variables --- */
 :root {
-  --primary-blue: #0f172a;
-  --success-green: #10b981;
-  --sidebar-bg: #fdfaff;
-  --border-color: #f1f3f7;
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.1) 100%);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-saturate: blur(30px) saturate(200%);
+  --inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  --sf-blue: #007AFF;
+  --sf-green: #34C759;
+  --sf-red: #FF3B30;
+  --text-main: #1d1d1f;
+  --text-mute: #86868b;
 }
 
 .tax-page-wrapper {
-  background-color: #f3f4f6;
   min-height: 100vh;
-  padding: 40px;
-  font-family: 'Inter', -apple-system, sans-serif;
+  padding: 30px;
+  background: radial-gradient(circle at top right, rgba(0, 122, 255, 0.08), transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+/* --- Nút Quay Lại (Mini Glass) --- */
+.btn-back-nav {
+  align-self: flex-start;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  padding: 10px 20px;
+  border-radius: 100px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-back-nav:hover {
+  background: white;
+  transform: translateX(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Container Chính (Tấm kính lớn) --- */
 .tax-main-container {
   display: flex;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 1300px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-saturate);
+  -webkit-backdrop-filter: var(--glass-saturate);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px;
+  box-shadow:
+          0 40px 100px rgba(0, 0, 0, 0.08),
+          var(--inner-light);
   overflow: hidden;
-  min-height: 700px;
+  min-height: 750px;
+  animation: sf-pop-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* --- Sidebar (Kính mờ tầng 2) --- */
 .tax-sidebar {
-  width: 320px;
-  background-color: var(--sidebar-bg);
-  border-right: 1px solid var(--border-color);
-  padding: 30px;
+  width: 420px;
+  background: rgba(255, 255, 255, 0.15);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 40px 30px;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
   display: flex;
+  align-items: center;
   gap: 15px;
   margin-bottom: 40px;
 }
 
-.brand-icon {
-  background: var(--primary-blue);
-  color: white;
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  font-size: 20px;
-}
+.brand-text h3 { font-weight: 850; font-size: 19px; color: var(--text-main); }
 
-.brand-text h3 { margin: 0; font-size: 16px; color: #1e293b; }
-.brand-text p { margin: 0; font-size: 11px; color: #64748b; }
-
-.input-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 800;
-  color: #94a3b8;
-  margin-bottom: 8px;
-}
-
+/* Search Bar (Viên nang lỏng) */
 .search-bar {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 100px;
+  padding: 6px 6px 6px 22px;
+  transition: 0.3s;
   display: flex;
   align-items: center;
-  background: white;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 2px 8px 2px 5px;
-  transition: 0.3s;
+  justify-content: space-between;
 }
 
+.search-bar:focus-within {
+  background: white;
+  border-color: var(--sf-blue);
+  box-shadow: 0 0 0 5px rgba(0, 122, 255, 0.12);
+}
+
+.search-bar input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-weight: 600;
+  color: var(--text-main);
+}
 .btn-icon-only-search {
-  background: transparent !important;
-  color: inherit !important;
-  border: none !important;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  cursor: pointer;
+  /* 1. Chất liệu Kính Lỏng Xanh (Blue Liquid Glass) */
+  background: linear-gradient(
+          135deg,
+          rgba(0, 122, 255, 0.7) 0%,
+          rgba(0, 122, 255, 0.3) 100%
+  ) !important;
+
+  /* 2. Hiệu ứng khúc xạ & Bão hòa màu */
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+
+  /* 3. Hình khối tròn trịa & Viền siêu mảnh */
+  width: 42px;
+  height: 42px;
+  border-radius: 50% !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+
+  /* 4. Hiệu ứng bắt sáng mặt nước (Surface Highlights)
+     - Bóng đổ ngoài để tạo độ nổi
+     - Inset trắng trên đỉnh để giả lập phản chiếu ánh sáng
+     - Inset tối nhẹ ở đáy để tạo độ sâu khối nước
+  */
+  box-shadow:
+          0 10px 20px rgba(0, 122, 255, 0.2),      /* Bóng đổ nền mượt */
+          inset 0 1px 2px rgba(255, 255, 255, 0.6), /* Ánh sáng đọng trên mép nút */
+          inset 0 -1px 2px rgba(0, 0, 0, 0.1);      /* Độ sâu đáy nút */
+
+  /* 5. Căn chỉnh & Tương tác */
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  cursor: pointer;
   padding: 0;
-  margin-left: 5px;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
+/* Hiệu ứng khi Hover: Nút "căng" lên và rực rỡ hơn */
 .btn-icon-only-search:hover:not(:disabled) {
-  background-color: #f1f5f9 !important;
-  transform: scale(1.05);
+  transform: scale(1.1) translateY(-2px);
+  background: linear-gradient(
+          135deg,
+          rgba(0, 122, 255, 0.9) 0%,
+          rgba(0, 122, 255, 0.5) 100%
+  ) !important;
+  box-shadow:
+          0 15px 30px rgba(0, 122, 255, 0.35),
+          inset 0 1px 3px rgba(255, 255, 255, 0.8);
+}
+
+/* Xử lý Icon bên trong để trông như đang lơ lửng trong nước */
+.btn-icon-only-search svg {
+  color: white !important;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
+  transition: transform 0.3s ease;
 }
 
 .btn-icon-only-search:hover svg {
-  color: #2563eb;
+  transform: rotate(10deg) scale(1.1);
 }
 
-.loader-small-dark {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #e2e8f0;
-  border-bottom-color: #2563eb;
-  border-radius: 50%;
-  display: inline-block;
-  animation: rotation 1s linear infinite;
+/* Hiệu ứng Click (Nhấn xuống mặt nước) */
+.btn-icon-only-search:active {
+  transform: scale(0.95);
+  filter: brightness(0.9);
 }
-
-.sidebar-header svg {
-  flex-shrink: 0;
-}
-
-.search-bar:focus-within { border-color: var(--primary-blue); }
-
-.search-bar input {
-  border: none;
-  flex: 1;
-  padding: 10px;
-  outline: none;
-  font-size: 14px;
-}
-
-.search-bar button {
-  background: var(--primary-blue);
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  cursor: pointer;
+.btn-icon-only-search {
+  background: var(--sf-blue) !important;
+  border-radius: 50% !important;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: 0.3s;
 }
 
-.api-status {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
+.btn-icon-only-search:hover { transform: scale(1.1); filter: brightness(1.1); }
 
+/* API Status Pills */
 .status-pill {
-  font-size: 9px;
-  padding: 4px 8px;
-  border-radius: 5px;
-  font-weight: bold;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: 100px;
+  backdrop-filter: blur(5px);
 }
 
-.status-pill.online { background: #ecfdf5; color: #059669; }
-.status-pill.sync { background: #eff6ff; color: #2563eb; }
+.status-pill.online { background: rgba(52, 199, 89, 0.15); color: #1a7f37; border: 1px solid rgba(52, 199, 89, 0.2); }
+.status-pill.sync { background: rgba(0, 122, 255, 0.1); color: var(--sf-blue); border: 1px solid rgba(0, 122, 255, 0.1); }
 
+/* --- History Cards (Kính xếp chồng) --- */
 .section-title {
   font-size: 11px;
-  color: #94a3b8;
-  margin: 40px 0 15px;
+  font-weight: 800;
+  color: var(--text-mute);
+  letter-spacing: 1px;
+  margin: 35px 0 15px;
 }
 
 .history-card {
-  background: white;
-  border: 1px solid #f1f5f9;
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  transition: 0.2s;
 }
 
-.history-card:hover { transform: translateX(5px); border-color: #d1d5db; }
-.history-meta strong { display: block; font-size: 14px; color: #1e293b; }
-.history-meta p { font-size: 10px; color: #94a3b8; margin: 2px 0 0; }
-
-.error-box {
-  margin-top: 10px;
-  color: #ef4444;
-  font-size: 12px;
-  background: #fef2f2;
-  padding: 10px;
-  border-radius: 8px;
+.history-card:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: translateX(8px);
+  border-color: var(--sf-blue);
 }
 
-.tax-content { flex: 1; background: white; }
+.history-meta strong { color: var(--text-main); font-size: 15px; font-weight: 800; }
+.history-meta p { font-size: 11px; color: var(--text-mute); font-weight: 600; }
+
+/* --- Content (Vùng hiển thị dữ liệu) --- */
+.tax-content { flex: 1; position: relative; }
 
 .company-banner {
-  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
-              url('https://vtv1.mediacdn.vn/2019/10/10/fpt-15706934444551724619726.jpg') center/cover;
-  padding: 50px 40px;
-  color: white;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6)),
+  url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80') center/cover;
+  padding: 60px 45px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .badge-active {
-  background: var(--success-green);
-  font-size: 10px;
-  padding: 4px 10px;
-  border-radius: 4px;
+  background: var(--sf-green);
+  color: white;
+  padding: 6px 15px;
+  border-radius: 100px;
   font-weight: 800;
+  font-size: 11px;
 }
 
-.update-time { font-size: 10px; margin-left: 10px; opacity: 0.8; }
-.company-full-name { margin: 15px 0 0; font-size: 28px; line-height: 1.2; }
-
-.mst-label {
-    font-size: 10px !important;
-    font-weight: 800;
-    letter-spacing: 2px;
-    color: #cbd5e1;
-    margin: 0 0 8px 0 !important;
-    text-transform: uppercase;
+.company-full-name {
+  font-size: 38px;
+  font-weight: 900;
+  color: white;
+  letter-spacing: -0.05em;
+  text-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
+
+/* MST Identity (Mã số thuế premium) */
 .mst-text {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 800;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    letter-spacing: 2px;
-    color: #ffffff;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.1);
-    background: rgba(255, 255, 255, 0.1);
-    padding: 5px 15px;
-    border-radius: 8px;
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    display: inline-block;
-    transition: all 0.3s ease;
-}
-
-.mst-text:hover {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-.details-grid {
-  padding: 30px 40px;
-  background-color: #ffffff;
-}
-.detail-card {
-  border: 1px solid #edf2f7;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-weight: 850;
+  padding: 10px 22px;
   border-radius: 16px;
-  padding: 30px;
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(15px);
+  color: white;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+/* --- Details Card --- */
+.details-grid { padding: 40px; }
+
+.detail-card {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 35px;
+  padding: 40px;
+  box-shadow: var(--inner-light), 0 20px 40px rgba(0,0,0,0.03);
 }
 
 .detail-card h4 {
-  margin: 0 0 20px 0;
-  font-size: 13px;
-  color: #64748b;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-mute);
   letter-spacing: 1.5px;
-  font-weight: 700;
+  margin-bottom: 25px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.detail-card h4::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: #f1f5f9;
-}
-.vertical-info-list {
-  display: flex;
-  flex-direction: column;
-}
+
 .info-row-v {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  align-items: start;
-  padding: 18px 0;
-  border-bottom: 1px solid #f8fafc;
-  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 20px 0;
+  transition: 0.2s;
 }
 
 .info-row-v:hover {
-  background-color: #fafbff;
+  padding-left: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
 }
 
-.info-row-v:last-child {
-  border-bottom: none;
-}
-
-.info-row-v label {
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 600;
-  padding-top: 2px;
-}
-
-.info-row-v p {
-  margin: 0;
-  font-size: 15px;
-  color: #1e293b;
-  line-height: 1.6;
-  font-weight: 500;
-}
-
-.info-row-v p strong {
-  color: #0f172a;
-  font-weight: 700;
-}
-
-.phone-container {
-  display: flex;
-  align-items: center;
-  height: 24px;
-}
-
-.phone-img-v {
-  height: 20px;
-  object-fit: contain;
-  filter: contrast(110%) saturate(120%);
-}
+.info-row-v label { font-size: 11px; font-weight: 800; color: var(--text-mute); text-transform: uppercase; }
+.info-row-v p { font-size: 16px; font-weight: 700; color: var(--text-main); margin-top: 5px; }
 
 .status-highlight {
-  color: #10b981 !important;
-  font-weight: 700 !important;
+  background: rgba(52, 199, 89, 0.15) !important;
+  color: #1a7f37 !important;
+  font-weight: 850 !important;
+  padding: 6px 18px !important;
+  border-radius: 100px;
   display: inline-flex;
-  align-items: center;
-  background: #ecfdf5;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 13px !important;
-  width: fit-content;
+  margin-left: 20px;
 }
 
-@media (max-width: 768px) {
-  .info-row-v {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 15px 0;
-  }
-
-  .detail-card {
-    padding: 20px;
-  }
-}
-.grid-row { display: flex; gap: 40px; margin-bottom: 20px; }
-.grid-item label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; }
-.grid-item p { margin: 0; font-size: 14px; color: #1e293b; font-weight: 500; }
-.grid-item.full { width: 100%; margin-bottom: 20px; }
-
-.detail-footer {
-  padding: 20px 40px;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
-}
-
-.btn-print {
-  background: white;
-  border: 1px solid #e2e8f0;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.footer-actions { display: flex; gap: 12px; }
-
-.btn-report {
-  background: white;
-  border: 1px solid #fee2e2;
-  color: #ef4444;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.btn-apply {
-  background: var(--primary-blue);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
+/* Empty State */
 .empty-view {
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: var(--text-mute);
+  text-align: center;
 }
 
-.empty-view h3 { color: #475569; margin-bottom: 8px; }
+.empty-view h3 { font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 10px; }
 
-.loader {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #FFF;
-  border-bottom-color: transparent;
+/* Loader */
+.loader-small-dark {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-bottom-color: white;
   border-radius: 50%;
   animation: rotation 1s linear infinite;
+}
+
+@keyframes sf-pop-up {
+  from { opacity: 0; transform: scale(0.98) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes rotation {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Mobile */
+@media (max-width: 1000px) {
+  .tax-main-container { flex-direction: column; }
+  .tax-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--glass-border); }
 }

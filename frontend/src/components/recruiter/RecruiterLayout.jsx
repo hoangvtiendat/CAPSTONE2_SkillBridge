@@ -8,7 +8,11 @@ import {
     Plus,
     LogOut,
     Settings,
-    CreditCard
+    CreditCard,
+    Search,
+    Bell,
+    Building2,
+    ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -27,20 +31,24 @@ const RecruiterLayout = () => {
 
     const menuItems = [
         { icon: <LayoutDashboard size={20} />, label: 'Bảng điều khiển', path: '/recruiter/dashboard' },
-        { icon: <Users size={20} />, label: 'Ứng viên', path: '/recruiter/candidates' },
+        { icon: <Users size={20} />, label: 'Ứng viên', path: '/recruiter/candidates', badge: 12 },
         { icon: <FileText size={20} />, label: 'Tin tuyển dụng', path: '/company/jd-list' },
         { icon: <CreditCard size={20} />, label: 'Gói dịch vụ', path: '/company/subscriptions' },
         { icon: <Settings size={20} />, label: 'Cài đặt công ty', path: '/recruiter/settings' },
         { icon: <BarChart3 size={20} />, label: 'Phân tích', path: '/recruiter/analytics' },
     ];
 
+    const currentLabel = menuItems.find(i => i.path === location.pathname)?.label || 'Tổng quan';
+
     return (
         <div className="recruiter-layout">
-            {/* Sidebar */}
+            {/* --- SIDEBAR (Mini-to-Full) --- */}
             <aside className="recruiter-sidebar">
                 <div className="sidebar-brand">
-                    <div className="brand-icon">T</div>
-                    <span className="brand-name">{user?.companyName || 'Nhà tuyển dụng'}</span>
+                    <div className="brand-icon">
+                        <Building2 size={24} color="#007aff" />
+                    </div>
+                    <span className="brand-name">SkillBridge</span>
                 </div>
 
                 <nav className="sidebar-nav">
@@ -51,50 +59,69 @@ const RecruiterLayout = () => {
                             className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
                         >
                             {item.icon}
-                            <span>{item.label}</span>
-                            {item.label === 'Ứng viên' && <span className="nav-badge">12</span>}
+                            <span className="nav-label">{item.label}</span>
+                            {item.badge && <span className="nav-badge">{item.badge}</span>}
                         </Link>
                     ))}
                 </nav>
-
-                <div className="sidebar-footer">
-                    <div className="user-profile">
-                        <div className="user-avatar">
-                            {user?.name?.charAt(0).toUpperCase() || 'R'}
-                        </div>
-                        <div className="user-info">
-                            <p className="user-name">{user?.name || 'Nhà tuyển dụng'}</p>
-                            <p className="user-role">Nhà tuyển dụng</p>
-                        </div>
-                    </div>
-                    <button onClick={handleLogout} className="btn-logout">
-                        <LogOut size={18} />
-                        <span>Đăng xuất</span>
-                    </button>
-                </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="recruiter-main">
-                <header className="recruiter-header">
-                    <h2 className="header-title">
-                        {menuItems.find(i => i.path === location.pathname)?.label || 'Tổng quan'}
-                    </h2>
-                    <div className="header-actions">
+            {/* --- MAIN AREA --- */}
+            <div className="recruiter-main">
+                {/* --- HEADER FIXED SYSTEM --- */}
+                <header className="recruiter-header-fixed">
+                    <div className="header-left">
+                        <h2 className="header-title">{currentLabel}</h2>
+                    </div>
+
+                    <div className="header-right">
+                        <div className="header-search-bar">
+                            <Search size={18} className="search-icon" />
+                            <input type="text" placeholder="Tìm nhanh hồ sơ..." />
+                        </div>
+
+                        <button className="header-icon-btn">
+                            <Bell size={20} />
+                            <span className="notification-dot"></span>
+                        </button>
+
+                        <div className="header-divider"></div>
+
+                        {/* Thông tin người dùng di chuyển lên đây */}
+                        <div className="header-user-profile">
+                            <div className="user-avatar-mini">
+                                {user?.name?.charAt(0).toUpperCase() || 'R'}
+                            </div>
+                            <div className="user-details-mini">
+                                <span className="u-name">{user?.name || 'Recruiter'}</span>
+                                <span className="u-role">Nhà tuyển dụng</span>
+                            </div>
+                            <ChevronDown size={14} color="#86868b" />
+
+                            {/* Dropdown Logout (Ẩn hiện khi hover hoặc click) */}
+                            <div className="user-dropdown-glass">
+                                <button onClick={handleLogout} className="dropdown-item-logout">
+                                    <LogOut size={16} />
+                                    <span>Đăng xuất</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <button
-                            className="btn-create-job"
+                            className="btn-create-job-pill"
                             onClick={() => navigate('/create-jd')}
                         >
                             <Plus size={18} />
-                            <span>Tạo tin tuyển dụng</span>
+                            <span>Tạo tin</span>
                         </button>
                     </div>
                 </header>
 
-                <div className="recruiter-content">
+                {/* --- CONTENT PAGE --- */}
+                <main className="recruiter-content">
                     <Outlet />
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
     );
 };

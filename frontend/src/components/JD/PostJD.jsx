@@ -190,7 +190,6 @@ const PostJD = () => {
             
             <header className="jd-board-header">
                 <h2>
-                    <Hand className="icon-header" size={28} />
                     Tạo bài tuyển dụng mới
                 </h2>
                 <p className="subtitle">Điền thông tin chi tiết để đăng tuyển vị trí mới</p>

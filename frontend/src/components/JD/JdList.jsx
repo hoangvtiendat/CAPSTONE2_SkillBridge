@@ -25,7 +25,7 @@ const JdList = () => {
     const hasShownError = useRef(false);
 
     const handleViewApplicants = (e, jdId) => {
-        if (e) e.stopPropagation(); // Ngăn việc bị nhảy vào trang chi tiết JD
+        if (e) e.stopPropagation();
         navigate(`/recruiter/jobs/${jdId}/applications`);
     };
 

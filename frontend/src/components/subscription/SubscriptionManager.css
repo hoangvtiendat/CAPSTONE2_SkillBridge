@@ -1,414 +1,395 @@
+/* --- HỆ BIẾN SỐ ĐỒNG BỘ HỆ THỐNG --- */
+:root {
+    --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.12) 100%);
+    --glass-border: rgba(255, 255, 255, 0.45);
+    --glass-saturate: blur(30px) saturate(200%);
+    --inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    --sf-blue: #007aff;
+    --sf-green: #34c759;
+    --sf-red: #ff3b30;
+    --sf-amber: #ff9f0a;
+    --text-main: #1d1d1f;
+    --text-mute: #86868b;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .subscription-admin-manager {
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-    color: #111827;
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: radial-gradient(circle at top right, rgba(0, 122, 255, 0.05), transparent), #f5f5f7;
+    min-height: 100vh;
+    animation: sf-pop-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.sub-manager-header {
-    margin-bottom: 32px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--admin-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
+/* --- HEADER & BACK BUTTON --- */
+.admin-header {
+    margin-bottom: 40px;
 }
 
-.admin-header>div {
-    flex: 1;
+.btn-back {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 100px !important;
+    color: var(--text-main) !important;
+    font-weight: 700 !important;
+    transition: var(--transition) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+    height: 35px;
+    width: 110px;
 }
 
-.sub-manager-header h1 {
-    font-size: 24px;
-    font-weight: 800;
-    margin: 0 0 8px 0;
-    color: #111827;
+.btn-back:hover {
+    transform: translateX(-5px);
+    background: white !important;
 }
 
-.sub-manager-header p {
-    color: #6b7280;
-    margin: 0;
-    font-size: 1rem;
+.admin-header h1 {
+    font-size: 32px;
+    font-weight: 850;
+    color: var(--text-main);
+    letter-spacing: -0.04em;
+    margin-top: 20px;
 }
 
-.btn-create-subscription {
-    background: #2e4569;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-    white-space: nowrap;
+.admin-header svg {
+    color: var(--sf-blue);
 }
 
-.btn-create-subscription:hover {
-    background: #2563eb;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    transform: translateY(-1px);
-}
-
-.btn-create-subscription:active {
-    transform: translateY(0);
-}
-
-
+/* --- SYSTEM PLANS GRID --- */
 .admin-plans-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
 }
 
 .admin-plan-card {
-    background-color: #ffffff;
-    color: #111827;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 24px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-saturate);
+    border: 1px solid var(--glass-border);
+    border-radius: 35px;
+    padding: 40px;
     display: flex;
     flex-direction: column;
-    position: relative;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    transition: all 0.2s;
+    box-shadow: var(--inner-light), 0 20px 40px rgba(0, 0, 0, 0.04);
+    transition: var(--transition);
 }
 
 .admin-plan-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08);
 }
 
-/* Card Header */
-.plan-header {
-    text-align: left;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #e5e7eb;
+/* Plan Themes (Đồng bộ với các gói cước) */
+.theme-premium {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.85) 100%) !important;
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.plan-header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 12px;
+.theme-premium .price-value {
+    background: linear-gradient(135deg, #ff9f0a, #ffc107);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.plan-name-section {
-    flex: 1;
+.theme-standard {
+    background: linear-gradient(180deg, rgba(0, 122, 255, 0.05) 0%, rgba(255, 255, 255, 0.15) 100%);
+    border-color: rgba(0, 122, 255, 0.3);
 }
 
 .plan-name {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0;
-    color: #111827;
+    font-size: 24px;
+    font-weight: 850;
+    margin-bottom: 10px;
 }
 
 .plan-price-box {
-    margin: 12px 0;
+    margin-bottom: 30px;
 }
 
 .price-value {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: #3b82f6;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.status-badge.PENDING_PAYMENT {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-badge.ACTIVE {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-/* Card Body (Tính năng) */
-.plan-body {
-    flex-grow: 1;
-    margin: 16px 0;
+    font-size: 28px;
+    font-weight: 900;
 }
 
 .plan-features {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0 0 30px 0;
+    flex-grow: 1;
 }
 
 .plan-features li {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-    font-size: 0.9rem;
-}
-
-.plan-features li {
-    color: #4b5563;
-}
-
-.plan-features li svg {
-    flex-shrink: 0;
-    color: #6b7280;
-}
-
-.plan-features li.highlight {
+    gap: 12px;
+    font-size: 15px;
     font-weight: 600;
+    margin-bottom: 15px;
 }
 
-/* Card Footer (Nút bấm) */
-.plan-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: auto;
-    padding-top: 16px;
-    border-top: 1px solid #f3f4f6;
+.check-icon {
+    color: var(--sf-green);
 }
 
-.btn-edit-plan,
-.btn-delete-plan {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1px solid #d1d5db;
+/* --- CUSTOM FORM: PHIẾN KÍNH DÀY (THICK GLASS) --- */
+.subscription-admin-manager form {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-saturate);
+    border: 1px solid var(--glass-border);
+    border-radius: 40px;
+    padding: 50px !important;
+    box-shadow: var(--inner-light), 0 40px 80px rgba(0, 0, 0, 0.06);
+    animation: sf-pop-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.btn-edit-plan {
-    background-color: #384b6c;
-    color: white;
-    border-color: #3b82f6;
-    font-weight: 600;
-}
-
-.btn-edit-plan:hover {
-    background-color: #a7c9ba;
-    border-color: #2563eb;
-}
-
-.btn-delete-plan {
-    background-color: white;
-    color: #dc2626;
-    border-color: #fca5a5;
-}
-
-.btn-delete-plan:hover {
-    background-color: #fee2e2;
-    border-color: #fca5a5;
-}
-
-
-
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(2px);
-}
-
-.modal-content {
-    background: #ffffff;
-    width: 100%;
-    max-width: 600px;
-    border-radius: 12px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: #111827;
-}
-
-.text-highlight {
-    color: #2563eb;
+.subscription-admin-manager form label {
+    font-size: 12px;
     font-weight: 800;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
 }
 
-.btn-close {
-    background: transparent;
-    border: none;
-    color: #6b7280;
+.subscription-admin-manager form input[type="number"],
+.subscription-admin-manager form input[type="text"] {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 18px !important;
+    padding: 14px 20px !important;
+    font-weight: 700 !important;
+    color: var(--text-main) !important;
+    transition: var(--transition) !important;
+}
+
+.subscription-admin-manager form input:focus {
+    background: white !important;
+    border-color: var(--sf-blue) !important;
+    box-shadow: 0 0 0 5px rgba(0, 122, 255, 0.1) !important;
+    transform: translateY(-2px);
+}
+
+/* Custom Checkbox Glass Style */
+.subscription-admin-manager form label[style*="cursor: pointer"] {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 20px !important;
+    padding: 20px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    transition: var(--transition);
+}
+
+.subscription-admin-manager form label[style*="cursor: pointer"]:hover {
+    background: white !important;
+    border-color: var(--sf-blue) !important;
+}
+
+/* --- BUTTONS: LIQUID PILLS --- */
+.btn-edit-plan, button[type="submit"] {
+    background: linear-gradient(135deg, var(--sf-blue), #00c6ff) !important;
+    border-radius: 100px !important;
+    padding: 16px 30px !important;
+    font-weight: 850 !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 10px 20px rgba(0, 122, 255, 0.25) !important;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
     cursor: pointer;
 }
 
-.btn-close:hover {
-    color: #ef4444;
+.btn-edit-plan:hover, button[type="submit"]:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0, 122, 255, 0.35) !important;
 }
 
-.modal-body {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+button[type="button"] { /* Nút Hủy bỏ */
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-radius: 100px !important;
+    padding: 16px 30px !important;
+    font-weight: 700 !important;
+    color: var(--text-mute) !important;
+    transition: 0.3s !important;
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+button[type="button"]:hover {
+    background: var(--sf-red) !important;
+    color: white !important;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+/* --- UTILS --- */
+.loading-spinner {
+    text-align: center;
+    padding: 50px;
+    font-weight: 800;
+    color: var(--sf-blue);
+}
+/* --- CUSTOM REGISTRATION FORM (THE THICK PLATE) --- */
+.custom-register-container {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-saturate);
+    -webkit-backdrop-filter: var(--glass-saturate);
+    border: 1px solid var(--glass-border);
+    border-radius: 40px; /* Squircle lớn */
+    padding: 50px !important;
+    max-width: 650px;
+    margin: 0 auto;
+    box-shadow: var(--inner-light), 0 30px 60px rgba(0, 0, 0, 0.08);
+    animation: sf-pop-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.form-group label {
-    font-size: 0.9rem;
+.custom-form-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.custom-form-header h2 {
+    font-size: 26px;
+    font-weight: 850;
+    color: var(--text-main);
+    letter-spacing: -0.04em;
+    margin: 15px 0 8px;
+}
+
+.custom-form-header p {
+    color: var(--text-mute);
     font-weight: 600;
-    color: #374151;
+    font-size: 15px;
 }
 
-.form-control {
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-    transition: border-color 0.2s;
+/* --- INPUT FIELDS GLASS STYLE --- */
+.glass-input-group {
+    margin-bottom: 25px;
 }
 
-.form-control:focus {
+.glass-input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 10px;
+    padding-left: 5px;
+}
+
+.glass-input-group input[type="number"] {
+    width: 100%;
+    height: 54px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 18px;
+    padding: 0 20px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    transition: var(--transition);
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-.checkbox-wrapper {
+.glass-input-group input:focus {
+    background: white;
+    border-color: var(--sf-blue);
+    box-shadow: 0 0 0 5px rgba(0, 122, 255, 0.12);
+    transform: translateY(-2px);
+}
+
+.glass-input-group small {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-mute);
+    opacity: 0.8;
+}
+
+/* --- PRIORITY FEATURE BOX (THE TOGGLE PANEL) --- */
+.priority-feature-panel {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
     cursor: pointer;
-    background: #f8fafc;
-    padding: 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    transition: var(--transition);
+    margin-bottom: 35px;
 }
 
-.checkbox-wrapper input {
-    width: 18px;
-    height: 18px;
+.priority-feature-panel:hover {
+    background: white;
+    border-color: var(--sf-blue);
+    transform: translateY(-3px);
+}
+
+.priority-feature-panel input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    accent-color: var(--sf-blue);
     cursor: pointer;
 }
 
-.checkbox-text {
+.priority-info h5 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 2px 0;
+}
+
+.priority-info span {
+    font-size: 13px;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--text-mute);
 }
 
-.modal-footer {
-    padding: 16px 24px;
-    border-top: 1px solid #e5e7eb;
+/* --- FORM ACTIONS --- */
+.form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    background: #f9fafb;
-    border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 12px;
-}
-
-.btn-cancel,
-.btn-save {
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    font-size: 0.95rem;
+    gap: 15px;
 }
 
 .btn-cancel {
-    background: #ffffff;
-    border: 1px solid #d1d5db;
-    color: #374151;
+    padding: 14px 28px;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    border-radius: 100px;
+    font-weight: 700;
+    color: var(--text-mute);
+    cursor: pointer;
+    transition: 0.3s;
 }
 
 .btn-cancel:hover {
-    background: #f3f4f6;
+    background: var(--sf-red);
+    color: white;
 }
 
-.btn-save {
-    background: #2563eb;
-    color: #ffffff;
+.btn-submit-liquid {
+    padding: 14px 32px;
+    background: linear-gradient(135deg, var(--sf-blue), #00c6ff);
+    border: none;
+    border-radius: 100px;
+    color: white;
+    font-weight: 850;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0, 122, 255, 0.2);
+    transition: var(--transition);
 }
 
-.btn-save:hover:not(:disabled) {
-    background: #1d4ed8;
+.btn-submit-liquid:hover:not(:disabled) {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 30px rgba(0, 122, 255, 0.3);
 }
-
-.btn-save:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.loading-spinner {
-    text-align: center;
-    padding: 40px;
-    color: #6b7280;
-    font-size: 1.1rem;
-}
-
-/* Loading state */
-.loading {
-    text-align: center;
-    padding: 60px 20px;
-    color: #6b7280;
-    font-size: 1.1rem;
-    font-weight: 500;
-}
-
-/* No data message */
-.no-data {
-    text-align: center;
-    padding: 60px 20px;
-    color: #9ca3af;
-    font-size: 1rem;
-    grid-column: 1 / -1;
-    background: #f9fafb;
-    border-radius: 12px;
-    border: 2px dashed #e5e7eb;
+@keyframes sf-pop-up {
+    from { opacity: 0; transform: scale(0.98) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }

@@ -81,12 +81,12 @@ public class ApplicationController {
             String rs = applicationService.respondToApplication(id, jwt, request);
 
             ApiResponse<String> response = new ApiResponse<>(
-                    HttpStatus.OK.value(), "Lấy đơn ứng tuyển theo tin tuyển dụng thành công", rs
+                    HttpStatus.OK.value(), "Phản hồi đơn ứng tuyển thành công", rs
             );
             return ResponseEntity.ok(response);
         } catch (AppException ex) {
-            System.out.println("[GET APPLICATION BY COMPANY ID] AppException occurred");
-            System.out.println("[GET APPLICATION BY COMPANY ID] ErrorCode: " + ex.getErrorCode());
+            System.out.println("[RESPOND APPLICATION] AppException occurred");
+            System.out.println("[RESPOND APPLICATION] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
     }

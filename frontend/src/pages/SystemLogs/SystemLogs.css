@@ -1,332 +1,377 @@
-root {
-  --primary-bg: #f8fafc;
-  --card-bg: #ffffff;
-  --console-bg: #0f172a;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --accent-color: #3b82f6;
-  --border-color: #e2e8f0;
+/* SystemLogs.css - Liquid Glassmorphism (Light Mode) */
+
+:root {
+    /* Màu chủ đạo dựa trên Background bạn cung cấp */
+    --glass-bg: rgba(255, 255, 255, 0.45);
+    --glass-border: rgba(255, 255, 255, 0.7);
+    --glass-outline: rgba(203, 213, 225, 0.4);
+    --mac-shadow: 0 10px 40px -10px rgba(100, 116, 139, 0.2);
+    --text-main: #2f2f2f;
+    --text-muted: #64748b;
+    --accent-blue: #3b82f6;
 }
 
 .system-logs-container {
-  padding: 32px;
-  background-color: var(--primary-bg);
-  min-height: 100vh;
-  font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 40px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    color: var(--text-main);
+    background-attachment: fixed;
 }
 
-.subtitle {
-  color: var(--text-muted);
-  font-size: 14px;
-  margin-top: 4px;
+/* Nút quay lại kiểu Capsule */
+.btn-back-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    padding: 10px 24px;
+    border-radius: 50px; /* Bo tròn kiểu viên thuốc */
+    color: var(--text-main);
+    font-weight: 500;
+    box-shadow: var(--mac-shadow);
+    cursor: pointer;
+    margin-bottom: 30px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.btn-back-nav:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+/* Bố cục chính */
 .main-layout {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-  align-items: start;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
+/* Console Section - Dark Glass */
 .console-wrapper {
-    background: #000;
-    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.85); /* Console tối để nổi bật text log */
+    backdrop-filter: blur(20px);
+    border-radius: 32px; /* Bo góc lớn như ảnh mẫu */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    height: 700px;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    border: 1px solid #333;
-}
-
-.resizable-console {
-  resize: vertical;
-  overflow: auto;
-  min-height: 400px;
-  max-height: 85vh;
-  height: 685px;
 }
 
 .console-header {
-  background: #1e293b;
-  padding: 10px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #334155;
-  position: relative;
+    padding: 20px 25px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
 }
-
-.header-left {
-  display: flex;
-  align-items: center;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(239, 68, 68, 0.1);
-  padding: 4px 10px;
-  border-radius: 4px;
-}
-
-.live-indicator {
-  width: 8px;
-  height: 8px;
-  background: #ef4444;
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
-  animation: blink 1.2s infinite;
-}
-
-.live-view {
-  color: #ef4444;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  font-family: 'Inter', sans-serif;
-}
-
-@keyframes blink {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.terminal-dots {
-  display: flex;
-  gap: 6px;
-  margin-right: 12px;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.red { background: #ff5f56; }
-.yellow { background: #ffbd2e; }
-.green { background: #27c93f; }
 
 .header-text {
-  color: #94a3b8;
-  font-family: 'Fira Code', monospace;
-  font-size: 12px;
-  text-transform: lowercase;
+    color: rgba(255, 255, 255, 0.8);
+    /*font-family: "SF Mono", monospace;*/
+    font-size: 13px;
+    letter-spacing: 1px;
 }
 
 .console-body {
-    flex: 1;
+    padding: 25px;
     overflow-y: auto;
-    padding: 15px;
-    font-family: 'Courier New', monospace;
-    scroll-behavior: smooth;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 14px;
 }
 
-.log-line {
-    margin-bottom: 2px;
-    font-size: 0.9rem;
-    display: flex;
-    opacity: 0.95;
-    transition: background 0.2s;
-}
-
-.log-time {
-    margin-right: 12px;
-    white-space: nowrap;
-    opacity: 0.8;
-}
-
-.loading-indicator, .end-msg {
-    text-align: center;
-    padding: 20px;
-    color: #666;
-    font-size: 12px;
-    letter-spacing: 2px;
-}
-
+/* Sidebar Cards - Liquid Light Glass */
 .control-card {
-  background: var(--card-bg);
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px; /* Bo góc cực đại */
+    padding: 24px;
+    box-shadow: var(--mac-shadow);
+    margin-bottom: 24px;
 }
+
+.card-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-main);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Input Fields - Neumorphic Touch */
+.input-field {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--glass-outline);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    color: var(--text-main);
+    outline: none;
+    transition: border 0.3s;
+}
+
+.input-field:focus {
+    border-color: var(--accent-blue);
+    background: white;
+}
+
+/* Backup Button - Soft & Glowing */
+.btn-backup {
+    width: 100%;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 18px;
+    font-weight: 600;
+    box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-backup:hover {
+    transform: scale(1.02);
+    box-shadow: 0 15px 25px -5px rgba(59, 130, 246, 0.5);
+}
+
+/* Backup List Items */
+.backup-item {
+    background: rgba(255, 255, 255, 0.3);
+    margin-bottom: 12px;
+    padding: 14px;
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.backup-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.backup-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.btn-restore {
+    background: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.btn-restore:hover{
+    transform: scale(1.05);
+}
+/* Custom Scrollbar cho Glass Mode */
+.console-body::-webkit-scrollbar {
+    width: 6px;
+}
+.console-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+/* --- Cập nhật chi tiết cho Bộ lọc (Filter) --- */
 
 .card-header-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
-.card-header-flex .card-title {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-main);
-}
-
+/* Nút Đặt lại (Reset) phong cách tối giản của macOS */
 .btn-reset-filter {
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    color: #475569;
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 700;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--glass-border);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-blue);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     transition: all 0.2s ease;
-    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .btn-reset-filter:hover {
-    background: #e2e8f0;
-    color: #1e293b;
+    background: white;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
 }
 
 .icon-refresh {
-    font-size: 12px;
+    font-size: 14px;
+    display: inline-block;
+    transition: transform 0.5s ease;
 }
 
-.filter-group {
-  margin-bottom: 12px;
+.btn-reset-filter:active .icon-refresh {
+    transform: rotate(180deg);
 }
 
+/* Tùy chỉnh Select Box mức độ */
+.filter-group select.input-field {
+    appearance: none; /* Xóa icon mặc định của trình duyệt */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/* Màu sắc cho từng Option bên trong Select */
+/* Lưu ý: Browser chỉ hỗ trợ màu chữ cơ bản cho thẻ option */
+select.input-field option {
+    background-color: #f8fafc; /* Nền sáng để dễ đọc */
+    color: var(--text-main);
+}
+
+select.input-field option[value="INFO"] {
+    color: #10b981 !important; /* Xanh lá */
+    font-weight: bold;
+}
+
+select.input-field option[value="WARNING"] {
+    color: #f59e0b !important; /* Vàng cam */
+    font-weight: bold;
+}
+
+select.input-field option[value="DANGER"] {
+    color: #ef4444 !important; /* Đỏ */
+    font-weight: bold;
+}
+
+/* Tạo hiệu ứng màu sắc động cho chính Select Box khi chọn */
+/* Bạn có thể thêm class động trong React hoặc dùng CSS tập trung như sau: */
+.filter-group select.input-field[value="INFO"] { color: #10b981; }
+.filter-group select.input-field[value="WARNING"] { color: #f59e0b; }
+.filter-group select.input-field[value="DANGER"] { color: #ef4444; }
+
+/* Nhãn (Label) */
 .filter-group label {
-  display: block;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+    display: block;
+    margin-left: 5px;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
-.input-field {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  font-size: 14px;
-  color: var(--text-main);
-  background: #f1f5f9;
-  outline: none;
-  transition: border 0.2s;
+/* --- RESPONSIVE DESIGN --- */
+
+/* 1. Màn hình Tablet & Laptop nhỏ (Dưới 1100px) */
+@media (max-width: 1100px) {
+    .main-layout {
+        grid-template-columns: 1fr; /* Chuyển sang 1 cột */
+        gap: 20px;
+        height: auto; /* Để nội dung kéo dài tự nhiên */
+    }
+
+    .sidebar-controls {
+        order: 2; /* Đẩy bộ lọc xuống dưới console */
+    }
+
+    .console-section {
+        order: 1;
+        height: 500px; /* Giới hạn chiều cao console trên tablet */
+    }
+
+    .console-wrapper {
+        height: 100%;
+    }
 }
 
-.input-field:focus {
-  border-color: var(--accent-color);
+/* 2. Màn hình Mobile (Dưới 600px) */
+@media (max-width: 600px) {
+    .system-logs-container {
+        padding: 15px; /* Giảm padding ngoài cùng */
+    }
+
+    .btn-back-nav {
+        width: fit-content;
+        padding: 8px 16px;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .console-section {
+        height: 400px; /* Nhỏ hơn trên mobile */
+    }
+
+    .console-header {
+        padding: 12px 15px;
+    }
+
+    .header-right {
+        display: none; /* Ẩn chữ LIVE VIEW để tiết kiệm diện tích */
+    }
+
+    .console-body {
+        padding: 15px;
+        font-size: 12px; /* Chữ nhỏ hơn cho mobile */
+    }
+
+    .log-time {
+        display: block; /* Xuống dòng cho thời gian để tin nhắn log rộng hơn */
+        margin-bottom: 2px;
+        font-size: 10px;
+    }
+
+    .control-card {
+        padding: 18px;
+        border-radius: 20px; /* Bo góc nhỏ hơn một chút cho cân đối */
+    }
+
+    .card-title {
+        font-size: 15px;
+    }
+
+    /* Tối ưu danh sách Backup trên mobile */
+    .backup-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .btn-restore {
+        width: 100%;
+        text-align: center;
+        padding: 8px;
+    }
 }
 
-.btn-backup {
-  width: 100%;
-  padding: 12px;
-  background: var(--console-bg);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  transition: transform 0.1s;
-}
-
-.btn-backup:active { transform: scale(0.98); }
-
-.hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-
-.backup-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.backup-item:last-child { border-bottom: none; }
-
-.backup-name {
-  font-size: 13px;
-  font-weight: 500;
-  margin: 0;
-}
-
-.backup-meta {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.btn-restore {
-  font-size: 12px;
-  color: var(--accent-color);
-  background: #eff6ff;
-  border: none;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.console-body::-webkit-scrollbar {
-    width: 8px;
-}
-.console-body::-webkit-scrollbar-track {
-    background: #000;
-}
-.console-body::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 4px;
-}
-.console-body::-webkit-scrollbar-thumb:hover {
-    background: #444;
-}
-
-@media (max-width: 1024px) {
-  .main-layout {
-    grid-template-columns: 1fr 280px;
-    gap: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-  }
-  .sidebar-controls {
-    order: -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .control-card:nth-child(2) {
-    grid-column: span 2;
-  }
-}
-
-@media (max-width: 480px) {
-  .sidebar-controls {
-    grid-template-columns: 1fr;
-  }
-  .control-card:nth-child(2) {
-    grid-column: span 1;
-  }
-  .console-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .log-line {
-    font-size: 11px;
-    flex-direction: column;
-  }
+/* 3. Hiệu ứng Hover - Tắt trên thiết bị cảm ứng để tránh lag */
+@media (hover: none) {
+    .btn-back-nav:hover,
+    .btn-backup:hover,
+    .btn-reset-filter:hover {
+        transform: none;
+    }
 }

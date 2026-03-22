@@ -1,198 +1,178 @@
-.job-grid-section {
-  padding: 50px;
-  background: white;
+/* JobGrid.css - macOS Liquid Glass Edition */
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.35);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --mac-blue: #007aff;
+  --mac-text: #1d1d1f;
+  --mac-text-muted: #86868b;
+  --inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
 }
 
+.job-grid-section {
+  padding: 40px 20px;
+  max-width: 1250px;
+  margin: 0 auto;
+  /* Hiệu ứng trượt nhẹ đặc trưng của macOS */
+  animation: mac-slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- Header Section --- */
 .job-grid-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 35px;
+  gap: 20px;
 }
 
 .job-grid-header h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #333;
-  margin: 0;
+  font-size: 24px;
+  font-weight: 850; /* Font cực đậm chuẩn Apple */
+  color: var(--mac-text);
+  letter-spacing: -0.03em;
 }
 
-.search-filter {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
+/* --- Thanh Tìm Kiếm (Liquid Search) --- */
 .search-wrap {
   display: flex;
   align-items: center;
-  background: #fff;
-  border: 1px solid #e9e9f0;
-  border-radius: 8px;
-  padding: 6px 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  gap: 12px;
+  min-width: 400px;
+  padding: 10px 18px;
+
+  /* Hiệu ứng kính */
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+  border: 1px solid var(--glass-border);
+  border-radius: 16px; /* Bo góc mềm mại */
+  box-shadow: var(--inner-light), var(--glass-shadow);
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+}
+
+
+
+.search-wrap:focus-within {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--mac-blue);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15), var(--glass-shadow);
+  transform: translateY(-2px);
+}
+
+.search-wrap svg {
+  fill: var(--mac-text-muted);
+  flex-shrink: 0;
 }
 
 .job-search {
+  width: 100%;
   border: none;
   outline: none;
-  padding: 8px 10px;
-  min-width: 320px;
-  font-size: 14px;
+  background: transparent;
+  font-size: 15px;
+  color: var(--mac-text);
 }
 
-.filter-btn {
-  background: #fff;
-  border: 1px solid #e9e9f0;
-  padding: 8px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #333;
-  transition: all 0.18s ease;
+.job-search::placeholder {
+  color: var(--mac-text-muted);
 }
 
-.filter-btn:hover,
-.filter-btn.active {
-  background: #667eea;
-  color: white;
-  border-color: #667eea;
-}
-
-.filter-panel {
-  background: #fafafa;
-  border: 1px solid #eee;
-  padding: 12px 16px;
-  margin-bottom: 18px;
-  border-radius: 8px;
-  display: none;
-}
-
-.filter-note {
-  color: #666;
-  font-size: 14px;
-  display: none;
-}
-
-.filter-row {
-  display: none;
-}
-
+/* --- Grid Layout --- */
 .job-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 28px; /* Khoảng cách rộng rãi để lộ nền */
 }
 
-.view-all {
-  display: flex;
-  justify-content: center;
-}
-
-.btn-view-all {
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-  padding: 12px 40px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-view-all:hover {
-  background: #667eea;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-}
-
-/* Pagination Styles */
+/* --- Phân Trang (Glass Pagination) --- */
 .job-pagination {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 8px;
-  margin-top: 40px;
+  margin-top: 50px;
 }
 
 .job-page-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  color: #374151;
-  font-weight: 600;
-  cursor: pointer;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  font-size: 14px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+
+  color: var(--mac-text);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--inner-light);
 }
 
 .job-page-btn:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
-  background: #f9fafb;
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-3px);
+  color: var(--mac-blue);
+  border-color: rgba(0, 122, 255, 0.4);
 }
 
 .job-page-btn.active {
-  background: #667eea;
-  color: white;
-  border-color: #667eea;
+  background: var(--mac-blue);
+  color: #ffffff;
+  border-color: var(--mac-blue);
+  box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
 }
 
 .job-page-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
-  background: #f3f4f6;
-  border-color: #e5e7eb;
 }
 
 .pagination-ellipsis {
-  display: flex;
-  align-items: flex-end;
-  padding: 0 8px 8px;
-  color: #9ca3af;
-  font-weight: 700;
-  letter-spacing: 2px;
+  color: var(--mac-text-muted);
+  font-weight: 800;
+  padding: 0 4px;
+}
+
+/* --- States (Loading/Empty) --- */
+.job-grid > div {
+  font-weight: 600;
+  color: var(--mac-text-muted);
+}
+
+
+
+/* --- Animations --- */
+@keyframes mac-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .job-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-
-  .job-grid-section {
-    padding: 40px 30px;
-  }
-}
-
-@media (max-width: 768px) {
-  .job-grid-section {
-    padding: 30px 20px;
-  }
-
+@media (max-width: 900px) {
   .job-grid-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 15px;
   }
-
-  .sort-filter {
-    width: 100%;
+  .search-wrap {
+    min-width: 100%;
   }
+}
 
-  .sort-select {
-    flex: 1;
-  }
-
+@media (max-width: 500px) {
   .job-grid {
     grid-template-columns: 1fr;
   }

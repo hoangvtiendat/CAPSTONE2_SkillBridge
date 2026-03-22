@@ -148,8 +148,13 @@ const SystemLogs = () => {
                         </div>
                         <div className="filter-group">
                             <label>Mức độ</label>
-                            <select className="input-field" value={level} onChange={(e) => setLevel(e.target.value)}>
-                                <option value="">Tất cả các mức</option>
+                            <select
+                                className="input-field"
+                                value={level}
+                                onChange={(e) => setLevel(e.target.value)}
+                                style={{color: getLevelColor(level) === '#ffffff' ? 'inherit' : getLevelColor(level)}}
+                            >
+                                <option value="" style={{color: '#64748b'}}>Tất cả các mức</option>
                                 <option value="INFO">INFO</option>
                                 <option value="WARNING">WARNING</option>
                                 <option value="DANGER">DANGER</option>

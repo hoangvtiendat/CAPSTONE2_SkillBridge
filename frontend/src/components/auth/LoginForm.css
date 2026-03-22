@@ -1,53 +1,99 @@
+/* --- Root Variables Đồng Bộ --- */
+:root {
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-saturate: blur(25px) saturate(200%);
+  --inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  --sf-blue: #84bfff;
+  --text-main: #1d1d1f;
+  --text-mute: #64748b;
+}
+
+/* --- Container: Nền loang màu Apple Style --- */
 .welcome-container {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #f9fafb;
-  padding: 1rem;
-  font-family: sans-serif;
+  background: radial-gradient(circle at top right, rgba(0, 122, 255, 0.12), transparent),
+  radial-gradient(circle at bottom left, rgba(0, 198, 255, 0.08), transparent),
+  #f5f5f7;
+  padding: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* --- Auth Card: Khối kính lỏng trung tâm --- */
 .auth-card {
   width: 100%;
   max-width: 440px;
-  background: #ffffff;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f3f4f6;
-  border-radius: 12px;
-  padding: 2.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-saturate);
+  -webkit-backdrop-filter: var(--glass-saturate);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px; /* Bo góc cực đại */
+  padding: 3rem 2.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow:
+          0 30px 60px rgba(0, 0, 0, 0.08),
+          var(--inner-light);
+  animation: sf-pop-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Vệt sáng phản chiếu mặt nước */
+.auth-card::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -30%; width: 70%; height: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent 100%);
+  filter: blur(20px);
+  transform: rotate(-10deg);
+  pointer-events: none;
 }
 
 .auth-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 850;
+  color: var(--text-main);
+  margin-bottom: 2.5rem;
+  letter-spacing: -0.05em;
+  text-align: center;
 }
 
+/* --- Google Button: Kính mờ tầng 2 --- */
 .google-btn {
-  font-size: 15px;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  background: transparent;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 100px; /* Pill style */
   cursor: pointer;
-  font-weight: 500;
-  color: #334155;
+  font-weight: 700;
+  color: var(--text-main);
   margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+  font-size: 15px;
 }
 
-.google-btn:hover { background-color: #f9fafb; }
-.google-btn img { width: 1.25rem; height: 1.25rem; }
+.google-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
 
+.google-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+/* --- Divider: Thanh ngang mảnh --- */
 .divider {
   width: 100%;
   display: flex;
@@ -59,45 +105,55 @@
 .divider::before, .divider::after {
   content: "";
   height: 1px;
-  background-color: #e5e7eb;
+  background: rgba(0, 0, 0, 0.05);
   flex: 1;
 }
 
 .divider span {
-  font-size: 0.875rem;
-  color: #9ca3af;
-  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-mute);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
+/* --- Form & Input: Liquid Input --- */
 .auth-form { width: 100%; }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
-  font-size: 16px;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-mute);
+  padding-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  border: 1px solid #d1d5db;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 18px; /* Squircle radius */
   outline: none;
-  transition: all 0.2s;
-  box-sizing: border-box;
+  transition: all 0.3s ease;
   font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6;
+  background: white;
+  border-color: var(--sf-blue);
+  box-shadow: 0 0 0 5px rgba(0, 122, 255, 0.12);
 }
 
 .forgot-link {
@@ -109,39 +165,68 @@
 .forgot-link button {
   background: none;
   border: none;
-  color: #2563eb;
-  font-size: 0.875rem;
-  font-weight: 500;
+  color: var(--sf-blue);
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
+  transition: 0.2s;
 }
 
-.forgot-link button:hover { text-decoration: underline; }
+.forgot-link button:hover { opacity: 0.7; }
 
+/* --- Submit Button: Viên ngọc xanh lỏng --- */
 .submit-btn {
   width: 100%;
-  padding: 0.75rem;
-  background-color: #0f172a;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--sf-blue), #00c6ff);
   color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1.125rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 100px; /* Pill style */
+  font-weight: 800;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow:
+          0 15px 30px rgba(0, 122, 255, 0.25),
+          var(--inner-light);
 }
 
-.submit-btn:hover { background-color: #1e293b; }
+.submit-btn:hover {
+  transform: scale(1.02) translateY(-3px);
+  box-shadow: 0 20px 40px rgba(0, 122, 255, 0.35);
+  filter: brightness(1.05);
+}
 
+.submit-btn:active {
+  transform: scale(0.98);
+}
+
+/* --- Toggle Button --- */
 .toggle-btn {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   background: none;
   border: none;
-  font-size: 16px;
-  font-weight: 600;
-  color: #334155;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-mute);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.3s;
 }
 
-.toggle-btn:hover { color: #2563eb; }
+.toggle-btn:hover {
+  color: var(--sf-blue);
+}
+
+/* --- Animations --- */
+@keyframes sf-pop-up {
+  from { opacity: 0; transform: scale(0.96) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 2.5rem 1.5rem;
+    border-radius: 30px;
+  }
+}

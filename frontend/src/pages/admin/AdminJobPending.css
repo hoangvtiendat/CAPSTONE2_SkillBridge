@@ -1,193 +1,276 @@
-:root {
-    --primary-navy: #0f172a;
-    --navy-light: #1e293b;
-    --danger-red: #ef4444;
-    --danger-soft: #fef2f2;
-    --warning-yellow: #f59e0b;
-    --warning-soft: #fffbeb;
-    --success-green: #10b981;
-    --text-main: #1e293b;
-    --text-sub: #64748b;
-    --border-color: #e2e8f0;
-    --bg-main: #f8fafc;
-    --white: #ffffff;
-}
+/* AdminJobPending.css - Ultimate Liquid Glass Edition */
 
 .admin-pending-container {
-    padding: 24px;
-    background-color: var(--bg-main);
-    height: calc(100vh - 100px);
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    overflow: hidden;
-    font-family: 'Inter', system-ui, sans-serif;
+    padding: 30px;
+    /* Thay đổi: Sử dụng width: auto và margin để không lấn chiếm Sidebar */
+    width: 100%;
+    /* Đảm bảo không đè lên các menu điều hướng */
+    position: relative;
+    z-index: 1;
+
+    animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Header */
+/* --- Header Section --- */
 .admin-pending-header {
-    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 35px;
 }
 
-.header-left { display: flex; align-items: center; gap: 16px; }
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 .header-icon-box {
-    width: 48px; height: 48px; border-radius: 12px;
-    background: var(--danger-red); color: white;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-}
-
-.title-group h1 { font-size: 1.5rem; font-weight: 800; color: var(--primary-navy); margin: 0; }
-.title-group p { font-size: 0.9rem; color: var(--text-sub); margin: 0; }
-.title-group p span { color: var(--danger-red); font-weight: 600; }
-
-/* Filters */
-.filter-wrapper { display: flex; align-items: center; gap: 12px; }
-
-.custom-select-box {
-    position: relative; display: flex; align-items: center;
-    background: white; border: 1px solid var(--border-color);
-    border-radius: 10px; padding: 0 12px; transition: all 0.2s;
-    color: var(--text-sub);
-}
-
-.custom-select-box:focus-within { border-color: var(--primary-navy); box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); }
-
-.custom-select-box select {
-    border: none; outline: none; padding: 10px 32px 10px 8px;
-    font-size: 0.85rem; font-weight: 600; color: var(--text-main);
-    background: transparent; appearance: none; cursor: pointer;
-}
-
-.custom-select-box .arrow { position: absolute; right: 12px; pointer-events: none; }
-
-.btn-refresh {
-    width: 42px; height: 42px; border-radius: 10px;
-    border: 1px solid var(--border-color); background: white;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; color: var(--text-sub); transition: all 0.2s;
-}
-
-.btn-refresh:hover { background: #f1f5f9; color: var(--primary-navy); border-color: var(--primary-navy); }
-.spinning { animation: spin 1s linear infinite; }
-
-/* Table Card */
-.pending-content-card {
-    background: white; border-radius: 16px;
-    border: 1px solid var(--border-color);
-    flex: 1; display: flex; flex-direction: column;
-    min-height: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-}
-
-.table-scroll-container { flex: 1; overflow-y: auto; min-height: 0; }
-
-.pending-table-core { width: 100%; border-collapse: separate; border-spacing: 0; }
-.pending-table-core thead { position: sticky; top: 0; z-index: 10; }
-
-.pending-table-core th {
-    background: #f8fafc; padding: 16px 24px;
-    font-size: 0.7rem; font-weight: 800; color: var(--text-sub);
-    text-transform: uppercase; letter-spacing: 0.05em;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.pending-table-core td { padding: 18px 24px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-
-/* Job Detail Cells */
-.job-row-item { cursor: pointer; transition: background 0.2s; }
-.job-row-item:hover { background: #fbfcfe; }
-
-.job-detail-box { display: flex; flex-direction: column; gap: 4px; }
-.job-name { text-align: left; font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
-.job-loc { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: var(--text-sub); }
-
-.comp-box { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--navy-light); font-size: 0.85rem; }
-
-.timestamp { font-size: 0.85rem; color: var(--text-sub); font-family: monospace; }
-
-/* Status Pills */
-.status-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800;
-}
-.pill-RED { background: var(--danger-soft); color: var(--danger-red); border: 1px solid #fee2e2; }
-.pill-YELLOW { background: var(--warning-soft); color: var(--warning-yellow); border: 1px solid #fef3c7; }
-
-.status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-/* Buttons */
-.action-btns-group {
+    width: 54px;
+    height: 54px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px; /* Khoảng cách vừa phải */
+    color: #ef4444; /* Màu cảnh báo cho tin đăng nghi ngờ */
+    box-shadow: var(--mac-shadow);
 }
 
-/* Nút Duyệt Tin (Nhỏ & Gọn) */
-.btn-action-approve {
-    background: var(--primary-navy);
-    color: white;
+.title-group h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.title-group p span {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+/* --- Bộ lọc (Filter) - Triệt tiêu Select mặc định --- */
+.header-right .filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.custom-select-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    padding: 8px 16px;
+    border-radius: 40px; /* Kiểu viên thuốc */
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8), var(--mac-shadow);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.custom-select-box:focus-within {
+    background: white;
+    border-color: var(--accent-blue);
+}
+
+.custom-select-box select {
+    appearance: none; /* Xóa mũi tên mặc định */
+    -webkit-appearance: none;
+    background: transparent;
     border: none;
-    padding: 6px 14px; /* Giảm padding để nút nhỏ lại */
-    border-radius: 8px; /* Bo góc hiện đại */
-    font-size: 0.8rem; /* Font nhỏ gọn */
+    outline: none !important; /* Xóa viền xanh xấu xí */
+    font-family: inherit;
+    font-size: 14px;
     font-weight: 600;
+    color: var(--text-main);
     cursor: pointer;
+    min-width: 150px;
+    padding-right: 20px;
+    z-index: 1;
+}
+
+.custom-select-box .arrow {
+    position: absolute;
+    right: 15px;
+    pointer-events: none;
+    color: var(--text-muted);
+}
+
+/* --- Table & Content --- */
+.pending-content-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid var(--glass-border);
+    border-radius: 32px;
+    box-shadow: var(--mac-shadow);
+    overflow: hidden;
+    padding: 10px;
+}
+
+.pending-table-core th {
+    padding: 20px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.pending-table-core td {
+    padding: 22px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.job-row-item:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+/* --- Đánh giá AI (Status Pills) --- */
+.status-pill {
+    width: 170px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    margin: 4px;
+    margin-top: 10px;
+}
+
+/* Kiểu Yellow (Nghi ngờ) */
+.pill-YELLOW {
+    background: rgba(251, 191, 36, 0.15);
+    color: #b45309;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.pill-YELLOW .dot {
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #f59e0b;
+}
+
+/* Kiểu Red (Nguy hiểm) */
+.pill-RED {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* --- Chi tiết Job & Công ty --- */
+.job-name {
+    display: block;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-main);
+    margin-bottom: 6px;
+    /* Giới hạn 1 dòng để giữ bảng gọn gàng */
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.job-loc {
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.comp-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* --- Nút bấm Thao tác --- */
+.action-btns-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-action-approve {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
 }
 
 .btn-action-approve:hover {
-    background: #000;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px) scale(1.05);
 }
 
-.btn-action-approve:active {
-    transform: translateY(0);
-}
-
-/* Nút Từ Chối (Mảnh & Tinh tế) */
 .btn-action-reject {
-    background: transparent;
-    color: var(--text-sub); /* Màu mặc định nhẹ nhàng */
-    border: 1px solid var(--border-color); /* Viền mảnh */
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    background: white;
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    padding: 10px 20px;
+    border-radius: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
 .btn-action-reject:hover {
-    color: var(--danger-red);
-    border-color: var(--danger-red);
-    background: var(--danger-soft); /* Hiện nền đỏ nhạt khi hover */
+    background: #ef4444;
+    color: white;
 }
 
-/* Căn lại độ rộng cột thao tác để không bị thừa diện tích */
-.pending-table-core th:last-child,
-.pending-table-core td:last-child {
-    width: 180px !important; /* Thu hẹp cột hành động */
+/* --- Trạng thái Trống (Empty State) --- */
+.empty-overlay {
+    padding: 80px 0;
     text-align: center;
+    color: var(--text-muted);
 }
 
-/* Helpers */
-.center { text-align: center; }
-.empty-state { padding: 80px 0; text-align: center; }
-.empty-box { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); gap: 16px; }
-.empty-box p { font-weight: 600; font-size: 1.1rem; }
+.empty-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
 
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.empty-box p {
+    font-size: 16px;
+    font-weight: 600;
+}
 
-/* Custom Scrollbar */
-.table-scroll-container::-webkit-scrollbar { width: 6px; }
-.table-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+/* --- Nút Refresh --- */
+.btn-refresh {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--mac-shadow);
+    transition: all 0.3s;
+}
+
+.btn-refresh:hover {
+    color: var(--accent-blue);
+    transform: rotate(-180deg);
+}

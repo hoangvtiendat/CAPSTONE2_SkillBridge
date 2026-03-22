@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
+import './DeleteConfirm.css'
 const DeleteConfirmPage = ({ isOpen, onCancel, onConfirm }) => {
     if (!isOpen) return null;
 

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { toast, Toaster } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Lock, ChevronLeft } from 'lucide-react'; // Thêm icon để đồng bộ
 import "./SetPass.css";
 
 export function SetPass() {
@@ -11,6 +12,7 @@ export function SetPass() {
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (!email || !flow) {
@@ -22,40 +24,35 @@ export function SetPass() {
         e.preventDefault();
 
         if (!password || !confirmPassword) {
-            toast.warning("Thiếu thông tin", {
-                description: "Vui lòng nhập đầy đủ mật khẩu",
-            });
+            toast.warning("Vui lòng nhập đầy đủ mật khẩu");
             return;
         }
 
         if (password !== confirmPassword) {
             toast.error("Mật khẩu không khớp", {
-                description: "Vui lòng kiểm tra lại",
+                description: "Vui lòng kiểm tra lại ô xác nhận",
             });
             return;
         }
 
+        setIsLoading(true);
+
         if (flow === "register") {
-            toast.success("Tạo mật khẩu thành công", {
-                description: "Vui lòng bổ sung thông tin cá nhân",
+            toast.success("Mật khẩu hợp lệ", {
+                description: "Tiếp tục hoàn thiện hồ sơ của bạn",
             });
 
             setTimeout(() => {
                 navigate("/auth/complete-profile", {
-                    state: {
-                        email,
-                        password,
-                    },
+                    state: { email, password },
                 });
             }, 1000);
-
             return;
         }
 
         try {
-            const res = await fetch(
-                `http://localhost:3001/Users?email=${email}`
-            );
+            // Giả định API endpoint của bạn
+            const res = await fetch(`http://localhost:3001/Users?email=${email}`);
             const users = await res.json();
 
             if (!users.length) {
@@ -65,54 +62,59 @@ export function SetPass() {
 
             const userId = users[0].id;
 
-            const updateRes = await fetch(
-                `http://localhost:3001/Users/${userId}`,
-                {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        password,
-                        two_fa_enabled: false,
-                    }),
-                }
-            );
+            const updateRes = await fetch(`http://localhost:3001/Users/${userId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    password,
+                    two_fa_enabled: false,
+                }),
+            });
 
             if (!updateRes.ok) throw new Error();
 
-            toast.success("Đổi mật khẩu thành công", {
-                description: "Vui lòng đăng nhập lại",
+            toast.success("Đặt lại mật khẩu thành công", {
+                description: "Hệ thống đang chuyển bạn về trang đăng nhập",
             });
 
-            setTimeout(() => navigate("/login"), 1500);
+            setTimeout(() => navigate("/login"), 2000);
         } catch (err) {
-            toast.error("Có lỗi xảy ra", {
-                description: "Vui lòng thử lại",
-            });
+            toast.error("Lỗi hệ thống", { description: "Vui lòng thử lại sau" });
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
         <main className="welcome-container">
-
+            {/* Nút quay lại kiểu Glass */}
+            <button className="btn-back-nav" onClick={() => navigate(-1)}>
+                <ChevronLeft size={18} /> Quay lại
+            </button>
 
             <div className="auth-card">
+                <div className="auth-header-icon">
+                    <Lock size={32} strokeWidth={1.5} />
+                </div>
+
                 <h1 className="auth-title">
-                    {flow === "register"
-                        ? "Tạo mật khẩu"
-                        : "Đặt lại mật khẩu"}
+                    {flow === "register" ? "Tạo mật khẩu" : "Đặt lại mật khẩu"}
                 </h1>
 
-                <p style={{ marginBottom: 20, color: "#666" }}>
-                    Nhập mật khẩu cho tài khoản <b>{email}</b>
+                <p className="auth-subtitle">
+                    Thiết lập bảo mật cho tài khoản <br/>
+                    <strong>{email}</strong>
                 </p>
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     <div className="form-group">
-                        <label>Mật khẩu</label>
+                        <label>Mật khẩu mới</label>
                         <input
                             type="password"
+                            placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            required
                         />
                     </div>
 
@@ -120,17 +122,15 @@ export function SetPass() {
                         <label>Xác nhận mật khẩu</label>
                         <input
                             type="password"
+                            placeholder="••••••••"
                             value={confirmPassword}
-                            onChange={(e) =>
-                                setConfirmPassword(e.target.value)
-                            }
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
                         />
                     </div>
 
-                    <button type="submit" className="submit-btn">
-                        {flow === "register"
-                            ? "Tiếp tục"
-                            : "Đổi mật khẩu"}
+                    <button type="submit" className="submit-btn" disabled={isLoading}>
+                        {isLoading ? "Đang xử lý..." : flow === "register" ? "Tiếp tục" : "Cập nhật mật khẩu"}
                     </button>
                 </form>
             </div>
