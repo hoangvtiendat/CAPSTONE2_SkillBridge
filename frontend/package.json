@@ -31,7 +31,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "mock": "json-server --watch src/mock_data/db.json --routes src/mock_data/routes.json --port 3001"
+    "mock": "json-server --watch src/mock_data/db.json --routes src/mock_data/routes.json --port 3001",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix"
   },
   "eslintConfig": {
     "extends": [

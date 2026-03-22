@@ -5,6 +5,8 @@ import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -12,7 +14,11 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
+
+    // Tái sử dụng ObjectMapper từ JacksonConfig
+    private final ObjectMapper objectMapper;
 
     @Override
     public void commence(
@@ -22,13 +28,14 @@ public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
     ) throws IOException {
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
 
-        ApiResponse<?> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.UNAUTHORIZED.getCode());
-        apiResponse.setMessage(ErrorCode.UNAUTHORIZED.getMessage());
+        ApiResponse<?> apiResponse = ApiResponse.error(
+                ErrorCode.UNAUTHORIZED.getCode(),
+                ErrorCode.UNAUTHORIZED.getMessage()
+        );
 
-        ObjectMapper mapper = new ObjectMapper();
-        response.getWriter().write(mapper.writeValueAsString(apiResponse));
+        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
 }

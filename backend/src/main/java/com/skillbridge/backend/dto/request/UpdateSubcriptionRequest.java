@@ -1,19 +1,21 @@
 package com.skillbridge.backend.dto.request;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+
 @Data
-@Getter
-@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateSubcriptionRequest {
-    private BigDecimal price;
+    BigDecimal price;
 
-    private Integer jobLimit;
+    Integer jobLimit;
 
-    private Integer candidateViewLimit;
+    Integer candidateViewLimit;
 
-    private Boolean hasPriorityDisplay;
+    Boolean hasPriorityDisplay;
 }

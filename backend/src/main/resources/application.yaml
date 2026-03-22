@@ -70,7 +70,8 @@ server:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
@@ -78,6 +79,9 @@ jwt:
 gemini:
   api:
     key: ${gemini.api.key}
+    model: ${gemini.model:gemini-2.5-flash}
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:uploads}
 ai:
   ollama:
     url: http://localhost:11434

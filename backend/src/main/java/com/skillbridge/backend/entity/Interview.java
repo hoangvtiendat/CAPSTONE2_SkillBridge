@@ -2,65 +2,36 @@ package com.skillbridge.backend.entity;
 
 import com.skillbridge.backend.enums.InterviewStatus;
 import jakarta.persistence.*;
-/// Done
+import lombok.*;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "interviews")
-public class Interview extends BaseEntity{
+public class Interview extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "application_id")
+    @JoinColumn(name = "application_id", nullable = false)
     private Application application;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "slot_id")
+    @JoinColumn(name = "slot_id", nullable = false)
     private InterviewSlot slot;
 
+    @Column(name = "location_link", length = 500)
     private String locationLink;
 
     @Enumerated(EnumType.STRING)
-    private InterviewStatus status;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Application getApplication() {
-        return application;
-    }
-
-    public void setApplication(Application application) {
-        this.application = application;
-    }
-
-    public InterviewSlot getSlot() {
-        return slot;
-    }
-
-    public void setSlot(InterviewSlot slot) {
-        this.slot = slot;
-    }
-
-    public String getLocationLink() {
-        return locationLink;
-    }
-
-    public void setLocationLink(String locationLink) {
-        this.locationLink = locationLink;
-    }
-
-    public InterviewStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(InterviewStatus status) {
-        this.status = status;
-    }
+    @Column(nullable = false)
+    @Builder.Default
+    private InterviewStatus status = InterviewStatus.PENDING;
 }

@@ -1,41 +1,40 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
-import com.skillbridge.backend.dto.request.respondToJoinRequestRequest;
-import com.skillbridge.backend.dto.response.*;
-import com.skillbridge.backend.dto.request.CreateJobRequest;
+import com.skillbridge.backend.dto.request.RespondToJoinRequest;
 import com.skillbridge.backend.dto.request.DeactivateRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
-import com.skillbridge.backend.dto.response.JobFeedResponse;
-import com.skillbridge.backend.entity.Job;
-import com.skillbridge.backend.entity.User;
+import com.skillbridge.backend.dto.response.PageResponse;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.CompanyService;
+import com.skillbridge.backend.utils.PageableUtils;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/companies")
 public class CompanyController {
-
-    @Autowired
-    private final CompanyService companyService;
-
-    public CompanyController(CompanyService companyService) {
-        this.companyService = companyService;
-    }
+    CompanyService companyService;
 
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCompanyFeed(
@@ -54,6 +53,26 @@ public class CompanyController {
         );
         return ResponseEntity.ok(response);
     }
+
+//    @GetMapping("/feed")
+//    public ResponseEntity<ApiResponse<PageResponse<CompanyFeedItemResponse>>> getCompanyFeed(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size,
+//            @RequestParam(defaultValue = "createdAt") String sortBy,
+//            @RequestParam(defaultValue = "desc") String direction,
+//            @RequestParam(required = false) CompanyStatus status,
+//            @RequestParam(required = false) String keyword,
+//            @RequestParam(required = false) String categoryId
+//    ) {
+//        Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
+//        CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
+//        PageResponse<CompanyFeedItemResponse> rs = companyService.getCompanies(searchStatus, keyword, categoryId, pageable);
+//        return ResponseEntity.ok(ApiResponse.<PageResponse<CompanyFeedItemResponse>>builder()
+//                .code(HttpStatus.OK.value())
+//                .message("Lấy danh sách công ty thành công")
+//                .result(rs)
+//                .build());
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> getCompanyDetail(@PathVariable String id) {
@@ -150,14 +169,11 @@ public class CompanyController {
     }
 
     @PostMapping("/{companyId}/join-request")
-    public ResponseEntity<ApiResponse<String>> joinCompany(@Valid @RequestHeader(value = "Authorization") String token, @PathVariable String companyId) {
+    public ResponseEntity<ApiResponse<String>> joinCompany(
+            @PathVariable String companyId
+    ) {
         try {
-            System.out.println("token: " + token);
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            String jwt = token.substring(7);
-            String rs = companyService.joinCompany(companyId, jwt);
+            String rs = companyService.joinCompany(companyId);
 
             ApiResponse<String> response = new ApiResponse<>(
                     HttpStatus.OK.value(),
@@ -173,7 +189,7 @@ public class CompanyController {
     }
 
     @PostMapping("/join-request/{requestId}")
-    public ResponseEntity<ApiResponse<?>> joinCompanyByRequestId(@Valid @RequestHeader(value = "Authorization") String token, @PathVariable String requestId, @RequestBody respondToJoinRequestRequest request) {
+    public ResponseEntity<ApiResponse<?>> joinCompanyByRequestId(@Valid @RequestHeader(value = "Authorization") String token, @PathVariable String requestId, @RequestBody RespondToJoinRequest request) {
         try {
             System.out.println("token: " + token);
             if (token == null || !token.startsWith("Bearer ")) {
@@ -198,21 +214,17 @@ public class CompanyController {
     @PostMapping("/{companyId}/deactivate")
     public ResponseEntity<ApiResponse<String>> deactivateCompany(
             @PathVariable String companyId,
-            @Valid @RequestBody DeactivateRequest request,
-            @RequestHeader("Authorization") String token
+            @Valid @RequestBody DeactivateRequest request
     ) {
-        String jwt = token.substring(7);
-        String rs = companyService.deactivateCompany(companyId, request, jwt);
+        String rs = companyService.deactivateCompany(companyId, request);
         return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Success", rs));
     }
 
     @PostMapping("/{companyId}/reactivate")
     public ResponseEntity<ApiResponse<String>> reactivateCompany(
-            @PathVariable String companyId,
-            @RequestHeader("Authorization") String token
+            @PathVariable String companyId
     ) {
-        String jwt = token.substring(7);
-        String rs = companyService.reactivateCompany(companyId, jwt);
+        String rs = companyService.reactivateCompany(companyId);
         return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Success", rs));
     }
 

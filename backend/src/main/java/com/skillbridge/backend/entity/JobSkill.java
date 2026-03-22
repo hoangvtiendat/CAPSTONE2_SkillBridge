@@ -2,65 +2,33 @@ package com.skillbridge.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-/// Done
-@Entity
-@Table(name = "job_skills")
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class JobSkill extends BaseEntity{
+@Entity
+@Table(name = "job_skills")
+public class JobSkill extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id")
+    @JoinColumn(name = "job_id", nullable = false)
     @JsonIgnore
     private Job job;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "skill_id")
+    @JoinColumn(name = "skill_id", nullable = false)
     private Skill skill;
 
     @Column(name = "is_required")
-    private Boolean isRequired;
-
-
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Job getJob() {
-        return job;
-    }
-
-    public void setJob(Job job) {
-        this.job = job;
-    }
-
-    public Skill getSkill() {
-        return skill;
-    }
-
-    public void setSkill(Skill skill) {
-        this.skill = skill;
-    }
-
-    public Boolean getIsRequired() {
-        return isRequired;
-    }
-
-    public void setIsRequired(Boolean required) {
-        isRequired = required;
-    }
+    @Builder.Default
+    private Boolean isRequired = true;
 }

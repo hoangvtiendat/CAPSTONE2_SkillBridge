@@ -13,11 +13,14 @@ import java.util.List;
 
 @Repository
 public interface CandidateSkillRepository extends JpaRepository<CandidateSkill,String> {
-
+    /**
+     * Lấy danh sách tất cả các kỹ năng gắn liền với một ứng viên cụ thể.
+     * * @param candidate Thực thể ứng viên cần lấy kỹ năng
+     * @return Danh sách CandidateSkill chứa thông tin kỹ năng và cấp độ (nếu có)
+     */
     List<CandidateSkill> findByCandidate(Candidate candidate);
 
-    @Modifying
+    /** Xóa toàn bộ các kỹ năng liên quan đến một ứng viên dựa trên ID của ứng viên đó */
     @Transactional
-    @Query("DELETE FROM CandidateSkill cs WHERE cs.candidate.id = :userId")
-    void deleteByCandidateId(@Param("userId") String userId);
+    void deleteByCandidate_Id(String candidateId);
 }

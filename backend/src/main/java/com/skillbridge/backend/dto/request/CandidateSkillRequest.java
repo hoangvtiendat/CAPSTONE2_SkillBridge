@@ -1,22 +1,21 @@
 package com.skillbridge.backend.dto.request;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CandidateSkillRequest {
-    private String skillId;
-    private Integer experienceYears;
+    @NotBlank(message = "SKILL_NOT_FOUND")
+    String skillId;
 
-    public String getSkillId() {
-        return skillId;
-    }
-
-    public void setSkillId(String skillId) {
-        this.skillId = skillId;
-    }
-
-    public Integer getExperienceYears() {
-        return experienceYears;
-    }
-
-    public void setExperienceYears(Integer experienceYears) {
-        this.experienceYears = experienceYears;
-    }
+    @NotNull(message = "INVALID_INPUT")
+    @Min(value = 0, message = "INVALID_INPUT")
+    Integer experienceYears;
 }

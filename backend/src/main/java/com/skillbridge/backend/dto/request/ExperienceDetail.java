@@ -1,32 +1,29 @@
 package com.skillbridge.backend.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.time.LocalDate;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExperienceDetail {
 
+    @NotNull(message = "INVALID_INPUT")
+    @PastOrPresent(message = "INVALID_INPUT")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate startDate;
+    LocalDate startDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate endDate;
+    LocalDate endDate;
 
-    private String description;
-
-    public ExperienceDetail() {}
-
-    public ExperienceDetail(LocalDate startDate, LocalDate endDate, String description) {
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.description = description;
-    }
-
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
-
-    public LocalDate getEndDate() { return endDate; }
-    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    @NotBlank(message = "INVALID_INPUT")
+    String description;
 }

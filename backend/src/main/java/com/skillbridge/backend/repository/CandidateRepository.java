@@ -14,5 +14,6 @@ import java.util.List;
 
 @Repository
 public interface CandidateRepository extends JpaRepository<Candidate, String>, JpaSpecificationExecutor<Candidate> {
+    /** Tìm kiếm thông tin ứng viên dựa trên định danh người dùng (User ID) */
     Optional<Candidate> findByUser_Id(String userId);
 }

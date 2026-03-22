@@ -2,11 +2,17 @@ package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.entity.User;
-import com.skillbridge.backend.service.JwtService;
+import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.CompanyMemberRepository;
+import com.skillbridge.backend.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -15,26 +21,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private final JwtService jwtService;
-    private final com.skillbridge.backend.repository.UserRepository userRepository;
-    private final com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository;
-
-    public JwtAuthenticationFilter(JwtService jwtService, 
-                                 com.skillbridge.backend.repository.UserRepository userRepository,
-                                 com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository) {
-        this.jwtService = jwtService;
-        this.userRepository = userRepository;
-        this.companyMemberRepository = companyMemberRepository;
-    }
+    JwtService jwtService;
+    UserRepository userRepository;
+    CompanyMemberRepository companyMemberRepository;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-
+        String path = request.getServletPath();
         return path.startsWith("/oauth2/")
-                || path.startsWith("/login/");
+                || path.startsWith("/login/")
+                || path.startsWith("/auth/")
+                || path.startsWith("/public/");
     }
 
     @Override
@@ -44,73 +45,75 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (request.getServletPath().contains("/auth") || request.getServletPath().contains("/public")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token = authHeader.substring(7);
+        final String token = authHeader.substring(7);
 
         if (!jwtService.validateToken(token)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String userId = jwtService.getUserId(token);
+        try {
+            String userId = jwtService.getUserId(token);
+            String email = jwtService.getEmail(token);
+            String role = jwtService.getRole(token);
+            var user = userRepository.findById(userId).orElse(null);
+            if (user == null || !"ACTIVE".equals(user.getStatus())) {
+                sendErrorResponse(response, ErrorCode.USER_STATUS_LOCKED);
+                return;
+            }
 
-        var userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty() || !"ACTIVE".equals(userOptional.get().getStatus())) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"code\": 3003, \"message\": \"Tài khoản đã bị khóa\"}");
-            return;
+            if (isCompanyRelatedAction(request.getServletPath())) {
+                if (!checkCompanyStatus(userId, response)) return;
+            }
+            CustomUserDetails userDetails = new CustomUserDetails(userId, email, role);
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        } catch (Exception e) {
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
 
-        // US09: Kiểm tra nếu công ty bị vô hiệu hóa
+        filterChain.doFilter(request, response);
+    }
+
+    private boolean checkCompanyStatus(String userId, HttpServletResponse response) throws IOException {
         var memberOptional = companyMemberRepository.findByUser_Id(userId);
         if (memberOptional.isPresent()) {
             var member = memberOptional.get();
-            var company = member.getCompany();
-            if ("DEACTIVATED".equals(company.getStatus().name())) {
-                // Chỉ cho phép Company ADMIN truy cập các endpoint liên quan đến identity/reactivate
-                if (!"ADMIN".equals(member.getRole().name())) {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    response.setCharacterEncoding("UTF-8");
-                    response.getWriter().write("{\"code\": 6011, \"message\": \"Công ty của bạn đã bị vô hiệu hóa. Bạn tạm thời không thể truy cập quyền nhà tuyển dụng.\"}");
-                    return;
-                }
-                
-                // Admin vẫn được vào nhưng có thể bị hạn chế ở các API khác ngoài reactivate (tùy logic Controller)
-                // Ở đây ta cho phép Admin đi tiếp để họ có thể gọi API reactivate hoặc xem profile
+            if ("DEACTIVATED".equals(member.getCompany().getStatus().name())
+                    && !"ADMIN".equals(member.getRole().name())) {
+                sendErrorResponse(response, ErrorCode.COMPANY_ALREADY_DEACTIVATED);
+                return false;
             }
         }
+        return true;
+    }
 
-        User user = userOptional.get();
-        String email = user.getEmail();
-        String role = user.getRole();
+    private void sendErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+        response.setStatus(errorCode.getCode());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
-        CustomUserDetails userDetails =
-                new CustomUserDetails(userId, email, role);
+        String jsonResponse = String.format(
+                "{\"code\": %d, \"message\": \"%s\"}",
+                errorCode.getCode(),
+                errorCode.getMessage()
+        );
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+        response.getWriter().write(jsonResponse);
+    }
 
-        SecurityContextHolder.getContext()
-                .setAuthentication(authentication);
-
-        filterChain.doFilter(request, response);
+    private boolean isCompanyRelatedAction(String path) {
+        return path.startsWith("/jobs") || path.startsWith("/recruitment");
     }
 }

@@ -1,65 +1,106 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.utils.OtpUtils;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OtpService {
-    private final Map<String, String> otpStore = new ConcurrentHashMap<>();
-    private final Map<String, Long> otpExpire = new ConcurrentHashMap<>();
 
-    private static final long OTP_TTL = 3 * 60 * 1000; //thời hạn 180s
+    MailService mailService;
+    SystemLogService systemLog;
+    SimpMessagingTemplate messagingTemplate;
 
-    private final MailService mailService;
+    Map<String, OtpData> otpStorage = new ConcurrentHashMap<>();
 
-    public OtpService(MailService mailService) {
-        this.mailService = mailService;
+    // Thời gian sống của OTP (3 phút)
+    static long OTP_TTL = 3 * 60 * 1000;
+
+    /**
+     * Đối tượng lưu trữ nội bộ để đóng gói dữ liệu OTP
+     */
+    @Getter
+    @Builder
+    static class OtpData {
+        String code;
+        long expiryTime;
     }
 
+    /**
+     * Tạo OTP và lưu vào bộ nhớ tạm
+     */
     public String generateOtp(String email) {
-        String otp = String.valueOf((int) (Math.random() * 900000) + 100000);
-        otpStore.put(email, otp);
-        otpExpire.put(email, System.currentTimeMillis() + OTP_TTL);
-        return otp;
+        String otpCode = OtpUtils.generateRandomOtp();
+
+        OtpData data = OtpData.builder()
+                .code(otpCode)
+                .expiryTime(System.currentTimeMillis() + OTP_TTL)
+                .build();
+
+        otpStorage.put(email, data);
+
+        log.info("OTP generated for email: {}", email);
+        return otpCode;
     }
 
+    /**
+     * Gửi OTP qua Email và ghi Log hệ thống
+     */
     public void sendOtpEmail(String email, String subject, String content) {
-        mailService.sendToEmail(
-                email,
-                subject,
-                content
-        );
+        mailService.sendToEmail(null, email, subject, content);
+
+        // Ghi log hệ thống (currentUser = null vì user chưa login)
+        systemLog.info(null, "Hệ thống gửi mã OTP xác thực đến email: " + email);
+
+        // Realtime: Thông báo cho Admin biết có hoạt động gửi mã xác thực
+        messagingTemplate.convertAndSend("/topic/logs", "OTP_SENT:" + email);
     }
 
+    /**
+     * Xác thực mã OTP
+     */
     public boolean verifyOtp(String email, String otp) {
-        try {
-            if (!otpStore.containsKey(email)) {
-                return false;
-            }
-            long expireTime = otpExpire.get(email);
-            if (System.currentTimeMillis() > expireTime) {
-                otpStore.remove(email);
-                otpExpire.remove(email);
-                return false;
-            }
+        OtpData data = otpStorage.get(email);
 
-            return otpStore.get(email).equals(otp);
-//            boolean valid = otpStore.get(email).equals(otp);
-//            if (valid) {
-//                otpStore.remove(email);
-//                otpExpire.remove(email);
-//            }
-//            return valid;
-        } catch (Exception e) {
-            System.out.println("Catch: " + e.getMessage());
+        if (data == null) {
             return false;
         }
+
+        // Kiểm tra hết hạn
+        if (System.currentTimeMillis() > data.getExpiryTime()) {
+            consumeOtp(email);
+            return false;
+        }
+
+        return data.getCode().equals(otp);
     }
 
+    /**
+     * Hủy bỏ OTP sau khi sử dụng thành công
+     */
     public void consumeOtp(String email) {
-        otpStore.remove(email);
-        otpExpire.remove(email);
+        otpStorage.remove(email);
+    }
+
+    /**
+     * Kiểm tra xem Email có đang trong quá trình chờ OTP không
+     */
+    public boolean isWaitingForOtp(String email) {
+        return otpStorage.containsKey(email) &&
+                System.currentTimeMillis() < otpStorage.get(email).getExpiryTime();
     }
 }

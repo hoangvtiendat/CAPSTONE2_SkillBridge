@@ -1,25 +1,23 @@
 package com.skillbridge.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-/// Done
-@Entity
-@Table(name = "categories")
+import lombok.*;
+
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Data
-public class Category extends BaseEntity{
+@Entity
+@Table(name = "categories")
+public class Category extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
-
 }
-

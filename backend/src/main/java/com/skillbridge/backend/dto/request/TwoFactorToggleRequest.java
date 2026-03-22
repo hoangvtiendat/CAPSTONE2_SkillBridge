@@ -1,18 +1,18 @@
 package com.skillbridge.backend.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TwoFactorToggleRequest {
+
+    @NotNull(message = "FIELD_REQUIRED")
     @JsonProperty("isEnabled")
-    private boolean isEnabled;
-
-    public boolean isEnabled() {
-        return isEnabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        isEnabled = enabled;
-    }
+    Boolean isEnabled;
 }

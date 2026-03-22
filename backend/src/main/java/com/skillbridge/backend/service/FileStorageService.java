@@ -1,42 +1,99 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.utils.DataParserUtils;
+import com.skillbridge.backend.utils.SecurityUtils;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class FileStorageService {
 
-    private static final String UPLOAD_DIR = "uploads/";
+    @Value("${file.upload-dir:uploads}")
+    String uploadDir;
 
-    public String save(MultipartFile file) throws IOException {
-        Files.createDirectories(Paths.get(UPLOAD_DIR));
+    Path rootLocation;
 
-        String path = UPLOAD_DIR + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        file.transferTo(new File(path));
+    final SecurityUtils securityUtils;
+    final SystemLogService systemLog;
 
-        return path;
+    @PostConstruct
+    public void init() {
+        try {
+            this.rootLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(this.rootLocation);
+            log.info("Thư mục lưu trữ file đã sẵn sàng: {}", this.rootLocation);
+        } catch (IOException e) {
+            log.error("Không thể khởi tạo thư mục lưu trữ: {}", e.getMessage());
+            throw new RuntimeException("Could not initialize storage", e);
+        }
     }
 
-    public String saveFile(MultipartFile file, String subFolder) throws IOException {
-        if (file == null || file.isEmpty()) return null;
-
-        Path uploadPath = Paths.get(UPLOAD_DIR + subFolder);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+    /**
+     * Lưu file vào thư mục gốc kèm timestamp
+     */
+    public String save(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_FILE_FORMAT);
         }
 
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            String originalFileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+            String fileName = System.currentTimeMillis() + "_" + originalFileName;
+            Path targetLocation = this.rootLocation.resolve(fileName);
 
-        return "/" + subFolder + "/" + fileName;
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            return fileName;
+
+        } catch (IOException e) {
+            log.error("Lỗi khi lưu file: {}", e.getMessage());
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    /**
+     * Lưu file vào sub-folder (ví dụ: /avatars, /resumes)
+     */
+    public String saveFile(MultipartFile file, String subFolder) {
+        if (file == null || file.isEmpty() || DataParserUtils.isInvalid(subFolder)) {
+            return null;
+        }
+
+        try {
+            Path folderPath = this.rootLocation.resolve(subFolder).normalize();
+            if (!Files.exists(folderPath)) {
+                Files.createDirectories(folderPath);
+            }
+
+            String originalFileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+            String fileName = UUID.randomUUID().toString() + "_" + originalFileName;
+            Path filePath = folderPath.resolve(fileName);
+
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            return "/" + subFolder + "/" + fileName;
+
+        } catch (IOException e) {
+            log.error("Lỗi khi lưu file vào {}: {}", subFolder, e.getMessage());
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 }

@@ -1,11 +1,20 @@
 package com.skillbridge.backend.entity;
-import jakarta.persistence.*;
 
+import com.skillbridge.backend.utils.JsonConverter;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "candidates")
 public class Candidate extends BaseEntity {
 
     @Id
+    @Column(name = "user_id")
     private String id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -13,128 +22,36 @@ public class Candidate extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private String address;
 
+    @Column(name = "cv_url")
     private String cvUrl;
 
-    @Column(columnDefinition = "json")
+    @Column(name = "parsed_content_json", columnDefinition = "JSON")
     private String parsedContentJson;
 
-    @Column(columnDefinition = "json")
+    @Column(name = "vector_embedding", columnDefinition = "JSON")
     private String vectorEmbedding;
 
-    private Boolean isOpenToWork;
+    @Column(name = "is_open_to_work")
+    @Builder.Default
+    private Boolean isOpenToWork = true;
 
     @Convert(converter = JsonConverter.class)
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "JSON")
     private Object experience;
 
     @Convert(converter = JsonConverter.class)
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "JSON")
     private Object degree;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getCvUrl() {
-        return cvUrl;
-    }
-
-    public void setCvUrl(String cvUrl) {
-        this.cvUrl = cvUrl;
-    }
-
-    public String getParsedContentJson() {
-        return parsedContentJson;
-    }
-
-    public void setParsedContentJson(String parsedContentJson) {
-        this.parsedContentJson = parsedContentJson;
-    }
-
-    public String getVectorEmbedding() {
-        return vectorEmbedding;
-    }
-
-    public void setVectorEmbedding(String vectorEmbedding) {
-        this.vectorEmbedding = vectorEmbedding;
-    }
-
-    public Boolean getOpenToWork() {
-        return isOpenToWork;
-    }
-
-    public void setOpenToWork(Boolean openToWork) {
-        this.isOpenToWork = openToWork;
-    }
-
-    public Object getExperience() {
-        return experience;
-    }
-
-    public void setExperience(Object experience) {
-        this.experience = experience;
-    }
-
-    public Object getDegree() {
-        return degree;
-    }
-
-    public void setDegree(Object degree) {
-        this.degree = degree;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
 }

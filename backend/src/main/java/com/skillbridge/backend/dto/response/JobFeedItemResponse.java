@@ -1,23 +1,34 @@
 package com.skillbridge.backend.dto.response;
 
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class JobFeedItemResponse {
-    private String jobId;
-    private Object title;
-    private String description;
-    private String companyName;
-    private String companyImageUrl;
-    private Object subscriptionPlanName;
-    private String location;
-    private String categoryName;
-    private BigDecimal salaryMin;
-    private BigDecimal salaryMax;
+    String jobId;
+    Object title;
+    String description;
+    String companyName;
+    String companyImageUrl;
+    Object subscriptionPlanName;
+    String location;
+    String categoryName;
+    BigDecimal salaryMin;
+    BigDecimal salaryMax;
     List<String> skills;
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
+    /**
+     * Constructor tùy chỉnh nếu bạn vẫn dùng Query thủ công từ Repository (JPQL)
+     */
     public JobFeedItemResponse(String jobId, Object title, String description, String location,
                                BigDecimal salaryMin, BigDecimal salaryMax, LocalDateTime createdAt,
                                String companyName, String companyImageUrl, Object subscriptionPlanName, String categoryName) {
@@ -32,107 +43,5 @@ public class JobFeedItemResponse {
         this.companyImageUrl = companyImageUrl;
         this.subscriptionPlanName = subscriptionPlanName;
         this.categoryName = categoryName;
-    }
-
-    public String getJobId() {
-        return jobId;
-    }
-
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
-    }
-
-    public Object getTitle() {
-        return title;
-    }
-
-    public void setTitle(Object title) {
-        this.title = title;
-    }
-
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setSubscriptionPlanName(Object subscriptionPlanName) {
-        this.subscriptionPlanName = subscriptionPlanName;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
-
-
-    public String getCompanyImageUrl() {
-        return companyImageUrl;
-    }
-
-    public void setCompanyImageUrl(String companyImageUrl) {
-        this.companyImageUrl = companyImageUrl;
-    }
-
-    public Object getSubscriptionPlanName() {
-        return subscriptionPlanName;
-    }
-
-    public void setSubscriptionPlanName(String subscriptionPlanName) {
-        this.subscriptionPlanName = subscriptionPlanName;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
-    public BigDecimal getSalaryMin() {
-        return salaryMin;
-    }
-
-    public void setSalaryMin(BigDecimal salaryMin) {
-        this.salaryMin = salaryMin;
-    }
-
-    public BigDecimal getSalaryMax() {
-        return salaryMax;
-    }
-
-    public void setSalaryMax(BigDecimal salaryMax) {
-        this.salaryMax = salaryMax;
-    }
-
-    public List<String> getSkills() {
-        return skills;
-    }
-
-    public void setSkills(List<String> skills) {
-        this.skills = skills;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }

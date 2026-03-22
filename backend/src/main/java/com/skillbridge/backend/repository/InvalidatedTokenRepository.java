@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InvalidatedTokenRepository extends JpaRepository<InvalidatedToken, String> {
-
+    /** Kiểm tra xem một Token ID (jti) có nằm trong danh sách đen hay không */
+    boolean existsById(String jti);
 }

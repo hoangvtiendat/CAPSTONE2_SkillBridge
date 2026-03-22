@@ -9,6 +9,9 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.ApplicationService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -18,18 +21,21 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
 @RequestMapping("/applications")
 public class ApplicationController {
-    private final ApplicationService applicationService;
+    ApplicationService applicationService;
 
-    public ApplicationController(ApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
-
+    /**
+     * Lấy thông tin chi tiết một đơn ứng tuyển
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Application>> getApplicationById(@PathVariable String id, @Valid @RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<ApiResponse<Application>> getApplicationById(
+            @PathVariable String id,
+            @Valid @RequestHeader(value = "Authorization") String token
+    ) {
         try {
-
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
@@ -47,16 +53,20 @@ public class ApplicationController {
         }
     }
 
+    /**
+     * Lấy danh sách các đơn ứng tuyển theo ID của tin tuyển dụng
+     */
     @GetMapping("/job/{jobId}")
-    public ResponseEntity<ApiResponse<List<Application>>> getApplicationByJobId(@PathVariable String jobId, @Valid @RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<ApiResponse<List<Application>>> getApplicationByJobId(
+            @PathVariable String jobId,
+            @Valid @RequestHeader(value = "Authorization") String token
+    ) {
         try {
-
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             String jwt = token.substring(7);
             List<Application> rs = applicationService.getApplicationByJobId(jobId, jwt);
-
             ApiResponse<List<Application>> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Lấy đơn ứng tuyển theo tin tuyển dụng thành công", rs
             );
@@ -68,18 +78,21 @@ public class ApplicationController {
         }
     }
 
+    /**
+     * Nhà tuyển dụng phản hồi đơn ứng tuyển (Chấp nhận/Từ chối)
+     */
     @PostMapping("/{id}/respond")
     public ResponseEntity<ApiResponse<String>> respondToApplication(
-            @PathVariable String id, @Valid @RequestHeader(value = "Authorization") String token, @RequestBody RespondToApplicationRequest request
-            ) {
+            @PathVariable String id,
+            @Valid @RequestHeader(value = "Authorization") String token,
+            @RequestBody RespondToApplicationRequest request
+    ) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             String jwt = token.substring(7);
-
             String rs = applicationService.respondToApplication(id, jwt, request);
-
             ApiResponse<String> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Phản hồi đơn ứng tuyển thành công", rs
             );
@@ -90,5 +103,4 @@ public class ApplicationController {
             throw ex;
         }
     }
-
 }

@@ -21,6 +21,41 @@ import java.util.Optional;
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, String>, JpaSpecificationExecutor<Company> {
 
+    /** Tìm kiếm công ty theo Mã số thuế. Dùng để kiểm tra tính duy nhất khi đăng ký doanh nghiệp */
+    Optional<Company> findByTaxId(String taxId);
+
+    /** Đếm số lượng công ty theo trạng thái (Dùng cho Dashboard Admin) */
+    long countByStatus(CompanyStatus status);
+
+    /** Thống kê số lượng công ty đăng ký mới sau một khoảng thời gian nhất định. */
+    long countByCreatedAtAfter(LocalDateTime createdAtAfter);
+
+    /** Thống kê số lượng công ty đăng ký trong một khoảng thời gian (ví dụ: trong tháng này). */
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    /** Thống kê Top các công ty có số lượng bài đăng tuyển dụng nhiều nhất */
+    @Query("""
+        SELECT new com.skillbridge.backend.dto.TopCompanyDTO(
+            c.id, c.name, COUNT(j)
+        )
+        FROM Company c
+        LEFT JOIN Job j ON j.company.id = c.id AND j.isDeleted = false
+        WHERE c.isDeleted = false
+        GROUP BY c.id, c.name
+        ORDER BY COUNT(j) DESC
+    """)
+    List<TopCompanyDTO> findTop5ByJobCount(Pageable pageable);
+
+
+
+
+
+
+
+
+
+
+
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl, 
@@ -66,23 +101,6 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
             Pageable pageable
     );
 
-    Optional<Company> findCompaniesByTaxId(String taxId);
-
-    long countByStatus(CompanyStatus status);
-
-    @Query("""
-                SELECT new com.skillbridge.backend.dto.TopCompanyDTO(
-                    c.id,
-                    c.name,
-                    COUNT(j)
-                )
-                FROM Company c
-                LEFT JOIN Job j ON j.company.id = c.id
-                GROUP BY c.id, c.name
-                ORDER BY COUNT(j) DESC
-            """)
-    List<TopCompanyDTO> findTop5ByJobCount(Pageable pageable);
-
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
@@ -105,7 +123,4 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
             Pageable pageable
     );
 
-    long countByCreatedAtAfter(LocalDateTime createdAtAfter);
-
-    long countByCreatedAtBetween(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
 }

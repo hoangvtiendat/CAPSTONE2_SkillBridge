@@ -8,26 +8,30 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.AdminService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import com.skillbridge.backend.utils.PageableUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/admin")
 public class AdminController {
 
-    private final AdminService adminService;
+    AdminService adminService;
 
+    /**
+     * Lấy danh sách người dùng
+     */
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<Page<User>>> getUsers(
             @RequestParam(required = false) String name,
@@ -39,17 +43,13 @@ public class AdminController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction
     ) {
-        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-
+        Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
         Page<User> users = adminService.getUsers(name, email, role, status, pageable);
-
         ApiResponse<Page<User>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Lấy danh sách người dùng thành công",
                 users
         );
-
         return ResponseEntity.ok(response);
     }
 
@@ -88,7 +88,9 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}/unban")
-    public ResponseEntity<ApiResponse<Void>> unbanUser(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> unbanUser(
+            @PathVariable String id
+    ) {
         adminService.unbanUser(id);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
@@ -98,7 +100,9 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    // Company Management
+    /**
+     * Lấy danh sách công ty
+     */
     @GetMapping("/companies")
     public ResponseEntity<ApiResponse<Page<CompanyResponse>>> getCompanies(
             @RequestParam(required = false) String name,
@@ -109,22 +113,20 @@ public class AdminController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction
     ) {
-        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-
+        Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
         Page<CompanyResponse> companies = adminService.getCompanies(name, taxId, status, pageable);
-
         ApiResponse<Page<CompanyResponse>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Lấy danh sách công ty thành công",
                 companies
         );
-
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/companies/{id}/ban")
-    public ResponseEntity<ApiResponse<Void>> banCompany(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> banCompany(
+            @PathVariable String id
+    ) {
         adminService.banCompany(id);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
@@ -135,7 +137,9 @@ public class AdminController {
     }
 
     @PutMapping("/companies/{id}/unban")
-    public ResponseEntity<ApiResponse<Void>> unbanCompany(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> unbanCompany(
+            @PathVariable String id
+    ) {
         adminService.unbanCompany(id);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
@@ -146,7 +150,9 @@ public class AdminController {
     }
 
     @GetMapping("/companies/{id}")
-    public ResponseEntity<ApiResponse<CompanyResponse>> getCompanyById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<CompanyResponse>> getCompanyById(
+            @PathVariable String id
+    ) {
         CompanyResponse company = adminService.getCompanyById(id);
         ApiResponse<CompanyResponse> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
@@ -156,7 +162,9 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    // Category Management
+    /**
+     * Lấy danh sách ngành nghề
+     */
     @GetMapping("/categories")
     public ResponseEntity<ApiResponse<Page<CategoryResponse>>> getCategories(
             @RequestParam(defaultValue = "0") int page,
@@ -164,11 +172,8 @@ public class AdminController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction
     ) {
-        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-
+        Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
         Page<CategoryResponse> categories = adminService.getCategories(pageable);
-
         ApiResponse<Page<CategoryResponse>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Lấy danh sách ngành nghề thành công",
@@ -179,7 +184,9 @@ public class AdminController {
     }
 
     @PostMapping("/categories")
-    public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(@RequestBody CategoryRequest request) {
+    public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
+            @RequestBody CategoryRequest request
+    ) {
         CategoryResponse category = adminService.createCategory(request);
         ApiResponse<CategoryResponse> response = new ApiResponse<>(
                 HttpStatus.CREATED.value(),
@@ -204,7 +211,9 @@ public class AdminController {
     }
 
     @DeleteMapping("/categories/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(
+            @PathVariable String id)
+    {
         adminService.deleteCategory(id);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),

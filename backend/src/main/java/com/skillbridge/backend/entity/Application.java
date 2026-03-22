@@ -15,11 +15,12 @@ import lombok.*;
 public class Application extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @NotNull(message = "Công việc không được để trống")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id", nullable = false) // DB không cho phép null
+    @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
     @NotNull(message = "Ứng viên không được để trống")
@@ -57,15 +58,13 @@ public class Application extends BaseEntity {
     @Column(name = "ai_analysis", columnDefinition = "TEXT")
     private String aiAnalysis;
 
-    // Nếu ông dùng Hibernate 6+, nên dùng @JdbcTypeCode(SqlTypes.JSON)
-    // để DB hiểu đây là cột JSON thực thụ (nếu dùng PostgreSQL/MySQL)
     @Column(name = "qualifications", columnDefinition = "JSON")
     private String qualifications;
 
     @NotNull(message = "Trạng thái hồ sơ không được để trống")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default // Giúp Builder mặc định là PENDING nếu không set
+    @Builder.Default
     private ApplicationStatus status = ApplicationStatus.PENDING;
 }
 

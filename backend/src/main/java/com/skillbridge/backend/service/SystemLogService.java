@@ -1,11 +1,20 @@
 package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.response.CursorResponse;
 import com.skillbridge.backend.entity.SystemLog;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.LogLevel;
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.SystemLogRepository;
 import com.skillbridge.backend.repository.UserRepository;
+import com.skillbridge.backend.utils.DataParserUtils;
+import com.skillbridge.backend.utils.IpUtils;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -13,104 +22,104 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SystemLogService {
+    SystemLogRepository systemLogRepository;
+    UserRepository userRepository;
+    SimpMessagingTemplate messagingTemplate;
+    DataParserUtils dataParserUtils;
+    HttpServletRequest request;
+    IpUtils ipUtils;
 
-    private final SystemLogRepository systemLogRepository;
-    private final UserRepository userRepository;
-    private final SimpMessagingTemplate messagingTemplate;
-
-    public SystemLogService(
-            SystemLogRepository systemLogRepository,
-            UserRepository userRepository,
-            SimpMessagingTemplate messagingTemplate
-    ) {
-        this.systemLogRepository = systemLogRepository;
-        this.userRepository = userRepository;
-        this.messagingTemplate = messagingTemplate;
-    }
-
-    public List<SystemLog> getLogs(String cursor, int limit, String level, String date) {
-        System.out.println("\n" + "=".repeat(20) + " NHẬN REQUEST TRUY VẤN LOG " + "=".repeat(20));
-        System.out.println("-> Tham số đầu vào:");
-        System.out.println("   [Cursor]: " + (cursor == null ? "NULL (Lấy mới nhất)" : cursor));
-        System.out.println("   [Limit] : " + limit);
-        System.out.println("   [Level] : " + level);
-        System.out.println("   [Date]  : " + date);
-
+    /**
+     * Lấy danh sách Log theo cơ chế Cursor (ID của bản ghi cuối cùng)
+     */
+    public CursorResponse<SystemLog> getLogs(String cursor, int limit, String level, String date) {
         try {
             Pageable pageable = PageRequest.of(0, limit + 1);
 
-            LogLevel levelEnum = null;
-            if (level != null && !level.trim().isEmpty()) {
-                try {
-                    levelEnum = LogLevel.valueOf(level.toUpperCase().trim());
-                } catch (IllegalArgumentException e) {
-                    System.out.println("!! Cảnh báo: Level '" + level + "' không hợp lệ, chuyển về ALL.");
-                }
-            }
-            String cleanDate = null;
-            if (date != null && !date.trim().isEmpty() &&
-                    !date.equalsIgnoreCase("null") &&
-                    !date.equalsIgnoreCase("undefined")) {
-                cleanDate = date.trim();
-            }
+            LogLevel levelEnum = dataParserUtils.parseEnum(LogLevel.class, level);
+            LocalDate localDate = dataParserUtils.parseLocalDate(date);
 
-            // Gọi Repository
-            List<SystemLog> logs = systemLogRepository.getLogs(levelEnum, cursor, cleanDate, pageable);
+            LocalDateTime start = (localDate != null) ? localDate.atStartOfDay() : null;
+            LocalDateTime end = (localDate != null) ? localDate.atTime(LocalTime.MAX) : null;
 
-            System.out.println("-> Kết quả truy vấn DB:");
-            System.out.println("   [Số lượng thực tế trả về]: " + logs.size());
+            List<SystemLog> rawLogs = systemLogRepository.getLogs(
+                    levelEnum, start, end, null, cursor, pageable
+            );
 
-            if (!logs.isEmpty()) {
-                System.out.println("   [Bản ghi ĐẦU (Mới nhất)]: ID=" + logs.get(0).getId() + " | Time=" + logs.get(0).getCreatedAt());
-                System.out.println("   [Bản ghi CUỐI (Cũ nhất) ]: ID=" + logs.get(logs.size() - 1).getId());
+            List<SystemLog> logs = new ArrayList<>(rawLogs != null ? rawLogs : List.of());
 
-                // Kiểm tra logic hasMore cho bạn
-                if (logs.size() > limit) {
-                    System.out.println("   [Trạng thái]: CÒN dữ liệu để cuộn (hasMore = true)");
-                } else {
-                    System.out.println("   [Trạng thái]: ĐÃ HẾT dữ liệu (hasMore = false)");
-                }
-            } else {
-                System.out.println("   [Trạng thái]: Trống rỗng (Không có dữ liệu khớp bộ lọc)");
+            boolean hasNext = logs.size() > limit;
+            String nextCursor = null;
+
+            if (hasNext) {
+                logs.remove(limit);
+                nextCursor = logs.get(logs.size() - 1).getId();
             }
 
-            return logs;
+            return new CursorResponse<>(logs, nextCursor, hasNext);
 
         } catch (Exception e) {
-            System.err.println("!!! LỖI TRUY VẤN: " + e.getMessage());
-            e.printStackTrace();
-            return List.of();
-        } finally {
-            System.out.println("=".repeat(60) + "\n");
+            log.error("Error fetching logs: {}", e.getMessage());
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * Ghi log hành động mới (Transactional độc lập)
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logAction(CustomUserDetails userDetails, String action, LogLevel level) {
         try {
-            SystemLog log = new SystemLog();
+            SystemLog sysLog = new SystemLog();
+
             if (userDetails != null && userDetails.getUserId() != null) {
-                User userProxy = userRepository.getReferenceById(userDetails.getUserId());
-                log.setUser(userProxy);
+                userRepository.findById(userDetails.getUserId()).ifPresent(sysLog::setUser);
             }
+            String ipAddress = ipUtils.getClientIp(request);
+            sysLog.setIpAddress(ipAddress);
 
-            log.setAction(action);
-            log.setLogLevel(level);
+            sysLog.setAction(action);
+            sysLog.setLogLevel(level);
 
-            SystemLog savedLog = systemLogRepository.save(log);
+            SystemLog savedLog = systemLogRepository.save(sysLog);
 
-            // Bắn qua WebSocket
             messagingTemplate.convertAndSend("/topic/logs", savedLog);
 
-            String operator = (userDetails != null) ? userDetails.getUsername() : "System";
-            System.out.println(">>> [WS SEND]: " + action + " | Level: " + level + " | By: " + operator);
-
         } catch (Exception e) {
-            System.err.println("!!! LỖI GHI LOG: " + e.getMessage());
+            log.error("Failed to save action log: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Ghi log mức độ INFO (Thông tin thông thường)
+     */
+    public void info(CustomUserDetails user, String action) {
+        logAction(user, action, LogLevel.INFO);
+    }
+
+    /**
+     * Ghi log mức độ WARNING (Cảnh báo hành động nhạy cảm)
+     */
+    public void warn(CustomUserDetails user, String action) {
+        logAction(user, action, LogLevel.WARNING);
+    }
+
+    /**
+     * Ghi log mức độ DANGER (Lỗi hệ thống hoặc hành động nguy hiểm)
+     */
+    public void danger(CustomUserDetails user, String action) {
+        logAction(user, action, LogLevel.DANGER);
     }
 }

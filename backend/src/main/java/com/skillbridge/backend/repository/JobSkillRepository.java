@@ -13,12 +13,17 @@ import java.util.List;
 
 @Repository
 public interface JobSkillRepository extends JpaRepository<JobSkill, String> {
-    @Modifying
-    @Query("DELETE FROM JobSkill js WHERE js.skill.id = :skillId")
-    void deleteBySkillId(@Param("skillId") String skillId);
-    Boolean existsBySkillId(@Param("skillId") String skillId);
 
+    /** Kiểm tra xem một kỹ năng có đang được sử dụng bởi bất kỳ bài đăng tuyển dụng nào không */
+    boolean existsBySkillId(String skillId);
+
+    /** Xóa toàn bộ danh sách kỹ năng của một bài đăng tuyển dụng cụ thể */
     @Modifying
-    @Query("DELETE FROM JobSkill js WHERE js.job.id = :jobId")
+    @Transactional
+    @Query("""
+            UPDATE JobSkill js
+            SET js.isDeleted = true
+            WHERE js.job.id = :jobId
+    """)
     void deleteByJobId(@Param("jobId") String jobId);
 }
