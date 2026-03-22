@@ -47,7 +47,7 @@ public enum ErrorCode {
     APPLICATION_ALREADY_EXISTS(3010, "Bạn đã nộp đơn cho công việc này rồi", HttpStatus.BAD_REQUEST),
     OCR_FAILED(3011,"Lỗi ocr không thể đọc được dữ liệu",HttpStatus.BAD_REQUEST),
     // 4xxx: COMPANY & MEMBERSHIP
-    COMPANY_NOT_FOUND(4000, "Không tìm thấy thông tin công ty", HttpStatus.NOT_FOUND),
+    COMPANY_NOT_FOUND(4000, "Mã số thuế chưa tồn tại. Vui lòng đăng ký mới!", HttpStatus.NOT_FOUND),
     COMPANY_EXIST(4001, "Công ty này đã được đăng ký trên hệ thống", HttpStatus.BAD_REQUEST),
     NOT_COMPANY_MEMBER(4002, "Bạn không phải là thành viên của công ty này", HttpStatus.FORBIDDEN),
     NOT_COMPANY_ADMIN(4003, "Bạn không có quyền Admin của công ty", HttpStatus.FORBIDDEN),
