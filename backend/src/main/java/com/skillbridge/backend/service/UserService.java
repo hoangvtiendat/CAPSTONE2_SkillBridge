@@ -1,80 +1,100 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.UserCreationRequest;
 import com.skillbridge.backend.dto.request.UserUpdateRequest;
 import com.skillbridge.backend.dto.response.UserResponse;
-import com.skillbridge.backend.entity.CompanyMember;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.UserRepository;
+import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private CompanyMemberRepository companyMemberRepository;
+    UserRepository userRepository;
+    PasswordEncoder passwordEncoder;
+    JwtService jwtService;
+    CompanyMemberRepository companyMemberRepository;
+    SystemLogService systemLog;
+    SecurityUtils securityUtils;
 
+    /**
+     * Tạo người dùng mới và mã hóa mật khẩu
+     */
     public User createUser(UserCreationRequest request) {
         User user = new User();
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         user.setPassword(hashedPassword);
         user.setEmail(request.getEmail());
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        systemLog.info(null, "Hệ thống: Tạo tài khoản mới cho email: " + savedUser.getEmail());
+
+        return savedUser;
     }
 
+    /**
+     * Cập nhật thông tin cơ bản của người dùng theo ID
+     */
+    @Transactional
     public User updateUser(String id, UserUpdateRequest request) {
         User user = getUser(id);
         user.setEmail(request.getEmail());
+
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        systemLog.warn(currentUser, "Admin cập nhật thông tin người dùng ID: " + id);
+
         return userRepository.save(user);
     }
 
+    /**
+     * Lấy danh sách tất cả người dùng
+     */
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
+    /**
+     * Tìm người dùng theo ID
+     */
     public User getUser(String id) {
         return userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
+    /**
+     * Xóa người dùng
+     */
+    @Transactional
     public void deleteUser(String id) {
         User user = getUser(id);
-        userRepository.delete(user);
+        user.setDeleted(true);
+        userRepository.save(user);
+
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        systemLog.danger(currentUser, "Xóa người dùng (Soft Delete) ID: " + id);
     }
 
-    public User getMe(String token) {
-        if (token == null || token.isBlank() || !jwtService.validateToken(token)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-        String userId;
-        try {
-            userId = jwtService.getUserId(token);
-            System.out.println("userId = " + userId);
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-        if (userId == null) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
+    /**
+     * Lấy thông tin chi tiết người dùng hiện tại
+     */
+    public User getMe(String userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         System.out.println("user = " + user);
-
-        // Populate transient company fields
         companyMemberRepository.findByUser_Id(user.getId()).ifPresent(member -> {
             user.setCompanyName(member.getCompany().getName());
             user.setCompanyId(member.getCompany().getId());
@@ -87,8 +107,8 @@ public class UserService {
     }
 
     @Transactional
-    public User updateMe(String token, UserUpdateRequest request) {
-        User user = userRepository.findById(jwtService.getUserId(token))
+    public User updateMe(String userId, UserUpdateRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (request.getName() != null) {
@@ -114,9 +134,15 @@ public class UserService {
             user.setCompanyRole(member.getRole().name());
         });
 
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        systemLog.info(currentUser, "Người dùng tự cập nhật thông tin cá nhân");
+
         return user;
     }
 
+    /**
+     * Chuyển đổi Entity User sang UserResponse DTO
+     */
     public UserResponse mapToUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())

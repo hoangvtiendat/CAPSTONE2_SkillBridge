@@ -3,8 +3,7 @@ package com.skillbridge.backend.entity;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -13,45 +12,56 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-
-@Entity
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
 @Table(name = "jobs")
-public class Job extends BaseEntity{
+public class Job extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id")
+    @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recruiter_id")
+    @JoinColumn(name = "recruiter_id", nullable = false)
     private CompanyMember companyMember;
 
+    @Column(nullable = false)
     private String position;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "JSON")
     private Map<String, Object> title;
 
     @Enumerated(EnumType.STRING)
-    private ModerationStatus moderationStatus;
+    @Column(name = "moderation_status")
+    @Builder.Default
+    private ModerationStatus moderationStatus = ModerationStatus.YELLOW;
 
+    @Column(name = "moderation_score")
     private Float moderationScore;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "json")
+    @Column(name = "vector_embedding", columnDefinition = "JSON")
     private float[] vectorEmbedding;
 
-    private Integer viewCount;
+    @Column(name = "view_count")
+    @Builder.Default
+    private Integer viewCount = 0;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "VARCHAR(20) DEFAULT 'OPEN'")
-    private JobStatus status;
+    @Column(name = "status", length = 20)
+    @Builder.Default
+    private JobStatus status = JobStatus.OPEN;
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<JobSkill> jobSkills;
@@ -63,142 +73,20 @@ public class Job extends BaseEntity{
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "salary_min", precision = 19, scale = 2)
     private BigDecimal salaryMin;
+
+    @Column(name = "salary_max", precision = 19, scale = 2)
     private BigDecimal salaryMax;
 
     private String location;
-    private Integer PostingDay;
+
+    @Column(name = "posting_day")
+    private Integer postingDay;
+
     @Column(name = "start_date")
-    private LocalDateTime startDate ;
+    private LocalDateTime startDate;
 
     @Column(name = "end_date")
     private LocalDateTime endDate;
-
-
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Company getCompany() {
-        return company;
-    }
-
-    public void setCompany(Company company) {
-        this.company = company;
-    }
-
-    public CompanyMember getCompanyMember() {
-        return companyMember;
-    }
-
-    public void setCompanyMember(CompanyMember companyMember) {
-        this.companyMember = companyMember;
-    }
-
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
-    }
-
-    public Map<String, Object> getTitle() {
-        return title;
-    }
-
-    public void setTitle(Map<String, Object> title) {
-        this.title = title;
-    }
-
-    public ModerationStatus getModerationStatus() {
-        return moderationStatus;
-    }
-
-    public void setModerationStatus(ModerationStatus moderationStatus) {
-        this.moderationStatus = moderationStatus;
-    }
-
-    public Float getModerationScore() {
-        return moderationScore;
-    }
-
-    public void setModerationScore(Float moderationScore) {
-        this.moderationScore = moderationScore;
-    }
-
-    public float[] getVectorEmbedding() {
-        return vectorEmbedding;
-    }
-
-    public void setVectorEmbedding(float[] vectorEmbedding) {
-        this.vectorEmbedding = vectorEmbedding;
-    }
-
-    public Integer getViewCount() {
-        return viewCount;
-    }
-
-    public void setViewCount(Integer viewCount) {
-        this.viewCount = viewCount;
-    }
-
-    public JobStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(JobStatus status) {
-        this.status = status;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public BigDecimal getSalaryMin() {
-        return salaryMin;
-    }
-
-    public void setSalaryMin(BigDecimal salaryMin) {
-        this.salaryMin = salaryMin;
-    }
-
-    public BigDecimal getSalaryMax() {
-        return salaryMax;
-    }
-
-    public void setSalaryMax(BigDecimal salaryMax) {
-        this.salaryMax = salaryMax;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-    public List<JobSkill> getJobSkills() {
-        return jobSkills;
-    }
-    public void setJobSkills(List<JobSkill> jobSkills) {
-        this.jobSkills = jobSkills;
-    }
 }

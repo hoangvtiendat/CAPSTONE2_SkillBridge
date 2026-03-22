@@ -2,19 +2,27 @@ package com.skillbridge.backend.entity;
 
 import com.skillbridge.backend.enums.SlotStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
-/// Done
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "interview_slots")
-public class InterviewSlot extends BaseEntity{
+public class InterviewSlot extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job")
+    @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
     @Column(name = "start_time", nullable = false)
@@ -24,45 +32,7 @@ public class InterviewSlot extends BaseEntity{
     private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
-    private SlotStatus status;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Job getJobId() {
-        return job;
-    }
-
-    public void setJobId(Job job) {
-        this.job = job;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public SlotStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(SlotStatus status) {
-        this.status = status;
-    }
+    @Column(nullable = false)
+    @Builder.Default
+    private SlotStatus status = SlotStatus.AVAILABLE;
 }

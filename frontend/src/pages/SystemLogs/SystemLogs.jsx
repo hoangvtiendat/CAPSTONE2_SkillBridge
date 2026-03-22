@@ -28,13 +28,13 @@ const SystemLogs = () => {
             const response = await systemLogService.getLogs(cursor, limit, level, filterDate);
 
             if (response && response.code === 200) {
-                const newLogs = response.result || [];
+                const newLogs = response.result.data || [];
                 if (isAppend) {
                     setLogs(prev => [...prev, ...newLogs]);
                 } else {
                     setLogs(newLogs);
                 }
-                setHasMore(newLogs.length === limit);
+                setHasMore(response.result.hasNext);
             }
         } catch (error) {
             console.error("Failed to load logs:", error);
@@ -47,7 +47,6 @@ const SystemLogs = () => {
         const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
         const threshold = 100;
         const isNearBottom = scrollHeight - scrollTop <= clientHeight + threshold;
-
         if (isNearBottom && hasMore && !loading && logs.length > 0) {
             const lastLogId = logs[logs.length - 1].id;
             fetchLogs(lastLogId, true);

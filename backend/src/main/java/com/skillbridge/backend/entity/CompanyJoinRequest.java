@@ -4,6 +4,11 @@ import com.skillbridge.backend.enums.JoinRequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(
         name = "company_join_requests",
@@ -14,14 +19,12 @@ import lombok.*;
                 )
         }
 )
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class CompanyJoinRequest extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -34,37 +37,6 @@ public class CompanyJoinRequest extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private JoinRequestStatus status;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Company getCompany() {
-        return company;
-    }
-
-    public void setCompany(Company company) {
-        this.company = company;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public JoinRequestStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(JoinRequestStatus status) {
-        this.status = status;
-    }
+    @Builder.Default
+    private JoinRequestStatus status = JoinRequestStatus.PENDING;
 }

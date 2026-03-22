@@ -1,39 +1,19 @@
 package com.skillbridge.backend.dto.response;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RegisterResponse {
-    private String email;
-    private String accessToken;
-    private String refreshToken;
 
-   public  RegisterResponse(String email, String accessToken, String refreshToken) {
-       this.email = email;
-       this.accessToken = accessToken;
-       this.refreshToken = refreshToken;
-   }
-    public String getEmail() {
-        return email;
-    }
+    String email;
+    String accessToken;
+    String refreshToken;
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
 }

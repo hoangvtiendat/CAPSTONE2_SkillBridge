@@ -3,17 +3,19 @@ package com.skillbridge.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
-@Table(name = "notifications")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "notifications")
 public class Notification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,9 +29,12 @@ public class Notification extends BaseEntity {
     private String content;
 
     @Column(name = "is_read", nullable = false)
+    @Builder.Default
     private boolean isRead = false;
 
+    @Column(length = 50)
     private String type; // Ví dụ: APPLICATION_STATUS, NEW_JOB, SYSTEM
 
-    private String link; // Đường dẫn để FE điều hướng khi người dùng click vào thông báo (ví dụ: /applications/123)
+    @Column(length = 500)
+    private String link;
 }

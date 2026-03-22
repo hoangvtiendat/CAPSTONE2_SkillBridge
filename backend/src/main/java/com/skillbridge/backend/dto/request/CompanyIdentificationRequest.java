@@ -1,60 +1,31 @@
 package com.skillbridge.backend.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.URL;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CompanyIdentificationRequest {
-    private String name;
-    private String taxcode;
-    private String description;
-    private String address;
-    private String websiteUrl;
 
-    public CompanyIdentificationRequest(String name, String taxcode, String businessLicenseUrl, String imageUrl, String description, String address, String websiteUrl) {
-        this.name = name;
-        this.taxcode = taxcode;
-        this.description = description;
-        this.address = address;
-        this.websiteUrl = websiteUrl;
-    }
+    @NotBlank(message = "INVALID_INPUT")
+    @Size(max = 255, message = "INVALID_INPUT")
+    String name;
 
-    public CompanyIdentificationRequest() {
-    }
+    @NotBlank(message = "COMPANY_EXIST")
+    String taxcode;
 
-    public String getName() {
-        return name;
-    }
+    @Size(max = 2000, message = "INVALID_INPUT")
+    String description;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    @NotBlank(message = "INVALID_INPUT")
+    String address;
 
-    public String getTaxcode() {
-        return taxcode;
-    }
-
-    public void setTaxcode(String taxcode) {
-        this.taxcode = taxcode;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getWebsiteUrl() {
-        return websiteUrl;
-    }
-
-    public void setWebsiteUrl(String websiteUrl) {
-        this.websiteUrl = websiteUrl;
-    }
+    @URL(message = "INVALID_INPUT")
+    String websiteUrl;
 }

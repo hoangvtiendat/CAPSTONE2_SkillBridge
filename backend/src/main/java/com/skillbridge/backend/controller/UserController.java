@@ -1,5 +1,6 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.UserCreationRequest;
 import com.skillbridge.backend.dto.request.UserUpdateRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
@@ -9,19 +10,24 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.UserService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/users")
 public class UserController {
-    @Autowired
-    private UserService userService;
+    UserService userService;
 
     @PostMapping
     User createUser(@RequestBody UserCreationRequest request) {
@@ -34,12 +40,9 @@ public class UserController {
         return userService.getUsers();
     }
 
-    //Chỉ cho phép ADMIN getuser
-    // api get - .../identity/users
     @GetMapping("/{userid}  ")
     User getUser(@PathVariable String userid) {
         return userService.getUser(userid);
-
     }
 
     @PutMapping("/{userid}")
@@ -55,14 +58,11 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserResponse>> getMe(@Valid @RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<ApiResponse<UserResponse>> getMe(
+            @AuthenticationPrincipal CustomUserDetails currentUser
+    ) {
         try {
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            String jwt = token.substring(7);
-
-            User user = userService.getMe(jwt);
+            User user = userService.getMe(currentUser.getUserId());
             UserResponse rs = userService.mapToUserResponse(user);
             ApiResponse<UserResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Lấy dữ liệu cá nhân thành công", rs
@@ -77,14 +77,12 @@ public class UserController {
     }
 
     @PatchMapping("/me")
-    public ResponseEntity<ApiResponse<UserResponse>> updateMe(@Valid @RequestHeader(value = "Authorization") String token, @RequestBody UserUpdateRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> updateMe(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestBody UserUpdateRequest request
+    ) {
         try {
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            String jwt = token.substring(7);
-
-            User user = userService.updateMe(jwt, request);
+            User user = userService.updateMe(currentUser.getUserId(), request);
             UserResponse rs = userService.mapToUserResponse(user);
             ApiResponse<UserResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Chỉnh sửa thông tin cá nhân thành công", rs

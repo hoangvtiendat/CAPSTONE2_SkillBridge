@@ -7,6 +7,9 @@ import com.skillbridge.backend.entity.SubcriptionOfCompany;
 import com.skillbridge.backend.entity.SubscriptionPlan;
 import com.skillbridge.backend.service.SubscriptionService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,15 +18,11 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/subscription")
-
 public class SubscriptionController {
-
-    private final SubscriptionService subscriptionService;
-
-    public SubscriptionController(SubscriptionService subscriptionService ) {
-        this.subscriptionService = subscriptionService;
-    }
+    SubscriptionService subscriptionService;
 
     @GetMapping("/list")
     public ResponseEntity<List<SubscriptionPlan>> getAllSubscriptions() {
@@ -31,16 +30,17 @@ public class SubscriptionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SubscriptionPlan> getSubscriptionById(@PathVariable("id") String id) {
+    public ResponseEntity<SubscriptionPlan> getSubscriptionById(
+            @PathVariable("id") String id
+    ) {
         return ResponseEntity.ok(subscriptionService.getSubscriptionPlanById(id));
     }
 
     @PostMapping("/company/create")
     public ResponseEntity<SubcriptionOfCompany> createCompanySubscription(
-            @Valid @RequestBody CompanySubscriptionRequest companySubscriptionRequest) {
-
+            @Valid @RequestBody CompanySubscriptionRequest companySubscriptionRequest
+    ) {
         SubcriptionOfCompany companySubscriptions = subscriptionService.createCompanySubscriptions(companySubscriptionRequest);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(companySubscriptions);
     }
 
@@ -49,19 +49,21 @@ public class SubscriptionController {
             @PathVariable("id") String id
     ) {
         subscriptionService.deleteCompanySubscription(id);
-
         return ResponseEntity.ok(
-                new ApiResponse<>(200, "Xóa gói đăng ký thành công", null)
+            new ApiResponse<>(
+                200,
+                "Xóa gói đăng ký thành công",
+                null
+            )
         );
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<SubscriptionPlan> updateSubscription(
             @PathVariable("id") String id,
-            @RequestBody SubscriptionPlan subscriptionPlan) {
-
+            @RequestBody SubscriptionPlan subscriptionPlan
+    ) {
         SubscriptionPlan sub = subscriptionService.updateSubscription(id, subscriptionPlan);
-
         return ResponseEntity.ok(sub);
     }
 
@@ -69,7 +71,4 @@ public class SubscriptionController {
     public ResponseEntity<List<SubcriptionOfCompany>> getAllSubscriptionPlans() {
         return ResponseEntity.ok(subscriptionService.getMyCompanySubscriptions());
     }
-
-
-
 }

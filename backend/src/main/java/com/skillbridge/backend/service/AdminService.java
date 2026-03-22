@@ -17,7 +17,10 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.repository.specification.CompanySpecification;
 import com.skillbridge.backend.repository.specification.UserSpecification;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,15 +35,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AdminService {
 
-    private final UserRepository userRepository;
-    private final CompanyRepository companyRepository;
-    private final JobRepository jobRepository;
-    private final CompanySubscriptionRepository subscriptionRepository;
-    private final UserService userService;
-    private final CategoryRepository categoryRepository;
+    UserRepository userRepository;
+    CompanyRepository companyRepository;
+    JobRepository jobRepository;
+    CompanySubscriptionRepository subscriptionRepository;
+    UserService userService;
+    CategoryRepository categoryRepository;
 
     public SystemStatsResponse statsOverview(String token, LocalDate startDate, LocalDate endDate) {
         User user = userService.getMe(token);

@@ -1,11 +1,11 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.DeactivateRequest;
 import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
-import com.skillbridge.backend.dto.response.CompanyMemberResponse;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.entity.CompanyJoinRequest;
 import com.skillbridge.backend.entity.CompanyMember;
@@ -19,7 +19,12 @@ import com.skillbridge.backend.enums.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
+import com.skillbridge.backend.utils.SecurityUtils;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -27,59 +32,32 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import com.skillbridge.backend.repository.SubscriptionPlanRepository;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CompanyService {
-    private final String UPLOAD_DIR = "uploads/";
-    private final OtpService otpService;
-
-    private final com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository;
-    private final UserService userService;
-    private final CompanyRepository companyRepository;
-    private final SubscriptionPlanRepository subscriptionPlanRepository;
-    private final CompanyJoinRequestRepository companyJoinRequestRepository;
-    private final FileStorageService fileStorageService;
-    private final JobRepository jobRepository;
-    private final SystemLogRepository systemLogRepository;
-    private final com.skillbridge.backend.repository.UserRepository userRepository;
-
-    public CompanyService(
-            FileStorageService fileStorageService,
-            CompanyRepository companyRepository,
-            SubscriptionPlanRepository subscriptionPlanRepository,
-            CompanyMemberRepository companyMemberRepository,
-            UserService userService,
-            CompanyJoinRequestRepository companyJoinRequestRepository,
-            JobRepository jobRepository,
-            SystemLogRepository systemLogRepository,
-            OtpService otpService,
-            com.skillbridge.backend.repository.UserRepository userRepository) {
-        this.companyRepository = companyRepository;
-        this.subscriptionPlanRepository = subscriptionPlanRepository;
-        this.companyMemberRepository = companyMemberRepository;
-        this.userService = userService;
-        this.companyJoinRequestRepository = companyJoinRequestRepository;
-        this.jobRepository = jobRepository;
-        this.systemLogRepository = systemLogRepository;
-        this.otpService = otpService;
-        this.userRepository = userRepository;
-        this.fileStorageService = fileStorageService;
-    }
+    String UPLOAD_DIR = "uploads/";
+    OtpService otpService;
+    CompanyMemberRepository companyMemberRepository;
+    CompanyRepository companyRepository;
+    CompanyJoinRequestRepository companyJoinRequestRepository;
+    FileStorageService fileStorageService;
+    JobRepository jobRepository;
+    UserRepository userRepository;
+    SystemLogService systemLogService;
+    SecurityUtils securityUtils;
+    NotificationService notificationService;
+    SimpMessagingTemplate messagingTemplate;
 
     public Map<String, Object> getCompanies(int page, CompanyStatus status, int limit, String keyword, String categoryId) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -121,19 +99,70 @@ public class CompanyService {
         }
     }
 
+
+
+
+
+
+    /** ADMIN phản hồi yêu cầu từ công ty */
+    @Transactional
     public String responseCompanies(String id,String status){
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         try{
             Company company = companyRepository.findById(id)
                     .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 
+            CompanyMember creator = companyMemberRepository.findByCompany_Id(id).stream()
+                    .findFirst()
+                    .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+            User userCreator = creator.getUser();
+            String subject = "[SkillBridge] Thông báo kết quả duyệt hồ sơ công ty";
+            String content = "";
+
             if("ACTIVE".equals(status)){
                 company.setStatus(CompanyStatus.ACTIVE);
-                System.out.println("Admin đã chấp nhận công ty này");
+                creator.setRole(CompanyRole.ADMIN);
+                userCreator.setRole("RECRUITER");
+
+                companyMemberRepository.save(creator);
+                content = String.format(
+                    "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
+                            "<h2 style='color: #28a745;'>Chúc mừng! Công ty của bạn đã được duyệt</h2>" +
+                            "<p>Chào <b>%s</b>,</p>" +
+                            "<p>Yêu cầu đăng ký công ty <b>%s</b> của bạn đã được quản trị viên hệ thống phê duyệt.</p>" +
+                            "<p>Hiện tại bạn đã có quyền <b>Quản trị viên (Recruiter)</b> để đăng tin tuyển dụng và quản lý nhân sự cho công ty.</p>" +
+                            "<p>Vui lòng đăng nhập để trải nghiệm các tính năng dành cho doanh nghiệp.</p>" +
+                            "<br><p>Trân trọng,<br>SkillBridge Team</p></div>",
+                    userCreator.getName(), company.getName()
+                );
+                systemLogService.info(currentUser, "Admin phê duyệt công ty: " + company.getName());
             }else{
                 company.setStatus(CompanyStatus.BAN);
-                System.out.println("Admin đã ban công ty này");
+                content = String.format(
+                    "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
+                            "    <h2 style='color: #dc3545;'>Thông báo từ chối hồ sơ</h2>" +
+                            "    <p>Chào <b>%s</b>,</p>" +
+                            "    <p>Rất tiếc, hồ sơ đăng ký công ty <b>%s</b> của bạn đã bị từ chối/khóa bởi quản trị viên hệ thống.</p>" +
+                            "    <p><b>Lưu ý:</b> Nếu bạn cho rằng đây là một sự nhầm lẫn, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi để được giải quyết.</p>" +
+                            "    <br><p>Trân trọng,<br><b>SkillBridge Team</b></p>" +
+                            "</div>",
+                    userCreator.getName(), company.getName()
+                );
+                systemLogService.warn(currentUser, "Admin từ chối/ban công ty: " + company.getName());
             }
             companyRepository.save(company);
+            notificationService.createNotification(
+                    userCreator,
+                    null,
+                    subject,
+                    content,
+                    "COMPANY_MODERATION",
+                    "/companies/" + id,
+                    true
+            );
+
+            messagingTemplate.convertAndSend("/topic/companies", id);
+
             return "Duyệt yêu cầu tạo công ty thành công";
         }catch(Exception e){
             System.out.println("Loi" + e);
@@ -141,6 +170,7 @@ public class CompanyService {
         }
     }
 
+    /** Xem chi tiết công ty */
     public CompanyFeedItemResponse getCompanyDetail(String id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
@@ -154,11 +184,12 @@ public class CompanyService {
         );
     }
 
+    /** Tra cứu công ty theo mã số thuế trên trang tratenongty */
     public CompanyDTO lookupByTaxCode(String mst) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String cleanMst = mst.trim();
         try {
             String searchUrl = "https://www.tratencongty.com/search/" + cleanMst;
-
             Document searchDoc = Jsoup.connect(searchUrl)
                     .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
                     .header("Content-Type", "application/x-www-form-urlencoded")
@@ -167,35 +198,36 @@ public class CompanyService {
                     .timeout(15000)
                     .followRedirects(true)
                     .post();
+            CompanyDTO result = null;
 
             if (searchDoc.location().contains("/company/")) {
-                return parseTraTenCongTy(searchDoc, cleanMst);
+                result = parseTraTenCongTy(searchDoc, cleanMst);
+            } else {
+                Element firstLink = searchDoc.selectFirst(".search-results a[href*='/company/']");
+                if (firstLink != null) {
+                    String detailUrl = firstLink.absUrl("href");
+                    Document detailDoc = Jsoup.connect(detailUrl)
+                            .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+                            .get();
+                    result = parseTraTenCongTy(detailDoc, cleanMst);
+                }
             }
-
-            Element searchResults = searchDoc.selectFirst(".search-results");
-            if (searchResults == null) {
-                return null;
+            if (result != null) {
+                systemLogService.info(currentUser, "Tra cứu MST thành công: " + cleanMst + " - " + result.getName());
+            } else {
+                systemLogService.warn(currentUser, "Tra cứu MST không tìm thấy kết quả: " + cleanMst);
             }
-            Element firstLink = searchDoc.selectFirst(".search-results a[href*='/company/']");
-
-            if (firstLink != null) {
-                String detailUrl = firstLink.absUrl("href");
-
-                Document detailDoc = Jsoup.connect(detailUrl)
-                        .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
-                        .get();
-                return parseTraTenCongTy(detailDoc, cleanMst);
-            }
+            return result;
         } catch (Exception e) {
-            System.err.println("!!! LỖI TRONG QUÁ TRÌNH TRA CỨU: " + e.getMessage());
+            systemLogService.danger(currentUser, "Lỗi hệ thống khi tra cứu MST " + cleanMst + ": " + e.getMessage());
+            return null;
         }
-        return null;
     }
 
+    /** hàm hỗ trợ lấy thông tin công ty */
     private CompanyDTO parseTraTenCongTy(Document doc, String mst) {
         CompanyDTO dto = new CompanyDTO();
         dto.setTaxCode(mst);
-
         Element jumbotron = doc.selectFirst(".jumbotron");
         if (jumbotron != null) {
             Element mainTitle = doc.selectFirst("h4, h1");
@@ -213,7 +245,6 @@ public class CompanyService {
             String rawHtml = jumbotron.html();
             String textLines = Jsoup.clean(rawHtml, "", org.jsoup.safety.Safelist.none()
                     .addTags("br")).replace("<br>", "\n");
-
             for (String line : textLines.split("\n")) {
                 String cleanLine = line.trim();
                 String lowerLine = cleanLine.toLowerCase();
@@ -237,8 +268,9 @@ public class CompanyService {
         return dto;
     }
 
+    /** Lấy thông tin công ty dựa vào mã số thuế */
     public CompanyFeedItemResponse getCompanyByTax(String taxCode) {
-        Optional<Company> companyOpt = companyRepository.findCompaniesByTaxId(taxCode);
+        Optional<Company> companyOpt = companyRepository.findByTaxId(taxCode);
 
         if (companyOpt.isPresent()) {
             Company company = companyOpt.get();
@@ -251,18 +283,17 @@ public class CompanyService {
     public CompanyFeedItemResponse identifyCompany(CompanyIdentificationRequest request,
                                                    MultipartFile logo,
                                                    MultipartFile license) throws IOException {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
-        // 1. Kiểm tra tồn tại qua Tax Code
-        Optional<Company> companyOpt = companyRepository.findCompaniesByTaxId(request.getTaxcode());
+        Optional<Company> companyOpt = companyRepository.findByTaxId(request.getTaxcode());
         if (companyOpt.isPresent()) {
+            systemLogService.warn(currentUser, "Đăng ký trùng MST: " + request.getTaxcode());
             throw new AppException(ErrorCode.COMPANY_EXIST);
         }
 
-        // 2. Xử lý lưu File
         String logoUrl = fileStorageService.saveFile(logo, "logos");
         String licenseUrl = fileStorageService.saveFile(license, "licenses");
 
-        // 3. Lưu vào Database
         Company company = new Company();
         company.setName(request.getName());
         company.setTaxId(request.getTaxcode());
@@ -275,6 +306,16 @@ public class CompanyService {
 
         companyRepository.saveAndFlush(company);
 
+        systemLogService.info(currentUser, "Yêu cầu tạo công ty mới: " + company.getName());
+        Map<String, Object> adminPayload = Map.of(
+                "type", "NEW_COMPANY_REGISTRATION",
+                "companyId", company.getId(),
+                "companyName", company.getName(),
+                "taxCode", company.getTaxId()
+        );
+
+        messagingTemplate.convertAndSend("/topic/admin-notifications", (Object) adminPayload);
+
         SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
         return new CompanyFeedItemResponse(
                 company.getId(), company.getName(), company.getTaxId(),
@@ -283,34 +324,30 @@ public class CompanyService {
                 company.getWebsiteUrl(), company.getStatus(), planName
         );
     }
+    /** Yêu cầu gia nhập công ty nếu công ty đã tồn tại */
+    @Transactional
+    public String joinCompany(String companyId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-    public String joinCompany(String companyId, String token) {
-        User user = userService.getMe(token);
         Company company = companyRepository.findById(companyId).orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
-        Optional<CompanyMember> existingMember = companyMemberRepository.findByCompany_IdAndUser_Id(companyId, user.getId());
+        Optional<CompanyMember> existingMember = companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getUserId());
 
         if (existingMember.isPresent()) {
-
             CompanyRole role = existingMember.get().getRole();
-
             if (role == CompanyRole.ADMIN) {
                 throw new AppException(ErrorCode.YOU_ARE_ADMIN);
             }
-
             if (role == CompanyRole.MEMBER) {
                 throw new AppException(ErrorCode.YOU_ARE_MEMBER);
             }
         }
 
         Optional<CompanyJoinRequest> existingRequest = companyJoinRequestRepository.findByCompany_IdAndUser_IdAndStatus(companyId, user.getId(), JoinRequestStatus.PENDING);
-
         if (existingRequest.isPresent()) {
             throw new AppException(ErrorCode.REQUEST_ALREADY_SENT);
         }
-
-
         List<CompanyMember> admins = companyMemberRepository.findByCompany_IdAndRole(companyId, CompanyRole.ADMIN);
-
         if (admins.isEmpty()) {
             throw new AppException(ErrorCode.HAS_NO_ADMIN);
         }
@@ -318,34 +355,40 @@ public class CompanyService {
         CompanyJoinRequest joinRequest = CompanyJoinRequest.builder().company(company).user(user).status(JoinRequestStatus.PENDING).build();
         companyJoinRequestRepository.save(joinRequest);
 
+        systemLogService.info(currentUser, "Gửi yêu cầu gia nhập công ty: " + company.getName());
         String subject = "[SkillBridge] Yêu cầu tham gia công ty";
-
         for (CompanyMember adminMember : admins) {
-
             User admin = adminMember.getUser();
             String adminEmail = admin.getEmail();
-
             String content = "<div style=\"font-family: Arial; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;\">" + "<h2 style=\"color:#1a73e8\">Yêu cầu tham gia công ty</h2>" + "<p>Xin chào,</p>" + "<p><b>" + user.getName() + "</b> đã gửi yêu cầu tham gia công ty của bạn.</p>" + "<p>Email người gửi: " + user.getEmail() + "</p>" + "<p>Vui lòng đăng nhập hệ thống để phê duyệt hoặc từ chối yêu cầu này.</p>" + "<br>" + "<p style=\"font-size:12px;color:#888\">Trân trọng,<br>SkillBridge Team</p>" + "</div>";
-
-            otpService.sendOtpEmail(adminEmail, subject, content);
+            notificationService.createNotification(
+                    admin,
+                    null,
+                    subject,
+                    content,
+                    "JOIN_REQUEST",
+                    "/company/requests",
+                    true
+            );
+            otpService.sendOtpEmail(admin.getEmail(), subject, content);
         }
-
         return "Yêu cầu tham gia đã được gửi đến admin công ty";
     }
-    //ADmin công ty duyệt thành viên vào công ty
-    public String respondToJoinRequest(String requestId, String status, String token) {
-        System.out.println("Status: " + status);
-        User currentUser = userService.getMe(token);
 
-        CompanyJoinRequest joinRequest = companyJoinRequestRepository
-                .findById(requestId)
+
+    /** Admin công ty duyệt thành viên vào công ty */
+    @Transactional
+    public String respondToJoinRequest(String requestId, String status, String token) {
+        CustomUserDetails adminDetails = securityUtils.getCurrentUser();
+
+        CompanyJoinRequest joinRequest = companyJoinRequestRepository.findById(requestId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
 
         Company company = joinRequest.getCompany();
-        String companyId = company.getId();
+        User requestUser = joinRequest.getUser();
 
         CompanyMember adminCheck = companyMemberRepository
-                .findByCompany_IdAndUser_Id(companyId, currentUser.getId())
+                .findByCompany_IdAndUser_Id(company.getId(), adminDetails.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
 
         if (adminCheck.getRole() != CompanyRole.ADMIN) {
@@ -363,21 +406,10 @@ public class CompanyService {
             throw new AppException(ErrorCode.INVALID_STATUS);
         }
 
-        if (newStatus != JoinRequestStatus.APPROVED &&
-                newStatus != JoinRequestStatus.REJECTED) {
-            throw new AppException(ErrorCode.INVALID_STATUS);
-        }
-
-        joinRequest.setStatus(newStatus);
-        companyJoinRequestRepository.save(joinRequest);
-
-        User requestUser = joinRequest.getUser();
-
         if (newStatus == JoinRequestStatus.APPROVED) {
-            company.setStatus(CompanyStatus.ACTIVE);
-            companyRepository.save(company);
+            joinRequest.setStatus(JoinRequestStatus.APPROVED);
             boolean alreadyMember = companyMemberRepository
-                    .findByCompany_IdAndUser_Id(companyId, requestUser.getId())
+                    .findByCompany_IdAndUser_Id(company.getId(), requestUser.getId())
                     .isPresent();
 
             if (!alreadyMember) {
@@ -385,13 +417,16 @@ public class CompanyService {
                 newMember.setCompany(company);
                 newMember.setUser(requestUser);
                 newMember.setRole(CompanyRole.MEMBER);
-
                 companyMemberRepository.save(newMember);
             }
+            systemLogService.info(adminDetails, "Phê duyệt thành viên " + requestUser.getName() + " vào công ty " + company.getName());
         } else if (newStatus == JoinRequestStatus.REJECTED) {
-            company.setStatus(CompanyStatus.BAN);
-            companyRepository.save(company);
+            joinRequest.setStatus(JoinRequestStatus.REJECTED);
+            systemLogService.warn(adminDetails, "Từ chối thành viên " + requestUser.getName() + " gia nhập công ty " + company.getName());
+        } else {
+            throw new AppException(ErrorCode.INVALID_STATUS);
         }
+        companyJoinRequestRepository.save(joinRequest);
 
         String subject = "[SkillBridge] Kết quả yêu cầu tham gia công ty";
         String content =
@@ -403,17 +438,26 @@ public class CompanyService {
                         "<br>" +
                         "<p style=\"font-size:12px;color:#888\">Trân trọng,<br>SkillBridge Team</p>" +
                         "</div>";
+        notificationService.createNotification(
+                requestUser,
+                null,
+                subject,
+                content,
+                "JOIN_RESULT",
+                "/my-companies",
+                true
+        );
         otpService.sendOtpEmail(requestUser.getEmail(), subject, content);
-
         return "Xử lý yêu cầu thành công";
     }
 
+    /** Vô hiệu hoá công ty */
     @Transactional
-    public String deactivateCompany(String companyId, DeactivateRequest request, String token) {
-        User currentUser = userService.getMe(token);
+    public String deactivateCompany(String companyId, DeactivateRequest request) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
         // 1. Kiểm tra Permission (Phải là Admin của công ty)
-        CompanyMember adminMember = companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getId())
+        CompanyMember adminMember = companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
 
         if (adminMember.getRole() != CompanyRole.ADMIN) {
@@ -437,14 +481,10 @@ public class CompanyService {
         companyRepository.save(company);
 
         // 4. Ẩn tất cả Jobs
-        jobRepository.updateStatusByCompanyId(companyId, JobStatus.HIDDEN);
+        jobRepository.updateStatusByCompanyId(companyId, JobStatus.LOCK);
 
         // 5. Audit Log
-        SystemLog log = new SystemLog();
-        log.setUser(currentUser);
-        log.setAction("DEACTIVATE_COMPANY: " + company.getName());
-        log.setLogLevel(LogLevel.INFO);
-        systemLogRepository.save(log);
+        systemLogService.danger(currentUser, "VÔ HIỆU HÓA CÔNG TY: " + company.getName() + " (ID: " + companyId + ")");
 
         // 6. Gửi Email thông báo cho tất cả thành viên (trừ người thực hiện nếu cần, nhưng thường gửi hết)
         List<CompanyMember> members = companyMemberRepository.findByCompany_Id(companyId);
@@ -483,6 +523,23 @@ public class CompanyService {
                     "</div>";
 
                 try {
+                    notificationService.createNotification(
+                            u,
+                            null,
+                            subject,
+                            content,
+                            "COMPANY_DEACTIVATED",
+                            "/",
+                            true
+                    );
+
+                    Map<String, Object> logoutSignal = Map.of(
+                            "action", "FORCE_LOGOUT",
+                            "reason", "COMPANY_DEACTIVATED",
+                            "companyId", companyId
+                    );
+                    messagingTemplate.convertAndSend("/topic/user-notifications/" + u.getId(), (Object) logoutSignal);
+
                     otpService.sendOtpEmail(u.getEmail(), subject, content);
                 } catch (Exception e) {
                     System.err.println("Failed to send deactivation email to " + u.getEmail() + ": " + e.getMessage());
@@ -494,10 +551,10 @@ public class CompanyService {
     }
 
     @Transactional
-    public String reactivateCompany(String companyId, String token) {
-        User currentUser = userService.getMe(token);
+    public String reactivateCompany(String companyId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
-        CompanyMember adminMember = companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getId())
+        CompanyMember adminMember = companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
 
         if (adminMember.getRole() != CompanyRole.ADMIN) {
@@ -514,10 +571,8 @@ public class CompanyService {
         company.setStatus(CompanyStatus.ACTIVE);
         companyRepository.save(company);
 
-        // US09: Tự động mở lại các Jobs đã bị ẩn khi vô hiệu hóa
-        jobRepository.updateStatusByCompanyIdAndCurrentStatus(companyId, JobStatus.HIDDEN, JobStatus.OPEN);
+        systemLogService.info(currentUser, "KÍCH HOẠT LẠI CÔNG TY: " + company.getName());
 
-        // Gửi thông báo kích hoạt lại cho các thành viên
         List<CompanyMember> members = companyMemberRepository.findByCompany_Id(companyId);
         String subject = "[SkillBridge] Thông báo kích hoạt lại tài khoản công ty";
 
@@ -547,17 +602,27 @@ public class CompanyService {
                 "</div>";
 
             try {
+                notificationService.createNotification(
+                        u,
+                        null,
+                        subject,
+                        content,
+                        "COMPANY_REACTIVATED",
+                        "/dashboard",
+                        true
+                );
+
+                Map<String, Object> uiUpdate = Map.of(
+                        "action", "COMPANY_REACTIVATED",
+                        "companyId", companyId,
+                        "companyName", company.getName()
+                );
+                messagingTemplate.convertAndSend("/topic/user-notifications/" + u.getId(), (Object) uiUpdate);
                 otpService.sendOtpEmail(u.getEmail(), subject, content);
             } catch (Exception e) {
                 System.err.println("Failed to send reactivation email to " + u.getEmail() + ": " + e.getMessage());
             }
         }
-
-        SystemLog log = new SystemLog();
-        log.setUser(currentUser);
-        log.setAction("REACTIVATE_COMPANY: " + company.getName());
-        log.setLogLevel(LogLevel.INFO);
-        systemLogRepository.save(log);
 
         return "Kích hoạt lại công ty thành công. Các bài đăng tuyển dụng đã được hiển thị lại.";
     }

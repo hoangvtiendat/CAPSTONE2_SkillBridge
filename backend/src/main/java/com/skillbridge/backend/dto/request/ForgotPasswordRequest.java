@@ -1,16 +1,18 @@
 package com.skillbridge.backend.dto.request;
 
-import lombok.Data;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ForgotPasswordRequest {
+
+    @NotBlank(message = "EMAIL_INVALID")
+    @Email(message = "EMAIL_INVALID")
     String email;
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
 }

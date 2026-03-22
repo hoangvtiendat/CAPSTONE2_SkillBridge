@@ -2,55 +2,35 @@ package com.skillbridge.backend.entity;
 
 import com.skillbridge.backend.enums.LogLevel;
 import jakarta.persistence.*;
+import lombok.*;
 
-import java.time.LocalDateTime;
-/// Done
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "system_logs")
-public class SystemLog extends BaseEntity{
+public class SystemLog extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String action;
 
-    public LogLevel getLogLevel() {
-        return logLevel;
-    }
-
-    public void setLogLevel(LogLevel logLevel) {
-        this.logLevel = logLevel;
-    }
-
     @Enumerated(EnumType.STRING)
-    private LogLevel logLevel;
+    @Column(name = "log_level", length = 20)
+    @Builder.Default
+    private LogLevel logLevel = LogLevel.INFO;
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
+    @Column(name = "ip_address", length = 45)
+    private String ipAddress;
 }

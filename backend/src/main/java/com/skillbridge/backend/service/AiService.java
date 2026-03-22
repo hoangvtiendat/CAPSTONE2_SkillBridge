@@ -6,23 +6,39 @@ import com.skillbridge.backend.dto.request.OllamaOptions;
 import com.skillbridge.backend.dto.request.OllamaRequest;
 import com.skillbridge.backend.dto.response.OllamaResponse;
 import com.skillbridge.backend.dto.response.SkillAnalysisResult;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AiService {
-    private final RestClient restClient;
-    @Value("${ai.ollama.model}")
-    private String aiModel;
+    @NonFinal
+    RestClient restClient;
 
-    //Taoj RestCilent
-    public AiService(@Value("${ai.ollama.url}") String ollamaUrl) {
+    @NonFinal
+    @Value("${ai.ollama.model}")
+    String aiModel;
+
+    @NonFinal
+    @Value("${ai.ollama.url}")
+    String ollamaUrl;
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
         this.restClient = RestClient.builder()
                 .baseUrl(ollamaUrl)
                 .build();
     }
+
     public String analyzeAndScoreSkills(String candidateSkills, String jobRequirements) {
 
         String systemPrompt = """

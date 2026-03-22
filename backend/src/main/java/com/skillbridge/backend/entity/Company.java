@@ -10,7 +10,11 @@ import org.hibernate.validator.constraints.URL;
 
 import java.util.List;
 
-/// Done
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(
         name = "companies",
@@ -18,17 +22,16 @@ import java.util.List;
                 @UniqueConstraint(columnNames = "tax_id")
         }
 )
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Company extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @NotBlank(message = "Tên công ty không được để trống")
-    @Size(max = 255, message = "Tên công ty không được vượt quá 255 ký tự")
+    @Size(max = 255)
     @Column(nullable = false)
     private String name;
 
@@ -39,6 +42,7 @@ public class Company extends BaseEntity {
     @Column(name = "business_license_url")
     private String businessLicenseUrl;
 
+    @Column(name = "posting_duration")
     private int postingDuration;
 
     @Column(name = "image_url")
@@ -48,7 +52,7 @@ public class Company extends BaseEntity {
     @Column(nullable = false)
     private CompanyStatus status;
 
-    @Size(max = 2000, message = "Mô tả không được vượt quá 2000 ký tự")
+    @Size(max = 2000)
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -59,113 +63,21 @@ public class Company extends BaseEntity {
     @Column(name = "website_url")
     private String websiteUrl;
 
-    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<CompanySubscription> subscriptions;
 
-
-
-//    public String getCurrentSubscriptionPlanName() {
-//        if (this.subscriptions == null || this.subscriptions.isEmpty()) {
-//            return "No Plan";
-//        }
-//
-//        return this.subscriptions.stream()
-//                .filter(sub -> Boolean.TRUE.equals(sub.getActive()))
-//                .findFirst()
-//                .map(sub -> sub.getSubscriptionPlan().getName().toString())
-//                .orElse("No Active Plan");
-//    }
-
+    /**
+     * Lấy trạng thái gói dịch vụ hiện tại.
+     */
     public SubscriptionPlanStatus getCurrentSubscriptionPlanName() {
-        // Nếu không có danh sách subscription, mặc định trả về FREE hoặc null
         if (this.subscriptions == null || this.subscriptions.isEmpty()) {
             return SubscriptionPlanStatus.FREE;
         }
 
         return this.subscriptions.stream()
-                .filter(sub -> Boolean.TRUE.equals(sub.getActive()))
+                .filter(sub -> Boolean.TRUE.equals(sub.getIsActive()))
                 .findFirst()
                 .map(sub -> sub.getSubscriptionPlan().getName())
-                // Giả định: getName() của SubscriptionPlan đã trả về kiểu SubscriptionPlanStatus
                 .orElse(SubscriptionPlanStatus.FREE);
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getTaxId() {
-        return taxId;
-    }
-
-    public void setTaxId(String taxId) {
-        this.taxId = taxId;
-    }
-
-    public String getBusinessLicenseUrl() {
-        return businessLicenseUrl;
-    }
-
-    public void setBusinessLicenseUrl(String businessLicenseUrl) {
-        this.businessLicenseUrl = businessLicenseUrl;
-    }
-
-    public CompanyStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(CompanyStatus status) {
-        this.status = status;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getWebsiteUrl() {
-        return websiteUrl;
-    }
-
-    public void setWebsiteUrl(String websiteUrl) {
-        this.websiteUrl = websiteUrl;
-    }
-
-    public void getpostingDuration(int postingDuration){
-        this.postingDuration = postingDuration;
-    }
-    public void setSubscriptions(List<CompanySubscription> subscriptions) {
-        this.subscriptions = subscriptions;
     }
 }

@@ -5,6 +5,8 @@ import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
@@ -12,7 +14,11 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAccessDeniedHandler implements AccessDeniedHandler {
+
+    // Inject ObjectMapper đã được cấu hình trong JacksonConfig
+    private final ObjectMapper objectMapper;
 
     @Override
     public void handle(
@@ -22,13 +28,14 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
     ) throws IOException {
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setContentType("application/json;charset=UTF-8");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
 
-        ApiResponse<?> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.FORBIDDEN.getCode());
-        apiResponse.setMessage(ErrorCode.FORBIDDEN.getMessage());
+        ApiResponse<?> apiResponse = ApiResponse.error(
+                ErrorCode.FORBIDDEN.getCode(),
+                ErrorCode.FORBIDDEN.getMessage()
+        );
 
-        ObjectMapper mapper = new ObjectMapper();
-        response.getWriter().write(mapper.writeValueAsString(apiResponse));
+        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
 }
