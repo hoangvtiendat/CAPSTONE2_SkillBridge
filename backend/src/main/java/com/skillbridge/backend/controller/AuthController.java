@@ -1,5 +1,6 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.*;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
@@ -11,10 +12,14 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.InvalidatedTokenRepository;
 import com.skillbridge.backend.service.OtpService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.skillbridge.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
@@ -23,23 +28,22 @@ import org.slf4j.LoggerFactory;
 
 
 @RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/auth")
 public class AuthController {
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-
-    @Autowired
-    private AuthService authService;
+    AuthService authService;
 
     @PostMapping("/register/verify-otp")
-    public ResponseEntity<ApiResponse<RegisterResponse>> registerOtp(@Valid @RequestBody RegisterOtpRequest request) {
+    public ResponseEntity<ApiResponse<RegisterResponse>> registerOtp(
+            @Valid @RequestBody RegisterOtpRequest request
+    ) {
         try {
             RegisterResponse rs = authService.registerOtp(request);
             ApiResponse<RegisterResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Đăng ký tài khoản thành công", rs
             );
-
             return ResponseEntity.ok(response);
-
         } catch (AppException ex) {
             System.out.println("[REGISTER] AppException occurred");
             System.out.println("[REGISTER] ErrorCode: " + ex.getErrorCode());
@@ -48,14 +52,14 @@ public class AuthController {
     }
 
     @GetMapping("/oauth2/success")
-    public ResponseEntity<?> success(OAuth2AuthenticationToken authentication) {
+    public ResponseEntity<?> success(
+            OAuth2AuthenticationToken authentication
+    ) {
         try {
             OAuth2User oauthUser = authentication.getPrincipal();
-
             String email = oauthUser.getAttribute("email");
             String name = oauthUser.getAttribute("name");
             RegisterResponse rs = authService.registerGoogle(email, name);
-
             ApiResponse<RegisterResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Đăng ký tài khoản thành công", rs
             );
@@ -68,7 +72,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> register(
+            @Valid @RequestBody RegisterRequest request
+    ) {
         try {
             String rs = authService.register(request);
             ApiResponse<String> response = new ApiResponse<>(
@@ -84,16 +90,16 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
         try {
             LoginResponse result = authService.login(request);
-
             if (result == null) {
                 System.out.println("[LOGIN] Login failed: invalid email or password");
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             System.out.println("[LOGIN] Login success");
-
             String message = "Đăng nhập thành công";
             if ("1".equals(result.getIs2faEnabled()) || "true".equalsIgnoreCase(result.getIs2faEnabled())) {
                 message = "Mã xác thực 2 lớp đã được gửi về email " + request.getEmail();
@@ -112,7 +118,9 @@ public class AuthController {
     }
 
     @PostMapping("/login/verify-otp")
-    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(
+            @Valid @RequestBody LoginRequest request
+    ) {
         try {
             LoginResponse result = authService.verifyOtp(request);
 
@@ -129,7 +137,9 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<ApiResponse<String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
         try {
             String rs = authService.forgotPassword(request);
             ApiResponse<String> response = new ApiResponse<>(
@@ -144,7 +154,9 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<LoginResponse>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
         try {
             LoginResponse rs = authService.resetPassword(request);
             ApiResponse<LoginResponse> response = new ApiResponse<>(
@@ -159,15 +171,13 @@ public class AuthController {
     }
 
     @PatchMapping("/me/2fa")
-    public ResponseEntity<ApiResponse<User>> toggleTwoFactor(@Valid @RequestBody TwoFactorToggleRequest request, @Valid @RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<ApiResponse<User>> toggleTwoFactor(
+            @Valid @RequestBody TwoFactorToggleRequest request,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
         try {
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            String jwt = token.substring(7);
-
-            System.out.println("aa: " + request.isEnabled());
-            User rs = authService.toggleTwoFactor(request.isEnabled(), jwt);
+            System.out.println("aa: " + request.getIsEnabled());
+            User rs = authService.toggleTwoFactor(request.getIsEnabled(), user.getUserId());
             ApiResponse<User> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Cập nhật 2FA", rs
             );
@@ -181,13 +191,14 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<ApiResponse<String>> logout(
+            @Valid @RequestHeader(value = "Authorization") String token
+    ) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             String jwt = token.substring(7);
-
             authService.logout(jwt);
             ApiResponse<String> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Đăng xuất", "Đăng xuất tài khoản thành công"
@@ -199,6 +210,4 @@ public class AuthController {
             throw ex;
         }
     }
-
-
 }

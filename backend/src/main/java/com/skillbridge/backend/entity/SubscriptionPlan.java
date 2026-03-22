@@ -2,66 +2,42 @@ package com.skillbridge.backend.entity;
 
 import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.math.BigDecimal;
-/// Done
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "subscription_plans")
-public class SubscriptionPlan extends BaseEntity{
+public class SubscriptionPlan extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
     private SubscriptionPlanStatus name;
+
+    @Column(precision = 19, scale = 2)
     private BigDecimal price;
+
+    @Column(name = "job_limit")
     private Integer jobLimit;
+
+    @Column(name = "posting_duration")
     private Integer postingDuration;
+
+    @Column(name = "candidate_view_limit")
     private Integer candidateViewLimit;
-    private Boolean hasPriorityDisplay;
 
-
-    public String getId() {
-        return id;
-    }
-    public void setId(String id) {
-        this.id = id;
-    }
-    public SubscriptionPlanStatus getName() {
-        return name;
-    }
-    public void setName(SubscriptionPlanStatus name) {
-        this.name = name;
-    }
-    public BigDecimal getPrice() {
-        return price;
-    }
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-    public Integer getJobLimit() {
-        return jobLimit;
-    }
-    public void setJobLimit(Integer jobLimit) {
-        this.jobLimit = jobLimit;
-    }
-    public Integer getCandidateViewLimit() {
-        return candidateViewLimit;
-    }
-    public void setCandidateViewLimit(Integer candidateViewLimit) {
-        this.candidateViewLimit = candidateViewLimit;
-    }
-    public Boolean getHasPriorityDisplay() {
-        return hasPriorityDisplay;
-    }
-    public void setHasPriorityDisplay(Boolean hasPriorityDisplay) {
-        this.hasPriorityDisplay = hasPriorityDisplay;
-    }
-    public Integer getPostingDuration() {
-        return postingDuration;
-    }
-    public void setPostingDuration(Integer postingDuration) {
-        this.postingDuration = postingDuration;
-    }
+    @Column(name = "has_priority_display")
+    @Builder.Default
+    private Boolean hasPriorityDisplay = false;
 }

@@ -11,8 +11,9 @@ import java.util.List;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, String>, JpaSpecificationExecutor<Application> {
-
+    /** Kiểm tra xem ứng viên đã nộp đơn vào công việc cụ thể này chưa */
     boolean existsByJobAndCandidate(Job job, Candidate candidate);
 
+    /** Lấy danh sách tất cả các đơn ứng tuyển của một bài đăng tuyển dụng cụ thể */
     List<Application> findByJob_Id(String jobId);
 }

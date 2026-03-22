@@ -1,42 +1,22 @@
 package com.skillbridge.backend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
 
-@Entity
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "invalidated_tokens")
 public class InvalidatedToken {
+
     @Id
-    private String id;
+    private String id; // Thường là JTI (JWT ID) hoặc chính chuỗi Token
+
+    @Column(name = "expiry_time", nullable = false)
     private Date expiryTime;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Date getExpiryTime() {
-        return expiryTime;
-    }
-
-    public void setExpiryTime(Date expiryTime) {
-        this.expiryTime = expiryTime;
-    }
-
-    public InvalidatedToken(){
-    }
-    public InvalidatedToken(Date expiryTime){
-        this.expiryTime = expiryTime;
-    }
-    public InvalidatedToken(String id, Date expiryTime){
-        this.id = id;
-        this.expiryTime = expiryTime;
-    }
 }

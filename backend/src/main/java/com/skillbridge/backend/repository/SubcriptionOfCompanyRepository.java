@@ -20,20 +20,32 @@ import java.util.Optional;
 
 @Repository
 public interface SubcriptionOfCompanyRepository extends JpaRepository<SubcriptionOfCompany, String> {
-
-
+    /** Lấy toàn bộ lịch sử đăng ký của một công ty */
     List<SubcriptionOfCompany> findByCompanyId (String companyId);
+
+    /** Lấy toàn bộ lịch sử đăng ký của công ty(chưa xoá) */
+    List<SubcriptionOfCompany> findByCompanyIdAndDeletedFalse(String companyId);
+
+    /** Tìm gói đăng ký dựa trên ID công ty và trạng thái */
     Optional<SubcriptionOfCompany> findByCompanyIdAndStatus(String id, SubscriptionOfCompanyStatus status);
+
+    /** Tìm tất cả gói đăng ký đã vượt quá ngày kết thúc (EndDate) */
     List<SubcriptionOfCompany> findAllByEndDateBefore(LocalDateTime now);
 
-    List<SubcriptionOfCompany> findAllByEndDateBeforeAndStatusAndNameNot(LocalDateTime date, SubscriptionOfCompanyStatus status, SubscriptionPlanStatus name);
+    /** Tìm các gói cước hết hạn nhưng ngoại trừ một loại tên gói cụ thể */
+    List<SubcriptionOfCompany> findAllByEndDateBeforeAndStatusAndNameNot(
+            LocalDateTime date,
+            SubscriptionOfCompanyStatus status,
+            SubscriptionPlanStatus name
+    );
 
-    List<SubcriptionOfCompany> findAllByEndDateBeforeAndStatusAndName(LocalDateTime date, SubscriptionOfCompanyStatus status, SubscriptionPlanStatus name);
+    /** Tìm các gói cước hết hạn theo chính xác trạng thái và tên gói */
+    List<SubcriptionOfCompany> findAllByEndDateBeforeAndStatusAndName(
+            LocalDateTime date,
+            SubscriptionOfCompanyStatus status,
+            SubscriptionPlanStatus name
+    );
 
-    Optional<SubcriptionOfCompany> findById(String id);
-
+    /** Tìm kiếm gói đăng ký cụ thể dựa trên ID công ty và tên loại gói */
     Optional<SubcriptionOfCompany> findByCompanyIdAndName(String companyId, SubscriptionPlanStatus name);
-
-    ///  update thời gian sau khi đăng kys gói
-
 }

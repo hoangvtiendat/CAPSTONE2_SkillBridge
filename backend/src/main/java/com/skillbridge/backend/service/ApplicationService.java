@@ -1,5 +1,6 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.RespondToApplicationRequest;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.enums.ApplicationStatus;
@@ -9,7 +10,10 @@ import com.skillbridge.backend.repository.ApplicationRepository;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.JobRepository;
 import com.skillbridge.backend.repository.NotificationRepository;
+import com.skillbridge.backend.utils.SecurityUtils;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
@@ -23,31 +27,31 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ApplicationService {
-    private final ApplicationRepository applicationRepository;
-    private final UserService userService;
-    private final JobRepository jobRepository;
-    private final CompanyMemberRepository companyMemberRepository;
-    private final MailService mailService;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final NotificationRepository notificationRepository;
+    ApplicationRepository applicationRepository;
+    JobRepository jobRepository;
+    CompanyMemberRepository companyMemberRepository;
+    NotificationService notificationService;
+    SecurityUtils securityUtils;
 
     public Application getApplicationById(String id, String jwt) {
-        User user = userService.getMe(jwt);
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+
         Application application = applicationRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
         Job job = jobRepository.findById(application.getJob().getId()).orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
         System.out.println("job id = " + application.getJob().getId());
 
-        companyMemberRepository.findByCompany_IdAndUser_Id(job.getCompany().getId(), user.getId()).orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+        companyMemberRepository.findByCompany_IdAndUser_Id(job.getCompany().getId(), currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
         return application;
     }
 
     public List<Application> getApplicationByJobId(String jobId, String jwt) {
-        User user = userService.getMe(jwt);
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+
         Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
-        companyMemberRepository.findByCompany_IdAndUser_Id(job.getCompany().getId(), user.getId()).orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+        companyMemberRepository.findByCompany_IdAndUser_Id(job.getCompany().getId(), currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
 
         List<Application> applications = applicationRepository.findByJob_Id(jobId);
 
@@ -56,14 +60,14 @@ public class ApplicationService {
 
     @Transactional(rollbackFor = Exception.class)
     public String respondToApplication(String id, String jwt, RespondToApplicationRequest request) {
-        User currentUser = userService.getMe(jwt);
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
 
         Job job = application.getJob();
 
-        companyMemberRepository.findByCompany_IdAndUser_Id(job.getCompany().getId(), currentUser.getId())
+        companyMemberRepository.findByCompany_IdAndUser_Id(job.getCompany().getId(), currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
 
         ApplicationStatus newStatus;
@@ -97,36 +101,15 @@ public class ApplicationService {
 
         // --- THỰC HIỆN LUỒNG THÔNG BÁO ---
 
-        // A. Lưu thông báo vào Database
-        Notification notification = Notification.builder()
-                .user(candidateUser)
-                .title(title)
-                .content(messageBody)
-                .isRead(false)
-                .type("APPLICATION_STATUS")
-                .link("/candidate/applications/" + id)
-                .build();
-        notificationRepository.save(notification);
-
-        // B. Bắn thông báo Real-time (WebSocket)
-        try {
-            messagingTemplate.convertAndSendToUser(
-                    candidateUser.getId(),
-                    "/queue/notifications",
-                    notification
-            );
-            log.info("WebSocket sent to user: {}", candidateUser.getId());
-        } catch (Exception e) {
-            log.error("WebSocket failed: {}", e.getMessage());
-        }
-
-        // C. Gửi Email
-        try {
-            mailService.sendToEmail(candidateUser.getEmail(), title, messageBody);
-        } catch (Exception e) {
-            log.error("Email failed: {}", e.getMessage());
-        }
-
+        notificationService.createNotification(
+                candidateUser,
+                currentUser.getEmail(),
+                title,
+                messageBody,
+                "APPLICATION_STATUS",
+                "/candidate/applications/" + id,
+                true
+        );
         return "Phản hồi ứng viên thành công!";
     }
 

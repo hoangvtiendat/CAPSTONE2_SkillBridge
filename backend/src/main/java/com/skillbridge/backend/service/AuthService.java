@@ -1,76 +1,76 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.*;
-//import com.skillbridge.backend.dto.request.LoginResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.dto.response.RegisterResponse;
 import com.skillbridge.backend.entity.InvalidatedToken;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.InvalidatedTokenRepository;
 import com.skillbridge.backend.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.security.AuthProvider;
 import java.util.Date;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthService {
-    @Autowired
-    private InvalidatedTokenRepository invalidatedTokenRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private com.skillbridge.backend.repository.CompanyMemberRepository companyMemberRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private OtpService otpService;
-    @Autowired
-    private JwtService jwtService;
-    // sử dụng preAuthorize
-    // @PreAuthorize("hasRole('ADMIN')") chỉ Admin mới được dùng api
-    // @PreAuthorize("hasAnyRole('USER','ADMIN')") Admin hoặc user dùng api
+    InvalidatedTokenRepository invalidatedTokenRepository;
+    UserRepository userRepository;
+    CompanyMemberRepository companyMemberRepository;
+    PasswordEncoder passwordEncoder;
+    OtpService otpService;
+    JwtService jwtService;
+    SystemLogService systemLog;
 
+    /**
+     * Gửi OTP đăng ký tài khoản
+     */
     public String register(RegisterRequest request) {
-        User user = new User();
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            System.out.println("email exist");
             throw new AppException(ErrorCode.EMAIL_EXIST);
         }
 
         String subject = "[SkillBridge] Mã xác thực đăng ký tài khoản";
         String otp = otpService.generateOtp(request.getEmail());
         String content =
-                "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
-                        "    <h2 style=\"color: #1a73e8; text-align: center; margin-top: 0;\">Xác thực đăng ký tài khoản</h2>" +
-                        "    <p style=\"font-size: 15px; color: #555;\">Chào bạn,</p>" +
-                        "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Bạn đang thực hiện <b>đăng ký tài khoản</b> trên hệ thống <b>SkillBridge</b>. Vui lòng nhập mã xác thực dưới đây để hoàn tất quá trình đăng ký:</p>" +
-                        "    " +
-                        "    <div style=\"text-align: center; margin: 30px 0;\">" +
-                        "        <span style=\"display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a73e8; background: #f0f7ff; padding: 15px 30px; border-radius: 8px; border: 1px solid #1a73e8;\">" +
-                        otp +
-                        "        </span>" +
-                        "    </div>" +
-                        "    " +
-                        "    <p style=\"font-size: 14px; color: #666; font-style: italic; text-align: center;\">Mã xác thực có hiệu lực trong vòng <b>180 giây</b>.</p>" +
-                        "    " +
-                        "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
-                        "        <p style=\"margin: 5px 0;\">⚠️ <b>Lưu ý:</b> Vui lòng không chia sẻ mã này cho bất kỳ ai. Đội ngũ SkillBridge không bao giờ yêu cầu cung cấp mã xác thực.</p>" +
-                        "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br>Đội ngũ SkillBridge</p>" +
-                        "    </div>" +
-                        "</div>";
+            "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
+            "    <h2 style=\"color: #1a73e8; text-align: center; margin-top: 0;\">Xác thực đăng ký tài khoản</h2>" +
+            "    <p style=\"font-size: 15px; color: #555;\">Chào bạn,</p>" +
+            "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Bạn đang thực hiện <b>đăng ký tài khoản</b> trên hệ thống <b>SkillBridge</b>. Vui lòng nhập mã xác thực dưới đây để hoàn tất quá trình đăng ký:</p>" +
+            "    " +
+            "    <div style=\"text-align: center; margin: 30px 0;\">" +
+            "        <span style=\"display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a73e8; background: #f0f7ff; padding: 15px 30px; border-radius: 8px; border: 1px solid #1a73e8;\">" +
+            otp +
+            "        </span>" +
+            "    </div>" +
+            "    " +
+            "    <p style=\"font-size: 14px; color: #666; font-style: italic; text-align: center;\">Mã xác thực có hiệu lực trong vòng <b>180 giây</b>.</p>" +
+            "    " +
+            "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
+            "        <p style=\"margin: 5px 0;\">⚠️ <b>Lưu ý:</b> Vui lòng không chia sẻ mã này cho bất kỳ ai. Đội ngũ SkillBridge không bao giờ yêu cầu cung cấp mã xác thực.</p>" +
+            "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br>Đội ngũ SkillBridge</p>" +
+            "    </div>" +
+            "</div>";
         otpService.sendOtpEmail(request.getEmail(), subject, content);
         return "Mã xác thực đăng ký tài khoản đã được gửi về mail";
     }
 
+    /**
+     * Xác thực OTP và hoàn tất đăng ký
+     */
     @Transactional
     public RegisterResponse registerOtp(RegisterOtpRequest request) {
         if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
@@ -85,9 +85,13 @@ public class AuthService {
         user.setName(request.getName());
         user.setAddress(request.getAddress());
         user.setStatus("ACTIVE");
+        user.setRole("CANDIDATE");
+
         userRepository.saveAndFlush(user);
 
-        String accessToken = jwtService.generateAccesToken(
+        systemLog.info(CustomUserDetails.fromUser(user), "Người dùng " + user.getEmail() + " đăng ký tài khoản thành công");
+
+        String accessToken = jwtService.generateAccessTokens(
                 user.getId(), user.getEmail(), user.getRole()
         );
         String refreshToken = jwtService.generateRefreshToken(user.getId());
@@ -132,8 +136,9 @@ public class AuthService {
             throw new AppException(ErrorCode.USER_STATUS);
         }
         User savedUser = userRepository.saveAndFlush(user);
+        systemLog.info(CustomUserDetails.fromUser(user), "User " + email + " đăng nhập qua Google");
 
-        String accessToken = jwtService.generateAccesToken(
+        String accessToken = jwtService.generateAccessTokens(
                 savedUser.getId(),
                 savedUser.getEmail(),
                 savedUser.getRole()
@@ -146,16 +151,20 @@ public class AuthService {
         return new RegisterResponse(savedUser.getEmail(), accessToken, refreshToken);
     }
 
-
+    /**
+     * Đăng nhập
+     */
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
         System.out.println("user: " + user.toString());
         if (!"ACTIVE".equals(user.getStatus())) {
             throw new AppException(ErrorCode.USER_STATUS);
         }
         boolean matches = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if (!matches) {
+            systemLog.warn(CustomUserDetails.fromUser(user), "Đăng nhập thất bại: Sai mật khẩu");
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
 
@@ -165,42 +174,38 @@ public class AuthService {
             String otp = otpService.generateOtp(user.getEmail());
 
             String content = "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
-                    "    <h2 style=\"color: #1a73e8; text-align: center; margin-top: 0;\">Xác thực đăng nhập</h2>" +
-                    "    <p style=\"font-size: 15px; color: #555;\">Chào bạn,</p>" +
-                    "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Bạn đang thực hiện đăng nhập vào hệ thống <b>SkillBridge</b>. Vui lòng nhập mã xác thực dưới đây để hoàn tất:</p>" +
-                    "    " +
-                    "    <div style=\"text-align: center; margin: 30px 0;\">" +
-                    "        <span style=\"display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a73e8; background: #f0f7ff; padding: 15px 30px; border-radius: 8px; border: 1px solid #1a73e8;\">" + otp + "</span>" +
-                    "    </div>" +
-                    "    " +
-                    "    <p style=\"font-size: 14px; color: #666; font-style: italic; text-align: center;\">Mã có hiệu lực trong vòng <b>180 giây</b>.</p>" +
-                    "    " +
-                    "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
-                    "        <p style=\"margin: 5px 0;\">⚠️ <b>Lưu ý:</b> Vui lòng không chia sẻ mã này cho bất kỳ ai. Đội ngũ SkillBridge không bao giờ yêu cầu cung cấp mã này.</p>" +
-                    "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br>Đội ngũ SkillBridge</p>" +
-                    "    </div>" +
-                    "</div>";
+                "    <h2 style=\"color: #1a73e8; text-align: center; margin-top: 0;\">Xác thực đăng nhập</h2>" +
+                "    <p style=\"font-size: 15px; color: #555;\">Chào bạn,</p>" +
+                "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Bạn đang thực hiện đăng nhập vào hệ thống <b>SkillBridge</b>. Vui lòng nhập mã xác thực dưới đây để hoàn tất:</p>" +
+                "    " +
+                "    <div style=\"text-align: center; margin: 30px 0;\">" +
+                "        <span style=\"display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a73e8; background: #f0f7ff; padding: 15px 30px; border-radius: 8px; border: 1px solid #1a73e8;\">" + otp + "</span>" +
+                "    </div>" +
+                "    " +
+                "    <p style=\"font-size: 14px; color: #666; font-style: italic; text-align: center;\">Mã có hiệu lực trong vòng <b>180 giây</b>.</p>" +
+                "    " +
+                "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
+                "        <p style=\"margin: 5px 0;\">⚠️ <b>Lưu ý:</b> Vui lòng không chia sẻ mã này cho bất kỳ ai. Đội ngũ SkillBridge không bao giờ yêu cầu cung cấp mã này.</p>" +
+                "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br>Đội ngũ SkillBridge</p>" +
+                "    </div>" +
+                "</div>";
             otpService.sendOtpEmail(user.getEmail(), subject, content);
 
             return new LoginResponse("1", null, null, null);
         }
-        //
+        systemLog.info(CustomUserDetails.fromUser(user), "Đăng nhập thành công");
         return issueToken(user);
     }
 
     public LoginResponse verifyOtp(LoginRequest request) {
-
         boolean valid = otpService.verifyOtp(
                 request.getEmail(),
                 request.getOtp()
         );
-
         otpService.consumeOtp(request.getEmail());
-
         if (!valid) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }
-
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
 
@@ -208,24 +213,23 @@ public class AuthService {
             throw new AppException(ErrorCode.USER_STATUS);
         }
 
+        systemLog.info(CustomUserDetails.fromUser(user), "Xác thực 2FA thành công");
         return issueToken(user);
     }
 
     @Transactional
     public LoginResponse issueToken(User user) {
-        // Check if user is a member of a deactivated company
         var memberOptional = companyMemberRepository.findByUser_Id(user.getId());
         if (memberOptional.isPresent()) {
             var member = memberOptional.get();
             if ("DEACTIVATED".equals(member.getCompany().getStatus().name())) {
-                // If company is deactivated, only COMPANY ADMIN is allowed to log in (to reactivate)
                 if (!"ADMIN".equals(member.getRole().name())) {
                     throw new AppException(ErrorCode.COMPANY_DEACTIVATED_MEMBER);
                 }
             }
         }
 
-        String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
+        String accessToken = jwtService.generateAccessTokens(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
         user.setRefreshToken(refreshToken);
@@ -264,7 +268,7 @@ public class AuthService {
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         user.setPassword(hashedPassword);
 
-        String accessToken = jwtService.generateAccesToken(user.getId(), user.getEmail(), user.getRole());
+        String accessToken = jwtService.generateAccessTokens(user.getId(), user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
@@ -272,49 +276,34 @@ public class AuthService {
         return new LoginResponse(user.getIs2faEnabled(), accessToken, refreshToken, user.getRole());
     }
 
-    public User toggleTwoFactor(boolean is2faEnabled, String token) {
-        if (token == null || token.isBlank() || !jwtService.validateToken(token)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-        String userId;
-        try {
-            userId = jwtService.getUserId(token);
-            System.out.println("userId = " + userId);
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
+    public User toggleTwoFactor(boolean is2faEnabled, String userId) {
         System.out.println("is2faEnabled = " + is2faEnabled);
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         user.setIs2faEnabled(String.valueOf(is2faEnabled));
         return userRepository.save(user);
-
     }
 
     public void logout(String jwt) {
-
         try {
-            // 2. Trích xuất thông tin từ token thông qua JwtService
             Claims claims = jwtService.extractClaims(jwt);
-            String jti = claims.getId(); // Lấy ID duy nhất của token
+            String jti = claims.getId();
             Date expiryTime = claims.getExpiration();
             String userId = claims.getSubject();
 
-            // 3. Đưa Access Token vào danh sách đen (Blacklist)
             InvalidatedToken invalidatedToken = new InvalidatedToken();
             invalidatedToken.setId(jti);
             invalidatedToken.setExpiryTime(expiryTime);
             invalidatedTokenRepository.save(invalidatedToken);
 
-            // 4. Vô hiệu hóa Refresh Token trong Database của User
             userRepository.findById(userId).ifPresent(user -> {
                 user.setRefreshToken(null);
                 userRepository.save(user);
+                systemLog.info(CustomUserDetails.fromUser(user), "Người dùng đăng xuất");
             });
 
             System.out.println("[LOGOUT] User ID: " + userId + " đã logout thành công.");
 
         } catch (AppException e) {
-            // Nếu token đã hết hạn sẵn (TOKEN_EXPIRED), coi như đã logout xong
             if (e.getErrorCode() == ErrorCode.TOKEN_EXPIRED) {
                 return;
             }

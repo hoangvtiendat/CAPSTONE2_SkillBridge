@@ -1,13 +1,19 @@
 package com.skillbridge.backend.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class JobSkillRequest {
-    @NotBlank
-    private String skillId;
-    private Boolean isRequired;
+
+    @NotBlank(message = "SKILL_NOT_FOUND")
+    String skillId;
+
+    @Builder.Default
+    Boolean isRequired = true;
 }

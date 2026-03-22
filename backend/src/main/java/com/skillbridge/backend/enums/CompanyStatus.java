@@ -1,8 +1,5 @@
 package com.skillbridge.backend.enums;
 
 public enum CompanyStatus {
-    PENDING,
-    ACTIVE,
-    BAN,
-    DEACTIVATED
+    PENDING, ACTIVE, BAN, DEACTIVATED
 }

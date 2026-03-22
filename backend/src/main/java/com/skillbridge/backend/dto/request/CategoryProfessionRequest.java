@@ -1,21 +1,21 @@
 package com.skillbridge.backend.dto.request;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
-@Getter
-@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CategoryProfessionRequest {
 
-    private String name;
+    @NotBlank(message = "CATEGORY_EXIST")
+    @Size(max = 100, message = "INVALID_INPUT")
+    String name;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    @Size(max = 500, message = "INVALID_INPUT")
+    String description;
 }

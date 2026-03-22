@@ -1,145 +1,126 @@
 package com.skillbridge.backend.exception;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@AllArgsConstructor
 public enum ErrorCode {
-    // ===== SYSTEM =====
-    UNCATEGORIZED_EXCEPTION(9999, "Lỗi hệ thống"),
-    INVALID_KEY(1001, "Invalid enum key"),
-    INVALID_JSON_FORMAT(1002, "Định dạng JSON không hợp lệ"),
-    INVALID_FILE_FORMAT(1010, "Định dạng file không hợp lệ. Chỉ chấp nhận .pdf, .jpg, .png"),
-    JOB_NOT_FOUND(1101, "Bài đăng tuyển dụng không tồn tại hoặc đã bị xóa"),
-    JOB_ALREADY_CLOSED(1102, "Bài đăng này đã đóng, không thể thao tác"),
-    INVALID_JOB_STATUS(1103, "Trạng thái công việc không hợp lệ"),
+    // 1xxx: SYSTEM & GENERAL
+    UNCATEGORIZED_EXCEPTION(1000, "Lỗi hệ thống không xác định", HttpStatus.INTERNAL_SERVER_ERROR),
+    INTERNAL_SERVER_ERROR(1001, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_KEY(1002, "Key cấu hình không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_JSON_FORMAT(1003, "Định dạng dữ liệu JSON không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_INPUT(1004, "Dữ liệu đầu vào không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_FORMAT(1005, "Định dạng file không hợp lệ (Chỉ nhận .pdf, .jpg, .png)", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
+    JSON_PROCESSING_ERROR(1006, "Lỗi xử lý chuyển đổi dữ liệu JSON", HttpStatus.INTERNAL_SERVER_ERROR),
+    FIELD_REQUIRED(1007, "Trường dữ liệu này là bắt buộc", HttpStatus.BAD_REQUEST),
+    TEMPERATURE_INVALID(1008, "Giá trị Temperature phải nằm trong khoảng từ 0.0 đến 1.0", HttpStatus.BAD_REQUEST),
+    ENDPOINT_NOT_FOUND(1009, "Đường dẫn API không tồn tại", HttpStatus.NOT_FOUND),
+    METHOD_NOT_ALLOWED(1010, "Phương thức HTTP không được hỗ trợ", HttpStatus.METHOD_NOT_ALLOWED),
+    UNSUPPORTED_MEDIA_TYPE(1011, "Định dạng dữ liệu truyền vào không hỗ trợ", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
+    INVALID_STATUS(1012, "Trạng thái không hợp lệ", HttpStatus.BAD_REQUEST),
+    ACCESS_DENIED(1013, "Truy cập bị từ chối, bạn không có quyền thực hiện hành động này", HttpStatus.FORBIDDEN),
+    LOG_NOT_FOUND(1014, "Không tìm thấy log", HttpStatus.NOT_FOUND),
 
-    // ===== HTTP =====
-    ENDPOINT_NOT_FOUND(4040, "API không tồn tại"),
-    METHOD_NOT_ALLOWED(4050, "Method không được hỗ trợ"),
-    UNSUPPORTED_MEDIA_TYPE(4150, "Content-Type không được hỗ trợ"),
-    // ===== VALIDATION =====
-    EMAIL_INVALID(2001, "Email không hợp lệ"),
-    REQUIRED(2002, "Không được để trống"),
-    PASSWORD_INVALID(2003, "Mật khẩu không hơp lệ"),
-    EMAIL_EXIST(2004, "Email đã tồn tại"),
-    EMAIL_ALREADY_REGISTERED_BY_PASSWORD(2007, "Email đã được đăng ký bằng tài khoản LOCAL"),
-    INVALID_OTP(2005, "Mã OTP SAI"),
-    INVALID_INPUT(2006, "Dữ liệu đầu vào không hợp lệ"),
-    FORBIDDEN(3002, "Bạn không có quyền truy cập chức năng này"),
-    USER_STATUS(3003, "Tài khoản đã bị khóa"),
-    USER_NOT_FOUND(3004, "Không tìm thấy ngưười dùng"),
-    CATEGORY_NOT_FOUND(3005, "Không tìm thấy danh mục lĩnh vực"),
-    CANDIDATE_NOT_FOUND(3006, "Không tìm thấy thông tin ứng viên"),
-    // ===== AUTH / SECURITY =====
-    TOKEN_EXPIRED(402, "Token đã hết hạn, vui lòng đăng nhập lại"),
-    UNAUTHORIZED(401, "Bạn chưa đăng nhập"),
-    // ===== Category/ SKilll ====
-    CATEGORY_PROFESSION(501, "Tên lĩnh vữc bị trùng vui lòng đổi tên khác"),
+    // 2xxx: AUTH & SECURITY
+    UNAUTHORIZED(2000, "Bạn chưa đăng nhập hoặc phiên làm việc hết hạn", HttpStatus.UNAUTHORIZED),
+    FORBIDDEN(2001, "Bạn không có quyền truy cập chức năng này", HttpStatus.FORBIDDEN),
+    TOKEN_EXPIRED(2002, "Token đã hết hạn, vui lòng đăng nhập lại", HttpStatus.UNAUTHORIZED),
+    EMAIL_INVALID(2003, "Email không đúng định dạng", HttpStatus.BAD_REQUEST),
+    PASSWORD_INVALID(2004, "Mật khẩu không đủ mạnh hoặc không đúng", HttpStatus.BAD_REQUEST),
+    EMAIL_EXIST(2005, "Email này đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
+    EMAIL_ALREADY_REGISTERED_BY_PASSWORD(2006, "Email này đã được đăng ký bằng mật khẩu, vui lòng không dùng mạng xã hội", HttpStatus.BAD_REQUEST),
+    INVALID_OTP(2007, "Mã xác thực (OTP) không chính xác", HttpStatus.BAD_REQUEST),
 
-    SKILL_EXITS_NAME(502, "Tên kỹ năng đã tồn tại trước đó"),
-    SKILL_NOT_FOUND(503, "Không tìm thấy kĩ năng"),
-    DUPLICATE_JOB_SKILL(504, "Hiện tại kĩ năng đang được sử dụng"),
-    /// Company
-    EXIT_STATUS_COMPANY(601, "Hiện tại trạng thái của công ty bạn không cho phép"),
+    // 3xxx: USER & CANDIDATE
+    USER_NOT_FOUND(3000, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
+    USER_STATUS_LOCKED(3001, "Tài khoản của bạn hiện đang bị khóa", HttpStatus.FORBIDDEN),
+    CANDIDATE_NOT_FOUND(3002, "Không tìm thấy thông tin ứng viên", HttpStatus.NOT_FOUND),
+    DEGREE_TYPE_REQUIRED(3003, "Loại bằng cấp là bắt buộc", HttpStatus.BAD_REQUEST),
+    INVALID_DEGREE_INFO(3004, "Thông tin bằng cấp hoặc chứng chỉ không hợp lệ", HttpStatus.BAD_REQUEST),
+    USER_STATUS(3005, "Trạng thái người dùng không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_CERTIFICATE_INFO(3007, "Thông tin chứng chỉ không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_DEGREE_TYPE(3008, "Loại bằng cấp không được hệ thống hỗ trợ", HttpStatus.BAD_REQUEST),
+    PHONE_INVALID(3009, "Số điện thoại không hợp lệ (Phải có 10 số, bắt đầu bằng 0 hoặc +84)", HttpStatus.BAD_REQUEST),
+    APPLICATION_ALREADY_EXISTS(3010, "Bạn đã nộp đơn cho công việc này rồi", HttpStatus.BAD_REQUEST),
+    OCR_FAILED(3011,"Lỗi ocr không thể đọc được dữ liệu",HttpStatus.BAD_REQUEST),
+    // 4xxx: COMPANY & MEMBERSHIP
+    COMPANY_NOT_FOUND(4000, "Không tìm thấy thông tin công ty", HttpStatus.NOT_FOUND),
+    COMPANY_EXIST(4001, "Công ty này đã được đăng ký trên hệ thống", HttpStatus.BAD_REQUEST),
+    NOT_COMPANY_MEMBER(4002, "Bạn không phải là thành viên của công ty này", HttpStatus.FORBIDDEN),
+    NOT_COMPANY_ADMIN(4003, "Bạn không có quyền Admin của công ty", HttpStatus.FORBIDDEN),
+    YOU_ARE_ALREADY_MEMBER(4004, "Bạn đã là thành viên hoặc Admin của công ty này", HttpStatus.BAD_REQUEST),
+    COMPANY_STATUS_INVALID(4005, "Trạng thái công ty hiện tại không cho phép thực hiện thao tác này", HttpStatus.BAD_REQUEST),
+    MEMBER_NOT_FOUND(4006, "Bạn chưa tham gia vào công ty nào", HttpStatus.NOT_FOUND),
+    JOIN_REQUEST_NOT_FOUND(4007, "Không tìm thấy yêu cầu tham gia công ty", HttpStatus.NOT_FOUND),
+    REQUEST_ALREADY_SENT(4008, "Bạn đã gửi yêu cầu tham gia trước đó rồi", HttpStatus.BAD_REQUEST),
+    COMPANY_DEACTIVATED(4009, "Công ty đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
+    INVALID_CONFIRMATION_CODE(4010, "Mã xác nhận không chính xác", HttpStatus.BAD_REQUEST),
+    COMPANY_ALREADY_DEACTIVATED(4011, "Công ty này đã ngừng hoạt động từ trước", HttpStatus.BAD_REQUEST),
+    JOIN_REQUEST_ALREADY_PROCESSED(4012, "Yêu cầu tham gia này đã được xử lý", HttpStatus.BAD_REQUEST),
+    HAS_NO_ADMIN(4013, "Công ty hiện không có quản trị viên", HttpStatus.BAD_REQUEST),
+    YOU_ARE_MEMBER(4014, "Bạn đã là thành viên của công ty này", HttpStatus.BAD_REQUEST),
+    YOU_ARE_ADMIN(4015, "Bạn đang là quản trị viên của công ty này", HttpStatus.BAD_REQUEST),
+    EXITS_YOUR_ROLE(4016, "Bạn đã sở hữu vai trò này rồi", HttpStatus.BAD_REQUEST),
+    EXIT_STATUS_COMPANY(4017, "Trạng thái công ty này đã tồn tại", HttpStatus.BAD_REQUEST),
+    COMPANY_DEACTIVATED_MEMBER(4018, "Tài khoản của bạn thuộc một công ty đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
 
-    /// Comapany_member
-    MEMBER_NOT_FOUND(701, "Bạn chưa là nhân viên của công ty nào cả"),
-    // Jobs
-    JD_NOT_FOUND(801, "Không tìm thấy bài đăng"),
-    EXITS_JD_STATUS(802, "Hiện tại bạn không thể thay đổi thông tin bài đăng"),
-    EXITS_YOUR_ROLE(803, "Bạn không có đủ thẩm quyền để thực hiện chức năng này"),
-    JOB_STATUS_EXITS(804, "Hiện tại JD đang được sử dụng vui lòng đăng lại khi bài đăng đóng"),
-    JOB_NO_OPEN(805, "Bài tuyển dụng hiện chưa được mở"),
-    JOB_NO_GREEN(806, "Bài tuyển dụng này chưa được duyệt trên hệ thống"),
-    SUBCRIFTION_OF_COMPANY(805, "Không tìm thấy gói cước của Công ty "),
-    EXIR_SUBSCRIFTION(806, "Hiện tại ban đã sử dụng hết dịch vụ gói cước"),
-    ///  ===== SUBSCRIPTTION
-    // Thêm vào Enum ErrorCode của bạn
-    NOT_FOUND_SUBSCRIPTION(901, "Không tìm thấy gói đăng ký"),
-    NOT_FOUND_SUBSCRIPTION_PRENIUM(902, "Hiện tại không có gói cước prenium vui lòng thử lại sau"),
-    CLOSE_OLD_SUBSCRIPTION(903, "Lỗi thay đổi trạng thái gói cước cũ"),
-    CHECK_STATUS_SUB(904, "Không nhận được thông báo báo từ bên PayOS"),
-    // 1. Ràng buộc về Giá (Price)
-    FREE_PRICE_CANNOT_BE_CHANGED(902, "Gói FREE không được phép sửa giá"),
-    STANDARD_PRICE_MUST_BE_GREATER_THAN_ZERO(903, "Giá của gói STANDARD bắt buộc phải lớn hơn 0"),
-    STANDARD_PRICE_EXCEEDS_PREMIUM(904, "Giá của gói STANDARD không được vượt quá gói PREMIUM"),
-    PREMIUM_PRICE_LOWER_THAN_STANDARD(905, "Giá của gói PREMIUM không được bé hơn gói STANDARD"),
+    // 5xxx: JOB & SKILL & CATEGORY
+    JOB_NOT_FOUND(5000, "Bài đăng tuyển dụng không tồn tại hoặc đã bị xóa", HttpStatus.NOT_FOUND),
+    JOB_ALREADY_CLOSED(5001, "Bài đăng này đã đóng, không thể thao tác", HttpStatus.BAD_REQUEST),
+    INVALID_JOB_STATUS(5002, "Trạng thái tin tuyển dụng không hợp lệ", HttpStatus.BAD_REQUEST),
+    CATEGORY_NOT_FOUND(5003, "Không tìm thấy danh mục/lĩnh vực này", HttpStatus.NOT_FOUND),
+    CATEGORY_EXIST(5004, "Tên lĩnh vực/ngành nghề này đã tồn tại", HttpStatus.BAD_REQUEST),
+    SKILL_NOT_FOUND(5005, "Không tìm thấy kỹ năng yêu cầu", HttpStatus.NOT_FOUND),
+    SKILL_EXIST(5006, "Kỹ năng này đã tồn tại trong hồ sơ", HttpStatus.BAD_REQUEST),
+    DUPLICATE_JOB_SKILL(5007, "Kỹ năng này đang được sử dụng, không thể xóa", HttpStatus.BAD_REQUEST),
+    JOB_NOT_APPROVED(5008, "Bài tuyển dụng này chưa được duyệt trên hệ thống", HttpStatus.FORBIDDEN),
+    SKILL_NAME_REQUIRED(5009, "Tên kỹ năng không được để trống", HttpStatus.BAD_REQUEST),
+    JOB_NO_GREEN(5010, "Bài đăng này không đủ điều kiện (Green Check)", HttpStatus.BAD_REQUEST),
+    JOB_STATUS_EXITS(5011, "Trạng thái này đã tồn tại cho bài tuyển dụng", HttpStatus.BAD_REQUEST),
+    SKILL_EXITS_NAME(5012, "Tên kỹ năng này đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
+    CATEGORY_PROFESSION(5013, "Danh mục ngành nghề chuyên môn không hợp lệ hoặc đã tồn tại", HttpStatus.BAD_REQUEST),
 
-    // 2. Ràng buộc về Tin tuyển dụng (Job Limit)
-    FREE_JOB_LIMIT_EXCEEDS_STANDARD(906, "Số lượng JD của gói FREE không được vượt quá gói STANDARD"),
-    STANDARD_JOB_LIMIT_LOWER_THAN_FREE(907, "Số lượng JD của gói STANDARD không được bé hơn gói FREE"),
-    STANDARD_JOB_LIMIT_EXCEEDS_PREMIUM(908, "Số lượng JD của gói STANDARD không được vượt quá gói PREMIUM"),
-    PREMIUM_JOB_LIMIT_LOWER_THAN_STANDARD(909, "Số lượng JD của gói PREMIUM không được bé hơn gói STANDARD"),
+    // 6xxx: SUBSCRIPTION & PAYMENT (TIER LOGIC)
+    SUBSCRIPTION_NOT_FOUND(6000, "Không tìm thấy gói đăng ký của công ty", HttpStatus.NOT_FOUND),
+    SUBSCRIPTION_EXPIRED_OR_OUT(6001, "Gói dịch vụ đã hết hạn hoặc hết lượt sử dụng", HttpStatus.PAYMENT_REQUIRED),
+    PAYMENT_PROVIDER_ERROR(6002, "Không nhận được phản hồi từ đối tác thanh toán", HttpStatus.BAD_GATEWAY),
+    PRICE_STRATEGY_INVALID(6003, "Ràng buộc về giá giữa các gói cước không hợp lệ", HttpStatus.BAD_REQUEST),
+    LIMIT_STRATEGY_INVALID(6004, "Ràng buộc về số lượng giữa các gói không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_CUSTOM_LIMITS(6005, "Số lượng giới hạn phải lớn hơn 0", HttpStatus.BAD_REQUEST),
+    PRICE_CANNOT_BE_NEGATIVE(6006, "Giá gói cước không được là số âm", HttpStatus.BAD_REQUEST),
+    FREE_PLAN_LIMITATION(6007, "Gói FREE không được phép thay đổi cấu hình nâng cao", HttpStatus.FORBIDDEN),
+    PAYMENT_AMOUNT_TOO_LOW(6008, "Số tiền thanh toán tối thiểu là 1,000 VNĐ", HttpStatus.BAD_REQUEST),
+    PAYMENT_FAILED(6009, "Giao dịch thất bại, vui lòng thử lại sau", HttpStatus.PAYMENT_REQUIRED),
+    INVALID_PAYMENT_METHOD(6010, "Phương thức thanh toán không được hỗ trợ", HttpStatus.BAD_REQUEST),
+    LIMIT_EXCEEDS_NEXT_TIER(6011, "Giới hạn của gói không được vượt quá gói cấp cao hơn", HttpStatus.BAD_REQUEST),
+    SUBSCRIPTION_OF_COMPANY(6012, "Công ty hiện đã có gói đăng ký còn hiệu lực", HttpStatus.BAD_REQUEST),
+    EXIT_SUBSCRIPTION(6013, "Gói đăng ký đã hết hạn", HttpStatus.BAD_REQUEST),
+    CHECK_STATUS_SUB(6014, "Vui lòng kiểm tra lại trạng thái gói đăng ký", HttpStatus.BAD_REQUEST),
+    NOT_FOUND_SUBSCRIPTION(6015, "Không tìm thấy thông tin gói dịch vụ này", HttpStatus.NOT_FOUND),
+    FREE_PRICE_CANNOT_BE_CHANGED(6016, "Giá gói FREE là mặc định, không thể thay đổi", HttpStatus.BAD_REQUEST),
+    FREE_HAS_PRIORITY_DISPLAY_NOT_ALLOWED(6017, "Gói FREE không được phép bật tính năng ưu tiên hiển thị", HttpStatus.BAD_REQUEST),
+    FREE_JOB_LIMIT_EXCEEDS_STANDARD(6018, "Giới hạn tin của gói FREE không được vượt quá gói STANDARD", HttpStatus.BAD_REQUEST),
+    FREE_CANDIDATE_VIEW_LIMIT_EXCEEDS_STANDARD(6019, "Giới hạn xem ứng viên gói FREE không được vượt quá gói STANDARD", HttpStatus.BAD_REQUEST),
+    STANDARD_PRICE_MUST_BE_GREATER_THAN_ZERO(6020, "Giá gói STANDARD phải lớn hơn gói FREE", HttpStatus.BAD_REQUEST),
+    STANDARD_PRICE_EXCEEDS_PREMIUM(6021, "Giá của gói STANDARD không được vượt quá gói PREMIUM", HttpStatus.BAD_REQUEST),
+    STANDARD_JOB_LIMIT_LOWER_THAN_FREE(6022, "Giới hạn tin gói STANDARD phải lớn hơn hoặc bằng gói FREE", HttpStatus.BAD_REQUEST),
+    STANDARD_JOB_LIMIT_EXCEEDS_PREMIUM(6023, "Giới hạn tin gói STANDARD không được vượt quá gói PREMIUM", HttpStatus.BAD_REQUEST),
+    STANDARD_CANDIDATE_VIEW_LIMIT_LOWER_THAN_FREE(6024, "Giới hạn xem của gói STANDARD phải lớn hơn gói FREE", HttpStatus.BAD_REQUEST),
+    STANDARD_CANDIDATE_VIEW_LIMIT_EXCEEDS_PREMIUM(6025, "Giới hạn xem của gói STANDARD không được vượt quá gói PREMIUM", HttpStatus.BAD_REQUEST),
+    PREMIUM_PRICE_LOWER_THAN_STANDARD(6026, "Giá gói PREMIUM phải cao hơn gói STANDARD", HttpStatus.BAD_REQUEST),
+    PREMIUM_JOB_LIMIT_LOWER_THAN_STANDARD(6027, "Giới hạn tin gói PREMIUM phải cao hơn gói STANDARD", HttpStatus.BAD_REQUEST),
+    PREMIUM_CANDIDATE_VIEW_LIMIT_LOWER_THAN_STANDARD(6028, "Giới hạn xem gói PREMIUM phải cao nhất hệ thống", HttpStatus.BAD_REQUEST),
+    NOT_FOUND_SUBSCRIPTION_PRENIUM(6029, "Không tìm thấy thông tin gói PREMIUM trong hệ thống", HttpStatus.NOT_FOUND),
+    UNBALANCED_CUSTOM_PLAN(6030, "Cấu hình gói tùy chỉnh không cân bằng so với các gói mặc định", HttpStatus.BAD_REQUEST),
 
-    // 3. Ràng buộc về Lượt xem hồ sơ (Candidate View Limit)
-    FREE_CANDIDATE_VIEW_LIMIT_EXCEEDS_STANDARD(910, "Lượt xem hồ sơ của gói FREE không được vượt quá gói STANDARD"),
-    STANDARD_CANDIDATE_VIEW_LIMIT_LOWER_THAN_FREE(911, "Lượt xem hồ sơ của gói STANDARD không được bé hơn gói FREE"),
-    STANDARD_CANDIDATE_VIEW_LIMIT_EXCEEDS_PREMIUM(912, "Lượt xem hồ sơ của gói STANDARD không được vượt quá gói PREMIUM"),
-    PREMIUM_CANDIDATE_VIEW_LIMIT_LOWER_THAN_STANDARD(913, "Lượt xem hồ sơ của gói PREMIUM không được bé hơn gói STANDARD"),
+    // 7xxx: APPLICATION
+    APPLICATION_NOT_FOUND(7000, "Không tìm thấy hồ sơ ứng tuyển", HttpStatus.NOT_FOUND),
+    ALREADY_APPLIED(7001, "Bạn đã ứng tuyển vào vị trí này trước đó rồi", HttpStatus.BAD_REQUEST);
 
-
-    // 4. Ràng buộc về Hiển thị ưu tiên (Priority Display)
-    FREE_HAS_PRIORITY_DISPLAY_NOT_ALLOWED(914, "Gói FREE không được phép bật hiển thị ưu tiên"),
-    UNBALANCED_CUSTOM_PLAN(915, "Tỷ lệ Job và View không cân bằng"),
-    INVALID_CUSTOM_LIMITS(916, "Số lượng phải lớn hơn 0"),
-    ACCESS_DENIED(917, "Bạn chỉ có thể xóa gói cước của công ty bạn"),
-
-    //CATEGORY
-    CATEGORY_EXIST(2008, "Ngành nghề này đã tồn tại"),
-
-    //  DEGREE
-    DEGREE_TYPE_REQUIRED(5001, "Loại bằng cấp là bắt buộc"),
-    INVALID_DEGREE(5002, "Thông tin bằng cấp không hợp lệ"),
-    INVALID_CERTIFICATE(5003, "Chứng chỉ không hợp lệ hoặc đã hết hạn"),
-    INVALID_DEGREE_TYPE(5004, "Loại bằng cấp không hỗ trợ"),
-
-
-    //COMPANIES
-    COMPANY_EXIST(6001, "Công ty đã được đăng ký"),
-    COMPANY_NOT_FOUND(6002, "Không tìm thấy công ty"),
-    YOU_ARE_ADMIN(6003, "Bạn đã là ADMIN của công ty này"),
-    YOU_ARE_MEMBER(6004, "Bạn đã là thành viên của công ty này"),
-    HAS_NO_ADMIN(6005, "Công ty không có ADMIN nào"),
-    NOT_COMPANY_MEMBER(6006, "Bạn không phải là thành viên của công ty"),
-    NOT_COMPANY_ADMIN(6007, "Bạn không phải là admin của công ty"),
-    INVALID_CONFIRMATION_CODE(6008, "Mã xác nhận không đúng (Yêu cầu: DEACTIVATE)"),
-    COMPANY_ALREADY_DEACTIVATED(6009, "Công ty đã bị vô hiệu hóa từ trước"),
-
-
-    //REQUEST
-    REQUEST_ALREADY_SENT(7001, "Yêu cầu đã được gửi từ trước"),
-    INVALID_STATUS(7002, "Trạng thái không hợp lệ"),
-    JOIN_REQUEST_NOT_FOUND(7003, "Không tìm thấy yêu cầu tham gia"),
-    INVALID_JOIN_REQUEST(7004, "Yêu cầu tham gia không hợp lệ"),
-    JOIN_REQUEST_ALREADY_PROCESSED(7005, "Yêu cầu này đã được xử lý"),
-
-    //JOB
-    ALREADY_APPLIED(8001, "Hồ sơ ứng tuyển đã tồn tại cho bài đăng tuyển này"),
-
-    //APPLICATION
-    APPLICATION_NOT_FOUND(9001, "Không tìm thấy hồ sơ ứng tuyển"),
-    JSON_TO_TEXT_EXIT(5005, "lỗi biến đổi Json sang Text"),
-    COMPANY_DEACTIVATED_MEMBER(6011, "Công ty của bạn đã bị vô hiệu hóa. Bạn tạm thời không thể truy cập quyền nhà tuyển dụng."),
-    ;
-    private int code;
-    private String message;
-
-    ErrorCode(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
+    private final int code;
+    private final String message;
+    private final HttpStatus httpStatus;
 }
-

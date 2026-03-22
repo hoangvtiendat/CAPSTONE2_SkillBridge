@@ -14,7 +14,13 @@ import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
+import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,63 +37,59 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentService {
+    PayOS payOS;
+    CompanyMemberRepository companyMemberRepository;
+    SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
+    SubscriptionPlanRepository subscriptionPlanRepository;
+    PaymentTransactionRepository paymentTransactionRepository;
+    CompanyRepository companyRepository;
+    JobRepository jobRepository;
+    SystemLogService systemLog;
+    SecurityUtils securityUtils;
+    SimpMessagingTemplate messagingTemplate;
 
-    private final PayOS payOS;
-    private final CompanyMemberRepository companyMemberRepository;
-    private final SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
-    private final SubscriptionPlanRepository subscriptionPlanRepository;
-    private final PaymentTransactionRepository paymentTransactionRepository;
-    private final CompanyRepository companyRepository;
-    private final JobRepository jobRepository;
-
-    public PaymentService(PayOS payOS, CompanyMemberRepository companyMemberRepository, SubcriptionOfCompanyRepository subcriptionOfCompanyRepository,
-                          SubscriptionPlanRepository subscriptionPlanRepository,
-                          PaymentTransactionRepository paymentTransactionReposit, CompanyRepository companyRepository
-            , JobRepository jobRepository) {
-        this.payOS = payOS;
-        this.companyMemberRepository = companyMemberRepository;
-        this.subcriptionOfCompanyRepository = subcriptionOfCompanyRepository;
-        this.subscriptionPlanRepository = subscriptionPlanRepository;
-        this.paymentTransactionRepository = paymentTransactionReposit;
-        this.companyRepository = companyRepository;
-        this.jobRepository = jobRepository;
-    }
-
-
+    /**
+     * Tạo liên kết thanh toán PayOS cho gói dịch vụ
+     */
+    @Transactional
     public String createPaymentLink(String id_ofBill, int type) throws Exception {
-        long orderCode = System.currentTimeMillis() / 1000;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
-        var recruiter = companyMemberRepository.findByUser_Id(userDetails.getUserId())
+        var recruiter = companyMemberRepository.findByUser_Id(currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
+            systemLog.danger(currentUser, "Cố gắng thanh toán trái phép gói dịch vụ");
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
+
         BigDecimal amount = BigDecimal.ZERO;
         String description = "";
         String idOfSubcriptionOfCompany = "";
+        String planName;
+
         if (type == 0) {
             SubscriptionPlan getDetailSub = subscriptionPlanRepository.getReferenceById(id_ofBill);
             idOfSubcriptionOfCompany = getDetailSub.getId();
             amount = getDetailSub.getPrice();
+            planName = getDetailSub.getName().toString();
         } else if (type == 1) {
             SubcriptionOfCompany getDetailSub = subcriptionOfCompanyRepository.getReferenceById(id_ofBill);
             idOfSubcriptionOfCompany = getDetailSub.getId();
             amount = getDetailSub.getPrice();
+            planName = "CUSTOM PLAN";
         } else {
-            throw new Exception("Loại hóa đơn không hợp lệ, không thể xác định số tiền!");
+            throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
         }
         Map<String, Object> dataOfSubcription = new HashMap<>();
         dataOfSubcription.put("id_of_bill", id_ofBill);
         dataOfSubcription.put("type", type);
 
-        System.out.println("DEBUG: ID = " + id_ofBill + " | Amount lấy được từ DB = " + amount);
+        long orderCode = System.currentTimeMillis() / 1000;
 
         CreatePaymentLinkRequest paymentRequest = CreatePaymentLinkRequest.builder()
                 .orderCode(orderCode)
@@ -96,97 +98,98 @@ public class PaymentService {
                 .cancelUrl("http://localhost:3000/company/subscriptions")
                 .returnUrl("http://localhost:3000/company/subscriptions")
                 .build();
+
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setType(type);
-        transaction.setSubscription_id(idOfSubcriptionOfCompany);
+        transaction.setSubscriptionId(idOfSubcriptionOfCompany);
         transaction.setOrderCode(orderCode);
         transaction.setCompanyId(recruiter.getCompany().getId());
         paymentTransactionRepository.save(transaction);
+
+        systemLog.info(currentUser, "Khởi tạo thanh toán gói " + planName + " - Số tiền: " + amount);
+
         return payOS.paymentRequests().create(paymentRequest).getCheckoutUrl();
     }
 
-
+    /**
+     * Xác thực dữ liệu Webhook gửi từ PayOS
+     */
     public WebhookData verifyWebhook(Webhook webhook) throws Exception {
         return payOS.webhooks().verify(webhook);
     }
 
+    /**
+     * Xử lý logic khi thanh toán thành công (Webhook Callback)
+     */
     @Transactional
     public void handleSuccessfulPayment(WebhookData data) {
         long orderCode = data.getOrderCode();
         String code = data.getCode();
-        Long amount = data.getAmount();
 
-        try {
-            System.out.println("Đang xử lý chức năng cho mã đơn hàng: " + orderCode);
-            System.out.println("Mã trạng thái giao dịch: " + code);
-            System.out.println("Số tiền nhận được: " + amount);
-            System.out.println("data: " + data);
+        if ("00".equals(code)) {
+            try {
+                PaymentTransaction transaction = paymentTransactionRepository.findById(orderCode)
+                        .orElseThrow(() -> new Exception("Không tìm thấy giao dịch: " + orderCode));
 
-            if (orderCode == 123) {
-                return;
-            }
-
-            if ("00".equals(code)) {
-                PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(orderCode)
-                        .orElseThrow(() -> new Exception("Không tìm thấy giao dịch với mã: " + orderCode));
-
-                subcriptionOfCompanyRepository.findByCompanyIdAndStatus(paymentTransaction.getCompanyId(), SubscriptionOfCompanyStatus.OPEN)
-                        .ifPresent(closeSub -> {
-                            closeSub.setStatus(SubscriptionOfCompanyStatus.CLOSE);
-                            subcriptionOfCompanyRepository.save(closeSub);
+                subcriptionOfCompanyRepository.findByCompanyIdAndStatus(transaction.getCompanyId(), SubscriptionOfCompanyStatus.OPEN)
+                        .ifPresent(oldSub -> {
+                            oldSub.setStatus(SubscriptionOfCompanyStatus.CLOSE);
+                            subcriptionOfCompanyRepository.save(oldSub);
                         });
 
-                if (paymentTransaction.getType() == 0) {
-                    SubscriptionPlan getSub = subscriptionPlanRepository.getReferenceById(paymentTransaction.getSubscription_id());
-                    String companyId = paymentTransaction.getCompanyId();
-                    SubcriptionOfCompany newSubscription = new SubcriptionOfCompany();
-                    Company company = companyRepository.getReferenceById(companyId);
-
-                    newSubscription.setCompany(company);
-                    newSubscription.setName(getSub.getName());
-                    newSubscription.setJobLimit(getSub.getJobLimit());
-                    newSubscription.setCandidateViewLimit(getSub.getCandidateViewLimit());
-                    newSubscription.setHasPriorityDisplay(getSub.getHasPriorityDisplay());
-                    newSubscription.setPrice(getSub.getPrice());
-                    newSubscription.setStatus(SubscriptionOfCompanyStatus.OPEN);
-                    newSubscription.setPostingDuration(getSub.getPostingDuration());
-                    newSubscription.setStartDate(LocalDateTime.now());
-                    newSubscription.setEndDate(LocalDateTime.now().plusMonths(getSub.getPostingDuration() != null ? getSub.getPostingDuration() : 1));
-                    newSubscription.setIsActive(true);
-
-                    jobRepository.updateDurationForOldJobs(
-                            paymentTransaction.getCompanyId(),
-                            getSub.getPostingDuration(),
-                            List.of(
-                                    JobStatus.OPEN, JobStatus.PENDING
-                            )
-                    );
-
-                    subcriptionOfCompanyRepository.save(newSubscription);
+                if (transaction.getType() == 0) {
+                    activateStandardPlan(transaction);
+                } else if (transaction.getType() == 1) {
+                    activateCustomPlan(transaction);
                 }
 
-                if (paymentTransaction.getType() == 1) {
-                    SubcriptionOfCompany getSub = subcriptionOfCompanyRepository.getReferenceById(paymentTransaction.getSubscription_id());
-                    getSub.setStatus(SubscriptionOfCompanyStatus.OPEN);
-                    getSub.setStartDate(LocalDateTime.now());
-                    getSub.setEndDate(LocalDateTime.now().plusMonths(getSub.getPostingDuration() != null ? getSub.getPostingDuration() : 1));
-                    jobRepository.updateDurationForOldJobs(
-                            paymentTransaction.getCompanyId(),
-                            getSub.getPostingDuration(),
-                            List.of(
-                                    JobStatus.OPEN, JobStatus.PENDING
-                            )
-                    );
-                    subcriptionOfCompanyRepository.save(getSub);
-                }
+                systemLog.info(null, "Giao dịch #" + orderCode + " hoàn tất. Công ty ID: " + transaction.getCompanyId() + " đã được nâng cấp.");
 
-            } else {
+                messagingTemplate.convertAndSend("/topic/payments", "SUCCESS:" + orderCode);
+
+            } catch (Exception e) {
+                log.error("Lỗi xử lý kích hoạt gói sau thanh toán: ", e);
                 throw new AppException(ErrorCode.CHECK_STATUS_SUB);
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new AppException(ErrorCode.CHECK_STATUS_SUB);
         }
+    }
+
+    private void activateStandardPlan(PaymentTransaction transaction) {
+        SubscriptionPlan plan = subscriptionPlanRepository.getReferenceById(transaction.getSubscriptionId());
+        Company company = companyRepository.getReferenceById(transaction.getCompanyId());
+
+        SubcriptionOfCompany newSub = new SubcriptionOfCompany();
+        newSub.setCompany(company);
+        newSub.setName(plan.getName());
+        newSub.setJobLimit(plan.getJobLimit());
+        newSub.setCandidateViewLimit(plan.getCandidateViewLimit());
+        newSub.setHasPriorityDisplay(plan.getHasPriorityDisplay());
+        newSub.setPrice(plan.getPrice());
+        newSub.setStatus(SubscriptionOfCompanyStatus.OPEN);
+        newSub.setPostingDuration(plan.getPostingDuration());
+        newSub.setStartDate(LocalDateTime.now());
+        newSub.setEndDate(LocalDateTime.now().plusMonths(plan.getPostingDuration() != null ? plan.getPostingDuration() : 1));
+        newSub.setIsActive(true);
+
+        updateJobDurations(transaction.getCompanyId(), plan.getPostingDuration());
+        subcriptionOfCompanyRepository.save(newSub);
+    }
+
+    private void activateCustomPlan(PaymentTransaction transaction) {
+        SubcriptionOfCompany customSub = subcriptionOfCompanyRepository.getReferenceById(transaction.getSubscriptionId());
+        customSub.setStatus(SubscriptionOfCompanyStatus.OPEN);
+        customSub.setStartDate(LocalDateTime.now());
+        customSub.setEndDate(LocalDateTime.now().plusMonths(customSub.getPostingDuration() != null ? customSub.getPostingDuration() : 1));
+
+        updateJobDurations(transaction.getCompanyId(), customSub.getPostingDuration());
+        subcriptionOfCompanyRepository.save(customSub);
+    }
+
+    private void updateJobDurations(String companyId, Integer duration) {
+        jobRepository.updateDurationForOldJobs(
+                companyId,
+                duration,
+                List.of(JobStatus.OPEN, JobStatus.PENDING)
+        );
     }
 }

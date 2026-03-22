@@ -1,34 +1,44 @@
 package com.skillbridge.backend.dto.request;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateJobRequest {
-    @NotBlank(message = "Vị trí công việc không được để trống")
-    private String position;
 
-    @NotEmpty(message = "Tiêu đề không được để trống")
-    private Map<String, Object> title;
+    @NotBlank(message = "INVALID_INPUT")
+    String position;
 
-    @NotBlank(message = "Mô tả không được để trống")
-    private String description;
+    @NotEmpty(message = "INVALID_INPUT")
+    Map<String, Object> title;
 
-    @NotBlank(message = "Danh mục không được để trống")
-    private String categoryId;
+    @NotBlank(message = "INVALID_INPUT")
+    String description;
 
-    private BigDecimal salaryMin;
-    private BigDecimal salaryMax;
-    private String location;
-    @NotEmpty(message = "Danh sách kĩ năng không được để trống")
-    private List<JobSkillRequest> skills;
+    @NotBlank(message = "CATEGORY_NOT_FOUND")
+    String categoryId;
 
+    @Min(value = 0, message = "INVALID_INPUT")
+    BigDecimal salaryMin;
+
+    @Min(value = 0, message = "INVALID_INPUT")
+    BigDecimal salaryMax;
+
+    @NotBlank(message = "INVALID_INPUT")
+    String location;
+
+    @NotEmpty(message = "SKILL_NOT_FOUND")
+    List<JobSkillRequest> skills;
 }

@@ -1,18 +1,22 @@
 package com.skillbridge.backend.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
-@Getter
-@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class SkillRequest {
-    @NotBlank
-    private String name;
-    private String category_id;
-    public void setName(String name){
-        this.name = (name != null) ? name.replaceAll("\\s+", "") : null;
+
+    @NotBlank(message = "SKILL_NAME_REQUIRED")
+    String name;
+
+    String categoryId;
+
+    public void setName(String name) {
+        this.name = (name != null) ? name.trim() : null;
     }
 }

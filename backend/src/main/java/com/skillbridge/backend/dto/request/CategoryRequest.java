@@ -1,26 +1,21 @@
 package com.skillbridge.backend.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CategoryRequest {
-    @NotBlank(message = "Tên ngành nghề không được để trống")
-    private String name;
 
-    public CategoryRequest() {}
+    @NotBlank(message = "CATEGORY_EXIST")
+    @Size(max = 255, message = "INVALID_INPUT")
+    String name;
 
-    public CategoryRequest(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    @Size(max = 500, message = "INVALID_INPUT")
+    String description;
 }

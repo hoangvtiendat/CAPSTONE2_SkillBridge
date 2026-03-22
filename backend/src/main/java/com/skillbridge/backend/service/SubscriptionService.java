@@ -13,12 +13,16 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.SubcriptionOfCompanyRepository;
 import com.skillbridge.backend.repository.SubscriptionRepository;
+import com.skillbridge.backend.utils.SecurityUtils;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.View;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,38 +31,57 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class SubscriptionService {
-    @Autowired
     SubscriptionRepository subscriptionRepository;
-    @Autowired
-    SubcriptionOfCompanyRepository companySubcriptionRespository;
-    @Autowired
+    SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
     CompanyMemberRepository companyMemberRepository;
-    @Autowired
-    private View error;
+    SystemLogService systemLog;
+    SecurityUtils securityUtils;
+    SimpMessagingTemplate messagingTemplate;
+
+    /**
+     * Lấy danh sách tất cả gói dịch vụ hiện có
+     */
     public List<SubscriptionPlan> getAllSubscriptionPlans() {
         return subscriptionRepository.findAll();
     }
+
+    /**
+     * Tìm gói dịch vụ theo ID
+     */
     public SubscriptionPlan getSubscriptionPlanById(String id) {
         return subscriptionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
     }
+
+    /**
+     * Cập nhật thông tin gói dịch vụ (có ràng buộc logic giữa các gói)
+     */
+    @Transactional
     public SubscriptionPlan updateSubscription(String id, SubscriptionPlan subscriptionPlan) {
+        SubscriptionPlan plan = subscriptionRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
+        SubscriptionPlanStatus status_name = plan.getName();
+        LogicUpdateForUpdateSubscription(status_name, subscriptionPlan);
+        plan.setPrice(subscriptionPlan.getPrice());
+        plan.setPostingDuration(subscriptionPlan.getPostingDuration());
+        plan.setJobLimit(subscriptionPlan.getJobLimit());
+        plan.setCandidateViewLimit(subscriptionPlan.getCandidateViewLimit());
+        plan.setHasPriorityDisplay(subscriptionPlan.getHasPriorityDisplay());
 
-        SubscriptionPlan updatedSubscriptionPlan = getSubscriptionPlanById(id);
-        SubscriptionPlanStatus status_name = updatedSubscriptionPlan.getName();
+        SubscriptionPlan savedPlan = subscriptionRepository.save(plan);
 
-        LogicUpdateForUpdatescription(status_name, subscriptionPlan);
-        updatedSubscriptionPlan.setPrice(subscriptionPlan.getPrice());
-        updatedSubscriptionPlan.setPostingDuration(subscriptionPlan.getPostingDuration());
-        updatedSubscriptionPlan.setJobLimit(subscriptionPlan.getJobLimit());
-        updatedSubscriptionPlan.setCandidateViewLimit(subscriptionPlan.getCandidateViewLimit());
-        updatedSubscriptionPlan.setHasPriorityDisplay(subscriptionPlan.getHasPriorityDisplay());
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        systemLog.warn(currentUser, "Cấu hình gói " + savedPlan.getName() + " đã thay đổi");
 
-        return subscriptionRepository.save(updatedSubscriptionPlan);
+        messagingTemplate.convertAndSend("/topic/subscription-plans", savedPlan);
+
+        return savedPlan;
     }
 
-    public void LogicUpdateForUpdatescription(SubscriptionPlanStatus status, SubscriptionPlan request) {
+    public void LogicUpdateForUpdateSubscription(SubscriptionPlanStatus status, SubscriptionPlan request) {
         if (SubscriptionPlanStatus.FREE.equals(status)) {
             SubscriptionPlan standard = subscriptionRepository.findByName(SubscriptionPlanStatus.STANDARD)
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
@@ -117,17 +140,17 @@ public class SubscriptionService {
         }
     }
 
+    /**
+     * Tạo đăng ký gói Custom cho Công ty
+     */
     public SubcriptionOfCompany createCompanySubscriptions(CompanySubscriptionRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        var recruiter = companyMemberRepository.findByUser_Id(userDetails.getUserId())
+        var recruiter = companyMemberRepository.findByUser_Id(currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
+            systemLog.danger(currentUser, "Cố gắng tạo gói đăng ký Custom trái phép");
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
         SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
@@ -150,7 +173,14 @@ public class SubscriptionService {
         newSubscription.setEndDate(LocalDateTime.now().plusDays(30));
         newSubscription.setIsActive(true);
 
-        return companySubcriptionRespository.save(newSubscription);
+        SubcriptionOfCompany saved = subcriptionOfCompanyRepository.save(newSubscription);
+
+        systemLog.info(currentUser, "Đăng ký gói Custom mới cho công ty: " + recruiter.getCompany().getName());
+
+        String companyTopic = "/topic/company/" + recruiter.getCompany().getId() + "/subscriptions";
+        messagingTemplate.convertAndSend(companyTopic, saved);
+
+        return saved;
     }
 
     public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request)
@@ -211,47 +241,67 @@ public class SubscriptionService {
         return customJobCost.add(customViewCost).add(totalPriorityCost)
                 .setScale(2, RoundingMode.HALF_UP);
     }
+
+    /**
+     * Xóa (Hủy) gói dịch vụ của công ty
+     */
     public void deleteCompanySubscription(String subscriptionId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-
-        var recruiter = companyMemberRepository.findByUser_Id(userDetails.getUserId())
+        var recruiter = companyMemberRepository.findByUser_Id(currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
+            systemLog.danger(currentUser, "Vi phạm phân quyền: User cố gắng xóa gói dịch vụ");
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
 
-        SubcriptionOfCompany subscription = companySubcriptionRespository.findById(subscriptionId)
+        SubcriptionOfCompany subscription = subcriptionOfCompanyRepository.findById(subscriptionId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
         if (!subscription.getCompany().getId().equals(recruiter.getCompany().getId())) {
+            systemLog.danger(currentUser, "Cảnh báo bảo mật: Cố gắng xóa gói của công ty khác ID: " + subscriptionId);
             throw new AppException(ErrorCode.ACCESS_DENIED);
         }
 
-        companySubcriptionRespository.delete(subscription);
-;
+        subscription.setIsActive(false);
+        subscription.setDeleted(true);
+
+        subcriptionOfCompanyRepository.save(subscription);
+
+        systemLog.warn(currentUser, "Xóa gói dịch vụ ID: " + subscriptionId);
+
+        String companyTopic = "/topic/company/" + recruiter.getCompany().getId() + "/subscriptions";
+        messagingTemplate.convertAndSend(companyTopic, "DELETED:" + subscriptionId);
     }
+
     public List<SubcriptionOfCompany> getMyCompanySubscriptions() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        try {
+            if (currentUser == null || currentUser.getUserId() == null) {
+                log.error("CurrentUser is NULL - Đăng nhập có vấn đề");
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var recruiter = companyMemberRepository.findByUser_Id(currentUser.getUserId())
+                    .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+            if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
+                systemLog.danger(currentUser, ErrorCode.EXITS_YOUR_ROLE.getMessage());
+                throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
+            }
+
+            List<SubcriptionOfCompany> subscriptions = subcriptionOfCompanyRepository
+                    .findByCompanyIdAndDeletedFalse(recruiter.getCompany().getId());
+
+            return subscriptions;
+
+        } catch (AppException e) {
+            systemLog.danger(currentUser, "Lỗi hệ thống: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            systemLog.danger(currentUser, "Lỗi hệ thống: " + e.getMessage());
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-
-        var recruiter = companyMemberRepository.findByUser_Id(userDetails.getUserId())
-                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
-
-        if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
-            throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
-        }
-        return companySubcriptionRespository.findByCompanyId(recruiter.getCompany().getId());
-
     }
-
 }

@@ -9,5 +9,4 @@ public record OllamaRequest(
         boolean stream,
         String format,
         OllamaOptions options
-
 ) {}

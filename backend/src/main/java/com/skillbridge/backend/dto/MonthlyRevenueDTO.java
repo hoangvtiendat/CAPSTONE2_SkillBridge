@@ -1,21 +1,14 @@
 package com.skillbridge.backend.dto;
 
+import lombok.*;
 import java.math.BigDecimal;
 
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MonthlyRevenueDTO {
     private Integer month;
     private BigDecimal revenue;
-
-    public MonthlyRevenueDTO(Integer month, BigDecimal revenue) {
-        this.month = month;
-        this.revenue = revenue;
-    }
-
-    public Integer getMonth() {
-        return month;
-    }
-
-    public BigDecimal getRevenue() {
-        return revenue;
-    }
 }

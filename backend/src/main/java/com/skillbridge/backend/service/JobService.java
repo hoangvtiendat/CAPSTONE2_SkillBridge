@@ -17,10 +17,12 @@ import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.JobRepository;
-import lombok.Builder;
+import com.skillbridge.backend.utils.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
-import com.skillbridge.backend.repository.SystemLogRepository;
-//import jakarta.transaction.Transactional;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import com.skillbridge.backend.repository.*;
@@ -50,26 +52,26 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JobService {
-    private final String UPLOAD_DIR = "uploads/";
-    private final JobRepository jobRepository;
-    private final SystemLogRepository systemLogRepository;
-    private final SystemLogService logsService;
-    private final CategoryRepository categoryRepository;
-    private final SkillRepository skillRepository;
-    private final JobSkillRepository jobSkillRepository;
-    private final CompanyMemberRepository companyMemberRepository;
-    private final EmbeddingService embeddingService;
-    private final CompanyRepository companyRepository;
-
-    private final CandidateRepository candidateRepository;
-    private final ApplicationRepository applicationRepository;
-    private final ObjectMapper objectMapper;
-    private final FileStorageService fileStorageService;
-    private final NotificationRepository notificationRepository;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final SubscriptionPlanRepository subscriptionPlanRepository;
-    private final SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
+    String UPLOAD_DIR = "uploads/";
+    JobRepository jobRepository;
+    SystemLogService logsService;
+    CategoryRepository categoryRepository;
+    SkillRepository skillRepository;
+    JobSkillRepository jobSkillRepository;
+    CompanyMemberRepository companyMemberRepository;
+    EmbeddingService embeddingService;
+    CompanyRepository companyRepository;
+    SecurityUtils securityUtils;
+    CandidateRepository candidateRepository;
+    ApplicationRepository applicationRepository;
+    ObjectMapper objectMapper;
+    FileStorageService fileStorageService;
+    NotificationRepository notificationRepository;
+    NotificationService notificationService;
+    SimpMessagingTemplate messagingTemplate;
+    SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
 
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -97,6 +99,7 @@ public class JobService {
                 "currentPage", jobPage.getNumber()
         );
     }
+
     public Map<String, Object> getJobsByCompany(String companyId, int page, int limit, List<String> categoryIds) {
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -140,7 +143,6 @@ public class JobService {
                 "currentPage", jobPage.getNumber()
         );
     }
-
     public AdminJobFeedResponse adminGetJob(String cursor, int limit, String status, String modStatus) {
         try {
             JobStatus newStatus = null;
@@ -167,6 +169,7 @@ public class JobService {
             boolean hasMore = jobs.size() > limit;
             List<AdminJobFeedItemResponse> resultList = hasMore ? jobs.subList(0, limit) : jobs;
             enrichSkills((List<JobFeedItemResponse>) (List<?>) resultList);
+
             String nextCursor = hasMore ? jobs.get(limit).getJobId() : null;
             return new AdminJobFeedResponse(resultList, nextCursor, hasMore);
         } catch (Exception e) {
@@ -201,6 +204,8 @@ public class JobService {
         }
     }
 
+
+
     private void enrichSkills(List<JobFeedItemResponse> items) {
         if (items == null || items.isEmpty()) {
             return;
@@ -225,8 +230,40 @@ public class JobService {
         }
     }
 
-    public JobDetailResponse getJobDetail(String jobId) {
+
+
+
+
+
+
+
+
+
+    /**
+     * lấy chi tiết của 1 job theo id
+     */
+    public JobDetailResponse getJobDetail(String jobId, HttpServletRequest request) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUserOptional();
+        HttpSession session = request.getSession();
+
         try {
+            String sessionKey = "VIEWED_JOB_" + jobId;
+            boolean hasViewed = session.getAttribute(sessionKey) != null;
+
+            boolean shouldIncrement = !hasViewed;
+
+            if (currentUser != null) {
+                boolean isInternal = currentUser.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") ||
+                                a.getAuthority().equals("ROLE_RECRUITER"));
+                if (isInternal) shouldIncrement = false;
+            }
+
+            if (shouldIncrement) {
+                jobRepository.incrementViewCount(jobId);
+                session.setAttribute(sessionKey, true);
+            }
+
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
             List<Object[]> skillData = jobRepository.findSkillNamesByJobIds(List.of(jobId));
@@ -234,6 +271,7 @@ public class JobService {
                     .map(obj -> (String) obj[1])
                     .collect(Collectors.toList());
             Object titleData = job.getTitle();
+
             JobDetailResponse detail = new JobDetailResponse(
                     job.getId(),
                     titleData,
@@ -244,6 +282,7 @@ public class JobService {
                     job.getSalaryMax(),
                     job.getStatus() != null ? job.getStatus().name() : null,
                     job.getModerationStatus() != null ? job.getModerationStatus().name() : null,
+                    job.getViewCount(),
                     job.getCompany() != null ? job.getCompany().getId() : null,
                     job.getCompany() != null ? job.getCompany().getName() : "N/A",
                     job.getCompany() != null ? job.getCompany().getImageUrl() : null,
@@ -259,101 +298,199 @@ public class JobService {
         }
     }
 
+    /**
+     * Xoá bài đăng tuyển dụng (Soft Delete)
+     */
     @Transactional
-    public void deleteJob(CustomUserDetails userDetails, String jobId) {
+    public void deleteJob(String jobId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         try {
             Job job = jobRepository.findById(jobId).orElseThrow(
-                    ()-> new AppException(ErrorCode.JOB_NOT_FOUND));
-            String jobDescription = job.getDescription();
-            job.setIsDeleted(true);
+                    () -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+            job.setDeleted(true);
             jobRepository.save(job);
-            logsService.logAction(userDetails, "Admin xóa bài đăng tuyển dụng: " + jobDescription + " (ID: " + jobId + ")", LogLevel.WARNING);
+            logsService.warn(currentUser, "Admin xóa bài đăng: " + job.getPosition() + " (ID: " + jobId + ")");
+
+            String subject = "Bài đăng tuyển dụng đã bị gỡ bỏ";
+            String content = generateJobEmailContent(job, "đã bị gỡ bỏ bởi quản trị viên hệ thống", "#ef4444");
+
+            sendNotificationToRecruiterAndAdmin(job, subject, content, "JOB_DELETED", "/");
+            messagingTemplate.convertAndSend("/topic/jobs/delete", (Object) jobId);
+        } catch (AppException e) {
+            throw e;
         } catch (Exception e) {
-            System.err.println("Lỗi khi xóa job: " + e.getMessage());
-            logsService.logAction(userDetails, "Lỗi hệ thống khi xóa Job ID " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
+            logsService.danger(currentUser, "Lỗi hệ thống khi xóa Job ID " + jobId + ": " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
+    /**
+     * Thay đổi trạng thái kiểm duyệt (Moderation)
+     */
     @Transactional
-    public void changeModerationStatus(CustomUserDetails userDetails, String jobId, String modStatus) {
+    public void changeModerationStatus(String jobId, String modStatus) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         try {
             ModerationStatus newModStatus;
             try {
                 newModStatus = ModerationStatus.valueOf(modStatus.toUpperCase());
             } catch (IllegalArgumentException e) {
-                logsService.logAction(userDetails, "Admin nhập sai trạng thái kiểm duyệt: " + modStatus, LogLevel.WARNING);
+                logsService.warn(currentUser, "Admin nhập sai trạng thái kiểm duyệt: " + modStatus);
                 throw new AppException(ErrorCode.INVALID_INPUT);
             }
-            Job job = jobRepository.findById(jobId)
-                    .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+            Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
             ModerationStatus oldStatus = job.getModerationStatus();
             job.setModerationStatus(newModStatus);
+
             if (newModStatus == ModerationStatus.RED || newModStatus == ModerationStatus.YELLOW) {
                 job.setStatus(JobStatus.PENDING);
-            }
-            if (newModStatus == ModerationStatus.GREEN) {
+            } else if (newModStatus == ModerationStatus.GREEN) {
                 job.setStatus(JobStatus.OPEN);
             }
             jobRepository.save(job);
-            logsService.logAction(userDetails, "Thay đổi kiểm duyệt Job ID: " + jobId + " [" + oldStatus + " -> " + newModStatus + "]", LogLevel.WARNING);
+            logsService.warn(currentUser, "Thay đổi kiểm duyệt Job " + job.getPosition() + ": [" + oldStatus + " -> " + newModStatus + "]");
+
+            String subject = "Cập nhật kiểm duyệt bài đăng";
+            String color = (newModStatus == ModerationStatus.GREEN) ? "#10b981" : "#f59e0b";
+            String content = generateJobEmailContent(job, "đã được cập nhật trạng thái kiểm duyệt thành: <b>" + newModStatus + "</b>", color);
+
+            sendNotificationToRecruiterAndAdmin(job, subject, content, "JOB_MODERATION", "/jobs/" + jobId);
+
+            messagingTemplate.convertAndSend("/topic/jobs/moderation", (Object) Map.of("jobId", jobId, "status", newModStatus));
+        } catch (AppException e) {
+            throw e;
         } catch (Exception e) {
-            System.err.println("Lỗi hệ thống khi cập nhật Moderation: " + e.getMessage());
-            logsService.logAction(userDetails, "Lỗi hệ thống khi cập nhật Moderation Job ID " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
+            logsService.danger(currentUser, "Lỗi hệ thống khi Moderation Job " + jobId + ": " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
+    /**
+     * Thay đổi trạng thái hiển thị (JobStatus)
+     */
     @Transactional
-    public void changeStatus(CustomUserDetails userDetails, String jobId, String status) {
+    public void changeStatus(String jobId, String status) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         try {
             JobStatus newStatus;
             try {
                 newStatus = JobStatus.valueOf(status.toUpperCase());
             } catch (IllegalArgumentException e) {
-                logsService.logAction(userDetails, "Admin nhập sai trạng thái kiểm duyệt: " + status, LogLevel.WARNING);
+                logsService.warn(currentUser, "Admin nhập sai trạng thái Job: " + status);
                 throw new AppException(ErrorCode.INVALID_INPUT);
             }
-            Job job = jobRepository.findById(jobId)
-                    .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-
+            Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
             JobStatus oldStatus = job.getStatus();
             job.setStatus(newStatus);
             jobRepository.save(job);
-            logsService.logAction(userDetails, "Thay đổi trạng thái Job ID: " + jobId + " [" + oldStatus + " -> " + newStatus + "]", LogLevel.WARNING);
+            logsService.warn(currentUser, "Thay đổi trạng thái Job " + job.getPosition() + ": [" + oldStatus + " -> " + newStatus + "]");
+            String subject = "Trạng thái bài đăng đã thay đổi";
+            String content = generateJobEmailContent(job, "đã được chuyển sang trạng thái: <b>" + newStatus + "</b>", "#3b82f6");
+            sendNotificationToRecruiterAndAdmin(job, subject, content, "JOB_STATUS_CHANGE", "/jobs/" + jobId);
+        } catch (AppException e) {
+            throw e;
         } catch (Exception e) {
-            System.err.println("Lỗi hệ thống khi cập nhật status: " + e.getMessage());
-            logsService.logAction(userDetails, "Lỗi hệ thống khi cập nhật status Job ID " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
+            logsService.danger(currentUser, "Lỗi hệ thống khi đổi status Job " + jobId + ": " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
+    /**
+     * Hàm hỗ trợ: Gửi thông báo cho Recruiter và Admin duy nhất của công ty
+     */
+    private void sendNotificationToRecruiterAndAdmin(Job job, String subject, String content, String type, String link) {
+        User creator = job.getCompanyMember().getUser();
+        notificationService.createNotification(creator, null, subject, content, type, link, true);
+        companyMemberRepository.findByCompany_IdAndRole(job.getCompany().getId(), CompanyRole.ADMIN)
+                .stream()
+                .findFirst()
+                .ifPresent(adminMember -> {
+                    User adminUser = adminMember.getUser();
+                    if (!adminUser.getId().equals(creator.getId())) {
+                        notificationService.createNotification(adminUser, null, subject, content, type, link, true);
+                    }
+                });
+    }
+
+    /**
+     * Hàm hỗ trợ: Tạo nội dung HTML cho Email thông báo Job
+     */
+    private String generateJobEmailContent(Job job, String actionText, String color) {
+        return String.format(
+                "<div style='font-family: Arial; padding: 15px; border-left: 4px solid %s;'>" +
+                        "<h4>Thông báo từ SkillBridge</h4>" +
+                        "<p>Bài đăng vị trí <b>%s</b> tại công ty <b>%s</b> %s.</p>" +
+                        "<p>Vui lòng đăng nhập hệ thống để biết thêm chi tiết.</p>" +
+                        "</div>",
+                color, job.getPosition(), job.getCompany().getName(), actionText
+        );
+    }
+
+    /**
+     * Phê duyệt hoặc Từ chối bài đăng đang chờ (PENDING)
+     */
     @Transactional
-    public void responseJobPending(CustomUserDetails userDetails, String jobId, String status) {
+    public void responseJobPending(String jobId, String status) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         try {
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-            if(!"OPEN".equals(status)&&!"LOCK".equals(status)){
-                System.out.println("Khoong the thay doi");
+            if (!"OPEN".equals(status) && !"LOCK".equals(status)) {
+                throw new AppException(ErrorCode.INVALID_INPUT);
             }
-            if("OPEN".equals(status)){
-                JobStatus open = JobStatus.OPEN;
-                ModerationStatus green = ModerationStatus.GREEN;
-                job.setModerationStatus(green);
-                job.setStatus(open);
+
+            String actionDescription = "";
+            String subject = "";
+            String color = "";
+
+            if ("OPEN".equals(status)) {
+                job.setModerationStatus(ModerationStatus.GREEN);
+                job.setStatus(JobStatus.OPEN);
+
+                actionDescription = "đã được PHÊ DUYỆT và hiển thị công khai";
+                subject = "Tin tuyển dụng của bạn đã được phê duyệt";
+                color = "#10b981";
+            } else {
+                job.setStatus(JobStatus.LOCK);
+
+                actionDescription = "đã bị TỪ CHỐI bởi quản trị viên";
+                subject = "Thông báo kết quả duyệt tin tuyển dụng";
+                color = "#ef4444";
             }
-            if("LOCK".equals(status)){
-                JobStatus lock = JobStatus.LOCK;
-                job.setStatus(lock);
-            }
+
             jobRepository.save(job);
-            logsService.logAction(userDetails, "Admin đã chấp nhận bài đăng ", LogLevel.WARNING);
+            logsService.warn(currentUser, "Admin " + status + " bài đăng: " + job.getPosition() + " (ID: " + jobId + ")");
+
+            String content = generateJobEmailContent(job, actionDescription, color);
+            sendNotificationToRecruiterAndAdmin(job, subject, content, "JOB_APPROVAL", "/jobs/" + jobId);
+
+            Map<String, Object> updateSignal = Map.of(
+                    "jobId", jobId,
+                    "newStatus", job.getStatus().name(),
+                    "newModStatus", job.getModerationStatus().name()
+            );
+            messagingTemplate.convertAndSend("/topic/jobs/approval", (Object) updateSignal);
+
+        } catch (AppException e) {
+            throw e;
         } catch (Exception e) {
-            System.err.println("Lỗi khi duyệt bài đăng: " + e.getMessage());
-            logsService.logAction(userDetails, "Lỗi duyệt bài đăng " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
+            log.error("Lỗi khi duyệt bài đăng {}: {}", jobId, e.getMessage());
+            logsService.logAction(currentUser, "Lỗi duyệt bài đăng " + jobId + ". Chi tiết: " + e.getMessage(), LogLevel.DANGER);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
+
+
+
+
+
+
+
+
+
+
 
     public Job createJD(CreateJobRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -376,11 +513,11 @@ public class JobService {
         }
 
         SubcriptionOfCompany getSubcriptionOfCompany = subcriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(),SubscriptionOfCompanyStatus.OPEN)
-                .orElseThrow(() -> new AppException(ErrorCode.SUBCRIFTION_OF_COMPANY));
+                .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_OF_COMPANY));
 
     if(getSubcriptionOfCompany.getCurrentJobCount() > getSubcriptionOfCompany.getJobLimit())
     {
-        throw new AppException(ErrorCode.EXIR_SUBSCRIFTION);
+        throw new AppException(ErrorCode.EXIT_SUBSCRIPTION);
     }
 
         List<JobSkill> jobSkills = new ArrayList<>();
@@ -460,12 +597,11 @@ public class JobService {
         jobRepository.save(job);
         return savedJob;
     }
+
     @Scheduled(cron = "0 0 0 * * *") // Tự động chạy vào 00:00 mỗi ngày
     @Transactional
     public void handleExpiredSubscriptions() {
         LocalDateTime now = LocalDateTime.now();
-
-
         List<SubcriptionOfCompany> expiredPremiumSubs = subcriptionOfCompanyRepository
                 .findAllByEndDateBeforeAndStatusAndNameNot(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
 
@@ -537,7 +673,7 @@ public class JobService {
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         Job job = jobRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
         return mapToJobResponse(job);
     }
@@ -595,7 +731,7 @@ public class JobService {
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
         if (!job.getCompanyMember().getId().equals(recruiter.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -687,7 +823,7 @@ public class JobService {
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         Job job = jobRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
         boolean isAdmin = recruiter.getRole() == CompanyRole.ADMIN;
         boolean isJobOwner = job.getCompanyMember().getId().equals(recruiter.getId());
@@ -696,7 +832,7 @@ public class JobService {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
         job.setStatus(JobStatus.LOCK);
-        job.setIsDeleted(true);
+        job.setDeleted(true);
         jobRepository.save(job);
 
         return job;
@@ -717,7 +853,7 @@ public class JobService {
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         Job job = jobRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
         boolean isAdmin = recruiter.getRole() == CompanyRole.ADMIN;
         boolean isJobOwner = job.getCompanyMember().getId().equals(recruiter.getId());
@@ -727,7 +863,7 @@ public class JobService {
         }
 
         Job oldPost = jobRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.JD_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
         if (JobStatus.CLOSED.equals(oldPost.getStatus())) {
             Job newJob = jobRepository.save(job);
             return newJob;
@@ -797,7 +933,6 @@ public class JobService {
                 .collect(Collectors.toSet());
 
         for (User recruiter : distinctRecruiters) {
-            // A. Lưu vào Database
             Notification notification = Notification.builder()
                     .user(recruiter)
                     .title(title)
@@ -819,7 +954,6 @@ public class JobService {
                 log.error("Lỗi WebSocket cho recruiter {}: {}", recruiter.getId(), e.getMessage());
             }
         }
-
         return request;
     }
 }

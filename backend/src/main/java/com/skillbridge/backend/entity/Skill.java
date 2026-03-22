@@ -3,21 +3,26 @@ package com.skillbridge.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
-@Entity
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
 @Table(name = "skills")
 public class Skill extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36)
+    @Setter(AccessLevel.NONE)
     private String id;
 
+    @Column(nullable = false, unique = true)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -25,12 +30,15 @@ public class Skill extends BaseEntity {
     @JsonIgnore
     private Category category;
 
+    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<JobSkill> jobSkills;
+
+    /**
+     * Trả về ID của Category cho Frontend dễ xử lý
+     */
     @JsonProperty("category_id")
     public String getCategoryId() {
         return (category != null) ? category.getId() : null;
     }
-
-    @OneToMany(mappedBy = "skill")
-    @JsonIgnore
-    private List<JobSkill> jobSkills;
 }

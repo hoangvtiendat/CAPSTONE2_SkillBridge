@@ -1,23 +1,35 @@
 package com.skillbridge.backend.repository;
 
 import com.skillbridge.backend.entity.Skill;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface SkillRepository extends JpaRepository<Skill, String> {
-    @Query("SELECT s FROM Skill s WHERE s.id = :id")
-    Optional<Skill> findById(@Param("id") String id);
+    /**
+     * Tìm kiếm gợi ý kỹ năng theo từ khóa (Autocomplete).
+     * <p>Ví dụ: Nhập "jav" sẽ gợi ý "Java", "JavaScript".</p>
+     * * @param name Từ khóa tìm kiếm
+     * @return Danh sách kỹ năng chứa từ khóa, không phân biệt hoa thường
+     */
+    @Query("SELECT s FROM Skill s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%')) " +
+            "ORDER BY CASE " +
+            "  WHEN LOWER(s.name) LIKE LOWER(CONCAT(:name, '%')) THEN 1 " +
+            "  ELSE 2 " +
+            "END, s.name ASC")
+    List<Skill> searchAutocomplete(@Param("name") String name, Pageable pageable);
 
-    List<Skill> findByNameContainingIgnoreCase(String name);
+    /** Tìm kiếm kỹ năng theo tên */
     List<Skill> findByName(String name);
-    boolean existsByName(String name);
-    List<Skill> findByCategory_Id(String categoryId);
-    // check tồn tại
 
+    /** Kiểm tra trùng tên*/
+    boolean existsByName(String name);
+
+    /** Lấy toàn bộ kỹ năng thuộc một danh mục cụ thể */
+    List<Skill> findByCategory_Id(String categoryId);
 }

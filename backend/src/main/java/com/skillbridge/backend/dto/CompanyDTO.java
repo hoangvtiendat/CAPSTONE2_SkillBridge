@@ -1,77 +1,34 @@
 package com.skillbridge.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import lombok.*;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CompanyDTO {
+
+    @NotBlank(message = "Tên công ty không được để trống")
     private String name;
+
+    @NotBlank(message = "Địa chỉ không được để trống")
     private String address;
+
     private String status;
+
+    @NotBlank(message = "Người đại diện không được để trống")
     private String representative;
+
     private String startDate;
+
     private String licenseDate;
 
+    @NotBlank(message = "Mã số thuế không được để trống")
+    @Pattern(regexp = "^[0-9]{10,13}$", message = "Mã số thuế không hợp lệ")
     private String taxCode;
+
     private String phoneImg;
-
-    public String getTaxCode() {
-        return taxCode;
-    }
-
-    public void setTaxCode(String taxCode) {
-        this.taxCode = taxCode;
-    }
-
-    public String getPhoneImg() {
-        return phoneImg;
-    }
-
-    public void setPhoneImg(String phoneImg) {
-        this.phoneImg = phoneImg;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getRepresentative() {
-        return representative;
-    }
-
-    public void setRepresentative(String representative) {
-        this.representative = representative;
-    }
-
-    public String getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(String startDate) {
-        this.startDate = startDate;
-    }
-
-    public String getLicenseDate() {
-        return licenseDate;
-    }
-
-    public void setLicenseDate(String licenseDate) {
-        this.licenseDate = licenseDate;
-    }
 }
