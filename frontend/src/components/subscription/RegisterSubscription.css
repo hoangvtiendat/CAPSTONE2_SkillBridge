@@ -1,0 +1,244 @@
+/* REGISTER SUBSCRIPTION - LIQUID GLASS SYSTEM
+    Prefix: rs- (To prevent CSS leakage)
+*/
+
+:root {
+    /* Main Branding */
+    --rs-blue: #007aff;
+    --rs-blue-light: #00c6ff;
+    --rs-green: #34c759;
+    --rs-green-light: #30d158;
+    --rs-amber: #ff9f0a;
+    --rs-amber-light: #ffc107;
+    --rs-red: #ff3b30;
+    --rs-gray: #8e8e93;
+    --rs-gray-light: #c7c7cc;
+
+    /* Glass Properties */
+    --rs-glass-border: rgba(255, 255, 255, 0.45);
+    --rs-inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    --rs-transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rs-page-wrapper {
+    max-width: 1280px;
+    margin: 0 auto;
+    min-height: 100vh;
+    animation: rs-page-entrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --- 1. NAVIGATION & HEADER --- */
+.rs-header-nav {
+    margin-bottom: 50px;
+}
+
+.rs-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px) saturate(180%);
+    border: 1px solid var(--rs-glass-border);
+    border-radius: 100px;
+    color: #1d1d1f;
+    font-weight: 750;
+    cursor: pointer;
+    transition: var(--rs-transition);
+}
+
+.rs-back-btn:hover {
+    transform: translateX(-8px);
+    background: white;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.rs-main-title {
+    font-size: 38px;
+    font-weight: 850;
+    color: #1d1d1f;
+    letter-spacing: -0.05em;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 25px;
+}
+
+.rs-main-title svg {
+    color: var(--rs-blue);
+    filter: drop-shadow(0 4px 12px rgba(0, 122, 255, 0.3));
+}
+
+/* --- 2. GRID & CARD BASE --- */
+.rs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 32px;
+}
+
+.rs-card {
+    backdrop-filter: blur(35px) saturate(210%);
+    border-radius: 45px;
+    padding: 45px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: var(--rs-inner-light), 0 20px 40px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--rs-glass-border);
+    position: relative;
+    overflow: hidden;
+}
+
+.rs-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: var(--rs-inner-light), 0 40px 80px rgba(0, 0, 0, 0.1);
+}
+
+/* --- 3. TINTED GLASS THEMES --- */
+.rs-tier-free {
+    background: linear-gradient(180deg, rgba(142, 142, 147, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+}
+.rs-tier-standard {
+    background: linear-gradient(180deg, rgba(0, 122, 255, 0.12) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-color: rgba(0, 122, 255, 0.3);
+}
+.rs-tier-premium {
+    background: linear-gradient(180deg, rgba(251, 191, 36, 0.18) 0%, rgba(251, 191, 36, 0.08) 100%);
+    border-color: rgba(251, 191, 36, 0.45);
+}
+.rs-tier-custom {
+    background: linear-gradient(180deg, rgba(52, 199, 89, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-color: rgba(52, 199, 89, 0.35);
+}
+
+/* Tier Specific Text Colors */
+.rs-tier-free .rs-plan-name, .rs-tier-free .rs-price-value { color: var(--rs-gray); }
+.rs-tier-standard .rs-plan-name, .rs-tier-standard .rs-price-value { color: var(--rs-blue); }
+.rs-tier-premium .rs-plan-name, .rs-tier-premium .rs-price-value { color: #b45309; }
+.rs-tier-custom .rs-plan-name, .rs-tier-custom .rs-price-value { color: #1a7f37; }
+
+/* --- 4. CARD CONTENT --- */
+.rs-plan-name { font-size: 28px; font-weight: 850; margin-bottom: 12px; letter-spacing: -0.04em; }
+.rs-price-box { margin-bottom: 40px; display: flex; align-items: baseline; }
+.rs-price-value { font-size: 38px; font-weight: 900; }
+.rs-price-unit { font-size: 15px; font-weight: 700; opacity: 0.6; margin-left: 6px; }
+
+.rs-features-list { list-style: none; padding: 0; margin: 0 0 40px 0; flex-grow: 1; }
+.rs-features-list li {
+    display: flex; align-items: center; gap: 14px; font-size: 16px;
+    font-weight: 600; color: #3a3a3c; margin-bottom: 16px;
+}
+.rs-features-list li svg { color: currentColor; opacity: 0.8; }
+
+/* --- 5. UNIFIED LIQUID BUTTONS --- */
+.rs-btn-tier {
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 850;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: white;
+}
+
+/* Button Color Mapping */
+.rs-tier-free .rs-btn-tier {
+    background: linear-gradient(135deg, var(--rs-gray) 0%, var(--rs-gray-light) 100%);
+    box-shadow: var(--rs-inner-light), 0 10px 20px rgba(142, 142, 147, 0.2);
+}
+.rs-tier-standard .rs-btn-tier {
+    background: linear-gradient(135deg, var(--rs-blue) 0%, var(--rs-blue-light) 100%);
+    box-shadow: var(--rs-inner-light), 0 10px 20px rgba(0, 122, 255, 0.25);
+}
+.rs-tier-premium .rs-btn-tier {
+    background: linear-gradient(135deg, var(--rs-amber) 0%, var(--rs-amber-light) 100%);
+    color: #451a03;
+    box-shadow: var(--rs-inner-light), 0 10px 20px rgba(255, 159, 10, 0.3);
+}
+.rs-tier-custom .rs-btn-tier {
+    background: linear-gradient(135deg, var(--rs-green) 0%, var(--rs-green-light) 100%);
+    box-shadow: var(--rs-inner-light), 0 10px 20px rgba(52, 199, 89, 0.25);
+}
+
+.rs-btn-tier:hover {
+    transform: translateY(-6px) scale(1.03);
+    filter: brightness(1.1);
+}
+
+.rs-btn-tier:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.rs-free-badge {
+    padding: 16px; background: rgba(0, 0, 0, 0.05); border-radius: 100px;
+    color: var(--rs-gray); font-weight: 750; text-align: center; font-size: 15px;
+}
+
+/* --- 6. CUSTOM FORM SLAB --- */
+.rs-custom-form-plate {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%);
+    backdrop-filter: blur(45px); border: 1px solid var(--rs-glass-border); border-radius: 50px;
+    padding: 60px; max-width: 680px; margin: 30px auto;
+    box-shadow: var(--rs-inner-light), 0 40px 100px rgba(0, 0, 0, 0.08);
+}
+
+.rs-form-icon {
+    color: var(--rs-blue) !important; margin-bottom: 18px;
+    filter: drop-shadow(0 6px 15px rgba(0, 122, 255, 0.3));
+}
+
+.rs-input-group label {
+    display: block; font-size: 12px; font-weight: 850; color: var(--rs-gray);
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
+}
+
+.rs-input-group input {
+    width: 100%; height: 60px; background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 22px; padding: 0 24px; font-size: 18px; font-weight: 700; outline: none; transition: 0.3s;
+}
+
+.rs-input-group input:focus {
+    background: white; border-color: var(--rs-blue) !important;
+    box-shadow: 0 0 0 6px rgba(0, 122, 255, 0.1); transform: translateY(-2px);
+}
+
+.rs-toggle-panel {
+    display: flex; align-items: center; gap: 20px; padding: 28px;
+    background: rgba(255, 255, 255, 0.35); border: 1px solid var(--rs-glass-border);
+    border-radius: 30px; cursor: pointer; margin-bottom: 45px; transition: 0.3s;
+}
+
+.rs-toggle-panel:hover { background: white; transform: translateY(-4px); border-color: var(--rs-blue); }
+.rs-toggle-panel input { width: 26px; height: 26px; accent-color: var(--rs-blue) !important; }
+
+/* Main Submit Button (Always System Blue) */
+.rs-btn-submit {
+    background: linear-gradient(135deg, var(--rs-blue) 0%, var(--rs-blue-light) 100%) !important;
+    color: white !important; width: 100%; padding: 18px; border: none; border-radius: 100px;
+    font-weight: 850; font-size: 16px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 12px; margin-top: 10px;
+    box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3), var(--rs-inner-light);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.rs-btn-submit:hover:not(:disabled) { transform: translateY(-5px) scale(1.03); filter: brightness(1.1); box-shadow: 0 15px 35px rgba(0, 122, 255, 0.45); }
+
+.rs-btn-cancel {
+    padding: 18px 35px; background: rgba(0, 0, 0, 0.05); border: none;
+    border-radius: 100px; font-weight: 750; color: var(--rs-gray); cursor: pointer; transition: 0.3s;
+}
+.rs-btn-cancel:hover { background: var(--rs-red); color: white; }
+
+/* --- 7. ANIMATIONS --- */
+@keyframes rs-page-entrance {
+    from { opacity: 0; transform: scale(0.96) translateY(30px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.rs-loading { text-align: center; padding: 100px; font-weight: 850; color: var(--rs-blue); font-size: 20px; }

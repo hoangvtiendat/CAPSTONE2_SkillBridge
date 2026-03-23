@@ -4,7 +4,7 @@ import subscriptionService from '../../services/api/subscriptionService';
 import { toast, Toaster } from 'sonner';
 import { Check, ArrowLeft, ShoppingCart, Package } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import './SubscriptionManager.css';
+import './RegisterSubscription.css';
 
 const RegisterSubscription = () => {
     const navigate = useNavigate();
@@ -73,7 +73,6 @@ const RegisterSubscription = () => {
 
     const handleSubmitCustomPackage = async (e) => {
         e.preventDefault();
-
         if (!customForm.jobLimit || customForm.jobLimit <= 0) return toast.warning('Số lượng tin đăng không hợp lệ');
         if (!customForm.candidateViewLimit || customForm.candidateViewLimit <= 0) return toast.warning('Số lượt xem CV không hợp lệ');
 
@@ -84,71 +83,68 @@ const RegisterSubscription = () => {
                 candidateViewLimit: Number(customForm.candidateViewLimit),
                 hasPriorityDisplay: customForm.hasPriorityDisplay
             };
-
             await subscriptionService.createSubscriptionOfCompany(data, token);
             toast.success('Tạo gói thành công!', { description: 'Đang chuyển hướng về trang quản lý...' });
-
             setTimeout(() => navigate('/company/subscriptions'), 1500);
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Không thể tạo gói đăng ký';
-            toast.error('Lỗi tạo gói', { description: errorMessage });
+            toast.error('Lỗi tạo gói', { description: error.response?.data?.message || 'Không thể tạo gói đăng ký' });
         } finally {
             setSubmitting(false);
         }
     };
 
-    const getThemeClass = (planName) => {
+    const getTierClass = (planName) => {
         const name = planName?.toUpperCase() || '';
-        if (name.includes('PREMIUM')) return 'theme-premium';
-        if (name.includes('STANDARD')) return 'theme-standard';
-        return 'theme-free';
+        if (name.includes('PREMIUM')) return 'rs-tier-premium';
+        if (name.includes('STANDARD')) return 'rs-tier-standard';
+        if (name.includes('CUSTOM')) return 'rs-tier-custom';
+        return 'rs-tier-free';
     };
 
     return (
-        <div className="subscription-admin-manager">
+        <div className="rs-page-wrapper">
             <Toaster position="top-right" richColors />
 
-            <div className="">
-                <button className="btn-back" onClick={() => navigate(-1)}>
+            <div className="rs-header-nav">
+                <button className="rs-back-btn" onClick={() => navigate(-1)}>
                     <ArrowLeft size={18} /> Quay lại
                 </button>
             </div>
 
-            {loading && <div className="loading-spinner">Đang tải dữ liệu lỏng...</div>}
+            {loading && <div className="rs-loading">Đang tải dữ liệu lỏng...</div>}
 
-            {/* HIỂN THỊ GÓI HỆ THỐNG */}
             {!loading && subscriptionType === 'system' && (
-                <div className="admin-plans-grid">
+                <div className="rs-grid">
                     {subscriptions.map((sub) => {
-                        const themeClass = getThemeClass(sub.name);
+                        const tierClass = getTierClass(sub.name);
                         return (
-                            <div key={sub.id} className={`admin-plan-card ${themeClass}`}>
-                                <div className="plan-header">
-                                    <h2 className="plan-name">{sub.name}</h2>
-                                    <div className="plan-price-box">
-                                        <span className="price-value">
+                            <div key={sub.id} className={`rs-card ${tierClass}`}>
+                                <div className="rs-card-header">
+                                    <h2 className="rs-plan-name">{sub.name}</h2>
+                                    <div className="rs-price-box">
+                                        <span className="rs-price-value">
                                             {sub.price === 0 ? 'Miễn phí' : new Intl.NumberFormat('vi-VN').format(sub.price)}
                                         </span>
-                                        {sub.price > 0 && <span className="price-unit">₫/tháng</span>}
+                                        {sub.price > 0 && <span className="rs-price-unit">₫/tháng</span>}
                                     </div>
                                 </div>
 
-                                <div className="plan-body">
-                                    <ul className="plan-features">
-                                        <li><Check className="check-icon" size={18} /> <span><strong>{sub.jobLimit}</strong> Tin đăng / tháng</span></li>
-                                        <li><Check className="check-icon" size={18} /> <span><strong>{sub.candidateViewLimit}</strong> Lượt xem hồ sơ</span></li>
-                                        <li><Check className="check-icon" size={18} /> <span>Thời hạn: <strong>{sub.postingDuration || '30'} ngày</strong></span></li>
-                                        <li><Check className="check-icon" size={18} /> <span>Duyệt ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span></li>
+                                <div className="rs-card-body">
+                                    <ul className="rs-features-list">
+                                        <li><Check size={18} /> <span><strong>{sub.jobLimit}</strong> Tin đăng / tháng</span></li>
+                                        <li><Check size={18} /> <span><strong>{sub.candidateViewLimit}</strong> Lượt xem hồ sơ</span></li>
+                                        <li><Check size={18} /> <span>Thời hạn: <strong>{sub.postingDuration || '30'} ngày</strong></span></li>
+                                        <li><Check size={18} /> <span>Ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span></li>
                                     </ul>
                                 </div>
 
-                                <div className="plan-footer">
+                                <div className="rs-card-footer">
                                     {sub.price > 0 ? (
-                                        <button className="btn-edit-plan" onClick={() => postPayment(sub.id, 0)}>
+                                        <button className="rs-btn-tier" onClick={() => postPayment(sub.id, 0)}>
                                             <ShoppingCart size={16} /> Chọn gói này
                                         </button>
                                     ) : (
-                                        <div className="free-badge-glass">
+                                        <div className="rs-free-badge">
                                             <Check size={16} /> Gói miễn phí
                                         </div>
                                     )}
@@ -159,65 +155,37 @@ const RegisterSubscription = () => {
                 </div>
             )}
 
-            {/* HIỂN THỊ FORM TÙY CHỈNH */}
             {!loading && subscriptionType === 'custom' && (
-                <div className="custom-register-container">
-                    <div className="custom-form-header">
-                        <ShoppingCart size={56} style={{ color: 'var(--sf-blue)' }} />
-                        <h2>Thiết lập gói cước riêng</h2>
-                        <p>Tùy chỉnh các giới hạn để phù hợp với quy mô tuyển dụng</p>
+                <div className="rs-custom-form-plate">
+                    <div className="rs-form-intro">
+                        <ShoppingCart size={56} className="rs-form-icon" />
+                        <h2>Tùy chỉnh Gói cước</h2>
+                        <p>Thiết lập thông số phù hợp với nhu cầu riêng của doanh nghiệp</p>
                     </div>
 
-                    <form onSubmit={handleSubmitCustomPackage}>
-                        <div className="glass-input-group">
+                    <form onSubmit={handleSubmitCustomPackage} className="rs-form-content">
+                        <div className="rs-input-group">
                             <label>Số lượng tin đăng / tháng *</label>
-                            <input
-                                type="number"
-                                name="jobLimit"
-                                value={customForm.jobLimit}
-                                onChange={handleCustomFormChange}
-                                min="1"
-                                required
-                                placeholder="Ví dụ: 10"
-                            />
-                            <small>Hệ thống cấp quyền đăng tin dựa trên con số này.</small>
+                            <input type="number" name="jobLimit" value={customForm.jobLimit} onChange={handleCustomFormChange} min="1" required placeholder="Ví dụ: 10" />
                         </div>
 
-                        <div className="glass-input-group">
+                        <div className="rs-input-group">
                             <label>Lượt xem hồ sơ ứng viên *</label>
-                            <input
-                                type="number"
-                                name="candidateViewLimit"
-                                value={customForm.candidateViewLimit}
-                                onChange={handleCustomFormChange}
-                                min="1"
-                                required
-                                placeholder="Ví dụ: 50"
-                            />
-                            <small>Số lượng CV chi tiết bạn có thể mở khóa mỗi tháng.</small>
+                            <input type="number" name="candidateViewLimit" value={customForm.candidateViewLimit} onChange={handleCustomFormChange} min="1" required placeholder="Ví dụ: 50" />
                         </div>
 
-                        <label className="priority-feature-panel">
-                            <input
-                                type="checkbox"
-                                name="hasPriorityDisplay"
-                                checked={customForm.hasPriorityDisplay}
-                                onChange={handleCustomFormChange}
-                            />
-                            <div className="priority-info">
+                        <label className="rs-toggle-panel">
+                            <input type="checkbox" name="hasPriorityDisplay" checked={customForm.hasPriorityDisplay} onChange={handleCustomFormChange} />
+                            <div className="rs-toggle-info">
                                 <h5>Duyệt tin ưu tiên</h5>
-                                <span>Tin đăng hiển thị ở vị trí hàng đầu và duyệt nhanh.</span>
+                                <span>Hiển thị ở vị trí hàng đầu để thu hút ứng viên nhanh nhất.</span>
                             </div>
                         </label>
 
-                        <div className="form-actions">
-                            <button type="button" className="btn-cancel" onClick={() => navigate(-1)} disabled={submitting}>
-                                Hủy bỏ
-                            </button>
-                            <button type="submit" className="btn-submit-liquid" disabled={submitting}>
-                                {submitting ? 'Đang xử lý...' : (
-                                    <><ShoppingCart size={18} /> Tạo gói đăng ký</>
-                                )}
+                        <div className="rs-form-actions">
+                            <button type="button" className="rs-btn-cancel" onClick={() => navigate(-1)} disabled={submitting}>Hủy bỏ</button>
+                            <button type="submit" className="rs-btn-submit" disabled={submitting}>
+                                {submitting ? 'Đang tạo...' : <><ShoppingCart size={18} /> Xác nhận tạo gói</>}
                             </button>
                         </div>
                     </form>

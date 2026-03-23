@@ -165,7 +165,7 @@ const BusinessIdentity = () => {
             toast.success("Tìm thấy thông tin doanh nghiệp!");
             setCompanyInfo(response.result);
             setStep(3);
-        } else if (response && response.code === 6002) {
+        } else if (response && response.code === 4000) {
             toast.info("Mã số thuế chưa tồn tại. Vui lòng đăng ký mới!");
             setStep(2);
         } else {
