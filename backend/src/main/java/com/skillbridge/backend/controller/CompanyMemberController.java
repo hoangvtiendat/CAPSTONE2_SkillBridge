@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequestMapping("/company-members")
+@RequestMapping("/company-member")
 public class CompanyMemberController {
     CompanyMemberService companyMemberService;
 

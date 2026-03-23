@@ -71,11 +71,11 @@ public class SecurityConfig {
                                 "/identity/v3/api-docs/**",
                                 "/jobs/{id}",
                                 "/ws-log/**",
-                                "/payments/webhook"
+                                "/payments/webhook",
+                                "/CategoryProfession/**"
                         ).permitAll()
 
                         .requestMatchers(
-                                "/CategoryProfession/**",
                                 "/skill/set/**",
                                 "/jobs/feedAdmin/**",
                                 "/jobs/feedAdminPending/**", "/companies/feedPending/**",
@@ -84,8 +84,16 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/company-member/**",
-                                "/identity/subscription/**")
-                        .authenticated()
+                                "/identity/subscription/**",
+                                "/identity/CategoryProfession/**"
+                        ).hasRole("RECRUITER")
+
+                        .requestMatchers(
+                                "/candidates/**",
+                                "/applications/**",
+                                "/jobs/apply/**"
+                        ).hasRole("CANDIDATE")
+
                         .anyRequest().authenticated()
                 )
 

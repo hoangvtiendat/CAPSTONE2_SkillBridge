@@ -1,5 +1,6 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.MonthlyJobDTO;
 import com.skillbridge.backend.dto.MonthlyRevenueDTO;
 import com.skillbridge.backend.dto.TopCompanyDTO;
@@ -17,6 +18,7 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.repository.specification.CompanySpecification;
 import com.skillbridge.backend.repository.specification.UserSpecification;
+import com.skillbridge.backend.utils.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -39,17 +41,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AdminService {
-
     UserRepository userRepository;
     CompanyRepository companyRepository;
     JobRepository jobRepository;
     CompanySubscriptionRepository subscriptionRepository;
     UserService userService;
     CategoryRepository categoryRepository;
+    SecurityUtils securityUtils;
 
-    public SystemStatsResponse statsOverview(String token, LocalDate startDate, LocalDate endDate) {
-        User user = userService.getMe(token);
-        if (!"ADMIN".equals(user.getRole())) {
+    public SystemStatsResponse statsOverview(LocalDate startDate, LocalDate endDate) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        if (!"ADMIN".equals(currentUser.getRole())) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 

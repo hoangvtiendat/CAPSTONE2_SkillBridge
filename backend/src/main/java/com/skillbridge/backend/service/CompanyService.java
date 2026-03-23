@@ -112,19 +112,21 @@ public class CompanyService {
             Company company = companyRepository.findById(id)
                     .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 
-            CompanyMember creator = companyMemberRepository.findByCompany_Id(id).stream()
-                    .findFirst()
-                    .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+            List<CompanyMember> members = companyMemberRepository.findByCompany_Id(company.getId());
+
+            if (members.isEmpty()) {
+                throw new AppException(ErrorCode.MEMBER_NOT_FOUND);
+            }
+
+            CompanyMember creator = members.get(0); // Lấy người đầu tiên
             User userCreator = creator.getUser();
+            User user = userRepository.findById(userCreator.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
             String subject = "[SkillBridge] Thông báo kết quả duyệt hồ sơ công ty";
             String content = "";
 
             if("ACTIVE".equals(status)){
                 company.setStatus(CompanyStatus.ACTIVE);
-                creator.setRole(CompanyRole.ADMIN);
-                userCreator.setRole("RECRUITER");
-
-                companyMemberRepository.save(creator);
+                user.setRole("RECRUITER");
                 content = String.format(
                     "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
                             "<h2 style='color: #28a745;'>Chúc mừng! Công ty của bạn đã được duyệt</h2>" +
@@ -133,7 +135,7 @@ public class CompanyService {
                             "<p>Hiện tại bạn đã có quyền <b>Quản trị viên (Recruiter)</b> để đăng tin tuyển dụng và quản lý nhân sự cho công ty.</p>" +
                             "<p>Vui lòng đăng nhập để trải nghiệm các tính năng dành cho doanh nghiệp.</p>" +
                             "<br><p>Trân trọng,<br>SkillBridge Team</p></div>",
-                    userCreator.getName(), company.getName()
+                        user.getName(), company.getName()
                 );
                 systemLogService.info(currentUser, "Admin phê duyệt công ty: " + company.getName());
             }else{
@@ -146,13 +148,13 @@ public class CompanyService {
                             "    <p><b>Lưu ý:</b> Nếu bạn cho rằng đây là một sự nhầm lẫn, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi để được giải quyết.</p>" +
                             "    <br><p>Trân trọng,<br><b>SkillBridge Team</b></p>" +
                             "</div>",
-                    userCreator.getName(), company.getName()
+                        user.getName(), company.getName()
                 );
                 systemLogService.warn(currentUser, "Admin từ chối/ban công ty: " + company.getName());
             }
             companyRepository.save(company);
             notificationService.createNotification(
-                    userCreator,
+                    user,
                     null,
                     subject,
                     content,
@@ -285,6 +287,8 @@ public class CompanyService {
                                                    MultipartFile license) throws IOException {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
+        User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
         Optional<Company> companyOpt = companyRepository.findByTaxId(request.getTaxcode());
         if (companyOpt.isPresent()) {
             systemLogService.warn(currentUser, "Đăng ký trùng MST: " + request.getTaxcode());
@@ -305,6 +309,13 @@ public class CompanyService {
         company.setStatus(CompanyStatus.PENDING);
 
         companyRepository.saveAndFlush(company);
+
+        CompanyMember companyMember = new CompanyMember();
+        companyMember.setRole(CompanyRole.ADMIN);
+        companyMember.setCompany(company);
+        companyMember.setUser(user);
+
+        companyMemberRepository.save(companyMember);
 
         systemLogService.info(currentUser, "Yêu cầu tạo công ty mới: " + company.getName());
         Map<String, Object> adminPayload = Map.of(

@@ -3,7 +3,7 @@ package com.skillbridge.backend.service;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CompanySubscriptionRequest;
 import com.skillbridge.backend.entity.Company;
-import com.skillbridge.backend.entity.SubcriptionOfCompany;
+import com.skillbridge.backend.entity.SubscriptionOfCompany;
 import com.skillbridge.backend.entity.SubscriptionPlan;
 import com.skillbridge.backend.enums.CompanyRole;
 import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
@@ -11,7 +11,7 @@ import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
-import com.skillbridge.backend.repository.SubcriptionOfCompanyRepository;
+import com.skillbridge.backend.repository.SubscriptionOfCompanyRepository;
 import com.skillbridge.backend.repository.SubscriptionRepository;
 import com.skillbridge.backend.utils.SecurityUtils;
 import lombok.AccessLevel;
@@ -19,8 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +33,7 @@ import java.util.List;
 @Slf4j
 public class SubscriptionService {
     SubscriptionRepository subscriptionRepository;
-    SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
+    SubscriptionOfCompanyRepository subcriptionOfCompanyRepository;
     CompanyMemberRepository companyMemberRepository;
     SystemLogService systemLog;
     SecurityUtils securityUtils;
@@ -143,7 +141,7 @@ public class SubscriptionService {
     /**
      * Tạo đăng ký gói Custom cho Công ty
      */
-    public SubcriptionOfCompany createCompanySubscriptions(CompanySubscriptionRequest request) {
+    public SubscriptionOfCompany createCompanySubscriptions(CompanySubscriptionRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
         var recruiter = companyMemberRepository.findByUser_Id(currentUser.getUserId())
@@ -160,7 +158,7 @@ public class SubscriptionService {
 
         BigDecimal calculatedPrice = priceForCompanySubscriptions(request);
 
-        SubcriptionOfCompany newSubscription = new SubcriptionOfCompany();
+        SubscriptionOfCompany newSubscription = new SubscriptionOfCompany();
         newSubscription.setCompany(currentCompany);
         newSubscription.setName(SubscriptionPlanStatus.CUSTOM);
         newSubscription.setJobLimit(request.getJobLimit());
@@ -173,7 +171,7 @@ public class SubscriptionService {
         newSubscription.setEndDate(LocalDateTime.now().plusDays(30));
         newSubscription.setIsActive(true);
 
-        SubcriptionOfCompany saved = subcriptionOfCompanyRepository.save(newSubscription);
+        SubscriptionOfCompany saved = subcriptionOfCompanyRepository.save(newSubscription);
 
         systemLog.info(currentUser, "Đăng ký gói Custom mới cho công ty: " + recruiter.getCompany().getName());
 
@@ -256,7 +254,7 @@ public class SubscriptionService {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
 
-        SubcriptionOfCompany subscription = subcriptionOfCompanyRepository.findById(subscriptionId)
+        SubscriptionOfCompany subscription = subcriptionOfCompanyRepository.findById(subscriptionId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
         if (!subscription.getCompany().getId().equals(recruiter.getCompany().getId())) {
@@ -275,14 +273,9 @@ public class SubscriptionService {
         messagingTemplate.convertAndSend(companyTopic, "DELETED:" + subscriptionId);
     }
 
-    public List<SubcriptionOfCompany> getMyCompanySubscriptions() {
+    public List<SubscriptionOfCompany> getMyCompanySubscriptions() {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         try {
-            if (currentUser == null || currentUser.getUserId() == null) {
-                log.error("CurrentUser is NULL - Đăng nhập có vấn đề");
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-
             var recruiter = companyMemberRepository.findByUser_Id(currentUser.getUserId())
                     .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -291,7 +284,7 @@ public class SubscriptionService {
                 throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
             }
 
-            List<SubcriptionOfCompany> subscriptions = subcriptionOfCompanyRepository
+            List<SubscriptionOfCompany> subscriptions = subcriptionOfCompanyRepository
                     .findByCompanyIdAndDeletedFalse(recruiter.getCompany().getId());
 
             return subscriptions;

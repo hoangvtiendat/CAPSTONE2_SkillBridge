@@ -59,10 +59,9 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> getMe(
-            @AuthenticationPrincipal CustomUserDetails currentUser
     ) {
         try {
-            User user = userService.getMe(currentUser.getUserId());
+            User user = userService.getMe();
             UserResponse rs = userService.mapToUserResponse(user);
             ApiResponse<UserResponse> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Lấy dữ liệu cá nhân thành công", rs

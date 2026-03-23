@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "subscription_of_company") // Sửa lỗi chính tả subcription -> subscription
-public class SubcriptionOfCompany extends BaseEntity {
+@Table(name = "company_subscriptions")
+public class SubscriptionOfCompany extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

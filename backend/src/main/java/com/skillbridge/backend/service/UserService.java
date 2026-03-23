@@ -92,8 +92,9 @@ public class UserService {
     /**
      * Lấy thông tin chi tiết người dùng hiện tại
      */
-    public User getMe(String userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    public User getMe() {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         System.out.println("user = " + user);
         companyMemberRepository.findByUser_Id(user.getId()).ifPresent(member -> {
             user.setCompanyName(member.getCompany().getName());
