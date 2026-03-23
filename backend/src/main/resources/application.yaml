@@ -87,5 +87,5 @@ file:
 
 ai:
   ollama:
-    url: ${OLLAMA_URL:http://localhost:11434}
-    model: ${OLLAMA_MODEL:llama3.2:3b}
+    url: https://c51a-116-110-18-40.ngrok-free.app
+    model: skillbridge-qwen
