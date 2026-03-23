@@ -57,6 +57,25 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/skill/set/**",
+                                "/identity/jobs/feedAdmin/**",
+                                "/jobs/feedAdminPending/**", "/companies/feedPending/**",
+                                "/Logs/**", "/companies/taxLook"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                "/company-member/**",
+                                "/identity/subscription/**",
+                                "/identity/CategoryProfession/**"
+                        ).hasRole("RECRUITER")
+
+                        .requestMatchers(
+                                "/candidates/**",
+                                "/applications/**",
+                                "/jobs/apply/**"
+                        ).hasRole("CANDIDATE")
+
+                        .requestMatchers(
                                 "/jobs/feed",
                                 "/companies/feed",
                                 "/admin/**",
@@ -74,25 +93,6 @@ public class SecurityConfig {
                                 "/payments/webhook",
                                 "/CategoryProfession/**"
                         ).permitAll()
-
-                        .requestMatchers(
-                                "/skill/set/**",
-                                "/jobs/feedAdmin/**",
-                                "/jobs/feedAdminPending/**", "/companies/feedPending/**",
-                                "/Logs/**", "/companies/taxLook"
-                        ).hasRole("ADMIN")
-
-                        .requestMatchers(
-                                "/company-member/**",
-                                "/identity/subscription/**",
-                                "/identity/CategoryProfession/**"
-                        ).hasRole("RECRUITER")
-
-                        .requestMatchers(
-                                "/candidates/**",
-                                "/applications/**",
-                                "/jobs/apply/**"
-                        ).hasRole("CANDIDATE")
 
                         .anyRequest().authenticated()
                 )

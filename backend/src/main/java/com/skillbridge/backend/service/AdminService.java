@@ -44,7 +44,7 @@ public class AdminService {
     UserRepository userRepository;
     CompanyRepository companyRepository;
     JobRepository jobRepository;
-    CompanySubscriptionRepository subscriptionRepository;
+    SubscriptionOfCompanyRepository subscriptionRepository;
     UserService userService;
     CategoryRepository categoryRepository;
     SecurityUtils securityUtils;

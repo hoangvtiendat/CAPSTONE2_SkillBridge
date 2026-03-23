@@ -358,7 +358,11 @@ public class JobService {
 
             sendNotificationToRecruiterAndAdmin(job, subject, content, "JOB_MODERATION", "/jobs/" + jobId);
 
-            messagingTemplate.convertAndSend("/topic/jobs/moderation", (Object) Map.of("jobId", jobId, "status", newModStatus));
+            messagingTemplate.convertAndSend("/topic/jobs/moderation", (Object)Map.of(
+                    "jobId", jobId,
+                    "status", newModStatus.name()
+            ));
+
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
@@ -434,6 +438,7 @@ public class JobService {
     @Transactional
     public void responseJobPending(String jobId, String status) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        System.out.println(currentUser);
         try {
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));

@@ -284,8 +284,7 @@ public class SubscriptionService {
                 throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
             }
 
-            List<SubscriptionOfCompany> subscriptions = subcriptionOfCompanyRepository
-                    .findByCompanyIdAndDeletedFalse(recruiter.getCompany().getId());
+            List<SubscriptionOfCompany> subscriptions = subcriptionOfCompanyRepository.findByCompanyId(recruiter.getCompany().getId());
 
             return subscriptions;
 

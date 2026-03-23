@@ -1,5 +1,6 @@
 package com.skillbridge.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
 import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import jakarta.persistence.*;
@@ -15,7 +16,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "company_subscriptions")
 public class SubscriptionOfCompany extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)
@@ -24,6 +24,7 @@ public class SubscriptionOfCompany extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
+    @JsonBackReference
     private Company company;
 
     @Enumerated(EnumType.STRING)
