@@ -18,6 +18,7 @@ export function SkillPage() {
     const [editSkillName, setEditSkillName] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const getListSkillsOfCategory = useCallback(async (id) => {
         if (!id) return;
@@ -38,19 +39,22 @@ export function SkillPage() {
     }, [categoryId, getListSkillsOfCategory]);
 
     const handleCreateSkill = async () => {
-        if (!newSkillName.trim()) {
-            toast.warning("Vui lòng nhập tên kỹ năng");
-            return;
-        }
+        if (!newSkillName.trim() || isSubmitting) return;
+
+        setIsSubmitting(true);
+        const toastId = toast.loading("Đang thêm kỹ năng...");
+
         try {
-            await apiSkill.createSkill({ name: newSkillName, category_id: categoryId });
-            toast.success("Đã thêm kỹ năng mới");
+            await apiSkill.createSkill({ name: newSkillName.trim(), category_id: categoryId });
+            toast.success("Đã thêm kỹ năng mới", { id: toastId });
             setNewSkillName("");
             setIsAdding(false);
             getListSkillsOfCategory(categoryId);
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Lỗi khi thêm kỹ năng";
-            toast.error(errorMessage);
+            toast.error(errorMessage, { id: toastId });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

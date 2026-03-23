@@ -14,7 +14,6 @@ import lombok.*;
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id", length = 36)

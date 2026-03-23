@@ -12,7 +12,6 @@ import lombok.*;
 @Entity
 @Table(name = "interviews")
 public class Interview extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)

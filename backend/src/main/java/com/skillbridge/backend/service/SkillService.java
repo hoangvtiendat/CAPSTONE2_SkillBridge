@@ -34,11 +34,11 @@ public class SkillService {
 
     @Transactional
     public Skill CreateNewSkill(SkillRequest skillRequest) {
-        Skill skill = new Skill();
         if(skillRepository.existsByName(skillRequest.getName())) {
             throw new AppException(ErrorCode.SKILL_EXITS_NAME);
         }
-        skill.setName(skillRequest.getName());
+        Skill skill = new Skill();
+        skill.setName(skillRequest.getName().trim());
         Category category = categoryProfessionService.getCategoryProfessionById(skillRequest.getCategoryId());
         skill.setCategory(category);
 

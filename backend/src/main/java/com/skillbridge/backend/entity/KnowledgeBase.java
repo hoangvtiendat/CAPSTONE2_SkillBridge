@@ -11,7 +11,6 @@ import lombok.*;
 @Entity
 @Table(name = "knowledge_base")
 public class KnowledgeBase extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)

@@ -23,7 +23,6 @@ import java.util.List;
         }
 )
 public class Company extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)

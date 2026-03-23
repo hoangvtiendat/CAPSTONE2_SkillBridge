@@ -14,7 +14,6 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "subscription_plans")
 public class SubscriptionPlan extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)
