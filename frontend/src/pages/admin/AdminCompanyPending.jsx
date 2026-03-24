@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import companyService from '../../services/api/companyService';
 import './AdminCompanyPending.css';
-import { useNavigate } from 'react-router-dom';
-import { toast, Toaster } from "sonner";
+import {useNavigate} from 'react-router-dom';
+import {toast, Toaster} from "sonner";
 import {
     Building2, RotateCcw, ShieldCheck, CheckCircle,
     Globe, Hash, Calendar, MapPin
 } from 'lucide-react';
 
+const API_BASE_URL = "http://localhost:8081/identity";
 const AdminCompanyPending = () => {
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -15,6 +16,23 @@ const AdminCompanyPending = () => {
     const [hasMore, setHasMore] = useState(false);
     const navigate = useNavigate();
     const observerTarget = useRef(null);
+
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+
+        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+        console.log("aaa: ", `${baseUrl}${cleanPath}`)
+        return `${baseUrl}${cleanPath}`;
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN'); // Trả về dạng DD/MM/YYYY
+    };
 
     const fetchCompanies = useCallback(async (currentCursor = null, isReset = false) => {
         if (loading && !isReset) return;
@@ -45,7 +63,7 @@ const AdminCompanyPending = () => {
                     fetchCompanies(cursor);
                 }
             },
-            { threshold: 0.1 }
+            {threshold: 0.1}
         );
         if (observerTarget.current) observer.observe(observerTarget.current);
         return () => observer.disconnect();
@@ -57,9 +75,9 @@ const AdminCompanyPending = () => {
         try {
             await companyService.responseCompanyPending(id, "ACTIVE");
             setCompanies(prev => prev.filter(c => c.id !== id));
-            toast.success("Doanh nghiệp đã được kích hoạt!", { id: toastId });
+            toast.success("Doanh nghiệp đã được kích hoạt!", {id: toastId});
         } catch (err) {
-            toast.error("Thao tác thất bại", { id: toastId });
+            toast.error("Thao tác thất bại", {id: toastId});
         }
     };
 
@@ -72,20 +90,20 @@ const AdminCompanyPending = () => {
         try {
             await companyService.responseCompanyPending(id, "BAN");
             setCompanies(prev => prev.filter(c => c.id !== id));
-            toast.success("Đã từ chối doanh nghiệp!", { id: toastId });
+            toast.success("Đã từ chối doanh nghiệp!", {id: toastId});
         } catch (err) {
-            toast.error("Thao tác thất bại", { id: toastId });
+            toast.error("Thao tác thất bại", {id: toastId});
         }
     };
 
     return (
         <div className="admin-pending-container">
-            <Toaster position="top-right" richColors />
+            <Toaster position="top-right" richColors/>
 
             <div className="admin-pending-header">
                 <div className="header-left">
                     <div className="header-icon-box blue">
-                        <ShieldCheck size={24} />
+                        <ShieldCheck size={24}/>
                     </div>
                     <div className="title-group">
                         <h1>Phê duyệt Doanh nghiệp</h1>
@@ -100,7 +118,7 @@ const AdminCompanyPending = () => {
                             onClick={() => fetchCompanies(null, true)}
                             disabled={loading}
                         >
-                            <RotateCcw size={18} />
+                            <RotateCcw size={18}/>
                         </button>
                     </div>
                 </div>
@@ -110,69 +128,78 @@ const AdminCompanyPending = () => {
                 <div className="table-scroll-container">
                     <table className="pending-table-core">
                         <thead>
-                            <tr>
-                                <th style={{ width: '320px' }}>DOANH NGHIỆP</th>
-                                <th style={{ width: '150px' }} className="center">MÃ SỐ THUẾ</th>
-                                <th style={{ width: '220px' }}>LIÊN HỆ</th>
-                                <th style={{ width: '140px' }} className="center">NGÀY TẠO</th>
-                                <th style={{ width: '200px' }} className="center">THAO TÁC</th>
-                            </tr>
+                        <tr>
+                            <th style={{width: '320px'}}>DOANH NGHIỆP</th>
+                            <th style={{width: '150px'}} className="center">MÃ SỐ THUẾ</th>
+                            <th style={{width: '220px'}}>LIÊN HỆ</th>
+                            <th style={{width: '140px'}} className="center">NGÀY TẠO</th>
+                            <th style={{width: '200px'}} className="center">THAO TÁC</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {companies.map((comp) => (
-                                <tr key={comp.id} className="job-row-item" onClick={() => navigate(`/admin/companies/${comp.id}`)}>
-                                    <td>
-                                        <div className="company-main-info">
-                                            <div className="company-logo-box">
-                                                {comp.imageUrl ? <img src={comp.imageUrl} alt="logo" /> : <Building2 size={20} />}
+                        {companies.map((comp) => (
+                            <tr key={comp.id} className="job-row-item"
+                                onClick={() => navigate(`/admin/companies/${comp.id}`)}>
+                                <td>
+                                    <div className="company-main-info">
+                                        <div className="company-logo-box">
+                                            {comp.imageUrl ? (
+                                                <img src={getImageUrl(comp.imageUrl)} alt="logo"/>
+                                            ) : (
+                                                <Building2 size={20}/>
+                                            )}
+                                        </div>
+                                        <div className="job-detail-box">
+                                            <span className="job-name">{comp.name}</span>
+                                            <div className="job-loc">
+                                                <Globe size={12}/>
+                                                <span>{comp.websiteUrl || 'Chưa cập nhật'}</span>
                                             </div>
-                                            <div className="job-detail-box">
-                                                <span className="job-name">{comp.name}</span>
-                                                <div className="job-loc">
-                                                    <Globe size={12} />
-                                                    <span>{comp.websiteUrl || 'Chưa cập nhật'}</span>
-                                                </div>
-                                            </div>
                                         </div>
-                                    </td>
-                                    <td className="center">
-                                        <div className="tax-code-badge">
-                                            <Hash size={12} />
-                                            <span>{comp.taxId || 'N/A'}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="contact-info-cell">
-                                            <span className="email-text">{comp.email}</span>
-                                            <span className="phone-text">{comp.phoneNumber}</span>
-                                        </div>
-                                    </td>
-                                    <td className="center timestamp">12/03/2026</td>
-                                    <td className="center" onClick={(e) => e.stopPropagation()}>
-                                        <div className="action-btns-group">
-                                            <button className="btn-action-approve" onClick={(e) => handleApprove(e, comp.id)}>
-                                                <CheckCircle size={14} /> Duyệt
-                                            </button>
-                                            <button className="btn-action-reject" onClick={(e) => handleBan(e, comp.id)}>
-                                                Từ chối
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            <tr ref={observerTarget}>
-                                <td colSpan="5" className="loader-row center">
-                                    {loading ? (
-                                        <div className="loading-state-mini">
-                                            <RotateCcw size={16} className="spinning" /> Đang tải...
-                                        </div>
-                                    ) : hasMore ? (
-                                        <span className="load-more-text">Cuộn để tải thêm</span>
-                                    ) : (
-                                        <span className="end-text">Đã hiển thị toàn bộ doanh nghiệp</span>
-                                    )}
+                                    </div>
+                                </td>
+                                <td className="center">
+                                    <div className="tax-code-badge">
+                                        <Hash size={12}/>
+                                        <span>{comp.taxId || 'N/A'}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div className="contact-info-cell">
+                                        <span className="email-text">{comp.email}</span>
+                                        <span className="phone-text">{comp.phoneNumber}</span>
+                                    </div>
+                                </td>
+                                <td className="center timestamp">
+                                    {formatDate(comp.createdAt)}
+                                </td>
+                                <td className="center" onClick={(e) => e.stopPropagation()}>
+                                    <div className="action-btns-group">
+                                        <button className="btn-action-approve"
+                                                onClick={(e) => handleApprove(e, comp.id)}>
+                                            <CheckCircle size={14}/> Duyệt
+                                        </button>
+                                        <button className="btn-action-reject"
+                                                onClick={(e) => handleBan(e, comp.id)}>
+                                            Từ chối
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
+                        ))}
+                        <tr ref={observerTarget}>
+                            <td colSpan="5" className="loader-row center">
+                                {loading ? (
+                                    <div className="loading-state-mini">
+                                        <RotateCcw size={16} className="spinning"/> Đang tải...
+                                    </div>
+                                ) : hasMore ? (
+                                    <span className="load-more-text">Cuộn để tải thêm</span>
+                                ) : (
+                                    <span className="end-text">Đã hiển thị toàn bộ doanh nghiệp</span>
+                                )}
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>

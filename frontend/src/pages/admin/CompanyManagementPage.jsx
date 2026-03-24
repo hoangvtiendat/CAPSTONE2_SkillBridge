@@ -23,6 +23,8 @@ import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
 
+const API_BASE_URL = "http://localhost:8081/identity";
+
 const CompanyManagementPage = () => {
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -143,6 +145,18 @@ const CompanyManagementPage = () => {
         }
     };
 
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        // Nếu path đã có http/https thì trả về luôn
+        if (path.startsWith('http')) return path;
+
+        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+        console.log("aaa: ", `${baseUrl}${cleanPath}`)
+        return `${baseUrl}${cleanPath}`;
+    };
+
     const getStatusStyle = (status) => {
         switch (status) {
             case 'ACTIVE': return { backgroundColor: '#ecfdf5', color: '#059669' };
@@ -224,7 +238,7 @@ const CompanyManagementPage = () => {
                                             <div className="user-info-cell">
                                                 <div className="user-avatar-wrapper" style={{ borderRadius: '12px' }}>
                                                     {company.imageUrl ? (
-                                                        <img src={company.imageUrl} className="user-avatar" alt="" />
+                                                        <img src={getImageUrl(company.imageUrl )} className="user-avatar" alt="" />
                                                     ) : (
                                                         <div className="user-avatar-placeholder" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}>
                                                             <Building2 size={20} />

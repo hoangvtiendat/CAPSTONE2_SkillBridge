@@ -5,7 +5,7 @@ import {useCompany} from '../../hooks/useCompany';
 import companyService from '../../services/api/companyService';
 import './BusinessIdentity.css';
 
-// --- Bước 2: Form Đăng ký Doanh nghiệp mới (Có upload file) ---
+
 const BusinessRegisterForm = ({taxCode, onBack}) => {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +30,8 @@ const BusinessRegisterForm = ({taxCode, onBack}) => {
             setLogoPreview(URL.createObjectURL(file)); // Tạo link preview
         }
     };
+
+
 
     // Hàm xử lý khi chọn file GPKD
     const handleLicenseChange = (e) => {
@@ -173,6 +175,14 @@ const BusinessIdentity = () => {
         }
     };
 
+    const API_BASE_URL = "http://localhost:8081/identity";
+
+    const getImageUrl = (path) => {
+        if (!path) return "https://img.icons8.com/color/96/company.png";
+        if (path.startsWith('http')) return path;
+        return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+    };
+
     const handleJoinRequest = async () => {
         if (companyInfo?.status === 'BAN') {
             return toast.error("Công ty này đang bị khóa, không thể gửi yêu cầu!");
@@ -227,10 +237,13 @@ const BusinessIdentity = () => {
                 <div className="identity-card join-section animate-in">
                     <div className="company-info-display">
                         <img
-                            src={companyInfo.imageUrl || "https://img.icons8.com/color/96/company.png"}
+                            src={getImageUrl(companyInfo.imageUrl)}
                             alt="logo"
                             className="company-logo-preview"
-                            onError={(e) => e.target.src = "https://img.icons8.com/color/96/company.png"}
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "https://img.icons8.com/color/96/company.png";
+                            }}
                         />
                         <h2 className="company-name-highlight">{companyInfo.name}</h2>
 

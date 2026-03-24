@@ -91,8 +91,10 @@ public class SecurityConfig {
                                 "/jobs/{id}",
                                 "/ws-log/**",
                                 "/payments/webhook",
-                                "/CategoryProfession/**"
-                        ).permitAll()
+                                "/CategoryProfession/**",
+                                "/logos/**",
+                                "/licenses/**",
+                                "/CVs/**").permitAll()
 
                         .anyRequest().authenticated()
                 )
