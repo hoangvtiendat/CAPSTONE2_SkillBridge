@@ -400,7 +400,7 @@ const CompanyManagementPage = () => {
                         </div>
 
                         {/* Content */}
-                        <div style={{ padding: '32px', overflowY: 'auto', flex: 1 }}>
+                        <div style={{ background: '#ffffff', padding: '32px', overflowY: 'auto', flex: 1 }}>
                             {detailLoading ? (
                                 <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
                                     <Loader2 className="spinning-icon" size={40} />
