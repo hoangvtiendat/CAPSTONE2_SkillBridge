@@ -13,7 +13,6 @@ import java.util.Date;
 @Entity
 @Table(name = "invalidated_tokens")
 public class InvalidatedToken {
-
     @Id
     private String id; // Thường là JTI (JWT ID) hoặc chính chuỗi Token
 

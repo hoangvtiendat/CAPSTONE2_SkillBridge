@@ -77,8 +77,8 @@ public interface JobRepository extends JpaRepository<Job, String> {
     @Transactional
     @Query("""
         UPDATE Job j
-        SET j.postingDay = :days 
-        WHERE j.company.id = :companyId 
+        SET j.postingDay = :days
+        WHERE j.company.id = :companyId
         AND j.status IN :statuses
     """)
     int updateDurationForOldJobs(
@@ -105,15 +105,14 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title,j.description, j.location, 
-            j.salaryMin, j.salaryMax, j.createdAt, 
-            c.name,c.imageUrl,sp.name, cat.name
+            j.id, j.title,j.description, j.location,
+            j.salaryMin, j.salaryMax, j.createdAt,
+            c.name,c.imageUrl,cs.name, cat.name
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
         WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
         AND (:location IS NULL OR j.location LIKE %:location%)
@@ -133,15 +132,14 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.description, j.location, 
-            j.salaryMin, j.salaryMax, j.createdAt, 
-            c.name, c.imageUrl, sp.name, cat.name
+            j.id, j.title, j.description, j.location,
+            j.salaryMin, j.salaryMax, j.createdAt,
+            c.name, c.imageUrl, cs.name, cat.name
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
         WHERE j.status = :status
         AND j.company.id = :companyId
         AND j.isDeleted = false
@@ -179,20 +177,19 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
-            j.id, j.title, j.description, j.location, j.salaryMin, 
-            j.salaryMax, j.createdAt, c.name, c.imageUrl, 
-            sp.name, cat.name, j.status, j.moderationStatus
+            j.id, j.title, j.description, j.location, j.salaryMin,
+            j.salaryMax, j.createdAt, c.name, c.imageUrl,
+            cs.name, cat.name, j.status, j.moderationStatus
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
         WHERE j.isDeleted = false
         AND (:status IS NULL OR j.status = :status)
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
         AND (
-            :cursor IS NULL OR 
+            :cursor IS NULL OR
             j.createdAt < (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
             (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id < :cursor)
         )
@@ -207,20 +204,19 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
-            j.id, j.title, j.description, j.location, j.salaryMin, 
-            j.salaryMax, j.createdAt, c.name, c.imageUrl, 
-            sp.name, cat.name, j.status, j.moderationStatus
+            j.id, j.title, j.description, j.location, j.salaryMin,
+            j.salaryMax, j.createdAt, c.name, c.imageUrl,
+            cs.name, cat.name, j.status, j.moderationStatus
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
         WHERE j.isDeleted = false
         AND j.status = JobStatus.PENDING
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
         AND (
-            :cursor IS NULL OR 
+            :cursor IS NULL OR
             j.createdAt > (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
             (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id > :cursor)
         )

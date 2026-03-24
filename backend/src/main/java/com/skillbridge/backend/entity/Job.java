@@ -20,7 +20,6 @@ import java.util.Map;
 @Entity
 @Table(name = "jobs")
 public class Job extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)

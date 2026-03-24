@@ -23,7 +23,6 @@ import java.util.List;
         }
 )
 public class Company extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)
@@ -64,7 +63,7 @@ public class Company extends BaseEntity {
     private String websiteUrl;
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<CompanySubscription> subscriptions;
+    private List<SubscriptionOfCompany> subscriptions;
 
     /**
      * Lấy trạng thái gói dịch vụ hiện tại.
@@ -77,7 +76,7 @@ public class Company extends BaseEntity {
         return this.subscriptions.stream()
                 .filter(sub -> Boolean.TRUE.equals(sub.getIsActive()))
                 .findFirst()
-                .map(sub -> sub.getSubscriptionPlan().getName())
+                .map(sub -> sub.getName())
                 .orElse(SubscriptionPlanStatus.FREE);
     }
 }

@@ -71,7 +71,7 @@ public class JobService {
     NotificationRepository notificationRepository;
     NotificationService notificationService;
     SimpMessagingTemplate messagingTemplate;
-    SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
+    SubscriptionOfCompanyRepository subcriptionOfCompanyRepository;
 
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -358,7 +358,11 @@ public class JobService {
 
             sendNotificationToRecruiterAndAdmin(job, subject, content, "JOB_MODERATION", "/jobs/" + jobId);
 
-            messagingTemplate.convertAndSend("/topic/jobs/moderation", (Object) Map.of("jobId", jobId, "status", newModStatus));
+            messagingTemplate.convertAndSend("/topic/jobs/moderation", (Object)Map.of(
+                    "jobId", jobId,
+                    "status", newModStatus.name()
+            ));
+
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
@@ -434,6 +438,7 @@ public class JobService {
     @Transactional
     public void responseJobPending(String jobId, String status) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        System.out.println(currentUser);
         try {
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
@@ -512,10 +517,10 @@ public class JobService {
             throw new AppException(ErrorCode.EXIT_STATUS_COMPANY);
         }
 
-        SubcriptionOfCompany getSubcriptionOfCompany = subcriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(),SubscriptionOfCompanyStatus.OPEN)
+        SubscriptionOfCompany getSubscriptionOfCompany = subcriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(),SubscriptionOfCompanyStatus.OPEN)
                 .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_OF_COMPANY));
 
-    if(getSubcriptionOfCompany.getCurrentJobCount() > getSubcriptionOfCompany.getJobLimit())
+    if(getSubscriptionOfCompany.getCurrentJobCount() > getSubscriptionOfCompany.getJobLimit())
     {
         throw new AppException(ErrorCode.EXIT_SUBSCRIPTION);
     }
@@ -538,7 +543,7 @@ public class JobService {
         job.setSalaryMax(request.getSalaryMax());
         job.setEndDate(null);
         job.setStartDate(null);
-        job.setPostingDay(getSubcriptionOfCompany.getPostingDuration());
+        job.setPostingDay(getSubscriptionOfCompany.getPostingDuration());
         Job savedJob = jobRepository.save(job);
         job.setViewCount(0);
         job.setModerationScore(0f);
@@ -581,8 +586,8 @@ public class JobService {
             textBuilder.append(skillBuilder.substring(0, skillBuilder.length() - 2));
         }
         String textFinal = textBuilder.toString();
-        getSubcriptionOfCompany.setCurrentJobCount(getSubcriptionOfCompany.getCurrentJobCount()+1);
-        subcriptionOfCompanyRepository.save(getSubcriptionOfCompany);
+        getSubscriptionOfCompany.setCurrentJobCount(getSubscriptionOfCompany.getCurrentJobCount()+1);
+        subcriptionOfCompanyRepository.save(getSubscriptionOfCompany);
         //  Text > Vector
         try {
             float[] vector = embeddingService.createEmbedding(textFinal);
@@ -602,18 +607,18 @@ public class JobService {
     @Transactional
     public void handleExpiredSubscriptions() {
         LocalDateTime now = LocalDateTime.now();
-        List<SubcriptionOfCompany> expiredPremiumSubs = subcriptionOfCompanyRepository
+        List<SubscriptionOfCompany> expiredPremiumSubs = subcriptionOfCompanyRepository
                 .findAllByEndDateBeforeAndStatusAndNameNot(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
 
-        for (SubcriptionOfCompany expiredSub : expiredPremiumSubs) {
+        for (SubscriptionOfCompany expiredSub : expiredPremiumSubs) {
             expiredSub.setStatus(SubscriptionOfCompanyStatus.CLOSE);
             subcriptionOfCompanyRepository.save(expiredSub);
 
-            Optional<SubcriptionOfCompany> oldFreeSubOpt = subcriptionOfCompanyRepository
+            Optional<SubscriptionOfCompany> oldFreeSubOpt = subcriptionOfCompanyRepository
                     .findByCompanyIdAndName(expiredSub.getCompany().getId(), SubscriptionPlanStatus.FREE);
 
             if (oldFreeSubOpt.isPresent()) {
-                SubcriptionOfCompany freeSub = oldFreeSubOpt.get();
+                SubscriptionOfCompany freeSub = oldFreeSubOpt.get();
 
                 freeSub.setStatus(SubscriptionOfCompanyStatus.OPEN);
                 freeSub.setCurrentJobCount(0);
@@ -625,10 +630,10 @@ public class JobService {
             }
         }
 
-        List<SubcriptionOfCompany> expiredFreeSubs = subcriptionOfCompanyRepository
+        List<SubscriptionOfCompany> expiredFreeSubs = subcriptionOfCompanyRepository
                 .findAllByEndDateBeforeAndStatusAndName(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
 
-        for (SubcriptionOfCompany freeSub : expiredFreeSubs) {
+        for (SubscriptionOfCompany freeSub : expiredFreeSubs) {
             freeSub.setCurrentJobCount(0);
             freeSub.setStartDate(now);
             freeSub.setEndDate(now.plusMonths(1));

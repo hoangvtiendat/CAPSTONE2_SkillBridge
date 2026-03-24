@@ -11,7 +11,6 @@ import lombok.*;
 @Entity
 @Table(name = "notifications")
 public class Notification extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)

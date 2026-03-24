@@ -195,12 +195,12 @@ public class JobController {
     @PatchMapping("/feedAdmin/{jobId}/moderation")
     public ResponseEntity<ApiResponse<Void>> changeModerationStatus(
             @PathVariable String jobId,
-            @RequestParam String status
+            @RequestParam("status") String modStatus
     ) {
-        jobService.changeModerationStatus(jobId, status);
+        jobService.changeModerationStatus(jobId, modStatus);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
-                "Đã cập nhật trạng thái kiểm duyệt thành " + status,
+                "Đã cập nhật trạng thái kiểm duyệt thành " + modStatus,
                 null
         );
         return ResponseEntity.ok(response);
@@ -209,7 +209,7 @@ public class JobController {
     @PatchMapping("/feedAdmin/{jobId}/status")
     public ResponseEntity<ApiResponse<Void>> changeStatus(
             @PathVariable String jobId,
-            @RequestParam String status
+            @RequestParam("status") String status
     ) {
         jobService.changeStatus(jobId, status);
         ApiResponse<Void> response = new ApiResponse<>(

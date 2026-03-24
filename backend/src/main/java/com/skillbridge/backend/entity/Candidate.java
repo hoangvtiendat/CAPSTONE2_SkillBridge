@@ -12,7 +12,6 @@ import lombok.*;
 @Entity
 @Table(name = "candidates")
 public class Candidate extends BaseEntity {
-
     @Id
     @Column(name = "user_id")
     private String id;

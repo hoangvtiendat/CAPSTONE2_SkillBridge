@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "payment_transactions")
 public class PaymentTransaction extends BaseEntity {
-
     @Id
     @Column(name = "order_code")
     private Long orderCode;
@@ -27,10 +26,10 @@ public class PaymentTransaction extends BaseEntity {
     @Column(nullable = false)
     private int type;
 
-    // Gợi ý thêm các trường quan trọng để đối soát
-    @Column(precision = 19, scale = 2)
-    private BigDecimal amount;
-
-    @Column(length = 20)
-    private String status; // PENDING, PAID, CANCELLED
+//    // Gợi ý thêm các trường quan trọng để đối soát
+//    @Column(precision = 19, scale = 2)
+//    private BigDecimal amount;
+//
+//    @Column(length = 20)
+//    private String status; // PENDING, PAID, CANCELLED
 }

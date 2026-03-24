@@ -26,7 +26,6 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/admin")
 public class AdminController {
-
     AdminService adminService;
 
     /**
@@ -55,19 +54,13 @@ public class AdminController {
 
     @GetMapping("/stats/overview")
     public ResponseEntity<ApiResponse<SystemStatsResponse>> statsOverview(
-            @Valid @RequestHeader(value = "Authorization") String token,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         try {
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            String jwt = token.substring(7);
-
             if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1);
             if (endDate == null) endDate = LocalDate.now();
 
-            SystemStatsResponse rs = adminService.statsOverview(jwt, startDate, endDate);
+            SystemStatsResponse rs = adminService.statsOverview(startDate, endDate);
             return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Thống kê hệ thống", rs));
         } catch (AppException ex) {
             System.out.println("[STATS OVERVIEW] AppException occurred");

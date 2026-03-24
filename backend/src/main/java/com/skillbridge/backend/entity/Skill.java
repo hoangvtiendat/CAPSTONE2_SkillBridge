@@ -15,7 +15,6 @@ import java.util.List;
 @Entity
 @Table(name = "skills")
 public class Skill extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)
@@ -29,10 +28,6 @@ public class Skill extends BaseEntity {
     @JoinColumn(name = "category_id")
     @JsonIgnore
     private Category category;
-
-    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<JobSkill> jobSkills;
 
     /**
      * Trả về ID của Category cho Frontend dễ xử lý

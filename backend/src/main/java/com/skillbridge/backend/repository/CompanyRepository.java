@@ -59,12 +59,11 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl, 
-            c.description, c.address, c.websiteUrl, c.status, sp.name,
+            c.description, c.address, c.websiteUrl, c.status, cs.name,
             (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
         )
         FROM Company c
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
         WHERE c.isDeleted = false
         AND (:status IS NULL OR c.status = :status)
         ORDER BY c.createdAt DESC
@@ -75,18 +74,17 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     );
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
-            c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl, 
-            c.description, c.address, c.websiteUrl, c.status, sp.name,
+            c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
+            c.description, c.address, c.websiteUrl, c.status, cs.name,
             (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
         )
         FROM Company c
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
-        WHERE (:status IS NULL OR c.status = :status) 
+        WHERE (:status IS NULL OR c.status = :status)
         AND c.isDeleted = false
         AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
         AND (:categoryId IS NULL OR EXISTS (
-            SELECT 1 FROM Job j 
+            SELECT 1 FROM Job j
             WHERE j.company.id = c.id 
             AND j.category.id = :categoryId 
             AND j.status = 'OPEN' 
@@ -104,15 +102,14 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, sp.name
+            c.description, c.address, c.websiteUrl, c.status, cs.name
         )
         FROM Company c
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        LEFT JOIN cs.subscriptionPlan sp
         WHERE c.isDeleted = false
         AND c.status = CompanyStatus.PENDING
         AND (
-            :cursor IS NULL OR 
+            :cursor IS NULL OR
             c.createdAt > (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) OR
             (c.createdAt = (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) AND c.id > :cursor)
         )

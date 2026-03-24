@@ -1,17 +1,14 @@
 package com.skillbridge.backend.service;
-import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.exception.AppException;
 
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.entity.PaymentTransaction;
-import com.skillbridge.backend.entity.SubcriptionOfCompany;
+import com.skillbridge.backend.entity.SubscriptionOfCompany;
 import com.skillbridge.backend.entity.SubscriptionPlan;
 import com.skillbridge.backend.enums.CompanyRole;
 import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
-import com.skillbridge.backend.enums.SubscriptionPlanStatus;
-import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.utils.SecurityUtils;
@@ -21,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
@@ -43,7 +38,7 @@ import java.util.Map;
 public class PaymentService {
     PayOS payOS;
     CompanyMemberRepository companyMemberRepository;
-    SubcriptionOfCompanyRepository subcriptionOfCompanyRepository;
+    SubscriptionOfCompanyRepository subscriptionOfCompanyRepository;
     SubscriptionPlanRepository subscriptionPlanRepository;
     PaymentTransactionRepository paymentTransactionRepository;
     CompanyRepository companyRepository;
@@ -78,16 +73,16 @@ public class PaymentService {
             amount = getDetailSub.getPrice();
             planName = getDetailSub.getName().toString();
         } else if (type == 1) {
-            SubcriptionOfCompany getDetailSub = subcriptionOfCompanyRepository.getReferenceById(id_ofBill);
+            SubscriptionOfCompany getDetailSub = subscriptionOfCompanyRepository.getReferenceById(id_ofBill);
             idOfSubcriptionOfCompany = getDetailSub.getId();
             amount = getDetailSub.getPrice();
             planName = "CUSTOM PLAN";
         } else {
             throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
         }
-        Map<String, Object> dataOfSubcription = new HashMap<>();
-        dataOfSubcription.put("id_of_bill", id_ofBill);
-        dataOfSubcription.put("type", type);
+        Map<String, Object> dataOfSubscription = new HashMap<>();
+        dataOfSubscription.put("id_of_bill", id_ofBill);
+        dataOfSubscription.put("type", type);
 
         long orderCode = System.currentTimeMillis() / 1000;
 
@@ -131,10 +126,10 @@ public class PaymentService {
                 PaymentTransaction transaction = paymentTransactionRepository.findById(orderCode)
                         .orElseThrow(() -> new Exception("Không tìm thấy giao dịch: " + orderCode));
 
-                subcriptionOfCompanyRepository.findByCompanyIdAndStatus(transaction.getCompanyId(), SubscriptionOfCompanyStatus.OPEN)
+                subscriptionOfCompanyRepository.findByCompanyIdAndStatus(transaction.getCompanyId(), SubscriptionOfCompanyStatus.OPEN)
                         .ifPresent(oldSub -> {
                             oldSub.setStatus(SubscriptionOfCompanyStatus.CLOSE);
-                            subcriptionOfCompanyRepository.save(oldSub);
+                            subscriptionOfCompanyRepository.save(oldSub);
                         });
 
                 if (transaction.getType() == 0) {
@@ -158,7 +153,7 @@ public class PaymentService {
         SubscriptionPlan plan = subscriptionPlanRepository.getReferenceById(transaction.getSubscriptionId());
         Company company = companyRepository.getReferenceById(transaction.getCompanyId());
 
-        SubcriptionOfCompany newSub = new SubcriptionOfCompany();
+        SubscriptionOfCompany newSub = new SubscriptionOfCompany();
         newSub.setCompany(company);
         newSub.setName(plan.getName());
         newSub.setJobLimit(plan.getJobLimit());
@@ -172,17 +167,17 @@ public class PaymentService {
         newSub.setIsActive(true);
 
         updateJobDurations(transaction.getCompanyId(), plan.getPostingDuration());
-        subcriptionOfCompanyRepository.save(newSub);
+        subscriptionOfCompanyRepository.save(newSub);
     }
 
     private void activateCustomPlan(PaymentTransaction transaction) {
-        SubcriptionOfCompany customSub = subcriptionOfCompanyRepository.getReferenceById(transaction.getSubscriptionId());
+        SubscriptionOfCompany customSub = subscriptionOfCompanyRepository.getReferenceById(transaction.getSubscriptionId());
         customSub.setStatus(SubscriptionOfCompanyStatus.OPEN);
         customSub.setStartDate(LocalDateTime.now());
         customSub.setEndDate(LocalDateTime.now().plusMonths(customSub.getPostingDuration() != null ? customSub.getPostingDuration() : 1));
 
         updateJobDurations(transaction.getCompanyId(), customSub.getPostingDuration());
-        subcriptionOfCompanyRepository.save(customSub);
+        subscriptionOfCompanyRepository.save(customSub);
     }
 
     private void updateJobDurations(String companyId, Integer duration) {

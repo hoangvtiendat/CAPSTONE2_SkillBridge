@@ -12,7 +12,6 @@ import lombok.*;
 @Entity
 @Table(name = "system_logs")
 public class SystemLog extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)

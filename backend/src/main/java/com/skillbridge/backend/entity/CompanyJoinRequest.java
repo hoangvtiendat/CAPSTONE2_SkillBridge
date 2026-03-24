@@ -20,7 +20,6 @@ import lombok.*;
         }
 )
 public class CompanyJoinRequest extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)

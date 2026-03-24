@@ -11,7 +11,6 @@ import lombok.*;
 @Entity
 @Table(name = "candidate_skills")
 public class CandidateSkill extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)

@@ -1,5 +1,6 @@
 package com.skillbridge.backend.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,6 +15,7 @@ public class SkillRequest {
     @NotBlank(message = "SKILL_NAME_REQUIRED")
     String name;
 
+    @JsonProperty("category_id")
     String categoryId;
 
     public void setName(String name) {

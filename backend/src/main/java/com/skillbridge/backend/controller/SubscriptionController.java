@@ -3,7 +3,7 @@ package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.request.CompanySubscriptionRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
-import com.skillbridge.backend.entity.SubcriptionOfCompany;
+import com.skillbridge.backend.entity.SubscriptionOfCompany;
 import com.skillbridge.backend.entity.SubscriptionPlan;
 import com.skillbridge.backend.service.SubscriptionService;
 import jakarta.validation.Valid;
@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -37,10 +36,10 @@ public class SubscriptionController {
     }
 
     @PostMapping("/company/create")
-    public ResponseEntity<SubcriptionOfCompany> createCompanySubscription(
+    public ResponseEntity<SubscriptionOfCompany> createCompanySubscription(
             @Valid @RequestBody CompanySubscriptionRequest companySubscriptionRequest
     ) {
-        SubcriptionOfCompany companySubscriptions = subscriptionService.createCompanySubscriptions(companySubscriptionRequest);
+        SubscriptionOfCompany companySubscriptions = subscriptionService.createCompanySubscriptions(companySubscriptionRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(companySubscriptions);
     }
 
@@ -68,7 +67,7 @@ public class SubscriptionController {
     }
 
     @GetMapping("/company/list")
-    public ResponseEntity<List<SubcriptionOfCompany>> getAllSubscriptionPlans() {
+    public ResponseEntity<List<SubscriptionOfCompany>> getAllSubscriptionPlans() {
         return ResponseEntity.ok(subscriptionService.getMyCompanySubscriptions());
     }
 }
