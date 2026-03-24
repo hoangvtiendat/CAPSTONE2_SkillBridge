@@ -36,23 +36,20 @@
 
 /* --- Thanh Tìm Kiếm (Liquid Search) --- */
 .search-wrap {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 400px;
   padding: 10px 18px;
-
-  /* Hiệu ứng kính */
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-
-  border: 1px solid var(--glass-border);
-  border-radius: 16px; /* Bo góc mềm mại */
-  box-shadow: var(--inner-light), var(--glass-shadow);
-
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
+  border-radius: var(--lg-radius-md);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.34));
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-inner-light), var(--lg-shadow);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  overflow: hidden;
 }
 
 
