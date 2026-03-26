@@ -1,52 +1,39 @@
 package com.skillbridge.backend.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
+import com.skillbridge.backend.dto.request.JobSkillRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
-
-import com.skillbridge.backend.dto.request.CreateJobRequest;
-import com.skillbridge.backend.dto.request.JobSkillRequest;
-import com.skillbridge.backend.dto.response.JobFeedItemResponse;
-import com.skillbridge.backend.dto.response.JobResponse;
-import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.*;
-import com.skillbridge.backend.enums.ModerationStatus;
-
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
-import com.skillbridge.backend.repository.JobRepository;
+import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Page;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.transaction.annotation.Transactional;
-import com.skillbridge.backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -290,6 +277,8 @@ public class JobService {
                     skills,
                     job.getCreatedAt()
             );
+
+            System.out.println("name: " +  job.getCompany().getName() );
             return detail;
         } catch (Exception e) {
             System.err.println("LỖI HỆ THỐNG : " + e.getMessage());

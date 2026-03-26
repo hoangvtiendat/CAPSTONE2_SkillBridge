@@ -11,8 +11,8 @@ import {
 import './JobDetail.css';
 import { toast, Toaster } from 'sonner';
 
-// CHỈNH LẠI DÒNG NÀY: Import useAuth thay vì AuthContext
 import { useAuth } from '../../context/AuthContext';
+const API_BASE_URL = "http://localhost:8081/identity";
 
 const formatSalary = (amount) => {
     if (!amount && amount !== 0) return "Thỏa thuận";
@@ -57,10 +57,34 @@ const JobDetailPage = () => {
             setJob(data);
             if (data.title) {
                 let rawTitle = data.title;
+
                 try {
-                    rawTitle = typeof rawTitle === 'string' ? JSON.parse(rawTitle) : rawTitle;
-                } catch (e) { rawTitle = []; }
-                setParsedData(Array.isArray(rawTitle) ? rawTitle : []);
+                    rawTitle = typeof rawTitle === 'string'
+                        ? JSON.parse(rawTitle)
+                        : rawTitle;
+                } catch (e) {
+                    rawTitle = {};
+                }
+
+                const sections = Object.entries(rawTitle).map(([key, value]) => {
+                    let itemsArray = [];
+
+                    if (typeof value === 'string') {
+                        itemsArray = value
+                            .split('\n')
+                            .map(i => i.trim())
+                            .filter(i => i !== "");
+                    } else if (Array.isArray(value)) {
+                        itemsArray = value;
+                    }
+
+                    return {
+                        name: key,
+                        description: itemsArray
+                    };
+                });
+
+                setParsedData(sections);
             }
         } catch (error) {
             toast.error("Không thể tải chi tiết công việc");
@@ -138,6 +162,16 @@ const JobDetailPage = () => {
     const contentSections = parsedData.slice(1);
     const isClosed = job.status === 'CLOSED';
 
+    const getImageUrl = (path) => {
+            if (!path) return null;
+            if (path.startsWith('http')) return path;
+
+            const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+            const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+            console.log("aaa: ", `${baseUrl}${cleanPath}`)
+            return `${baseUrl}${cleanPath}`;
+        };
     return (
         <div className="candidate-job-detail-wrapper">
             <Toaster position="top-right" richColors />
@@ -150,10 +184,10 @@ const JobDetailPage = () => {
                 <div className="detail-card header-combined animate-in">
                     <div className="header-main-content">
                         <div className="company-info-section">
-                            <img src={job.companyImageUrl || '/default-logo.png'} alt="logo" className="company-logo-large" />
+                            <img src={getImageUrl(job.companyImageUrl)} alt="logo" className="company-logo-large" />
                             <div className="job-title-info">
                                 <div className="title-status-row">
-                                    <h1>{headerInfo.name || job.jobTitle}</h1>
+                                    <h1>{job.position}</h1>
                                     <span className={`status-badge ${isClosed ? 'status-closed' : 'status-open'}`}>
                                         {isClosed ? <AlertCircle size={14} /> : <Clock size={14} />}
                                         {isClosed ? 'Hết hạn' : 'Đang mở'}
@@ -178,6 +212,7 @@ const JobDetailPage = () => {
                                         <Clock size={16} /> {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true, locale: vi })}
                                     </span>
                                 </div>
+
 
                                 <div className="skills-tags-container inline-skills">
                                     {job.skills?.map((s, index) => (
@@ -208,18 +243,25 @@ const JobDetailPage = () => {
                     </div>
                 </div>
 
+                <div className="detail-card section">
+                    <h3>Mô tả công việc</h3>
+                    <p>{job.description}</p>
+                </div>
+
+
                 <div className="detail-grid">
                     {contentSections.map((section, index) => (
                         <div key={index} className="detail-card section animate-in" style={{animationDelay: `${(index + 1) * 0.1}s`}}>
                             <h3>{section.name}</h3>
                             <ul className="check-list">
-                                {(section.decription || section.Decription)?.map((item, idx) => (
+                                {(section.description || [])?.map((item, idx) => (
                                     <li key={idx}><span>{item}</span></li>
                                 ))}
                             </ul>
                         </div>
                     ))}
                 </div>
+
             </div>
 
             {/* --- MODAL FORM ỨNG TUYỂN --- */}
@@ -234,7 +276,7 @@ const JobDetailPage = () => {
                             <button className="close-x" onClick={() => setShowApplyModal(false)}><X /></button>
                         </div>
 
-                        <p className="modal-subtitle">Bạn đang ứng tuyển vị trí <strong>{headerInfo.name}</strong> tại <strong>{job.companyName}</strong></p>
+                        <p className="modal-subtitle">Bạn đang ứng tuyển vị trí <strong>{job.position}</strong> tại <strong>{job.companyName}</strong></p>
 
                         <form onSubmit={handleApplySubmit} className="apply-form-body">
                             <div className="form-grid">

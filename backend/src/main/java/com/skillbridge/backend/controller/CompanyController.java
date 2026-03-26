@@ -1,29 +1,23 @@
 package com.skillbridge.backend.controller;
 
-import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.CompanyDTO;
 import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
-import com.skillbridge.backend.dto.request.RespondToJoinRequest;
 import com.skillbridge.backend.dto.request.DeactivateRequest;
+import com.skillbridge.backend.dto.request.RespondToJoinRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
-import com.skillbridge.backend.dto.response.PageResponse;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.CompanyService;
-import com.skillbridge.backend.utils.PageableUtils;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,26 +47,6 @@ public class CompanyController {
         );
         return ResponseEntity.ok(response);
     }
-
-//    @GetMapping("/feed")
-//    public ResponseEntity<ApiResponse<PageResponse<CompanyFeedItemResponse>>> getCompanyFeed(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size,
-//            @RequestParam(defaultValue = "createdAt") String sortBy,
-//            @RequestParam(defaultValue = "desc") String direction,
-//            @RequestParam(required = false) CompanyStatus status,
-//            @RequestParam(required = false) String keyword,
-//            @RequestParam(required = false) String categoryId
-//    ) {
-//        Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
-//        CompanyStatus searchStatus = (status != null) ? status : CompanyStatus.ACTIVE;
-//        PageResponse<CompanyFeedItemResponse> rs = companyService.getCompanies(searchStatus, keyword, categoryId, pageable);
-//        return ResponseEntity.ok(ApiResponse.<PageResponse<CompanyFeedItemResponse>>builder()
-//                .code(HttpStatus.OK.value())
-//                .message("Lấy danh sách công ty thành công")
-//                .result(rs)
-//                .build());
-//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> getCompanyDetail(@PathVariable String id) {

@@ -2,9 +2,7 @@ package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.request.RespondToApplicationRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
-import com.skillbridge.backend.dto.response.RegisterResponse;
 import com.skillbridge.backend.entity.Application;
-import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.ApplicationService;
@@ -14,11 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -58,15 +54,10 @@ public class ApplicationController {
      */
     @GetMapping("/job/{jobId}")
     public ResponseEntity<ApiResponse<List<Application>>> getApplicationByJobId(
-            @PathVariable String jobId,
-            @Valid @RequestHeader(value = "Authorization") String token
+            @PathVariable String jobId
     ) {
         try {
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            String jwt = token.substring(7);
-            List<Application> rs = applicationService.getApplicationByJobId(jobId, jwt);
+            List<Application> rs = applicationService.getApplicationByJobId(jobId);
             ApiResponse<List<Application>> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Lấy đơn ứng tuyển theo tin tuyển dụng thành công", rs
             );
@@ -92,7 +83,7 @@ public class ApplicationController {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             String jwt = token.substring(7);
-            String rs = applicationService.respondToApplication(id, jwt, request);
+            String rs = applicationService.respondToApplication(id, request);
             ApiResponse<String> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Phản hồi đơn ứng tuyển thành công", rs
             );

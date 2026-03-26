@@ -397,7 +397,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                 <div className="sub-card-header">
                     <div className="sub-subtitle">
                         <span className="subtitle-text">NÂNG CẤP LÊN</span>
-                        <span className="sub-badge badge-yellow">Khuyến dùng</span>
+                        <span className="sub-badge badge-yellow">Khuyên dùng</span>
                     </div>
                     <div className="sub-title-row">
                         <h2 className="sub-name">{premiumPkg?.name }</h2>

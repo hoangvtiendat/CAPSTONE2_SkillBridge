@@ -3,22 +3,20 @@ package com.skillbridge.backend.repository;
 import com.skillbridge.backend.dto.MonthlyJobDTO;
 import com.skillbridge.backend.dto.response.AdminJobFeedItemResponse;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
-import com.skillbridge.backend.dto.response.PageResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, String> {
@@ -107,14 +105,15 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
             j.id, j.title,j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
-            c.name,c.imageUrl,cs.name, cat.name
+            c.name,c.imageUrl,soc.name, cat.name
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN SubscriptionOfCompany soc ON soc.company.id = c.id
         WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
+        AND soc.status = SubscriptionOfCompanyStatus.OPEN
         AND (:location IS NULL OR j.location LIKE %:location%)
         AND (:salary IS NULL OR (
                         CAST(j.salaryMin AS double) <= :salary
@@ -131,7 +130,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
     );
 
     @Query("""
-        SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
+        SELECT DISTINCT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
             j.id, j.title, j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
             c.name, c.imageUrl, cs.name, cat.name

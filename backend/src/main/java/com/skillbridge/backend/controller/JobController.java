@@ -1,33 +1,28 @@
 package com.skillbridge.backend.controller;
 
-import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.dto.request.JobApplicationRequest;
-import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
-import com.skillbridge.backend.entity.User;
-import com.skillbridge.backend.enums.JobStatus;
-import com.skillbridge.backend.enums.ModerationStatus;
-import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.dto.request.JobApplicationRequest;
+import com.skillbridge.backend.dto.response.AdminJobFeedResponse;
+import com.skillbridge.backend.dto.response.ApiResponse;
+import com.skillbridge.backend.dto.response.JobDetailResponse;
+import com.skillbridge.backend.dto.response.JobResponse;
 import com.skillbridge.backend.entity.Job;
+import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.JobService;
-import com.skillbridge.backend.utils.PageableUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.Map;
+
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,25 +48,6 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/feed")
-//    public ResponseEntity<ApiResponse<PageResponse<JobFeedItemResponse>>> getFeed(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size,
-//            @RequestParam(defaultValue = "createdAt") String sortBy,
-//            @RequestParam(defaultValue = "desc") String direction,
-//            @RequestParam(required = false) String categoryId,
-//            @RequestParam(required = false) String location,
-//            @RequestParam(required = false) Double salary
-//    ) {
-//        Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
-//        PageResponse<JobFeedItemResponse> rs = jobService.getJobFeed(categoryId, location, salary, pageable);
-//        return ResponseEntity.ok(ApiResponse.<PageResponse<JobFeedItemResponse>>builder()
-//                .code(HttpStatus.OK.value())
-//                .message("Lấy danh sách tin tuyển dụng thành công")
-//                .result(rs)
-//                .build());
-//    }
-
     @GetMapping("/company/{companyId}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getJobsByCompany(
             @PathVariable String companyId,
@@ -87,28 +63,6 @@ public class JobController {
         );
         return ResponseEntity.ok(response);
     }
-
-//    @GetMapping("/company/{companyId}")
-//public ResponseEntity<ApiResponse<PageResponse<JobFeedItemResponse>>> getJobsByCompany(
-//        @PathVariable String companyId,
-//        @RequestParam(defaultValue = "0") int page,
-//        @RequestParam(defaultValue = "10") int size, // Đổi limit thành size cho đồng bộ
-//        @RequestParam(defaultValue = "createdAt") String sortBy,
-//        @RequestParam(defaultValue = "desc") String direction,
-//        @RequestParam(required = false) List<String> categoryIds
-//) {
-//    // 1. Tạo Pageable ngay tại Controller
-//    Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
-//
-//    // 2. Gọi Service truyền vào pageable
-//    PageResponse<JobFeedItemResponse> rs = jobService.getJobsByCompany(companyId, categoryIds, pageable);
-//
-//    return ResponseEntity.ok(ApiResponse.<PageResponse<JobFeedItemResponse>>builder()
-//            .code(HttpStatus.OK.value())
-//            .message("Danh sách việc làm của công ty")
-//            .result(rs)
-//            .build());
-//}
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<JobDetailResponse>> getJobDetailByCandidate(

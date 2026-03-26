@@ -2,23 +2,22 @@ package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.RespondToApplicationRequest;
-import com.skillbridge.backend.entity.*;
+import com.skillbridge.backend.entity.Application;
+import com.skillbridge.backend.entity.Job;
+import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.ApplicationStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.ApplicationRepository;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.JobRepository;
-import com.skillbridge.backend.repository.NotificationRepository;
 import com.skillbridge.backend.utils.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -46,7 +45,7 @@ public class ApplicationService {
         return application;
     }
 
-    public List<Application> getApplicationByJobId(String jobId, String jwt) {
+    public List<Application> getApplicationByJobId(String jobId) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
         Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
@@ -59,7 +58,7 @@ public class ApplicationService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public String respondToApplication(String id, String jwt, RespondToApplicationRequest request) {
+    public String respondToApplication(String id, RespondToApplicationRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
         Application application = applicationRepository.findById(id)

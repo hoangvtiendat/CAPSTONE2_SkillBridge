@@ -15,6 +15,7 @@ const formatSalary = (amount) => {
     if (!amount && amount !== 0) return "Thỏa thuận";
     return new Intl.NumberFormat('vi-VN').format(amount) + " VND";
 };
+const API_BASE_URL = "http://localhost:8081/identity";
 
 const AdminJobDetailPage = () => {
     const { jobId } = useParams();
@@ -23,6 +24,17 @@ const AdminJobDetailPage = () => {
     const [sections, setSections] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+      const getImageUrl = (path) => {
+                if (!path) return null;
+                if (path.startsWith('http')) return path;
+
+                const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+                const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+                console.log("aaa: ", `${baseUrl}${cleanPath}`)
+                return `${baseUrl}${cleanPath}`;
+            };
 
     const fetchJobDetail = useCallback(async () => {
         try {
@@ -114,11 +126,7 @@ const AdminJobDetailPage = () => {
                 <div className="detail-card header-combined">
                     <div className="header-main-content">
                         <div className="company-info-section">
-                            <img
-                                src={job.companyImageUrl || '/default-logo.png'}
-                                alt="logo"
-                                className="company-logo-large"
-                            />
+                            <img src={getImageUrl(job.companyImageUrl)} alt="logo" className="company-logo-large" />
                             <div className="job-title-info">
                                 <h1>{job.jobTitle || "Chi tiết công việc"}</h1>
                                 <div className="company-and-plan">

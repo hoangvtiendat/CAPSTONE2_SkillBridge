@@ -1,27 +1,20 @@
 package com.skillbridge.backend.config;
 
-import com.skillbridge.backend.exception.AppException;
-import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.JwtAuthenticationFilter;
 import com.skillbridge.backend.service.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.context.annotation.RequestScope;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -59,25 +52,27 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/skill/set/**",
                                 "/identity/jobs/feedAdmin/**",
-                                "/jobs/feedAdminPending/**", "/companies/feedPending/**",
-                                "/Logs/**", "/companies/taxLook"
+                                "/jobs/feedAdminPending/**",
+                                "/companies/feedPending/**",
+                                "/Logs/**",
+                                "/companies/taxLook"
                         ).hasRole("ADMIN")
-
                         .requestMatchers(
                                 "/company-member/**",
                                 "/identity/subscription/**",
-                                "/identity/CategoryProfession/**"
+                                "/identity/CategoryProfession/**",
+                                "/applications/jobs/**"
                         ).hasRole("RECRUITER")
 
                         .requestMatchers(
                                 "/candidates/**",
-                                "/applications/**",
                                 "/jobs/apply/**"
                         ).hasRole("CANDIDATE")
 
                         .requestMatchers(
                                 "/jobs/feed",
                                 "/companies/feed",
+                                "/companies/{id}",
                                 "/admin/**",
                                 "/auth/**",
                                 "/users/**",
@@ -88,12 +83,14 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/identity/swagger-ui/**",
                                 "/identity/v3/api-docs/**",
-                                "/jobs/{id}",
+                                "/jobs/**",
+                                "/companies/**",
                                 "/ws-log/**",
                                 "/payments/webhook",
                                 "/CategoryProfession/**",
                                 "/logos/**",
                                 "/licenses/**",
+                                "/companies/*",
                                 "/CVs/**").permitAll()
 
                         .anyRequest().authenticated()
