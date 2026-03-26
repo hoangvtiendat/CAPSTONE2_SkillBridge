@@ -8,5 +8,5 @@ public record OllamaRequest(
         String prompt,
         boolean stream,
         String format,
-        OllamaOptions options
+        ollamaOptions options
 ) {}

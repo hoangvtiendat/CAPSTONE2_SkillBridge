@@ -1,124 +1,104 @@
 package com.skillbridge.backend.service;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skillbridge.backend.dto.request.OllamaOptions;
 import com.skillbridge.backend.dto.request.OllamaRequest;
+import com.skillbridge.backend.dto.request.ollamaOptions;
 import com.skillbridge.backend.dto.response.OllamaResponse;
-import com.skillbridge.backend.dto.response.SkillAnalysisResult;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import java.util.Map;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AiService {
-    @NonFinal
-    RestClient restClient;
 
-    @NonFinal
+    private final RestClient ollamaRestClient;
+    private final ObjectMapper objectMapper;
+
     @Value("${ai.ollama.model}")
-    String aiModel;
+    private String model;
 
-    @NonFinal
-    @Value("${ai.ollama.url}")
-    String ollamaUrl;
+    private static final String SYSTEM_PROMPT_CHECK_CV_AND_JD =
+            """
+            You are the AI core for 'SkillBridge - Career Path & Recruitment Optimization Platform'.
+            Your EXCLUSIVE task is 'Skill Gap Analysis & Recommendation' using a Competency Matrix.
 
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        this.restClient = RestClient.builder()
-                .baseUrl(ollamaUrl)
-                .build();
-    }
+            STRICT RULES:
+            - ONLY output valid JSON.
+            - Use Vietnamese for all textual explanations.
+            - Evaluate skills on a Level 1 to 5 scale.
+            - If CV lacks a JD skill, cv_current_level is 0.
+            - can_apply is true ONLY if gap_percentage is less than 20%.
+            - If can_apply is false, you MUST provide a learning roadmap to reach the jd_required_level.
 
-    public String analyzeAndScoreSkills(String candidateSkills, String jobRequirements) {
-
-        String systemPrompt = """
-            Bạn là một hệ thống trích xuất dữ liệu tuyển dụng.
-            Nhiệm vụ của bạn là đối chiếu "Kỹ năng ứng viên" với "Yêu cầu công việc (JD)" và phân loại thành ĐÚNG 3 mảng:
-            
-            1. "matched_skills": Các kỹ năng công nghệ JD YÊU CẦU và ứng viên ĐÃ CÓ.
-            2. "missing_skills": Các kỹ năng công nghệ JD YÊU CẦU nhưng ứng viên ĐANG THIẾU.
-            3. "irrelevant_skills": Các kỹ năng ứng viên có NHƯNG JD KHÔNG HỀ YÊU CẦU (kỹ năng dư thừa).
-            
-            --- VÍ DỤ CHUẨN ---
-            Kỹ năng ứng viên: {"languages": ["Python", "Java"]}
-            Yêu cầu công việc: Cần dev biết Java, Spring Boot, MySQL.
-            Kết quả JSON:
+            JSON SCHEMA:
             {
-                "matched_skills": ["Java"],
-                "missing_skills": ["Spring Boot", "MySQL"],
-                "irrelevant_skills": ["Python"]
-            }
-            -------------------
-            
-            QUAN TRỌNG: CHỈ TRẢ VỀ ĐÚNG 1 CHUỖI JSON. KHÔNG GIẢI THÍCH GÌ THÊM.
+              "match_score": number,
+              "gap_percentage": number,
+              "gap_analysis_summary": string,
+              "competency_matrix": [
+                {
+                  "skill_name": string,
+                  "jd_required_level": number,
+                  "cv_current_level": number,
+                  "status": "MET | GAP | MISSING"
+                }
+              ],
+              "learning_roadmap": [
+                {
+                  "skill_to_upgrade": string,
+                  "current_level": number,
+                  "target_level": number,
+                  "recommended_courses_or_actions": [string]
+                }
+              ],
+              "can_apply": boolean
+            }      
             """;
 
-        String fullPrompt = systemPrompt
-                + "\n--- Kỹ năng của ứng viên ---\n" + candidateSkills
-                + "\n\n--- Bài viết yêu cầu công việc (JD) ---\n" + jobRequirements;
+    public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper) {
+        this.ollamaRestClient = ollamaRestClient;
+        this.objectMapper = objectMapper;
+    }
 
-        OllamaOptions options = new OllamaOptions(0.0, 42);
-
-        OllamaRequest requestPayload = OllamaRequest.builder()
-                .model(aiModel)
-                .prompt(fullPrompt)
-                .stream(false)
-                .format("json")
-                .options(options)
-                .build();
-
+    public String analyzeSkillGap(Map<String, Object> cvData, Map<String, Object> jdData) {
         try {
-            OllamaResponse response = restClient.post()
+            ollamaOptions options = ollamaOptions.builder()
+                    .temperature(0.0)
+                    .top_k(10)
+                    .top_p(0.1)
+                    .num_predict(1500)
+                    .num_ctx(8192)
+                    .build();
+
+            String cvJsonString = objectMapper.writeValueAsString(cvData);
+            String jdJsonString = objectMapper.writeValueAsString(jdData);
+
+            String finalPrompt = SYSTEM_PROMPT_CHECK_CV_AND_JD +
+                    "\n\n--- JD JSON ---\n" + jdJsonString +
+                    "\n\n--- CV JSON ---\n" + cvJsonString;
+
+            OllamaRequest requestPayload = OllamaRequest.builder()
+                    .model(model)
+                    .prompt(finalPrompt)
+                    .stream(false)
+                    .format("json")
+                    .options(options)
+                    .build();
+
+            OllamaResponse response = ollamaRestClient.post()
                     .uri("/api/generate")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(requestPayload)
                     .retrieve()
                     .body(OllamaResponse.class);
 
-            String aiJsonResult = response != null ? response.response() : "{}";
-
-
-            return calculateScoreWithJava(aiJsonResult);
+            return response != null ? response.response() : "{}";
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "Lỗi xử lý hệ thống";
-        }
-
-    }
-    private String calculateScoreWithJava(String aiJsonResult) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            SkillAnalysisResult analysis = objectMapper.readValue(aiJsonResult, SkillAnalysisResult.class);
-
-            int matchedCount = analysis.matched_skills() != null ? analysis.matched_skills().size() : 0;
-            int missingCount = analysis.missing_skills() != null ? analysis.missing_skills().size() : 0;
-            int totalRequiredSkills = matchedCount + missingCount;
-
-            int finalScore = 0;
-            if (totalRequiredSkills > 0) {
-                finalScore = (int) Math.round(((double) matchedCount / totalRequiredSkills) * 100);
-            }
-
-            return String.format("Ứng viên đáp ứng %d%% yêu cầu. (Có: %s | Thiếu: %s)",
-                    finalScore,
-                    analysis.matched_skills(),
-                    analysis.missing_skills());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Lỗi khi tính toán điểm số từ dữ liệu AI";
+            return "{}";
         }
     }
 }
-

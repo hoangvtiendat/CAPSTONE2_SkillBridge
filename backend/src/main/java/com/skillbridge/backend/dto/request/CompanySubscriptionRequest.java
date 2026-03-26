@@ -16,10 +16,6 @@ public class CompanySubscriptionRequest {
     @Min(value = 1, message = "INVALID_CUSTOM_LIMITS")
     Integer jobLimit;
 
-//    @NotNull(message = "INVALID_INPUT")
-//    @Min(value = 1, message = "INVALID_CUSTOM_LIMITS")
-//    Integer postingDuration;
-
     @NotNull(message = "INVALID_INPUT")
     @Min(value = 1, message = "INVALID_CUSTOM_LIMITS")
     Integer candidateViewLimit;
