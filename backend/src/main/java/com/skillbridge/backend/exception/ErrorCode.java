@@ -118,8 +118,9 @@ public enum ErrorCode {
 
     // 7xxx: APPLICATION
     APPLICATION_NOT_FOUND(7000, "Không tìm thấy hồ sơ ứng tuyển", HttpStatus.NOT_FOUND),
-    ALREADY_APPLIED(7001, "Bạn đã ứng tuyển vào vị trí này trước đó rồi", HttpStatus.BAD_REQUEST);
-
+    ALREADY_APPLIED(7001, "Bạn đã ứng tuyển vào vị trí này trước đó rồi", HttpStatus.BAD_REQUEST),
+    // 8xxx: AI
+    AI_PARSING_FAILED(8001, "Không thể phân tích được CV của chức năng parsingCV", HttpStatus.BAD_REQUEST),;
     private final int code;
     private final String message;
     private final HttpStatus httpStatus;

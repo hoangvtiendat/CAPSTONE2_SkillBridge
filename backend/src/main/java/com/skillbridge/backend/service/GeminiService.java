@@ -40,17 +40,21 @@ public class GeminiService {
      * Gọi Gemini API và tự động parse kết quả về Object mong muốn
      */
     public <T> T callGemini(String prompt, Class<T> responseType) {
-        String url = String.format("https://generativelanguage.googleapis.com/v1/models/%s:generateContent?key=%s",
+        // 1. Đảm bảo url dùng v1beta
+        String url = String.format("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
                 modelName, apiKey);
 
         log.info("--- CALLING GEMINI API [Model: {}] ---", modelName);
+
+        // 2. Thêm response_mime_type vào generationConfig
         Map<String, Object> requestBody = Map.of(
                 "contents", Collections.singletonList(Map.of(
                         "parts", Collections.singletonList(Map.of("text", prompt))
                 )),
                 "generationConfig", Map.of(
                         "temperature", 0.1,
-                        "maxOutputTokens", 4096
+                        "maxOutputTokens", 4096,
+                        "responseMimeType", "application/json" // Thêm dòng này
                 )
         );
 

@@ -1,6 +1,7 @@
 package com.skillbridge.backend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CandidateSkillRequest;
@@ -46,6 +47,7 @@ public class CandidateService {
     SystemLogService systemLog;
     SecurityUtils securityUtils;
     SimpMessagingTemplate messagingTemplate;
+    AiService aiService;
 
     @NonFinal
     @Value("${gemini.api.key}")
@@ -277,10 +279,26 @@ public class CandidateService {
                 throw new AppException(ErrorCode.OCR_FAILED);
             }
 
-            LLMResumeResponse llmRes = geminiService.callGemini(buildPrompt(rawText), LLMResumeResponse.class);
+            String dataParsing = aiService.parsingCV_AI(rawText);
+            log.info("[AI_PARSING] Dữ liệu nhận được: {}", dataParsing);
+
+            if (dataParsing != null && dataParsing.contains("```")) {
+                dataParsing = dataParsing.replaceAll("```json|```", "").trim();
+            }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            ///  check lỗi dữ liệu data
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            ///  register ngày cho objmapper
+            objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+
+            LLMResumeResponse llmRes = objectMapper.readValue(dataParsing, LLMResumeResponse.class);
+
+            if (llmRes == null) {
+                throw new AppException(ErrorCode.AI_PARSING_FAILED);
+            }
 
             UpdateCandidateCvRequest request = convertLLMToRequest(llmRes);
-
             systemLog.info(currentUser, "AI đã phân tích thành công CV tải lên");
             return request;
 
@@ -290,6 +308,7 @@ public class CandidateService {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
+
 
     /**
      * Chuyển đổi kết quả từ mô hình ngôn ngữ lớn (LLM) sang định dạng Request của hệ thống.
