@@ -586,6 +586,8 @@ public class JobService {
             e.printStackTrace();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
+        ///  gán đèn giao thông cho JD
+
 
         jobSkillRepository.saveAll(jobSkills);
         jobRepository.save(job);
@@ -949,5 +951,12 @@ public class JobService {
             }
         }
         return request;
+    }
+
+    ///  Duyệt bài đăng cho GD
+    public static JobStatus moderation_mode(float[] vector, String CompanyID){
+        JobStatus Status = JobStatus.PENDING;
+
+        return Status;
     }
 }
