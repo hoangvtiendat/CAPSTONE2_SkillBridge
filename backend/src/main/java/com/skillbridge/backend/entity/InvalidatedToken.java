@@ -14,7 +14,7 @@ import java.util.Date;
 @Table(name = "invalidated_tokens")
 public class InvalidatedToken {
     @Id
-    private String id; // Thường là JTI (JWT ID) hoặc chính chuỗi Token
+    private String id;
 
     @Column(name = "expiry_time", nullable = false)
     private Date expiryTime;

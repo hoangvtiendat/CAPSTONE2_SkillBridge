@@ -1,20 +1,15 @@
 package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.dto.request.DeactivateRequest;
-import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.CompanyDTO;
+import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
+import com.skillbridge.backend.dto.request.DeactivateRequest;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
 import com.skillbridge.backend.entity.Company;
 import com.skillbridge.backend.entity.CompanyJoinRequest;
 import com.skillbridge.backend.entity.CompanyMember;
 import com.skillbridge.backend.entity.User;
-import com.skillbridge.backend.enums.CompanyRole;
-import com.skillbridge.backend.enums.CompanyStatus;
-import com.skillbridge.backend.enums.JoinRequestStatus;
-import com.skillbridge.backend.enums.SubscriptionPlanStatus;
-import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.enums.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -23,18 +18,16 @@ import com.skillbridge.backend.utils.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Page;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import com.skillbridge.backend.repository.SubscriptionPlanRepository;
-import com.skillbridge.backend.repository.CompanyMemberRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -68,7 +61,7 @@ public class CompanyService {
             String searchCategoryId = (categoryId != null && !categoryId.trim().isEmpty()) ? categoryId.trim() : null;
             companyPage = companyRepository.getCompanyFeedSearch(status, searchKeyword, searchCategoryId, pageable);
         } else {
-            companyPage = companyRepository.getCompanyFeed(status, pageable);
+            companyPage = companyRepository.getCompanyFeed(status,SubscriptionOfCompanyStatus.OPEN, pageable);
         }
 
         return Map.of(

@@ -2,10 +2,9 @@ package com.skillbridge.backend.repository;
 
 import com.skillbridge.backend.dto.TopCompanyDTO;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
-import com.skillbridge.backend.dto.response.CompanyFeedResponse;
 import com.skillbridge.backend.entity.Company;
-import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.CompanyStatus;
+import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -59,19 +58,22 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, cs.name,
-            c.createdAt,(SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
+            c.description, c.address, c.websiteUrl, c.status, soc.name,
+            c.createdAt,
+            (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
         )
         FROM Company c
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN SubscriptionOfCompany soc ON soc.company.id = c.id AND soc.status = :subOpenStatus
         WHERE c.isDeleted = false
         AND (:status IS NULL OR c.status = :status)
         ORDER BY c.createdAt DESC
     """)
     Page<CompanyFeedItemResponse> getCompanyFeed(
             @Param("status") CompanyStatus status,
+            @Param("subOpenStatus") SubscriptionOfCompanyStatus subOpenStatus,
             Pageable pageable
     );
+
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,

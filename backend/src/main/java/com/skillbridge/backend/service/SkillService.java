@@ -98,10 +98,10 @@ public class SkillService {
         return skill;
     }
 
-    public List<Skill> getAutocompleteSkills(String query, Pageable pageable) {
+    public List<Skill> getAutocompleteSkills(String query, String category, Pageable pageable) {
         if (query == null || query.trim().isEmpty()) {
             return List.of();
         }
-        return skillRepository.searchAutocomplete(query.trim(), pageable);
+        return skillRepository.searchAutoSkill(query.trim(), category, pageable);
     }
 }

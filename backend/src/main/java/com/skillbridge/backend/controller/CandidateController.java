@@ -4,19 +4,22 @@ import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.UpdateCandidateCvRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.UpdateCandidateCvResponse;
+import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.entity.Skill;
 import com.skillbridge.backend.service.CandidateService;
+import com.skillbridge.backend.service.CategoryProfessionService;
 import com.skillbridge.backend.service.SkillService;
 import com.skillbridge.backend.utils.PageableUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 @RestController
@@ -25,13 +28,13 @@ import java.util.List;
 @RequestMapping("/candidates")
 public class CandidateController {
     CandidateService candidateService;
+    CategoryProfessionService categoryProfessionService;
     SkillService skillService;
     /**
      * Upload và phân tích CV bằng AI/OCR
      */
     @PostMapping("/parse-cv")
     public ResponseEntity<ApiResponse<UpdateCandidateCvRequest>> parseCv(
-            @AuthenticationPrincipal CustomUserDetails user,
             @RequestParam("file") MultipartFile file
     ) {
         UpdateCandidateCvRequest response = candidateService.parsingCV(file);
@@ -54,13 +57,26 @@ public class CandidateController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/autocomplete")
-    public ResponseEntity<ApiResponse<List<Skill>>> autocompleteSkill(@RequestParam String query) {
+    @GetMapping("/auto-skill")
+    public ResponseEntity<ApiResponse<List<Skill>>> autoSkill(
+            @RequestParam String query,
+            String CategoryId) {
         Pageable pageable = PageableUtils.createPageable(0, 10, "name", "asc");
-        List<Skill> suggestions = skillService.getAutocompleteSkills(query, pageable);
+        List<Skill> suggestions = skillService.getAutocompleteSkills(query, CategoryId, pageable);
         return ResponseEntity.ok(ApiResponse.<List<Skill>>builder()
                 .code(HttpStatus.OK.value())
                 .message("Gợi ý kỹ năng cho từ khóa: " + query)
+                .result(suggestions)
+                .build());
+    }
+
+    @GetMapping("/auto-category")
+    public ResponseEntity<ApiResponse<List<Category>>> autoCategory(@RequestParam String query) {
+        Pageable pageable = PageableUtils.createPageable(0, 10, "name", "asc");
+        List<Category> suggestions = categoryProfessionService.getAutocompleteCategory(query, pageable);
+        return ResponseEntity.ok(ApiResponse.<List<Category>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Gợi ý ngành nghề cho từ khóa: " + query)
                 .result(suggestions)
                 .build());
     }

@@ -1,7 +1,8 @@
 package com.skillbridge.backend.service;
+
 import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.dto.request.CategoryProfessionRequest;
+import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CategoryRepository;
@@ -10,7 +11,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -131,4 +132,10 @@ public class CategoryProfessionService {
         }
     }
 
+    public List<Category> getAutocompleteCategory(String query,Pageable pageable) {
+        if (query == null || query.trim().isEmpty()) {
+            return List.of();
+        }
+        return categoryRepository.searchAutoCategory(query.trim(), pageable);
+    }
 }

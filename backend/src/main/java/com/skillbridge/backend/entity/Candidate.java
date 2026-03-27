@@ -36,7 +36,7 @@ public class Candidate extends BaseEntity {
     private String parsedContentJson;
 
     @Column(name = "vector_embedding", columnDefinition = "JSON")
-    private String vectorEmbedding;
+    private float[] vectorEmbedding;
 
     @Column(name = "is_open_to_work")
     @Builder.Default

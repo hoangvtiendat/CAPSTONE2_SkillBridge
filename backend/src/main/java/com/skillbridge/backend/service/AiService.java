@@ -54,7 +54,7 @@ public class AiService {
                 }
               ],
               "can_apply": boolean
-            }      
+            }
             """;
 
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper) {

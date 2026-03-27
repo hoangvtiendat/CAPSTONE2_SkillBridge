@@ -46,6 +46,7 @@ public class CandidateService {
     SystemLogService systemLog;
     SecurityUtils securityUtils;
     SimpMessagingTemplate messagingTemplate;
+    EmbeddingService embeddingService;
 
     @NonFinal
     @Value("${gemini.api.key}")
@@ -127,7 +128,7 @@ public class CandidateService {
     }
 
     /**
-     * Cập nhật thông tin CV thủ công
+     * Cập nhật thông tin CV
      */
     @Transactional
     public UpdateCandidateCvResponse updateCv(String userId, UpdateCandidateCvRequest request) {
@@ -142,55 +143,112 @@ public class CandidateService {
                         newCandidate.setUser(user);
                         return newCandidate;
                     });
-
             if (request.getName() != null) candidate.setName(request.getName());
             if (request.getIsOpenToWork() != null) candidate.setIsOpenToWork(request.getIsOpenToWork());
             if (request.getDescription() != null) candidate.setDescription(request.getDescription());
             if (request.getAddress() != null) candidate.setAddress(request.getAddress());
+            Category category = null ;
             if (request.getCategoryId() != null) {
-                Category category = categoryRepository.findById(request.getCategoryId())
+                 category = categoryRepository.findById(request.getCategoryId())
                         .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
                 candidate.setCategory(category);
             }
+
             if (request.getExperience() != null) {
                 candidate.setExperience(request.getExperience());
             }
+
             if (request.getDegrees() != null) {
                 validateDegrees(request.getDegrees());
                 candidate.setDegree(request.getDegrees());
             }
             candidate = candidateRepository.saveAndFlush(candidate);
+
+            List<CandidateSkill> finalSkills = new ArrayList<>();
+            StringBuilder skillBuilder = new StringBuilder();
+
             if (request.getSkills() != null) {
                 candidateSkillRepository.deleteByCandidate_Id(userId);
                 candidateSkillRepository.flush();
 
-                List<CandidateSkill> newSkills = new ArrayList<>();
-
                 for (CandidateSkillRequest sReq : request.getSkills()) {
                     Skill skillEntity = skillRepository.getReferenceById(sReq.getSkillId());
-
                     CandidateSkill cs = new CandidateSkill();
                     cs.setCandidate(candidate);
                     cs.setSkill(skillEntity);
                     cs.setExperienceYears(sReq.getExperienceYears() != null ? sReq.getExperienceYears() : 0);
-                    newSkills.add(cs);
+                    finalSkills.add(cs);
                 }
 
-                if (!newSkills.isEmpty()) {
-                    candidateSkillRepository.saveAll(newSkills);
+                if (!finalSkills.isEmpty()) {
+                    candidateSkillRepository.saveAll(finalSkills);
                     candidateSkillRepository.flush();
                 }
+            } else {
+                finalSkills = candidateSkillRepository.findByCandidate(candidate);
+            }
+            try {
+                UpdateCandidateCvResponse fullProfile = new UpdateCandidateCvResponse();
+                fullProfile.setName(candidate.getName());
+                fullProfile.setAddress(candidate.getAddress());
+                fullProfile.setDescription(candidate.getDescription());
+                fullProfile.setDegrees(deserializeDegrees(candidate.getDegree()));
+                fullProfile.setExperience(deserializeExperience(candidate.getExperience()));
+                fullProfile.setCategory(category.getName());
+                List<CandidateSkillResponse> skillResponses = finalSkills.stream().map(s -> {
+                    CandidateSkillResponse sr = new CandidateSkillResponse();
+                    sr.setSkillName(s.getSkill().getName());
+                    sr.setExperienceYears(s.getExperienceYears());
+                    return sr;
+                }).toList();
+                fullProfile.setSkills(skillResponses);
+                candidate.setParsedContentJson(objectMapper.writeValueAsString(fullProfile));
+                log.info("[DATA_SYNC] Đã hợp nhất dữ liệu và cập nhật parsedContentJson cho: {}", userId);
+            } catch (Exception e) {
+                log.error("[DATA_SYNC_ERROR] Không thể tạo parsedContentJson: ", e);
+            }
+
+            StringBuilder textBuilder = new StringBuilder();
+
+            if (candidate.getCategory() != null) {
+                textBuilder.append("Lĩnh vực: ").append(candidate.getCategory().getName()).append(". ");
+            }
+
+            List<DegreeResponse> degrees = deserializeDegrees(candidate.getDegree());
+            if (!degrees.isEmpty()) {
+                textBuilder.append("Học vấn: ");
+                for (DegreeResponse d : degrees) {
+                    textBuilder.append(d.getDegree() != null ? d.getDegree() : d.getName())
+                            .append(" chuyên ngành ").append(d.getMajor())
+                            .append(" tại ").append(d.getInstitution()).append(", ");
+                }
+            }
+
+            List<ExperienceDetail> experiences = deserializeExperience(candidate.getExperience());
+            if (!experiences.isEmpty()) {
+                textBuilder.append("Kinh nghiệm: ");
+                for (ExperienceDetail exp : experiences) {
+                    textBuilder.append(exp.getDescription()).append(". ");
+                }
+            }
+
+            if (skillBuilder.length() > 0) {
+                textBuilder.append("Kỹ năng: ").append(skillBuilder.substring(0, skillBuilder.length() - 2));
+            }
+
+            try {
+                float[] vector = embeddingService.createEmbedding(textBuilder.toString());
+                candidate.setVectorEmbedding(vector);
+                log.info("[EMBEDDING] Cập nhật vector thành công cho Candidate: {}", userId);
+            } catch (Exception e) {
+                log.error("[EMBEDDING_ERROR] Lỗi tạo vector: {}", e.getMessage());
             }
             candidateRepository.save(candidate);
-
             UpdateCandidateCvResponse response = getCv(userId);
-
             messagingTemplate.convertAndSend("/topic/candidate/" + userId + "/cv-update", response);
-
             systemLog.info(currentUser, "Cập nhật hồ sơ cá nhân thành công");
-
             return response;
-        }  catch (AppException e) {
+        } catch (AppException e) {
             log.warn("[CV_UPDATE] Lỗi nghiệp vụ khi cập nhật hồ sơ cho {}: {}", userId, e.getErrorCode().getMessage());
             throw e;
         } catch (Exception e) {
@@ -216,52 +274,71 @@ public class CandidateService {
     }
 
     private static final String PROMPT = """
-        Phân tích CV sau và trả về JSON chuẩn. 
-        YÊU CẦU NGHIÊM NGẶT: 
-        1. Chỉ trả về JSON, không giải thích.
-        2. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
-        3. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
-        4. Nếu endDate là hiện tại thì trả  ngày hiện tại theo định dạng yyyy-MM-dd
-        
-         Cấu trúc JSON yêu cầu:
-             {
-               "name": "Họ và tên",
-               "address": "Địa chỉ liên lạc",
-               "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
-               "degrees": [
-                 {
-                   "type": "DEGREE",
-                   "degree": "Tên bằng cấp (nếu là DEGREE)",
-                   "major": "Ngành học",
-                   "institution": "Tên trường/tổ chức cấp",
-                   "graduationYear": 2023
-                 },
-                 {
-                   "type": "CERTIFICATE",
-                   "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
-                   "year" 2025
-                 }
-               ],
-               "experience": [
-                 {
-                   "startDate": "yyyy-MM-dd",
-                   "endDate": "yyyy-MM-dd hoặc null",
-                   "description": "Chi tiết công việc"
-                 }
-               ],
-               "skills": [
-                 {
-                   "skillName": "Tên kỹ năng",
-                   "experienceYears": 3
-                 }
-               ]
-             }
-        
-        VĂN BẢN CV:
-        %s
-        """;
-    private String buildPrompt(String rawText) {
-        return String.format(PROMPT, rawText);
+    Phân tích CV sau và trả về JSON chuẩn dựa trên danh sách ngành và kỹ năng cho sẵn.
+    
+    DANH SÁCH NGÀNH VÀ KỸ NĂNG TỪ HỆ THỐNG:
+    %s
+    
+    YÊU CẦU NGHIÊM NGẶT:
+    1. Chỉ trả về JSON, không giải thích.
+    2. Ánh xạ 'categoryId' từ danh sách ngành phù hợp nhất.
+    3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%%, hãy chọn cái gần nhất.
+    4. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
+    5. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
+    6. Nếu endDate là hiện tại thì trả ngày hiện tại theo định dạng yyyy-MM-dd.
+    
+    Cấu trúc JSON yêu cầu:
+    {
+      "name": "Họ và tên",
+      "address": "Địa chỉ liên lạc",
+      "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+      "categoryId": "ID của ngành từ danh sách trên",
+      "degrees": [
+        {
+          "type": "DEGREE",
+          "degree": "Tên bằng cấp (nếu là DEGREE)",
+          "major": "Ngành học",
+          "institution": "Tên trường/tổ chức cấp",
+          "graduationYear": 2023
+        },
+        {
+          "type": "CERTIFICATE",
+          "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+          "year": 2025
+        }
+      ],
+      "experience": [
+        {
+          "startDate": "yyyy-MM-dd",
+          "endDate": "yyyy-MM-dd hoặc null",
+          "description": "Chi tiết công việc"
+        }
+      ],
+      "skills": [
+        {
+          "skillId": "ID của kỹ năng từ danh sách trên",
+          "skillName": "Tên kỹ năng gốc từ CV",
+          "experienceYears": 3
+        }
+      ]
+    }
+    
+    VĂN BẢN CV:
+    %s
+    """;
+
+    private String buildPrompt(String rawText, List<Category> categories, List<Skill> allSkills) {
+        StringBuilder metaData = new StringBuilder();
+        for (Category cat : categories) {
+            metaData.append("- Ngành [ID: ").append(cat.getId()).append(", Name: ").append(cat.getName()).append("]\n");
+            metaData.append("  Kỹ năng: ");
+            allSkills.stream()
+                    .filter(s -> s.getCategory() != null && s.getCategory().getId().equals(cat.getId()))
+                    .forEach(s -> metaData.append("[").append(s.getId()).append(": ").append(s.getName()).append("], "));
+            metaData.append("\n");
+        }
+
+        return String.format(PROMPT, metaData.toString(), rawText);
     }
 
     /**
@@ -277,7 +354,12 @@ public class CandidateService {
                 throw new AppException(ErrorCode.OCR_FAILED);
             }
 
-            LLMResumeResponse llmRes = geminiService.callGemini(buildPrompt(rawText), LLMResumeResponse.class);
+            List<Category> categories = categoryRepository.findAll();
+            List<Skill> allSkills = skillRepository.findAll();
+            LLMResumeResponse llmRes = geminiService.callGemini(
+                    buildPrompt(rawText, categories, allSkills),
+                    LLMResumeResponse.class
+            );
 
             UpdateCandidateCvRequest request = convertLLMToRequest(llmRes);
 
@@ -300,23 +382,19 @@ public class CandidateService {
         request.setName(res.name);
         request.setAddress(res.address);
         request.setDescription(res.description);
+        request.setCategoryId(res.categoryId);
         request.setDegrees(res.degrees);
         request.setExperience(res.experience);
         if (res.skills != null && !res.skills.isEmpty()) {
             List<CandidateSkillRequest> skillRequests = new ArrayList<>();
             for (CandidateSkillResponse llmSkill : res.skills) {
-                if (llmSkill.getSkillName() == null) continue;
-                String skillNameFromAI = llmSkill.getSkillName().trim();
-                skillRepository.findByName(skillNameFromAI)
-                        .stream()
-                        .findFirst()
-                        .ifPresent(skillEntity -> {
-                            CandidateSkillRequest sr = new CandidateSkillRequest();
-                            sr.setSkillId(skillEntity.getId());
-                            Integer years = llmSkill.getExperienceYears();
-                            sr.setExperienceYears(years != null ? years : 1);
-                            skillRequests.add(sr);
-                        });
+                if (llmSkill.getSkillId() != null && !llmSkill.getSkillId().isBlank()) {
+                    CandidateSkillRequest sr = new CandidateSkillRequest();
+                    sr.setSkillId(llmSkill.getSkillId());
+                    Integer years = llmSkill.getExperienceYears();
+                    sr.setExperienceYears(years != null ? years : 1);
+                    skillRequests.add(sr);
+                }
             }
             request.setSkills(skillRequests);
         }

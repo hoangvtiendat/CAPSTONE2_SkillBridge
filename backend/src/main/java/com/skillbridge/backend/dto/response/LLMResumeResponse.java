@@ -15,12 +15,12 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LLMResumeResponse {
-
     public String name;
     public String description;
+    public String categoryId;
+    public String categoryName;
     public String address;
     public List<DegreeRequest> degrees;
     public List<ExperienceDetail> experience;
     public List<CandidateSkillResponse> skills;
-
 }

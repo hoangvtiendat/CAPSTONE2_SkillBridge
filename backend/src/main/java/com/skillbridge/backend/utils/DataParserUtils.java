@@ -53,14 +53,41 @@ public class DataParserUtils {
      */
     public static String cleanJson(String raw) {
         if (raw == null || raw.isBlank()) return "{}";
-        String cleaned = raw.replaceAll("(?s)```json(.*?)```", "$1").trim();
-
-        int firstBrace = cleaned.indexOf("{");
-        int lastBrace = cleaned.lastIndexOf("}");
+        int firstBrace = raw.indexOf("{");
+        int lastBrace = raw.lastIndexOf("}");
 
         if (firstBrace >= 0 && lastBrace >= 0 && lastBrace > firstBrace) {
-            return cleaned.substring(firstBrace, lastBrace + 1);
+            return raw.substring(firstBrace, lastBrace + 1);
         }
-        return cleaned;
+        int firstBracket = raw.indexOf("[");
+        int lastBracket = raw.lastIndexOf("]");
+        if (firstBracket >= 0 && lastBracket >= 0 && lastBracket > firstBracket) {
+            return raw.substring(firstBracket, lastBracket + 1);
+        }
+
+        return raw.trim();
+    }
+    private String ensureValidJson(String json) {
+        json = json.trim();
+        int braces = 0;
+        int brackets = 0;
+
+        for (char c : json.toCharArray()) {
+            if (c == '{') braces++;
+            else if (c == '}') braces--;
+            else if (c == '[') brackets++;
+            else if (c == ']') brackets--;
+        }
+
+        StringBuilder fixedJson = new StringBuilder(json);
+        while (brackets > 0) {
+            fixedJson.append("]");
+            brackets--;
+        }
+        while (braces > 0) {
+            fixedJson.append("}");
+            braces--;
+        }
+        return fixedJson.toString();
     }
 }

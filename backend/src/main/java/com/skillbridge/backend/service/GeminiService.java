@@ -50,7 +50,7 @@ public class GeminiService {
                 )),
                 "generationConfig", Map.of(
                         "temperature", 0.1,
-                        "maxOutputTokens", 4096
+                        "maxOutputTokens", 8192
                 )
         );
 
@@ -67,9 +67,17 @@ public class GeminiService {
                     .path("text").asText();
 
             log.debug("AI Raw Response: {}", aiRawResponse);
-            String jsonStr = DataParserUtils.cleanJson(aiRawResponse);
-            return objectMapper.readValue(jsonStr, responseType);
-
+            String jsonStr = aiRawResponse.trim()
+                    .replaceAll("^```json", "")
+                    .replaceAll("```$", "")
+                    .trim();
+            jsonStr = DataParserUtils.cleanJson(jsonStr);
+            try {
+                return objectMapper.readValue(jsonStr, responseType);
+            } catch (Exception e) {
+                log.error("JSON vẫn không thể parse sau khi sửa: {}", jsonStr);
+                throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
+            }
         } catch (Exception e) {
             log.error("Gemini API Error: {}", e.getMessage());
             throw new AppException(ErrorCode.INVALID_JSON_FORMAT);

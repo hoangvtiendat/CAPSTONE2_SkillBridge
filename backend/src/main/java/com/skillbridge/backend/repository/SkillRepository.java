@@ -17,12 +17,17 @@ public interface SkillRepository extends JpaRepository<Skill, String> {
      * * @param name Từ khóa tìm kiếm
      * @return Danh sách kỹ năng chứa từ khóa, không phân biệt hoa thường
      */
-    @Query("SELECT s FROM Skill s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%')) " +
-            "ORDER BY CASE " +
-            "  WHEN LOWER(s.name) LIKE LOWER(CONCAT(:name, '%')) THEN 1 " +
-            "  ELSE 2 " +
-            "END, s.name ASC")
-    List<Skill> searchAutocomplete(@Param("name") String name, Pageable pageable);
+    @Query("""
+        SELECT s FROM Skill s
+        WHERE s.isDeleted = false
+        AND s.category.id = :categoryId
+        AND LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%'))
+        ORDER BY CASE
+            WHEN LOWER(s.name) LIKE LOWER(CONCAT(:name, '%')) THEN 1
+            ELSE 2
+        END, s.name ASC
+    """)
+    List<Skill> searchAutoSkill(@Param("name") String name, String categoryId, Pageable pageable);
 
     /** Tìm kiếm kỹ năng theo tên */
     List<Skill> findByName(String name);
