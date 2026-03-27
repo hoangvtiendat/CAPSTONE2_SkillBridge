@@ -100,11 +100,11 @@ public class AiService {
     public String analyzeSkillGap(Map<String, Object> cvData, Map<String, Object> jdData) {
         try {
             OllamaOptions options = OllamaOptions.builder()
-                    .temperature(0.0)
-                    .top_k(10)
-                    .top_p(0.1)
-                    .num_predict(1500)
-                    .num_ctx(8192)
+                    .temperature(0.2) ///// Điều chỉnh mức độ sáng tạo của AI.
+                    .top_k(50)   /// Giới hạn số lượng từ mà AI được cân nhắc khi sinh câu trả lời.
+                    .top_p(0.95) ///      // Kiểm soát phạm vi xác suất của các từ được chọn (nucleus sampling).
+                    .num_predict(3000)   /// Số lượng token tối đa AI có thể sinh ra trong một lần trả lời.
+                    .num_ctx(8192) ///     // Kích thước ngữ cảnh (context) mà AI có thể ghi nhớ.
                     .build();
 
             String cvJsonString = objectMapper.writeValueAsString(cvData);
