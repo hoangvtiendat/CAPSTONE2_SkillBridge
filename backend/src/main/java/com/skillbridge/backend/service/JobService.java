@@ -12,6 +12,7 @@ import com.skillbridge.backend.enums.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
+import com.skillbridge.backend.service.AI_Service_File.AIJobService;
 import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -28,6 +29,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -59,6 +62,7 @@ public class JobService {
     NotificationService notificationService;
     SimpMessagingTemplate messagingTemplate;
     SubscriptionOfCompanyRepository subcriptionOfCompanyRepository;
+    AIJobService aiJobService;
 
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -551,7 +555,7 @@ public class JobService {
             }
         }
 
-        job.setModerationStatus(ModerationStatus.YELLOW);
+//        job.setModerationStatus(ModerationStatus.YELLOW);
 
         //object > Text
         textBuilder.append(job.getPosition()).append(". ");
@@ -560,8 +564,8 @@ public class JobService {
             textBuilder.append(job.getCompany().getName()).append(". ");
         }
         Object titleObj = job.getTitle();
-        if (titleObj instanceof java.util.Map) {
-            String titleText = String.join(" - ", ((java.util.Map<String, String>) titleObj).values());
+        if (titleObj instanceof Map) {
+            String titleText = String.join(" - ", ((Map<String, String>) titleObj).values());
             textBuilder.append(titleText).append(". ");
         } else if (titleObj != null) {
             textBuilder.append(titleObj.toString()).append(". ");
@@ -586,12 +590,21 @@ public class JobService {
             e.printStackTrace();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-        ///  gán đèn giao thông cho JD
-
-
         jobSkillRepository.saveAll(jobSkills);
-        jobRepository.save(job);
-        return savedJob;
+        Job finalSavedJob =  jobRepository.save(job);
+        String IdJob = finalSavedJob.getId();
+
+
+        /// kiểm duyệt nội dung
+        System.out.println("đã chạy chức năng check bài spam");
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                System.out.println("ddang chayj chuc nang sapm");
+                aiJobService.ai_Check_Approval(IdJob);
+            }
+        });
+        return finalSavedJob;
     }
 
     @Scheduled(cron = "0 0 0 * * *") // Tự động chạy vào 00:00 mỗi ngày
@@ -633,7 +646,7 @@ public class JobService {
         }
     }
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<JobResponse> find_JD_of_Company() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -655,7 +668,7 @@ public class JobService {
                 .collect(Collectors.toList());
     }
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public JobResponse getIn4_of_JD_of_Company(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -954,9 +967,5 @@ public class JobService {
     }
 
     ///  Duyệt bài đăng cho GD
-    public static JobStatus moderation_mode(float[] vector, String CompanyID){
-        JobStatus Status = JobStatus.PENDING;
 
-        return Status;
-    }
 }

@@ -16,6 +16,7 @@ import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
+import com.skillbridge.backend.service.AI_Service_File.AiService;
 import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;

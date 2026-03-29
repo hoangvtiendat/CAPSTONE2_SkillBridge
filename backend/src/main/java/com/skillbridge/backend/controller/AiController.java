@@ -1,7 +1,7 @@
 package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.request.MatchRequest;
-import com.skillbridge.backend.service.AiService;
+import com.skillbridge.backend.service.AI_Service_File.AiService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

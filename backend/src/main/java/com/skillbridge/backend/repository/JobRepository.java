@@ -17,9 +17,11 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, String> {
+
 
     /** Lấy toàn bộ danh sách thực thể Job thuộc về một công ty */
     List<Job> findJobsByCompanyId(@Param("companyId") String companyId);
@@ -113,7 +115,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         LEFT JOIN SubscriptionOfCompany soc ON soc.company.id = c.id
         WHERE j.status = :status
         AND (:categoryId IS NULL OR cat.id = :categoryId)
-        AND soc.status = SubscriptionOfCompanyStatus.OPEN
+        AND soc.status = com.skillbridge.backend.enums.SubscriptionOfCompanyStatus.OPEN
         AND (:location IS NULL OR j.location LIKE %:location%)
         AND (:salary IS NULL OR (
                         CAST(j.salaryMin AS double) <= :salary
@@ -212,7 +214,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         LEFT JOIN j.category cat
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
         WHERE j.isDeleted = false
-        AND j.status = JobStatus.PENDING
+        AND j.status = com.skillbridge.backend.enums.JobStatus.PENDING
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
         AND (
             :cursor IS NULL OR
@@ -226,4 +228,18 @@ public interface JobRepository extends JpaRepository<Job, String> {
             @Param("modStatus") ModerationStatus modStatus,
             Pageable pageable
     );
+
+    /// Lấy dạnh sách VECTOR từng JD của cty đó
+    @Query(value = """
+    SELECT j.id as jobId, j.vector_embedding as vector
+    FROM jobs j
+    WHERE j.company_id = :companyId
+    AND j.vector_embedding IS NOT NULL
+    AND j.is_deleted = false
+       """, nativeQuery = true)
+    List<Object[]> ListAllVectorsByCompanyIdNative(@Param("companyId") String companyId);
+    ///  Lấy chi tiết 1 JD
+    @Override
+    Optional<Job> findById(String jobId);
 }
+
