@@ -60,6 +60,7 @@ import IndustryManagementPage from './pages/admin/IndustryManagementPage';
 import SkillManagementPage from './pages/admin/SkillManagementPage';
 import SkillPageContainer from './pages/Skill/SkillPage';
 import SubscriptionManager from "./pages/subscription/SubscriptionManager";
+import ChatWidget from './components/chat/ChatWidget';
 
 function App() {
     const location = useLocation();
@@ -222,6 +223,7 @@ function App() {
                     <Route path="*" element={<div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Trang không tồn tại</div>} />
                 </Routes>
             </div>
+            <ChatWidget />
         </>
     );
 }

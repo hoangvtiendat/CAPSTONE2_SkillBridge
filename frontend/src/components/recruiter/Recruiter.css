@@ -172,7 +172,7 @@
 }
 
 /* Đẩy Header khi Sidebar mở rộng */
-.recruiter-sidebar:hover ~ .recruiter-main .recruiter-header-fixed {
+.recruiter-sidebar:hover~.recruiter-main .recruiter-header-fixed {
     left: calc(var(--sidebar-full) + 50px);
 }
 
@@ -322,7 +322,8 @@
 }
 
 .recruiter-content {
-    margin-top: 100px; /* Chừa chỗ cho Header Fixed */
+    margin-top: 100px;
+    /* Chừa chỗ cho Header Fixed */
     animation: sf-pop-up 0.6s ease-out;
 }
 
@@ -368,6 +369,7 @@
         opacity: 0;
         transform: scale(0.98) translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -558,7 +560,8 @@
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     cursor: grab;
     position: relative;
-    border-left-width: 5px; /* Dùng để phân loại màu */
+    border-left-width: 5px;
+    /* Dùng để phân loại màu */
 }
 
 .candidate-card:hover {
@@ -580,10 +583,13 @@
     content: "";
     position: absolute;
     left: 0;
-    top: 15%; /* Không chạm đỉnh */
-    height: 70%; /* Chiều cao lơ lửng */
+    top: 15%;
+    /* Không chạm đỉnh */
+    height: 70%;
+    /* Chiều cao lơ lửng */
     width: 6px;
-    border-radius: 0 100px 100px 0; /* Bo tròn kiểu giọt nước */
+    border-radius: 0 100px 100px 0;
+    /* Bo tròn kiểu giọt nước */
     transition: all 0.4s var(--bezier);
     z-index: 2;
 }
@@ -593,6 +599,7 @@
     background: linear-gradient(to bottom, #fbbf24, #f59e0b);
     box-shadow: 2px 0 15px rgba(245, 158, 11, 0.5);
 }
+
 .candidate-card.applied:hover {
     background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, white 100%);
 }
@@ -602,6 +609,7 @@
     background: linear-gradient(to bottom, #34d399, #10b981);
     box-shadow: 2px 0 15px rgba(16, 185, 129, 0.5);
 }
+
 .candidate-card.review:hover {
     background: linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, white 100%);
 }
@@ -611,6 +619,7 @@
     background: linear-gradient(to bottom, #60a5fa, var(--sf-blue));
     box-shadow: 2px 0 15px rgba(0, 122, 255, 0.5);
 }
+
 .candidate-card.interview:hover {
     background: linear-gradient(90deg, rgba(0, 122, 255, 0.08) 0%, white 100%);
 }
@@ -622,6 +631,7 @@
     width: 8px;
     border-radius: 0;
 }
+
 .candidate-name {
     font-size: 16px;
     font-weight: 800;
@@ -665,10 +675,12 @@
         transform: scale(1);
         opacity: 1;
     }
+
     50% {
         transform: scale(1.3);
         opacity: 0.5;
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
@@ -693,28 +705,4 @@
 .btn-view-details:hover {
     background: var(--sf-blue);
     color: white;
-}
-
-/* --- 3. Bot Floating Button (Liquid Pearl) --- */
-.bot-floating-btn {
-    position: fixed;
-    bottom: 35px;
-    right: 35px;
-    width: 65px;
-    height: 65px;
-    background: linear-gradient(135deg, var(--sf-blue), #00c6ff);
-    color: white;
-    border-radius: 22px; /* Squircle */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 15px 35px rgba(0, 122, 255, 0.35), var(--inner-light);
-    cursor: pointer;
-    transition: 0.4s var(--bezier);
-    z-index: 1002;
-}
-
-.bot-floating-btn:hover {
-    transform: scale(1.1) rotate(10deg);
-    box-shadow: 0 20px 45px rgba(0, 122, 255, 0.5);
 }

@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Cách đăng bài tuyển dụng",
+    "content": "Để đăng bài tuyển dụng (JD) trên SkillBridge, bạn làm theo các bước sau:\n1. Đăng nhập với tài khoản Nhà tuyển dụng (Recruiter).\n2. Truy cập vào Dashboard hoặc menu Quản lý Tuyển dụng.\n3. Chọn mục 'Đăng tin mới' (Create JD).\n4. Điền đầy đủ thông tin vị trí cần tuyển dụng, mô tả công việc, mức lương và yêu cầu kỹ năng.\n5. Bấm 'Đăng bài' để lưu lên hệ thống."
+  },
+  {
+    "title": "Quên mật khẩu",
+    "content": "Nếu bạn quên mật khẩu đăng nhập, vui lòng:\n1. Bấm vào nút 'Quên mật khẩu' tại màn hình Đăng nhập.\n2. Nhập địa chỉ Email đã đăng ký.\n3. Hệ thống sẽ gửi một mã OTP qua Email của bạn.\n4. Nhập mã OTP đó vào màn hình xác nhận.\n5. Tạo mật khẩu mới và đăng nhập lại."
+  },
+  {
+    "title": "Cập nhật thông tin",
+    "content": "Để cập nhật thông tin cá nhân hoặc thông tin công ty:\n1. Nếu là Ứng viên: Bấm vào Avatar góc trên bên phải, chọn 'Hồ sơ cá nhân'. Ở đó bạn có thể đổi ảnh, cập nhật kinh nghiệm, học vấn và kỹ năng.\n2. Nếu là Nhà tuyển dụng: Truy cập vào 'Settings' (Cài đặt) trong Dashboard, sau đó chọn 'Business Identity' để cập nhật giấy phép kinh doanh, hoặc cập nhật thông tin giới thiệu công ty."
+  },
+  {
+    "title": "Ứng dụng có chức năng gì",
+    "content": "SkillBridge là nền tảng kết nối ứng viên và nhà tuyển dụng. \nTính năng cho ứng viên: Tìm việc làm theo kỹ năng, tạo CV, gửi đơn ứng tuyển, theo dõi trạng thái, và tra cứu thông tin doanh nghiệp.\nTính năng cho nhà tuyển dụng: Đăng tin tuyển dụng (JD), quản lý hồ sơ ứng viên, đặt lịch phỏng vấn và quảng bá hình ảnh doanh nghiệp."
+  }
+]

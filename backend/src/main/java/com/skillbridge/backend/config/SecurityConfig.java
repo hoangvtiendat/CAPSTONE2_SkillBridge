@@ -94,7 +94,9 @@ public class SecurityConfig {
                                 "/CategoryProfession/**",
                                 "/logos/**",
                                 "/licenses/**",
-                                "/CVs/**").permitAll()
+                                "/CVs/**",
+                                "/api/chat",
+                                "/api/chat/**").permitAll()
 
                         .anyRequest().authenticated()
                 )
