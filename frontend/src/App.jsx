@@ -22,6 +22,7 @@ import { SetPass } from './components/auth/SetPass';
 
 // Pages: Auth & General
 import HomePage from './pages/home/HomePage';
+import AboutUsPage from './pages/home/AboutUsPage';
 import LoginPage from './pages/auth/LoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ProfilePage from './pages/profile/ProfilePage';
@@ -151,6 +152,7 @@ function App() {
                 <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={<HomePage />} />
+                    <Route path="/about" element={<AboutUsPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path='/forgot-password' element={<ForgotPasswordPage />} />
                     <Route path="/otp-verification" element={<OTPVerification />} />

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Sparkles, X, Send, MessageSquare } from 'lucide-react';
+import { Bot, Sparkles, X, Send } from 'lucide-react';
 import api from '../../config/axiosConfig';
 import './ChatWidget.css';
 
@@ -78,7 +78,7 @@ const ChatWidget = () => {
                 {isOpen ? (
                     <X size={28} strokeWidth={2} />
                 ) : (
-                    <MessageSquare size={28} strokeWidth={2} fill="currentColor" fillOpacity={0.2} />
+                    <Bot size={28} color="#fff" strokeWidth={1.5} />
                 )}
             </button>
 
@@ -105,9 +105,7 @@ const ChatWidget = () => {
                         <div key={msg.id} className={`chat-message-row ${msg.sender}`}>
                             {msg.sender === 'bot' && (
                                 <div className="bot-avatar">
-                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    </svg>
+                                    <Bot size={16} strokeWidth={2} />
                                 </div>
                             )}
                             <div className={`chat-bubble ${msg.sender}`}>
@@ -118,9 +116,7 @@ const ChatWidget = () => {
                     {isLoading && (
                         <div className="chat-message-row bot">
                             <div className="bot-avatar">
-                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                </svg>
+                                <Bot size={16} strokeWidth={2} />
                             </div>
                             <div className="chat-bubble bot loading">
                                 <span className="dot"></span>

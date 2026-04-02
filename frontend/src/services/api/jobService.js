@@ -159,9 +159,9 @@ const jobService = {
 
     getAdminJobs: async (params = {}) => {
         try {
-            const { cursor, limit = 10, status, modStatus } = params;
+            const { page = 0, limit = 10, status, modStatus } = params;
             const response = await api.get(`/jobs/feedAdmin`, {
-                params: { cursor, limit, status, modStatus }
+                params: { page, limit, status, modStatus }
             });
 
             const result = response.data.result;
@@ -180,8 +180,9 @@ const jobService = {
 
             return {
                 jobs,
-                nextCursor: result.nextCursor,
-                hasMore: result.hasMore
+                totalPages: result.totalPages,
+                totalElements: result.totalElements,
+                currentPage: result.currentPage
             };
         } catch (error) {
             throw error;
@@ -190,15 +191,16 @@ const jobService = {
 
     getPendingJobs: async (params = {}) => {
         try {
-            const { cursor, limit = 10, modStatus } = params;
+            const { page = 0, limit = 10, modStatus } = params;
             const response = await api.get(`/jobs/feedAdminPending`, {
-                params: { cursor, limit, modStatus }
+                params: { page, limit, modStatus }
             });
             const result = response.data.result;
             return {
                 result: result.adminJobFeedItemResponse || [],
-                nextCursor: result.nextCursor,
-                hasMore: result.hasMore
+                totalPages: result.totalPages,
+                totalElements: result.totalElements,
+                currentPage: result.currentPage
             };
         } catch (error) {
             console.error('Error fetching pending jobs:', error);

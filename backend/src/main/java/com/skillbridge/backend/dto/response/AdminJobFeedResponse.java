@@ -4,13 +4,15 @@ import java.util.List;
 
 public class AdminJobFeedResponse {
     private List<AdminJobFeedItemResponse> adminJobFeedItemResponse;
-    private String nextCursor;
-    private boolean hasMore;
+    private int totalPages;
+    private long totalElements;
+    private int currentPage;
 
-    public AdminJobFeedResponse(List<AdminJobFeedItemResponse> adminJobFeedItemResponse, String nextCursor, boolean hasMore) {
+    public AdminJobFeedResponse(List<AdminJobFeedItemResponse> adminJobFeedItemResponse, int totalPages, long totalElements, int currentPage) {
         this.adminJobFeedItemResponse = adminJobFeedItemResponse;
-        this.nextCursor = nextCursor;
-        this.hasMore = hasMore;
+        this.totalPages = totalPages;
+        this.totalElements = totalElements;
+        this.currentPage = currentPage;
     }
 
     public List<AdminJobFeedItemResponse> getAdminJobFeedItemResponse() {
@@ -21,19 +23,27 @@ public class AdminJobFeedResponse {
         this.adminJobFeedItemResponse = adminJobFeedItemResponse;
     }
 
-    public String getNextCursor() {
-        return nextCursor;
+    public int getTotalPages() {
+        return totalPages;
     }
 
-    public void setNextCursor(String nextCursor) {
-        this.nextCursor = nextCursor;
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
     }
 
-    public boolean isHasMore() {
-        return hasMore;
+    public long getTotalElements() {
+        return totalElements;
     }
 
-    public void setHasMore(boolean hasMore) {
-        this.hasMore = hasMore;
+    public void setTotalElements(long totalElements) {
+        this.totalElements = totalElements;
+    }
+
+    public int getCurrentPage() {
+        return currentPage;
+    }
+
+    public void setCurrentPage(int currentPage) {
+        this.currentPage = currentPage;
     }
 }

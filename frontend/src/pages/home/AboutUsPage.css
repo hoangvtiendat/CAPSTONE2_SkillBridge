@@ -1,0 +1,387 @@
+.about-us-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #1a202c;
+}
+
+/* === Hero Section === */
+.about-hero {
+    text-align: center;
+    margin-bottom: 80px;
+}
+
+.about-hero-content {
+    max-width: 800px;
+    margin: 0 auto 60px;
+}
+
+.about-hero-content h1 {
+    font-size: 48px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 24px;
+}
+
+.about-hero-content .text-highlight {
+    color: var(--sf-blue, #2563eb);
+}
+
+.about-hero-content p {
+    font-size: 18px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+/* Mission & Vision wrappers */
+.mission-vision-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    text-align: left;
+}
+
+.mv-card {
+    padding: 32px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.mission-card {
+    background-color: #f1f5f9;
+}
+
+.vision-card {
+    background-color: #ecfdf5;
+}
+
+.mv-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.mv-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.mission-card .mv-icon {
+    color: var(--sf-blue, #2563eb);
+}
+
+.mission-card .mv-header h3 {
+    color: #1e293b;
+}
+
+.vision-card .mv-icon {
+    color: #059669;
+}
+
+.vision-card .mv-header h3 {
+    color: #064e3b;
+}
+
+.mv-card p {
+    color: #475569;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.mv-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: #475569;
+}
+
+.mv-list li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.mission-card .mv-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--sf-blue, #2563eb);
+    font-weight: bold;
+}
+
+.vision-card .mv-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #059669;
+    font-weight: bold;
+}
+
+/* === Common Section Utilities === */
+.section-subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 48px;
+    font-size: 16px;
+}
+
+h2 {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+/* === Stats Section === */
+.about-stats-section {
+    margin-bottom: 100px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.stat-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    margin: 0 auto 16px;
+}
+
+.icon-blue {
+    color: var(--sf-blue, #3b82f6);
+}
+
+.icon-purple {
+    color: #a855f7;
+}
+
+.icon-green {
+    color: #22c55e;
+}
+
+.icon-orange {
+    color: #f97316;
+}
+
+.stat-card h3 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px;
+}
+
+.stat-card p {
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* === Features Section === */
+.about-features-section {
+    margin-bottom: 100px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.feature-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 32px 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.feature-icon {
+    color: var(--sf-blue, #2563eb);
+    margin-bottom: 20px;
+}
+
+.feature-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+.feature-card p {
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.feature-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.feature-tags span {
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* === Tech Stack & Values Section === */
+.about-tech-values-section {
+    margin-bottom: 60px;
+}
+
+.tech-stack-container,
+.core-values-container {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 48px;
+    margin-bottom: 48px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+}
+
+/* Tech Stack */
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    margin-top: 40px;
+}
+
+.tech-column h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 20px;
+}
+
+.tech-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tech-column ul li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #475569;
+    font-size: 14px;
+}
+
+.tech-column ul li span {
+    color: var(--sf-blue, #2563eb);
+    font-weight: bold;
+}
+
+/* Core Values */
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 40px;
+}
+
+.value-card {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.value-icon {
+    color: var(--sf-blue, #2563eb);
+    margin-bottom: 16px;
+}
+
+.value-card h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+.value-card p {
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+
+/* === Responsive Adjustments === */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tech-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .mission-vision-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .about-hero-content h1 {
+        font-size: 36px;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .values-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tech-stack-container,
+    .core-values-container {
+        padding: 32px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .values-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tech-grid {
+        grid-template-columns: 1fr;
+    }
+}

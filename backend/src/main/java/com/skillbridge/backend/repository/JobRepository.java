@@ -188,15 +188,9 @@ public interface JobRepository extends JpaRepository<Job, String> {
         WHERE j.isDeleted = false
         AND (:status IS NULL OR j.status = :status)
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
-        AND (
-            :cursor IS NULL OR
-            j.createdAt < (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
-            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id < :cursor)
-        )
         ORDER BY j.createdAt DESC
     """)
-    List<AdminJobFeedItemResponse> adminGetJobs(
-            @Param("cursor") String cursor,
+    Page<AdminJobFeedItemResponse> adminGetJobs(
             @Param("status") JobStatus status,
             @Param("modStatus") ModerationStatus modStatus,
             Pageable pageable
@@ -215,15 +209,9 @@ public interface JobRepository extends JpaRepository<Job, String> {
         WHERE j.isDeleted = false
         AND j.status = JobStatus.PENDING
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
-        AND (
-            :cursor IS NULL OR
-            j.createdAt > (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) OR
-            (j.createdAt = (SELECT j2.createdAt FROM Job j2 WHERE j2.id = :cursor) AND j.id > :cursor)
-        )
         ORDER BY j.createdAt ASC
     """)
-    List<AdminJobFeedItemResponse> adminGetJobPending(
-            @Param("cursor") String cursor,
+    Page<AdminJobFeedItemResponse> adminGetJobPending(
             @Param("modStatus") ModerationStatus modStatus,
             Pageable pageable
     );

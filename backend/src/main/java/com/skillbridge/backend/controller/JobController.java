@@ -145,12 +145,12 @@ public class JobController {
 
     @GetMapping("/feedAdmin")
     public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getAllJobsForAdmin(
-            @RequestParam(required = false) String cursor,
+            @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String modStatus
     ) {
-        AdminJobFeedResponse result = jobService.adminGetJob(cursor, limit, status, modStatus);
+        AdminJobFeedResponse result = jobService.adminGetJob(page, limit, status, modStatus);
         ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Job Feed", result);
 
         return ResponseEntity.ok(response);
@@ -158,11 +158,11 @@ public class JobController {
 
     @GetMapping("/feedAdminPending")
     public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getPendingJobsForAdmin(
-            @RequestParam(required = false) String cursor,
+            @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String modStatus
     ){
-        AdminJobFeedResponse result = jobService.adminGetJobPending(cursor,limit,modStatus);
+        AdminJobFeedResponse result = jobService.adminGetJobPending(page,limit,modStatus);
         ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Pending Job Feed",result);
 
         return ResponseEntity.ok(response);
