@@ -18,7 +18,8 @@ public class UpdateCandidateCvResponse {
     private String name;
     private String description;
     private String address;
-    private String category;
+    private String categoryId;
+    private String category; // category name
 
     private List<DegreeResponse> degrees;
     private List<CandidateSkillResponse> skills;

@@ -26,6 +26,26 @@ const candidateService = {
         }
     },
 
+    getAutoCategory: async (query) => {
+        try {
+            const response = await api.get('/candidates/auto-category', { params: { query } });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAutoSkill: async (query, categoryId) => {
+        try {
+            const params = { query };
+            if (categoryId) params.categoryId = categoryId;
+            const response = await api.get('/candidates/auto-skill', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     updateCv: async (cvData) => {
         try {
             //console.log("SEND DATA:", JSON.stringify(cvData, null, 2));
