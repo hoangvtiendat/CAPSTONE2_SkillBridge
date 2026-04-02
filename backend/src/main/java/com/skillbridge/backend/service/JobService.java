@@ -64,6 +64,7 @@ public class JobService {
     SubscriptionOfCompanyRepository subcriptionOfCompanyRepository;
     AIJobService aiJobService;
 
+
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -784,7 +785,6 @@ public class JobService {
         }
 
         jobSkillRepository.saveAll(jobSkills);
-
         textBuilder.append(job.getPosition()).append(". ");
         textBuilder.append(job.getDescription()).append(". ");
 
@@ -813,8 +813,15 @@ public class JobService {
             e.printStackTrace();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-
-        return jobRepository.save(job);
+        jobRepository.save(job);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                System.out.println("ddang chayj chuc nang sapm");
+                aiJobService.ai_Check_Approval(jobId);
+            }
+        });
+        return job;
     }
 
     public Job deleteJD(String id) {

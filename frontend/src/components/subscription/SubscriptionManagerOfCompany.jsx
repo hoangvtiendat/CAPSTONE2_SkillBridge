@@ -468,7 +468,7 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                         <td>{sub.id}</td>
                                         <td>
                                             <span className="badge-history-pkg">
-                                                {sub.name} ({sub.postingDuration || 'N/A'} tháng)
+                                                {sub.name} ({sub.postingDuration || 'N/A'} ngày)
                                             </span>
                                         </td>
                                         <td>{new Date(sub.startDate || sub.endDate).toLocaleDateString('vi-VN')}</td>

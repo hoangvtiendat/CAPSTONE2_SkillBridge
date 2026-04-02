@@ -234,7 +234,7 @@ public class AiService {
 
         } catch (Exception e) {
             e.printStackTrace(); // In ra log lỗi thực sự
-            throw new RuntimeException("Lỗi thực sự là: " + e.getMessage(), e);
+            throw new RuntimeException(ErrorCode.AI_EXITS.getMessage());
         }
         finally {
             System.out.println("Đã chạy xong chứ năng đánh giá bài đăng ");

@@ -4,6 +4,7 @@ import com.skillbridge.backend.dto.MonthlyJobDTO;
 import com.skillbridge.backend.dto.response.AdminJobFeedItemResponse;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
 import com.skillbridge.backend.entity.Job;
+import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.enums.ModerationStatus;
 import jakarta.transaction.Transactional;
@@ -231,15 +232,24 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     /// Lấy dạnh sách VECTOR từng JD của cty đó
     @Query(value = """
-    SELECT j.id as jobId, j.vector_embedding as vector
-    FROM jobs j
-    WHERE j.company_id = :companyId
-    AND j.vector_embedding IS NOT NULL
-    AND j.is_deleted = false
-       """, nativeQuery = true)
+    SELECT j.id, j.vector_embedding 
+    FROM jobs j 
+    WHERE j.company_id = :companyId 
+      AND j.vector_embedding IS NOT NULL 
+      AND j.is_deleted = false
+    """, nativeQuery = true)
     List<Object[]> ListAllVectorsByCompanyIdNative(@Param("companyId") String companyId);
+
     ///  Lấy chi tiết 1 JD
     @Override
     Optional<Job> findById(String jobId);
+
+
+    ///  Lấy thông tin của ngừoi đăng
+    @Query("SELECT j.companyMember.user FROM Job j WHERE j.id = :jobId AND j.company.id = :companyId")
+    Optional<User> findUserByJobAndCompany(
+            @Param("jobId") String jobId,
+            @Param("companyId") String companyId
+    );
 }
 
