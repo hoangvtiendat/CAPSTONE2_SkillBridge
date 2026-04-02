@@ -259,15 +259,14 @@ public class AIJobService {
                 else if (result == 3) {
                     messageBody = String.format(
                             "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
-                                    "<h2 style='color: #fd7e14;'>ĐÂY LÀ 1 BÀI ĐĂNG SPAM</h2>" + // Màu cam cảnh báo
+                                    "<h2 style='color: #dc3545;'>Bài đăng bị đánh giá là Spam</h2>" +
                                     "<p>Chào <b>%s</b>,</p>" +
-                                    "<p>Hệ thống nhận thấy bài đăng: <b>%s</b> của bạn có nội dung khá tương đồng với một số bài đăng trước đó của công ty.</p>" +
-                                    "<p><b>Trạng thái:</b> <span style='color: #fd7e14; font-weight: bold;'>Đang chờ duyệt thủ công (Reviewing)</span></p>" +
-                                    "<p>Để đảm bảo chất lượng nội dung trên SkillBridge, đội ngũ quản trị viên sẽ kiểm tra lại bài đăng này trong thời gian sớm nhất.</p>" +
-                                    "<p><i>Lưu ý: Bạn nên hạn chế đăng tải các nội dung quá giống nhau để tránh bị đánh dấu là spam.</i></p>" +
-                                    "<br><p>Trân trọng,<br><b>SkillBridge AI Moderator</b></p></div>",
-                            receiver.getName(),
-                            titleText);
+                                    "<p>Bài đăng: <b>%s</b> của bạn không vượt qua được kiểm duyệt tự động vì có dấu hiệu spam.</p>" +
+                                    "<p><b>Trạng thái:</b> <span style='color: #dc3545;'>Đang chờ duyệt thủ công</span></p>" +
+                                    "<p><b>Lý do:</b> Nội dung quá tương đồng với các bài đăng trước đó của công ty.</p>" +
+                                    "<p>Vui lòng hạn chế đăng tải các nội dung trùng lặp để đảm bảo tiêu chuẩn cộng đồng.</p>" +
+                                    "<br><p>Trân trọng,<br>SkillBridge AI Moderator</p></div>",
+                            receiver.getName(), titleText);
                     job.setModerationStatus(ModerationStatus.RED);
 
                 }
