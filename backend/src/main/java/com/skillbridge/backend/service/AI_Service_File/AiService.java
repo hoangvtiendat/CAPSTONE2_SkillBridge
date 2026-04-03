@@ -97,32 +97,71 @@ public class AiService {
         %s
             """;
     private static final String PROMPT_CHECK_APPROVAL = """
-            Bạn là một chuyên gia kiểm duyệt nội dung tuyển dụng (Job Moderation AI). Nhiệm vụ của bạn là phân tích dữ liệu JSON của một Tin tuyển dụng (Job Description - JD) và quyết định xem bài đăng này có hợp lệ để hiển thị công khai hay không.
+            Bạn là một trợ lý AI kiểm duyệt nội dung tuyển dụng (Job Moderation AI) cho nền tảng SkillBridge. Nhiệm vụ của bạn là phân tích dữ liệu JSON của một Tin tuyển dụng (Job Description - JD) và quyết định xem bài đăng này có hợp lệ để hiển thị công khai hay không.
             
-            Hãy đánh giá JD dựa trên các RÀNG BUỘC NGHIÊM NGẶT sau đây:
+            Hãy đánh giá JD dựa trên các tiêu chí cởi mở và linh hoạt sau:
             
-            1. TÍNH CÓ NGHĨA VÀ MẠCH LẠC (BẮT BUỘC):
-            - Nội dung các trường `description`, hay các mô tả khác phải là ngôn ngữ tự nhiên, có ý nghĩa, liên quan trực tiếp đến việc làm.
-            - KHÔNG chấp nhận các đoạn text spam (ví dụ: "asdasdasd", "test test"), chuỗi ký tự vô nghĩa, hoặc nội dung không mang thông tin tuyển dụng.
-            
-            2. KHÔNG CHỨA NỘI DUNG NHẠY CẢM HOẶC VI PHẠM (BẮT BUỘC):
-            - Tuyệt đối KHÔNG chứa ngôn từ tục tĩu, xúc phạm, phân biệt đối xử (về giới tính, tôn giáo, chủng tộc).
-            - Tuyệt đối KHÔNG chứa nội dung liên quan đến tình dục, bạo lực, cờ bạc, các hoạt động bất hợp pháp hoặc chính trị nhạy cảm.
-            - Không chứa các đường link độc hại hoặc thông tin lừa đảo chiếm đoạt tài sản.
-            
-            3. TÍNH ĐẦY ĐỦ VÀ CHUYÊN NGHIỆP (BỔ SUNG):
-            - JD phải có đủ các thông tin cốt lõi: Vị trí (`position`), Mô tả công việc, và Yêu cầu.
-            - Mức lương (`salaryMin`, `salaryMax`) phải hợp lý (không được để số âm).
-            
-            4. TÍNH NHẤT QUÁN CỦA DỮ LIỆU (BỔ SUNG):
-            - Kỹ năng yêu cầu (`skills`) phải có sự liên quan logic đến vị trí công việc (`position`)
+            - Ngăn chặn Spam cơ bản: Chỉ từ chối khi nội dung hoàn toàn là các chuỗi ký tự gõ bừa vô nghĩa (ví dụ: "asdfgh", "qwerty") hoặc tin thử nghiệm quá ngắn (ví dụ: "test 123", "abc"). Nếu văn phong ngắn gọn, viết tắt, hoặc trình bày hơi lủng củng nhưng vẫn thể hiện rõ mục đích tuyển dụng, hãy CHẤP NHẬN.
+            - An toàn cộng đồng: Từ chối các bài đăng vi phạm pháp luật rõ ràng (cờ bạc, lừa đảo, tình dục), hoặc chứa ngôn từ chửi thề, xúc phạm nặng nề. Đối với các từ ngữ đời thường, hãy bỏ qua.
+            - Chấp nhận sự thiếu sót: Bài đăng không cần phải hoàn hảo 100%. Nếu thiếu một vài trường thông tin chi tiết, hoặc kỹ năng (skills) chưa khớp hoàn toàn với vị trí công việc, vẫn CHẤP NHẬN. Chỉ cần đảm bảo có thông tin vị trí công việc và mức lương không mang giá trị âm là được.
             
             ĐỊNH DẠNG ĐẦU RA:
             Bạn phải trả về kết quả dưới định dạng JSON với cấu trúc sau:
             {
               "isApproved": true/false,
-              "reason": "Giải thích ngắn gọn lý do tại sao đưa ra quyết định này, liệt kê các lỗi nếu có.",
-              "flaggedKeywords": ["danh sách các từ nhạy cảm hoặc vô nghĩa phát hiện được, nếu có"]
+              "reason": "Giải thích ngắn gọn lý do. Nếu duyệt (true), chỉ cần ghi 'Nội dung hợp lệ'.",
+              "flaggedKeywords": ["danh sách các từ khóa cấm phát hiện được, nếu không có hãy để mảng rỗng"]
+            }   
+            """;
+    private static final String PROMPT_CHECK_NEWJOV_VS_OLDJOB = """
+            Bạn là hệ thống AI Chuyên gia Kiểm duyệt Nội dung Tuyển dụng (Job Description - JD) cấp cao.
+            
+            Nhiệm vụ của bạn là so sánh hai JD được cung cấp dựa trên PHÂN TÍCH NGỮ NGHĨA SÂU (Deep Semantic Analysis) để xác định xem đây có phải là hành vi đăng bài SPAM (trùng lặp) hay không.
+            
+            ----------------------------------------
+            NGUYÊN TẮC CỐT LÕI
+            ----------------------------------------
+            1. Dựa trên NGỮ NGHĨA và BẢN CHẤT CÔNG VIỆC, tuyệt đối KHÔNG chỉ so sánh từ khóa hay cú pháp.
+            2. NHẬN DIỆN CÁC THỦ THUẬT: Việc đảo lộn thứ tự câu, thay thế bằng từ đồng nghĩa, hoặc thay đổi định dạng trình bày không làm thay đổi bản chất JD.
+            3. NGÔN NGỮ: Có khả năng đối chiếu xuyên ngôn ngữ (Ví dụ: Một JD tiếng Việt và một JD tiếng Anh dịch sát nghĩa của nhau được xem là giống nhau).
+            4. BỎ QUA TÊN CÔNG TY: Không dùng tên công ty làm tiêu chí đánh giá.
+            
+            ----------------------------------------
+            TIÊU CHÍ ĐÁNH GIÁ (Phân tích theo thứ tự)
+            ----------------------------------------
+            1. Vai trò & Chuyên môn (Role & Expertise).
+            2. Cấp bậc (Seniority/Level: Intern, Fresher, Junior, Senior, Lead, Manager, v.v.).
+            3. Hình thức làm việc (Job Type: Full-time, Part-time, Freelance, Contract).
+            4. Địa điểm làm việc (Location: Thành phố cụ thể, Khu vực, hoặc Remote).
+            5. Trách nhiệm & Yêu cầu cốt lõi (Core Responsibilities & Requirements).
+            6. Khung lương (Salary Range) & Quyền lợi.
+            
+            ----------------------------------------
+            KẾT LUẬN: LÀ SPAM (Trùng lặp - Giá trị "true") NẾU RƠI VÀO CÁC TRƯỜNG HỢP SAU:
+            ----------------------------------------
+            - Trùng lặp hoàn toàn: Nội dung, level, địa điểm giống nhau gần như 100%.
+            - Spam thủ thuật: Cùng bản chất công việc, cùng level, cùng địa điểm nhưng dùng từ đồng nghĩa, đảo cấu trúc câu, cấu trúc gạch đầu dòng.
+            - Spam dịch thuật: Cùng một công việc (cùng level, địa điểm) nhưng một bản tiếng Anh, một bản tiếng Việt.
+            - Tóm tắt vs Chi tiết: Một JD là phiên bản tóm tắt ngắn gọn của JD kia (cắt bớt râu ria) nhưng bản chất yêu cầu, level và vị trí không đổi.
+            - Đổi title nhưng giữ nguyên lõi: Ví dụ đổi "Nhân viên Content" thành "Chuyên viên Sáng tạo nội dung" nhưng yêu cầu, lương và mức độ công việc y hệt nhau.
+            
+            ----------------------------------------
+            KẾT LUẬN: KHÔNG PHẢI SPAM (Hợp lệ - Giá trị "false") NẾU CÓ SỰ KHÁC BIỆT RÕ RÀNG VỀ:
+            ----------------------------------------
+            - Cấp bậc (Level): Ví dụ: Trợ lý vs Quản lý; Junior vs Senior.
+            - Chênh lệch lương quá lớn: Chỉ ra rằng đây là hai vị trí thuộc hai phân khúc/level khác nhau dù title giống nhau.
+            - Địa điểm (Location): Cùng vị trí nhưng tuyển ở hai thành phố khác nhau (VD: Hà Nội vs TP.HCM). Lưu ý: Nếu một bên là "Hà Nội" và một bên là "Remote", tính là Khác nhau.
+            - Hình thức làm việc (Job Type): Một bên Full-time, một bên Part-time/Freelance.
+            - Tính chất dự án: Cùng title, cùng level nhưng mô tả công việc đòi hỏi technical skills/công cụ hoàn toàn khác nhau cho các dự án chuyên biệt khác nhau.
+            - NẾU KHÔNG CHẮC CHẮN (Tỷ lệ phân vân > 20%): Mặc định ưu tiên KHÔNG PHẢI SPAM để tránh xóa nhầm bài hợp lệ của nhà tuyển dụng.
+            
+            ----------------------------------------
+            RÀNG BUỘC ĐẦU RA (BẮT BUỘC)
+            ----------------------------------------
+            Chỉ được phép trả về duy nhất một chuỗi JSON hợp lệ, tuyệt đối không giải thích thêm, không có text nào nằm ngoài JSON.
+            
+            {
+              "spam": true | false
             }
             """;
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {
@@ -216,6 +255,10 @@ public class AiService {
             if(type_Function == 1){
                 finalPrompt = PROMPT_CHECK_APPROVAL +
                         "\n\n--- CV JSON ---\n" + dataJD_of_Company;
+            }
+            else if(type_Function == 2){
+                finalPrompt = PROMPT_CHECK_NEWJOV_VS_OLDJOB +
+                        "\n\n--- Data ---\n" + dataJD_of_Company;
             }
             OllamaRequest requestAI = OllamaRequest.builder()
                     .model(model)

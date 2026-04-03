@@ -87,5 +87,5 @@ file:
 
 ai:
   ollama:
-    url: https://3ff3-116-110-18-40.ngrok-free.app
+    url: https://59b5-116-110-18-40.ngrok-free.app
     model: skillbridge-qwen

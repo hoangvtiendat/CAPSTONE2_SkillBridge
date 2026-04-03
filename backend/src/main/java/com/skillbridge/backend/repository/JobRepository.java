@@ -235,15 +235,20 @@ public interface JobRepository extends JpaRepository<Job, String> {
     SELECT j.id, j.vector_embedding 
     FROM jobs j 
     WHERE j.company_id = :companyId 
+      AND j.id != :excludeJobId
       AND j.vector_embedding IS NOT NULL 
       AND j.is_deleted = false
+        AND j.status = :status
     """, nativeQuery = true)
-    List<Object[]> ListAllVectorsByCompanyIdNative(@Param("companyId") String companyId);
+    List<Object[]> listAllVectorsByCompanyIdExceptCurrent(
+            @Param("companyId") String companyId,
+            @Param("excludeJobId") String excludeJobId,
+            @Param("status") String status
+    );
 
     ///  Lấy chi tiết 1 JD
     @Override
     Optional<Job> findById(String jobId);
-
 
     ///  Lấy thông tin của ngừoi đăng
     @Query("SELECT j.companyMember.user FROM Job j WHERE j.id = :jobId AND j.company.id = :companyId")

@@ -37,19 +37,34 @@ public class AIJobService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    /// Tách riêng hàm lấy thông tin JD
-    ///  lấy vector của JD
-    public CheckApprovalResponse getVectorJd(String idJob) {
+    /// Lấy nội dung vector để so sánh
+    public String getJobComparisonResponse(String jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+        List<Object[]> skillData = jobRepository.findSkillNamesByJobIds(List.of(jobId));
+        List<String> skills = skillData.stream()
+                .map(obj -> (String) obj[1])
+                .toList();
         try{
-            Job job = jobRepository.findById(idJob)
-                    .orElseThrow(() -> new RuntimeException(ErrorCode.JOB_NOT_FOUND.getMessage()));
-            CheckApprovalResponse checkApprovalResponse = new CheckApprovalResponse();
-            checkApprovalResponse.setJobId(job.getId());
-            checkApprovalResponse.setTitle(job.getTitle());
-            checkApprovalResponse.setVector(job.getVectorEmbedding());
-            return checkApprovalResponse;
+        String categoryName = (job.getCategory() == null ? "" : job.getCategory().getName());
+        String companyName = (job.getCompany().getName() == null ? "" : job.getCompany().getName());
+        String skillsString = String.join(" ", skills);
+        String dataForAI = String.format(
+                "Position: %s\nTitle: %s\nCategory: %s\nSkills: %s\nSalary: %s - %s\nLocation: %s\nDescription: %s",
+                job.getPosition(),
+                job.getTitle(),
+                companyName,
+                categoryName,
+                skillsString,
+                job.getSalaryMin(),
+                job.getSalaryMax(),
+                job.getLocation(),
+                job.getDescription());
+            return dataForAI;
+
         } catch (Exception e) {
-            throw new RuntimeException(ErrorCode.JOB_NOT_FOUND.getMessage());
+            throw new RuntimeException(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
         }
     }
     //Hàm tính toán Vector
@@ -71,17 +86,19 @@ public class AIJobService {
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
     /// hàm check bài spam của công ty
-    public int checkSpamJd_of_company(String idOfCompany, float[] newJobVector) {
+    public int checkSpamJd_of_company(String idOfCompany, String idOfJob ,float[] newJobVector) {
         try {
-            List<Object[]> rawResults = jobRepository.ListAllVectorsByCompanyIdNative(idOfCompany);
+            String bestMathId = null;
+            double maxSimilarity = 0.0;
+            List<Object[]> rawResults = jobRepository.listAllVectorsByCompanyIdExceptCurrent(idOfCompany,idOfJob, JobStatus.OPEN.name());
 
             System.out.println("Size of rawResults: " + (rawResults != null ? rawResults.size() : 0));
+            System.out.println("All vector " + rawResults);
 
             if (rawResults == null || rawResults.isEmpty()) {
                 return 1;
             }
 
-            double maxSimilarity = 0.0;
             for (Object[] row : rawResults) {
                 Object vectorData = row[1];
                 if (vectorData == null) continue;
@@ -96,16 +113,45 @@ public class AIJobService {
                 float[] existingVector = objectMapper.readValue(vectorJson, float[].class);
 
                 double similarity = calculateCosineSimilarity(newJobVector, existingVector);
-                if (similarity > maxSimilarity) maxSimilarity = similarity;
+                if (similarity > maxSimilarity){
+                    maxSimilarity = similarity;
+                    bestMathId = (String) row[0];
+                }
+
+            }
+            System.out.println("maxSimilarity" + maxSimilarity);
+            if (maxSimilarity >= 0.45 && maxSimilarity < 0.6)
+            {return 2;}
+            if (maxSimilarity >= 0.6){
+            ///  Lây detail của JD mới
+            String detailNewJD = getJobComparisonResponse(idOfJob);
+            ///  Lấy detail cảu JD cũ
+            String detailOldJD = getJobComparisonResponse(bestMathId);
+            String data = "<JD1>\n" + detailNewJD + "\n</JD1>\n\n" +
+                        "<JD2>\n" + detailOldJD + "\n</JD2>";
+            String checkSpam = aiService.Ai_OF_SKILLBRIDGE(data, 2);
+            System.out.println("checkSpam"+ checkSpam);
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(checkSpam);
+            System.out.println("typeJSonnode" + jsonNode.getNodeType());
+
+            Boolean checkSpamJD = jsonNode.get("spam").asBoolean();
+            if(checkSpamJD == true){
+                return 3;
+            }
+            else {
+                return 1;
+            }
             }
 
-            if (maxSimilarity >= 0.92) return 3;
-            if (maxSimilarity >= 0.75) return 2;
             return 1;
 
         } catch (Exception e) {
-            e.printStackTrace(); // In lỗi chi tiết ra console để debug
+            e.printStackTrace();
             throw new RuntimeException("Lỗi khi kiểm tra vector: " + e.getMessage());
+        }
+        finally {
+            System.out.println("Đã chạy xong chức năng check spam ");
         }
     }    ///  Lấy thông tin cụ thể của bài đăng của JD
     public JobDetailResponse getIn4OfJD(String jobId) {
@@ -222,7 +268,7 @@ public class AIJobService {
             }
             else{
                 float[] vectorOFFJ = job.getVectorEmbedding();
-                int result = checkSpamJd_of_company(job.getCompany().getId(), vectorOFFJ);
+                int result = checkSpamJd_of_company(job.getCompany().getId(),dataOfJD ,vectorOFFJ);
                 System.out.println("ketquaspamtrave" + result);
                 if (result == 1) {
                     messageBody = String.format(
