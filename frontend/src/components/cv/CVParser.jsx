@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FileText, Wand2, Upload, Plus, X, ArrowRight, Save, Trash2 } from 'lucide-react';
 import candidateService from '../../services/api/candidateService';
 import { toast } from 'sonner';
@@ -34,7 +34,16 @@ export const CVParser = () => {
 
     // Temp state for new skill
     const [newSkillName, setNewSkillName] = useState('');
-    const [newSkillExp, setNewSkillExp] = useState(1);
+    const [newSkillId, setNewSkillId] = useState(null);
+
+    // Autocomplete states
+    const [categorySuggestions, setCategorySuggestions] = useState([]);
+    const [showCatSuggestions, setShowCatSuggestions] = useState(false);
+    const catTimeoutRef = useRef(null);
+
+    const [skillSuggestions, setSkillSuggestions] = useState([]);
+    const [showSkillSuggestions, setShowSkillSuggestions] = useState(false);
+    const skillTimeoutRef = useRef(null);
 
     /* ================= APIs ================= */
     useEffect(() => {
@@ -49,8 +58,8 @@ export const CVParser = () => {
                         categoryId: res.categoryId || '',
                         category: res.category || '',
                         skills: Array.isArray(res.skills) ? res.skills.map(s => ({
-                            skillId: s.skillId || null,
-                            skillName: s.skillName || s.name || s.skillId || 'Unknown Skill', // Fallback to ID if name missing
+                            skillId: s.skillId || s.id || null, // Check both
+                            skillName: s.skillName || s.name || 'Unknown Skill',
                             experienceYears: s.experienceYears || 1
                         })) : [],
                         degrees: res.degrees || [],
@@ -125,7 +134,7 @@ export const CVParser = () => {
                 if (parsedData.description) newData.description = parsedData.description;
                 if (parsedData.address) newData.address = parsedData.address;
                 if (parsedData.categoryId) newData.categoryId = parsedData.categoryId;
-                if (parsedData.category) newData.category = parsedData.category;
+                if (parsedData.categoryName || parsedData.category) newData.category = parsedData.categoryName || parsedData.category;
             }
 
             // Apply Experience (Append unique items)
@@ -187,20 +196,20 @@ export const CVParser = () => {
                 newData.degrees = [...prev.degrees, ...degreesToAdd];
             }
 
-            // Apply Skills (Append unique items)
             if (selectedItems.skills && parsedData.skills) {
                 const newSkills = parsedData.skills.map(s => {
                     const isObj = typeof s === 'object';
-                    const id = isObj ? s.skillId : null;
+                    const id = isObj ? (s.skillId || s.id) : null;
                     const name = isObj ? (s.skillName || s.name || s.skillId) : s;
-                    const exp = isObj && s.experienceYears ? s.experienceYears : 1;
+
+                    if (isObj) console.log("Mapping AI skill:", s.skillName, "-> ID:", id);
 
                     return {
                         skillName: name,
                         skillId: id,
-                        experienceYears: exp
+                        experienceYears: 1
                     };
-                });
+                }).filter(s => s.skillId); // Only add skills mapped to database IDs
 
                 const existingNames = new Set(prev.skills.map(s => s.skillName?.toLowerCase()));
                 const uniqueNewSkills = newSkills.filter(s => !existingNames.has(s.skillName?.toLowerCase()));
@@ -219,6 +228,70 @@ export const CVParser = () => {
     const updateField = (field, value) => {
         setCvData(prev => ({ ...prev, [field]: value }));
     };
+
+    // --- Autocomplete Handlers ---
+    const handleCategoryChange = (e) => {
+        const value = e.target.value;
+        setCvData(prev => ({ ...prev, category: value, categoryId: '' }));
+        if (value.length >= 2) {
+            if (catTimeoutRef.current) clearTimeout(catTimeoutRef.current);
+            catTimeoutRef.current = setTimeout(async () => {
+                try {
+                    const res = await candidateService.getAutoCategory(value);
+                    if (res && res.result) setCategorySuggestions(res.result);
+                    setShowCatSuggestions(true);
+                } catch (err) { }
+            }, 300);
+        } else {
+            setCategorySuggestions([]);
+            setShowCatSuggestions(false);
+        }
+    };
+
+    const selectCategory = (cat) => {
+        setCvData(prev => ({ ...prev, category: cat.name, categoryId: cat.id }));
+        setShowCatSuggestions(false);
+    };
+
+    const handleSkillChange = (e) => {
+        const value = e.target.value;
+        setNewSkillName(value);
+        setNewSkillId(null);
+        if (value.length >= 2) {
+            if (skillTimeoutRef.current) clearTimeout(skillTimeoutRef.current);
+            skillTimeoutRef.current = setTimeout(async () => {
+                try {
+                    const paramsId = cvData.categoryId || '';
+                    const res = await candidateService.getAutoSkill(value, paramsId);
+                    if (res && res.result) setSkillSuggestions(res.result);
+                    setShowSkillSuggestions(true);
+                } catch (err) { }
+            }, 300);
+        } else {
+            setSkillSuggestions([]);
+            setShowSkillSuggestions(false);
+        }
+    };
+
+    const selectSkill = (skill) => {
+        const normalizedName = skill.name.trim();
+        // Check if already exists in cvData.skills
+        if (!cvData.skills.some(s => (s.skillId === skill.id) || (s.skillName?.toLowerCase() === normalizedName.toLowerCase()))) {
+            setCvData(prev => ({
+                ...prev,
+                skills: [...prev.skills, { skillName: normalizedName, skillId: skill.id, experienceYears: 1 }]
+            }));
+            toast.success(`Đã thêm kỹ năng: ${normalizedName}`);
+        } else {
+            toast.info("Kỹ năng này đã có trong danh sách.");
+        }
+
+        setNewSkillName('');
+        setNewSkillId(null);
+        setSkillSuggestions([]);
+        setShowSkillSuggestions(false);
+    };
+    // -----------------------------
 
     const addExperience = () => {
         setCvData(prev => ({
@@ -259,15 +332,20 @@ export const CVParser = () => {
     const addSkill = (e) => {
         if (e.key === 'Enter' && newSkillName.trim()) {
             e.preventDefault();
+            if (!newSkillId) {
+                toast.error("Vui lòng chọn kỹ năng từ danh sách gợi ý hợp lệ.");
+                return;
+            }
             const normalizedName = newSkillName.trim();
             if (!cvData.skills.some(s => s.skillName?.toLowerCase() === normalizedName.toLowerCase())) {
                 setCvData(prev => ({
                     ...prev,
-                    skills: [...prev.skills, { skillName: normalizedName, skillId: null, experienceYears: newSkillExp }]
+                    skills: [...prev.skills, { skillName: normalizedName, skillId: newSkillId, experienceYears: 1 }]
                 }));
             }
             setNewSkillName('');
-            setNewSkillExp(1);
+            setNewSkillId(null);
+            setShowSkillSuggestions(false);
         }
     };
     const removeSkill = (index) => {
@@ -309,11 +387,13 @@ export const CVParser = () => {
                     description: e.description
                 })),
                 skills: cvData.skills.map(s => ({
-                    skillId: s.skillId || null,
-                    experienceYears: parseInt(s.experienceYears) || 1
-                })).filter(s => s.skillId)
+                    skillId: s.skillId || s.id || null,
+                    experienceYears: 1
+                })).filter(s => s.skillId) // Filter out skills without IDs as per strict backend requirement
             };
-            console.log("Saving Payload:", payload);
+
+            console.log("Saving Payload FINAL:", JSON.stringify(payload, null, 2));
+            console.log("Current cvData.skills:", cvData.skills);
             await candidateService.updateCv(payload);
             toast.success("Đã lưu hồ sơ thành công!");
         } catch (error) {
@@ -363,8 +443,7 @@ export const CVParser = () => {
                                             <strong>{parsedData.name}</strong>
                                             <p>{parsedData.address}</p>
                                             <p className="text-sm text-gray-500">{parsedData.description}</p>
-                                            {/* Display ID if Name is missing, assuming parser returns ID for now based on user feedback */}
-                                            {parsedData.categoryId && <p className="text-xs text-blue-600">Category ID: {parsedData.categoryId}</p>}
+                                            {parsedData.categoryName && <p className="text-xs text-blue-600 mt-1">Lĩnh vực: <b>{parsedData.categoryName}</b></p>}
                                         </div>
                                     </div>
                                 </div>
@@ -465,11 +544,27 @@ export const CVParser = () => {
                                 <label>Mô tả bản thân</label>
                                 <textarea rows={3} value={cvData.description} onChange={(e) => updateField('description', e.target.value)} placeholder="Giới thiệu ngắn gọn..." />
                             </div>
-                            <div className="form-group">
+                            <div className="form-group" style={{ position: 'relative' }}>
                                 <label>Lĩnh vực (Category)</label>
-                                <input value={cvData.category} onChange={(e) => updateField('category', e.target.value)} placeholder="VD: IT Software..." />
-                                {/* Hidden input to track ID if present */}
+                                <input value={cvData.category} onChange={handleCategoryChange} onFocus={() => { if (categorySuggestions.length > 0) setShowCatSuggestions(true) }} placeholder="VD: IT Software..." />
                                 <input type="hidden" value={cvData.categoryId || ''} />
+                                {showCatSuggestions && categorySuggestions.length > 0 && (
+                                    <ul className="suggestions-dropdown" style={{
+                                        position: 'absolute', top: '100%', left: 0, width: '100%', zIndex: 10,
+                                        background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px',
+                                        listStyle: 'none', padding: 0, margin: '4px 0 0 0', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto'
+                                    }}>
+                                        {categorySuggestions.map(cat => (
+                                            <li key={cat.id} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: '14px' }}
+                                                onClick={() => selectCategory(cat)}
+                                                onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
+                                                onMouseLeave={(e) => e.target.style.background = '#fff'}
+                                            >
+                                                {cat.name}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         </div>
 
@@ -555,20 +650,33 @@ export const CVParser = () => {
                             <h3>Kỹ năng</h3>
                             <div className="skills-container">
                                 {cvData.skills.map((skill, index) => (
-                                    <div key={index} className="skill-tag">
-                                        <span>{skill.skillName} ({skill.experienceYears} năm)</span>
+                                    <div key={index} className={`skill-tag ${!skill.skillId ? 'no-id' : ''}`}>
+                                        <span>{skill.skillName} {!skill.skillId && <span className="text-red-500 text-[10px] ml-1">(No ID)</span>}</span>
                                         <button onClick={() => removeSkill(index)}><X size={14} /></button>
                                     </div>
                                 ))}
                             </div>
                             <div className="form-row items-end">
-                                <div className="form-group flex-1">
+                                <div className="form-group flex-1" style={{ position: 'relative' }}>
                                     <label>Tên kỹ năng</label>
-                                    <input value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} onKeyDown={addSkill} placeholder="Nhập và Enter" />
-                                </div>
-                                <div className="form-group w-24">
-                                    <label>Số năm</label>
-                                    <input type="number" min="0" value={newSkillExp} onChange={(e) => setNewSkillExp(e.target.value)} />
+                                    <input value={newSkillName} onChange={handleSkillChange} onFocus={() => { if (skillSuggestions.length > 0) setShowSkillSuggestions(true) }} onKeyDown={addSkill} placeholder="Nhập và Enter" />
+                                    {showSkillSuggestions && skillSuggestions.length > 0 && (
+                                        <ul className="suggestions-dropdown" style={{
+                                            position: 'absolute', top: '100%', left: 0, width: '100%', zIndex: 10,
+                                            background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px',
+                                            listStyle: 'none', padding: 0, margin: '4px 0 0 0', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto'
+                                        }}>
+                                            {skillSuggestions.map(skill => (
+                                                <li key={skill.id} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: '14px' }}
+                                                    onClick={() => selectSkill(skill)}
+                                                    onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
+                                                    onMouseLeave={(e) => e.target.style.background = '#fff'}
+                                                >
+                                                    {skill.name}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -27,7 +27,7 @@ public interface SkillRepository extends JpaRepository<Skill, String> {
             ELSE 2
         END, s.name ASC
     """)
-    List<Skill> searchAutoSkill(@Param("name") String name, String categoryId, Pageable pageable);
+    List<Skill> searchAutoSkill(@Param("name") String name, @Param("categoryId") String categoryId, Pageable pageable);
 
     /** Tìm kiếm kỹ năng theo tên */
     List<Skill> findByName(String name);

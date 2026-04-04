@@ -72,16 +72,17 @@ public class CandidateService {
             return res;
         }).toList();
 
-        return new UpdateCandidateCvResponse(
-                candidate.getName(),
-                candidate.getDescription(),
-                candidate.getIsOpenToWork(),
-                candidate.getAddress(),
-                candidate.getCategory() != null ? candidate.getCategory().getName() : null,
-                degreeResponses,
-                skillResponses,
-                experienceDetails
-        );
+        return UpdateCandidateCvResponse.builder()
+                .name(candidate.getName())
+                .description(candidate.getDescription())
+                .isOpenToWork(candidate.getIsOpenToWork())
+                .address(candidate.getAddress())
+                .categoryId(candidate.getCategory() != null ? candidate.getCategory().getId() : null)
+                .category(candidate.getCategory() != null ? candidate.getCategory().getName() : null)
+                .degrees(degreeResponses)
+                .skills(skillResponses)
+                .experience(experienceDetails)
+                .build();
     }
 
     /**
@@ -193,27 +194,23 @@ public class CandidateService {
                 finalSkills = candidateSkillRepository.findByCandidate(candidate);
                 finalSkills.forEach(s -> skillBuilder.append(s.getSkill().getName()).append(", "));
             }
-
             try {
-                UpdateCandidateCvResponse fullProfile = new UpdateCandidateCvResponse();
-                fullProfile.setName(candidate.getName());
-                fullProfile.setAddress(candidate.getAddress());
-                fullProfile.setDescription(candidate.getDescription());
-                fullProfile.setDegrees(deserializeDegrees(candidate.getDegree()));
-                fullProfile.setExperience(deserializeExperience(candidate.getExperience()));
-
-                if (candidate.getCategory() != null) {
-                    fullProfile.setCategory(candidate.getCategory().getName());
-                }
-
-                List<CandidateSkillResponse> skillResponses = finalSkills.stream().map(s -> {
-                    CandidateSkillResponse sr = new CandidateSkillResponse();
-                    sr.setSkillName(s.getSkill().getName());
-                    sr.setExperienceYears(s.getExperienceYears());
-                    return sr;
-                }).toList();
-
-                fullProfile.setSkills(skillResponses);
+                UpdateCandidateCvResponse fullProfile = UpdateCandidateCvResponse.builder()
+                    .name(candidate.getName())
+                    .address(candidate.getAddress())
+                    .description(candidate.getDescription())
+                    .degrees(deserializeDegrees(candidate.getDegree()))
+                    .experience(deserializeExperience(candidate.getExperience()))
+                    .categoryId(candidate.getCategory() != null ? candidate.getCategory().getId() : null)
+                    .category(candidate.getCategory() != null ? candidate.getCategory().getName() : null)
+                    .skills(finalSkills.stream().map(s -> {
+                        CandidateSkillResponse sr = new CandidateSkillResponse();
+                        sr.setSkillId(s.getSkill().getId());
+                        sr.setSkillName(s.getSkill().getName());
+                        sr.setExperienceYears(s.getExperienceYears());
+                        return sr;
+                    }).toList())
+                    .build();
                 candidate.setParsedContentJson(objectMapper.writeValueAsString(fullProfile));
                 log.info("[DATA_SYNC] Đã hợp nhất dữ liệu và cập nhật parsedContentJson cho: {}", userId);
             } catch (Exception e) {
@@ -310,9 +307,10 @@ public class CandidateService {
     YÊU CẦU NGHIÊM NGẶT:
     1. Chỉ trả về JSON, không giải thích.
     2. Ánh xạ 'categoryId' từ danh sách ngành phù hợp nhất.
-    3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%%, hãy chọn cái gần nhất.
-    4. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
-    5. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
+    3. QUAN TRỌNG: Với mỗi kỹ năng trong CV, BẮT BUỘC tìm 'skillId' từ danh sách kỹ năng của ngành đã chọn. Nếu không tìm thấy, hãy thử tìm ở các ngành khác. 
+    4. CHỈ TRẢ VỀ kỹ năng nào có thể khớp được với 'skillId' trong hệ thống. KHÔNG TỰ TẠO ID MỚI.
+    5. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại.
+    6. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
     6. Nếu endDate là hiện tại thì trả ngày hiện tại theo định dạng yyyy-MM-dd.
     
     Cấu trúc JSON yêu cầu:
@@ -346,8 +344,8 @@ public class CandidateService {
       ],
       "skills": [
         {
-          "skillId": "ID của kỹ năng từ danh sách trên",
-          "skillName": "Tên kỹ năng gốc từ CV",
+          "skillId": "UUID của kỹ năng BẮT BUỘC lấy từ danh sách hệ thống",
+          "skillName": "Tên kỹ năng chuẩn trong hệ thống",
           "experienceYears": 3
         }
       ]
@@ -374,7 +372,7 @@ public class CandidateService {
     /**
      * Parsing CV bằng AI (Gemini)
      */
-    public UpdateCandidateCvRequest parsingCV(MultipartFile file) {
+    public LLMResumeResponse parsingCV(MultipartFile file) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         try {
             log.info("[AI_PARSING] Bắt đầu quét CV cho user: {}", currentUser.getUserId());
@@ -391,10 +389,75 @@ public class CandidateService {
                     LLMResumeResponse.class
             );
 
-            UpdateCandidateCvRequest request = convertLLMToRequest(llmRes);
+            if (llmRes.getCategoryId() != null && !llmRes.getCategoryId().isBlank()) {
+                categoryRepository.findById(llmRes.getCategoryId()).ifPresent(cat -> {
+                    llmRes.setCategoryName(cat.getName());
+                });
+            }
+
+            if (llmRes.getSkills() != null) {
+                final String identifiedCatId = llmRes.getCategoryId();
+
+                for (CandidateSkillResponse sr : llmRes.getSkills()) {
+                    if (sr != null && sr.getSkillName() != null) {
+                        String nameToMatch = sr.getSkillName().trim();
+
+                        // 1. Try to find by ID if provided and valid
+                        if (sr.getSkillId() != null && !sr.getSkillId().isEmpty() && !sr.getSkillId().contains("ID_")) {
+                             Skill foundById = allSkills.stream()
+                                     .filter(s -> s.getId().equals(sr.getSkillId()))
+                                     .findFirst().orElse(null);
+                             if (foundById != null) {
+                                 sr.setSkillId(foundById.getId());
+                                 sr.setSkillName(foundById.getName());
+                                 continue;
+                             }
+                        }
+
+                        // 2. Try exact match (case-insensitive) within the identified category first
+                        Skill matched = null;
+                        if (identifiedCatId != null) {
+                            matched = allSkills.stream()
+                                    .filter(sk -> sk.getCategory() != null && sk.getCategory().getId().equals(identifiedCatId))
+                                    .filter(sk -> sk.getName() != null && sk.getName().equalsIgnoreCase(nameToMatch))
+                                    .findFirst()
+                                    .orElse(null);
+                        }
+
+                        // 3. If no match in category, search globally (exact match)
+                        if (matched == null) {
+                            matched = allSkills.stream()
+                                    .filter(sk -> sk.getName() != null && sk.getName().equalsIgnoreCase(nameToMatch))
+                                    .findFirst()
+                                    .orElse(null);
+                        }
+
+                        // 4. Try "Contains" match if still nothing
+                        if (matched == null) {
+                             matched = allSkills.stream()
+                                    .filter(sk -> sk.getName() != null && (
+                                            sk.getName().equalsIgnoreCase(nameToMatch) ||
+                                            nameToMatch.toLowerCase().contains(sk.getName().toLowerCase()) ||
+                                            sk.getName().toLowerCase().contains(nameToMatch.toLowerCase())
+                                    ))
+                                    .findFirst()
+                                    .orElse(null);
+                        }
+
+                        if (matched != null) {
+                            sr.setSkillId(matched.getId());
+                            sr.setSkillName(matched.getName());
+                        } else {
+                            sr.setSkillId(null);
+                            // Keep the original name for display, but it will have No ID
+                        }
+                    }
+                }
+            }
 
             systemLog.info(currentUser, "AI đã phân tích thành công CV tải lên");
-            return request;
+            return llmRes;
+
         } catch (Exception e) {
             log.error("[AI_ERROR] Thất bại khi phân tích CV: ", e);
             systemLog.danger(currentUser, "AI không thể phân tích CV: " + e.getMessage());
