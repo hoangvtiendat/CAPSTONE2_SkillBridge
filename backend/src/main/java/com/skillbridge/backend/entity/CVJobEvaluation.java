@@ -1,8 +1,12 @@
 package com.skillbridge.backend.entity;
 
+import com.skillbridge.backend.dto.RoadmapDTO;
+import com.skillbridge.backend.utils.RoadmapConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,18 +38,9 @@ public class CVJobEvaluation extends BaseEntity {
     @Column(name = "weaknesses", columnDefinition = "TEXT")
     String weaknesses;
 
-    @Column(name = "roadmap", columnDefinition = "TEXT")
-    String roadmap;
+    @Column(name = "roadmap", columnDefinition = " LONGTEXT")
+    @Convert(converter = RoadmapConverter.class)
+    List<RoadmapDTO> roadmap;
 
-    @Builder.Default
-    @Column(name = "is_candidate")
-    Boolean isCandidate = false;
 
-    @Builder.Default
-    @Column(name = "is_recruiter")
-    Boolean isRecruiter = false;
-
-    @Builder.Default
-    @Column(name = "is_apply")
-    Boolean isApply = false;
 }

@@ -4,6 +4,7 @@ import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.validator.constraints.URL;
@@ -35,6 +36,8 @@ public class Company extends BaseEntity {
     private String name;
 
     @NotBlank(message = "Mã số thuế không được để trống")
+    @Size(min = 10, max = 10, message = "Mã số thuế phải có đúng 10 ký tự")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Mã số thuế phải là 10 chữ số")
     @Column(name = "tax_id", nullable = false, unique = true)
     private String taxId;
 

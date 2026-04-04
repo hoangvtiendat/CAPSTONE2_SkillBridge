@@ -61,12 +61,15 @@ public class SecurityConfig {
                                 "/company-member/**",
                                 "/identity/subscription/**",
                                 "/identity/CategoryProfession/**",
-                                "/applications/jobs/**"
+                                "/applications/jobs/**",
+                                "/candidates/potential/{jobId}"
+
                         ).hasRole("RECRUITER")
 
                         .requestMatchers(
                                 "/candidates/**",
-                                "/jobs/apply/**"
+                                "/jobs/apply/**",
+                                "/evaluate-self/{id}"
                         ).hasRole("CANDIDATE")
 
                         .requestMatchers(

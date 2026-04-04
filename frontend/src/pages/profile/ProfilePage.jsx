@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Shield, KeyRound, ChevronRight, ArrowLeft } from 'lucide-react';
 import authService from '../../services/api/authService';
+import candidateService from '../../services/api/candidateService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import './ProfilePage.css';
@@ -14,10 +15,26 @@ const ProfilePage = () => {
     const { user, fetchProfile } = useAuth();
     const navigate = useNavigate();
     const [viewMode, setViewMode] = useState('profile');
-    const [isOpenToWork, setIsOpenToWork] = useState(true);
+    const [isOpenToWork, setIsOpenToWork] = useState(false)
     const [isToggling2FA, setIsToggling2FA] = useState(false);
     const [is2faEnabledLocal, setIs2faEnabledLocal] = useState(user?.is2faEnabled || false);
+    const fetchCandidateStatus = async () => {
+        if (!user?.id) return;
+        try {
+            const response = await candidateService.getCv(user.id);
+            const status = response?.result ? !!response.result.isOpenToWork : !!response.isOpenToWork;
+            setIsOpenToWork(status);
+        } catch (error) {
+            console.error("Lỗi lấy trạng thái Candidate:", error);
+            setIsOpenToWork(false); // Lỗi thì mặc định tắt
+        }
+    };
 
+    useEffect(() => {
+        if (user?.id) {
+            fetchCandidateStatus();
+        }
+    }, [user?.id]);
     useEffect(() => {
         setIs2faEnabledLocal(user?.is2faEnabled || false);
     }, [user?.is2faEnabled]);
@@ -28,10 +45,32 @@ const ProfilePage = () => {
         }
     }, [user, navigate]);
 
-    const handleToggleOpenToWork = () => {
-        setIsOpenToWork(prev => !prev);
-    };
+    const handleToggleOpenToWork = async () => {
+        const newValue = !isOpenToWork;
+        try {
+            // Cập nhật UI trước (Optimistic UI)
+            setIsOpenToWork(newValue);
 
+            // Gọi API cập nhật vào bảng Candidate
+            await candidateService.toggleOpenToWork(newValue);
+
+            toast.success(`Đã ${newValue ? 'bật' : 'tắt'} trạng thái tìm việc`);
+
+            // Hiện thông báo thành công đẹp hơn
+            Swal.fire({
+                title: 'Thành công!',
+                text: `Đã cập nhật trạng thái tìm việc.`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            console.error("Lỗi cập nhật trạng thái:", error);
+            // Nếu API lỗi thì gạt nút về lại vị trí cũ
+            setIsOpenToWork(!newValue);
+            toast.error("Không thể cập nhật trạng thái tìm việc");
+        }
+    };
     return (
         <div className="profile-page-root">
             <div className="profile-page-container">

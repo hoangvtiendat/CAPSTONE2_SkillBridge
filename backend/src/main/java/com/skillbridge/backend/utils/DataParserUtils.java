@@ -51,23 +51,38 @@ public class DataParserUtils {
     /**
      * Xử lý chuỗi trả về, loại bỏ Markdown code blocks nếu có
      */
-    public static String cleanJson(String raw) {
-        if (raw == null || raw.isBlank()) return "{}";
-        int firstBrace = raw.indexOf("{");
-        int lastBrace = raw.lastIndexOf("}");
+    public static String cleanJsonString(String text) {
+        if (text == null || text.isBlank()) return "{}";
+        String cleaned = text.trim();
+        String codeFenceRegex = "```(?:json)?\\s*([\\s\\S]*?)\\s*```";
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(codeFenceRegex, java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Matcher matcher = pattern.matcher(cleaned);
 
-        if (firstBrace >= 0 && lastBrace >= 0 && lastBrace > firstBrace) {
-            return raw.substring(firstBrace, lastBrace + 1);
+        if (matcher.find()) {
+            cleaned = matcher.group(1).trim();
         }
-        int firstBracket = raw.indexOf("[");
-        int lastBracket = raw.lastIndexOf("]");
-        if (firstBracket >= 0 && lastBracket >= 0 && lastBracket > firstBracket) {
-            return raw.substring(firstBracket, lastBracket + 1);
+        cleaned = cleaned.replaceAll("\\\\end\\{[^}]*}", "");
+        cleaned = cleaned.replaceAll("\\\\begin\\{[^}]*}", "");
+        int firstBrace = Math.min(
+                cleaned.indexOf('{') >= 0 ? cleaned.indexOf('{') : Integer.MAX_VALUE,
+                cleaned.indexOf('[') >= 0 ? cleaned.indexOf('[') : Integer.MAX_VALUE
+        );
+        if (firstBrace != Integer.MAX_VALUE && firstBrace > 0) {
+            cleaned = cleaned.substring(firstBrace);
         }
 
-        return raw.trim();
+        int lastBrace = Math.max(
+                cleaned.lastIndexOf('}'),
+                cleaned.lastIndexOf(']')
+        );
+        if (lastBrace > 0) {
+            cleaned = cleaned.substring(0, lastBrace + 1);
+        }
+
+        return cleaned.trim();
     }
-    private String ensureValidJson(String json) {
+
+    public static String ensureValidJson(String json) {
         json = json.trim();
         int braces = 0;
         int brackets = 0;

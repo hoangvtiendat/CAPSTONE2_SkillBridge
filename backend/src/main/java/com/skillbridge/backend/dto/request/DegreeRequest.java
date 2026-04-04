@@ -2,7 +2,6 @@ package com.skillbridge.backend.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -26,4 +25,6 @@ public class DegreeRequest {
     // Dùng cho Certificate
     String name;
     Integer year;
+
+    Double grade;
 }

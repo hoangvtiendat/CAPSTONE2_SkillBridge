@@ -67,11 +67,9 @@ public class GeminiService {
                     .path("text").asText();
 
             log.debug("AI Raw Response: {}", aiRawResponse);
-            String jsonStr = aiRawResponse.trim()
-                    .replaceAll("^```json", "")
-                    .replaceAll("```$", "")
-                    .trim();
-            jsonStr = DataParserUtils.cleanJson(jsonStr);
+
+            String jsonStr = DataParserUtils.cleanJsonString(aiRawResponse);
+            jsonStr = DataParserUtils.ensureValidJson(jsonStr);
             try {
                 return objectMapper.readValue(jsonStr, responseType);
             } catch (Exception e) {

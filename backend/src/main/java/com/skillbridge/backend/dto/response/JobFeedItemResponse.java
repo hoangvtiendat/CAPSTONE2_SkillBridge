@@ -15,6 +15,7 @@ import java.util.List;
 public class JobFeedItemResponse {
     String jobId;
     Object title;
+    String position;
     String description;
     String companyName;
     String companyImageUrl;
@@ -29,11 +30,12 @@ public class JobFeedItemResponse {
     /**
      * Constructor tùy chỉnh nếu bạn vẫn dùng Query thủ công từ Repository (JPQL)
      */
-    public JobFeedItemResponse(String jobId, Object title, String description, String location,
+    public JobFeedItemResponse(String jobId, Object title,String position, String description, String location,
                                BigDecimal salaryMin, BigDecimal salaryMax, LocalDateTime createdAt,
                                String companyName, String companyImageUrl, Object subscriptionPlanName, String categoryName) {
         this.jobId = jobId;
         this.title = title;
+        this.position = position;
         this.description = description;
         this.location = location;
         this.salaryMin = salaryMin;

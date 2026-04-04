@@ -16,7 +16,6 @@ export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork }) => {
         if (file) {
             const imageUrl = URL.createObjectURL(file);
             setAvatarPreview(imageUrl);
-            // In a real app, you would upload the file here
         }
     };
 

@@ -280,16 +280,13 @@ export const CVParser = () => {
     // Save
     const handleSave = async () => {
         try {
-            // STRICT PAYLOAD CONSTRUCTION
             const payload = {
                 name: cvData.name,
                 description: cvData.description,
                 address: cvData.address,
-                categoryId: cvData.categoryId || null, // FIX: Send null if empty
+                categoryId: cvData.categoryId || null,
                 degrees: cvData.degrees.map(d => {
-                    // Type-cast years to numbers
                     const yearVal = d.type === 'DEGREE' ? parseInt(d.graduationYear) : parseInt(d.year);
-
                     if (d.type === 'DEGREE') {
                         return {
                             type: 'DEGREE',
@@ -314,14 +311,8 @@ export const CVParser = () => {
                 skills: cvData.skills.map(s => ({
                     skillId: s.skillId || null,
                     experienceYears: parseInt(s.experienceYears) || 1
-                })).filter(s => s.skillId) // Filter out skills without IDs as per strict backend requirement
+                })).filter(s => s.skillId)
             };
-            // xử lí phần categoryId
-            // if (!payload.categoryId) {
-            //     toast.error("Thiếu Category ID (Chưa có ID danh mục từ hệ thống)");
-            //     // return; // Let it try?
-            // }
-
             console.log("Saving Payload:", payload);
             await candidateService.updateCv(payload);
             toast.success("Đã lưu hồ sơ thành công!");
@@ -335,7 +326,6 @@ export const CVParser = () => {
     return (
         <div className="cv-page">
             <div className="cv-layout">
-                {/* LEFT - AI PARSER */}
                 <div className="cv-left">
                     <h2><Wand2 className="text-blue-500" /> AI CV Parser</h2>
 

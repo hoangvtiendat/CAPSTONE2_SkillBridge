@@ -46,6 +46,7 @@ import CreateJd from './pages/JD/PostJDPage';
 import DetailJD_Page from './pages/JD/detailJD';
 import SubscriptionOfCompany from "./pages/subscription/SubscriptionOfCompany";
 import RegisterSubscriptionPage from "./pages/subscription/RegisterSubscriptionPage";
+import PotentialCandidates from './pages/recruiter/PotentialCandidates';
 
 // Pages: Admin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -191,6 +192,7 @@ function App() {
                             <Route path="applications/:id" element={<ApplicationDetailPage />} />
                             <Route path="settings" element={<CompanySettings />} />
                             <Route path="candidates" element={<div className="p-8 text-center text-slate-500">Quản lý ứng viên - Sắp ra mắt</div>} />
+                             <Route path="jobs/:jobId/potential" element={<PotentialCandidates/>} />
                         </Route>
 
                         <Route path='/create-jd' element={<CreateJd />} />

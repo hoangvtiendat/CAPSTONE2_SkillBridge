@@ -23,7 +23,7 @@ public enum ErrorCode {
     INVALID_STATUS(1012, "Trạng thái không hợp lệ", HttpStatus.BAD_REQUEST),
     ACCESS_DENIED(1013, "Truy cập bị từ chối, bạn không có quyền thực hiện hành động này", HttpStatus.FORBIDDEN),
     LOG_NOT_FOUND(1014, "Không tìm thấy log", HttpStatus.NOT_FOUND),
-
+    INVALID_TAX_ID(1015, "Mã số thuế không hợp lệ, phải bao gồm đúng 10 chữ số", HttpStatus.BAD_REQUEST),
     // 2xxx: AUTH & SECURITY
     UNAUTHORIZED(2000, "Bạn chưa đăng nhập hoặc phiên làm việc hết hạn", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(2001, "Bạn không có quyền truy cập chức năng này", HttpStatus.FORBIDDEN),

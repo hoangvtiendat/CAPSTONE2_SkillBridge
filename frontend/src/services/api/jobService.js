@@ -21,7 +21,7 @@ const jobService = {
             const result = response.data.result;
             const jobs = (result.jobs || []).map(job => ({
                 id: job.jobId,
-                position: job.title?.en || job.title?.vi || 'Unknown Position',
+                position: job.position,
                 company: job.companyName,
                 location: job.location,
                 salary: {

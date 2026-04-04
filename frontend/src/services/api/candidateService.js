@@ -28,13 +28,20 @@ const candidateService = {
 
     updateCv: async (cvData) => {
         try {
-            //console.log("SEND DATA:", JSON.stringify(cvData, null, 2));
             const response = await api.put('/candidates/cv', cvData);
             return response.data;
         } catch (error) {
             throw error;
         }
-    }
+    },
+    toggleOpenToWork: async (status) => {
+        const response = await api.patch(`/candidates/open-to-work?isOpenToWork=${status}`);
+        return response.data;
+    },
+    getPotentialCandidates: async (jobId) => {
+        const response = await api.get(`/candidates/potential/${jobId}`);
+        return response.data;
+    },
 };
 
 export default candidateService;

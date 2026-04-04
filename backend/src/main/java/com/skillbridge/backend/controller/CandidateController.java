@@ -3,7 +3,9 @@ package com.skillbridge.backend.controller;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.UpdateCandidateCvRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
+import com.skillbridge.backend.dto.response.CandidateResponse;
 import com.skillbridge.backend.dto.response.UpdateCandidateCvResponse;
+import com.skillbridge.backend.entity.CVJobEvaluation;
 import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.entity.Skill;
 import com.skillbridge.backend.service.CandidateService;
@@ -93,5 +95,50 @@ public class CandidateController {
         ApiResponse<UpdateCandidateCvResponse> response = new ApiResponse<>();
         response.setResult(result);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/open-to-work")
+    public ResponseEntity<ApiResponse<UpdateCandidateCvResponse>> toggleOpenToWork(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam boolean isOpenToWork) {
+
+        UpdateCandidateCvResponse response = candidateService.updateOpenToWork(user.getUserId(),isOpenToWork);
+
+        return ResponseEntity.ok(ApiResponse.<UpdateCandidateCvResponse>builder()
+                .result(response)
+                .message("Cập nhật trạng thái tìm việc thành công")
+                .build());
+    }
+    /**
+     * 2. Nhà tuyển dụng săn nhân tài - tìm 10 ứng viên match nhất (chưa apply)
+     * URL: GET /candidates/potential/{jobId}
+     */
+    @GetMapping("/potential/{jobId}")
+    public ResponseEntity<ApiResponse<List<CandidateResponse>>> findPotentialCandidates(
+            @PathVariable String jobId
+    ) {
+        List<CandidateResponse> result = candidateService.findPotentialCandidates(jobId);
+        return ResponseEntity.ok(ApiResponse.<List<CandidateResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Tìm được " + result.size() + " ứng viên tiềm năng")
+                .result(result)
+                .build());
+    }
+
+    /**
+     * 3. Nhà tuyển dụng thực hiện đánh giá một ứng viên cụ thể
+     * URL: GET /candidates/evaluate-by-recruiter/{candidateId}/{jobId}
+     */
+    @GetMapping("/evaluate-by-recruiter/{candidateId}/{jobId}")
+    public ResponseEntity<ApiResponse<CVJobEvaluation>> evaluateByRecruiter(
+            @PathVariable String candidateId,
+            @PathVariable String jobId
+    ) {
+        CVJobEvaluation result = candidateService.getOrInitiateRecruiterEvaluation(candidateId, jobId);
+        return ResponseEntity.ok(ApiResponse.<CVJobEvaluation>builder()
+            .code(HttpStatus.OK.value())
+            .message("Nhà tuyển dụng đánh giá ứng viên thành công")
+            .result(result)
+            .build());
     }
 }
