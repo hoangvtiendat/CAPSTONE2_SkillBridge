@@ -26,5 +26,5 @@ public class DegreeRequest {
     String name;
     Integer year;
 
-    Double grade;
+    String level;
 }

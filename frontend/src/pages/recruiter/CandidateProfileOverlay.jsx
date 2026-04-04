@@ -1,161 +1,158 @@
 import React from 'react';
-import { X, Mail, Phone, MapPin, Briefcase, GraduationCap, ShieldCheck, User, Star, Calendar, Zap, Link as LinkIcon } from 'lucide-react';
 import './CandidateProfileOverlay.css';
 
-const CandidateProfileOverlay = ({ candidateData, isInvited, onClose }) => {
-    // Nếu không có dữ liệu thì không hiển thị
+const CandidateProfileOverlay = ({ candidateData, isInvited, onClose, onRate }) => {
     if (!candidateData) return null;
 
-    /**
-     * Hàm ẩn thông tin khi chưa gửi lời mời
-     */
     const maskInfo = (info, type) => {
         if (!info) return "Chưa cập nhật";
-        if (isInvited) return info; // Đã mời thì hiện full thông tin
+        if (isInvited) return info;
 
         if (type === 'email') {
             const [name, domain] = info.split('@');
             return `${name[0]}••••@${domain}`;
         }
-        if (type === 'phone') {
-            return `${info.slice(0, 3)}••••${info.slice(-2)}`;
-        }
-        // Địa chỉ: Ẩn hoàn toàn bằng dãy dấu chấm
-        return "••••••••••••••••••••";
+        if (type === 'phone') return `${info.slice(0, 3)}••••${info.slice(-2)}`;
+        if (type === 'address') return "••••••••••••";
+
+        return "••••••••";
     };
 
     const matchScore = ((candidateData.aiMatchingScore || 0) * 100).toFixed(0);
+    const degreesOnly = candidateData.degrees?.filter(d => d.type === 'DEGREE') || [];
+    const certificatesOnly = candidateData.degrees?.filter(d => d.type === 'CERTIFICATE') || [];
 
     return (
         <div className="profile-overlay-backdrop" onClick={onClose}>
-            <div className="profile-bubble-content" onClick={e => e.stopPropagation()}>
-                {/* Nút đóng góc trên bên phải */}
-                <button className="close-bubble-btn" onClick={onClose} aria-label="Close">
-                    <X size={18} />
+            <div className="profile-bubble-content floating-bubble" onClick={e => e.stopPropagation()}>
+                <button className="close-bubble-btn" onClick={onClose}>
+                    <span className="material-symbols-outlined">close</span>
                 </button>
 
                 <div className="bubble-scroll-area">
-
-                    {/* 1. BONG BÓNG LIÊN KẾT JOB (BUBBLE LINK) */}
-                    <div className="job-connection-bubble">
-                        <div className="bubble-pulse"></div>
-                        <LinkIcon size={14} />
-                        <span>Phù hợp cho: <strong>{candidateData.category || "Vị trí đang tuyển"}</strong></span>
-                    </div>
-
-                    {/* 2. HEADER SECTION (Đã xóa chữ PRO) */}
                     <header className="premium-header">
                         <div className="avatar-section">
                             <div className="main-avatar-ring">
                                 {candidateData.avatar ?
-                                    <img src={candidateData.avatar} alt={candidateData.name} /> :
-                                    <div className="avatar-alt"><User size={32} /></div>
+                                    <img src={candidateData.avatar} alt="Avatar" /> :
+                                    <div className="avatar-alt">
+                                        <span className="material-symbols-outlined" style={{fontSize: '48px', color: '#cbd5e1'}}>person</span>
+                                    </div>
                                 }
-                                <div className="score-float-badge">
-                                    {matchScore}%
-                                </div>
+                                <div className="score-float-badge">{matchScore}%</div>
                             </div>
                         </div>
-
                         <div className="header-text-info">
                             <h2>{candidateData.name}</h2>
                             <div className="status-row">
-                                <ShieldCheck size={14} className="verified-icon" />
-                                <span className="category-label">Hồ sơ đã xác thực bởi AI</span>
+                                <span className="material-symbols-outlined verified-icon">verified_user</span>
                             </div>
                         </div>
                     </header>
 
-                    {/* 3. CONTACT INFO GRID (Địa chỉ được ẩn bằng mask) */}
                     <div className="modern-info-grid">
                         <div className="contact-item">
-                            <div className="c-icon blue"><Mail size={14} /></div>
+                            <div className="c-icon blue">
+                                <span className="material-symbols-outlined">mail</span>
+                            </div>
                             <div className="c-text">
                                 <label>Email</label>
                                 <p>{maskInfo(candidateData.email, 'email')}</p>
                             </div>
                         </div>
                         <div className="contact-item">
-                            <div className="c-icon green"><Phone size={14} /></div>
+                            <div className="c-icon green">
+                                <span className="material-symbols-outlined">call</span>
+                            </div>
                             <div className="c-text">
                                 <label>Điện thoại</label>
                                 <p>{maskInfo(candidateData.phoneNumber, 'phone')}</p>
                             </div>
                         </div>
                         <div className="contact-item full">
-                            <div className="c-icon orange"><MapPin size={14} /></div>
+                            <div className="c-icon orange">
+                                <span className="material-symbols-outlined">location_on</span>
+                            </div>
                             <div className="c-text">
                                 <label>Địa chỉ</label>
-                                <p className={!isInvited ? "masked-text" : ""}>
-                                    {maskInfo(candidateData.address, 'address')}
-                                </p>
+                                <p>{maskInfo(candidateData.address, 'address')}</p>
                             </div>
                         </div>
                     </div>
 
-                    {!isInvited && (
-                        <div className="premium-unlock-bar">
-                            <Zap size={14} fill="currentColor" />
-                            <span>Mời ứng tuyển để xem đầy đủ thông tin liên hệ</span>
+                    <div className="content-card">
+                        <h4 className="card-title">
+                            <span className="material-symbols-outlined">work</span> Kinh nghiệm làm việc
+                        </h4>
+                        <div className="rich-timeline">
+                            {candidateData.experience && candidateData.experience.length > 0 ? (
+                                candidateData.experience.map((exp, i) => (
+                                    <div key={i} className="experience-item">
+                                        <div className="exp-content">
+                                            <h5>{exp.description}</h5>
+                                            <div className="exp-meta">
+                                                <span className="material-symbols-outlined" style={{fontSize: '14px'}}>calendar_today</span>
+                                                <span>{exp.startDate} — {exp.endDate || 'Hiện tại'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="empty-text-mini">Chưa có dữ liệu kinh nghiệm.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="content-card">
+                        <h4 className="card-title">
+                            <span className="material-symbols-outlined">school</span> Học vấn
+                        </h4>
+                        <div className="education-list">
+                            {degreesOnly.map((deg, i) => (
+                                <div key={i} className="edu-card-item">
+                                    <div className="edu-main-info">
+                                        <h5>{deg.degree}</h5>
+                                        <p className="major-text">{deg.major}</p>
+                                        <p className="school-text">{deg.institution}</p>
+                                    </div>
+                                    <div className="edu-footer-tags">
+                                        <span className="year-pill">{deg.graduationYear}</span>
+                                        {deg.level && <span className="grade-pill">Điểm: {deg.level}</span>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {certificatesOnly.length > 0 && (
+                        <div className="content-card">
+                            <h4 className="card-title">
+                                <span className="material-symbols-outlined">workspace_premium</span> Chứng chỉ chuyên môn
+                            </h4>
+                            <div className="certificate-grid">
+                                {certificatesOnly.map((cert, i) => (
+                                    <div key={i} className="badge-cert-item">
+                                        <div className="badge-info">
+                                            <h6>{cert.name}</h6>
+                                            <div className="cert-meta-row">
+                                                <span>Năm cấp: {cert.year}</span>
+                                                {cert.level && <span className="cert-level-badge">Cấp độ: {cert.level}</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
-
-                    {/* 4. GIỚI THIỆU */}
-                    <div className="content-card">
-                        <h4 className="card-title"><Star size={14} /> Giới thiệu</h4>
-                        <p className="bio-text">
-                            {candidateData.description || "Ứng viên chưa cập nhật phần giới thiệu bản thân."}
-                        </p>
-                    </div>
-
-                    {/* 5. KỸ NĂNG (Đã đổi y -> năm) */}
-                    <div className="content-card">
-                        <h4 className="card-title"><Zap size={14} /> Kỹ năng chuyên môn</h4>
-                        <div className="skill-pills-container">
-                            {candidateData.skills?.map((s, idx) => (
-                                <div key={idx} className="skill-pill">
-                                    <span className="s-name">{s.skillName}</span>
-                                    <span className="s-badge">{s.experienceYears} năm</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 6. KINH NGHIỆM & HỌC VẤN */}
-                    <div className="content-card">
-                        <h4 className="card-title"><Briefcase size={14} /> Hành trình sự nghiệp</h4>
-                        <div className="simple-timeline">
-                            {/* Kinh nghiệm */}
-                            {candidateData.experience?.map((exp, i) => (
-                                <div key={`exp-${i}`} className="tl-row">
-                                    <div className="tl-dot blue"></div>
-                                    <div className="tl-body">
-                                        <h5>{exp.description}</h5>
-                                        <p>{exp.startDate} — {exp.endDate || 'Hiện tại'}</p>
-                                    </div>
-                                </div>
-                            ))}
-                            {/* Học vấn */}
-                            {candidateData.degrees?.map((deg, i) => (
-                                <div key={`deg-${i}`} className="tl-row">
-                                    <div className="tl-dot green"></div>
-                                    <div className="tl-body">
-                                        <h5>{deg.major || deg.name}</h5>
-                                        <p>{deg.graduationYear || deg.year} • {deg.institution}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
 
-                {/* 7. FOOTER ACTION */}
-                <div className="fixed-footer-action">
-                    <button
-                        className={`btn-grand-invite ${isInvited ? 'success' : ''}`}
-                        disabled={isInvited}
-                    >
-                        {isInvited ? 'Đã gửi lời mời ứng tuyển' : 'Mời ứng tuyển ngay'}
+                <div className="fixed-footer-action dual-actions">
+                    <button className="btn-rate-candidate" onClick={() => onRate(candidateData)}>
+                        <span className="material-symbols-outlined">person_search</span>
+                        <span>Đánh giá</span>
+                    </button>
+                    <button className={`btn-grand-invite ${isInvited ? 'success' : ''}`} disabled={isInvited}>
+                        {isInvited ? 'Đã mời ứng tuyển' : 'Mời ứng tuyển'}
                     </button>
                 </div>
             </div>

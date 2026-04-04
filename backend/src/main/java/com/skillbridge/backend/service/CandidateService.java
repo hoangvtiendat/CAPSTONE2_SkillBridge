@@ -111,7 +111,7 @@ public class CandidateService {
         res.setGraduationYear(req.getGraduationYear() != null ? String.valueOf(req.getGraduationYear()) : null);
         res.setName(req.getName());
         res.setYear(req.getYear() != null ? String.valueOf(req.getYear()) : null);
-        req.setGrade(req.getGrade() != null ? req.getGrade(): null);
+        req.setLevel(req.getLevel() != null ? req.getLevel(): null);
         return res;
     }
 
@@ -230,7 +230,7 @@ public class CandidateService {
                     textBuilder.append(d.getDegree() != null ? d.getDegree() : d.getName())
                             .append(" chuyên ngành ").append(d.getMajor())
                             .append(" tại ").append(d.getInstitution())
-                            .append(" với điểm số ").append(d.getGrade()).append(", ");
+                            .append(" với cấp độ ").append(d.getLevel()).append(", ");
                 }
             }
 
@@ -326,13 +326,19 @@ public class CandidateService {
           "major": "Ngành học",
           "institution": "Tên trường/tổ chức cấp",
           "graduationYear": 2023
-          "grade": 3.5
+          "level": 3.5
         },
         {
           "type": "CERTIFICATE",
           "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
           "year": 2025
           "grade": 450
+        },
+        {
+          "type": "CERTIFICATE",
+          "name": "JLPT",
+          "year": 2025
+          "grade": N4
         }
       ],
       "experience": [
@@ -463,34 +469,6 @@ public class CandidateService {
             systemLog.danger(currentUser, "AI không thể phân tích CV: " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-    }
-
-    /**
-     * Chuyển đổi kết quả từ mô hình ngôn ngữ lớn (LLM) sang định dạng Request của hệ thống.
-     * Đồng thời tự động map tên kỹ năng từ AI sang ID kỹ năng trong Database.
-     */
-    private UpdateCandidateCvRequest convertLLMToRequest(LLMResumeResponse res) {
-        UpdateCandidateCvRequest request = new UpdateCandidateCvRequest();
-        request.setName(res.name);
-        request.setAddress(res.address);
-        request.setDescription(res.description);
-        request.setCategoryId(res.categoryId);
-        request.setDegrees(res.degrees);
-        request.setExperience(res.experience);
-        if (res.skills != null && !res.skills.isEmpty()) {
-            List<CandidateSkillRequest> skillRequests = new ArrayList<>();
-            for (CandidateSkillResponse llmSkill : res.skills) {
-                if (llmSkill.getSkillId() != null && !llmSkill.getSkillId().isBlank()) {
-                    CandidateSkillRequest sr = new CandidateSkillRequest();
-                    sr.setSkillId(llmSkill.getSkillId());
-                    Integer years = llmSkill.getExperienceYears();
-                    sr.setExperienceYears(years != null ? years : 1);
-                    skillRequests.add(sr);
-                }
-            }
-            request.setSkills(skillRequests);
-        }
-        return request;
     }
 
     /**

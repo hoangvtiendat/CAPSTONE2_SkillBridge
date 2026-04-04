@@ -12,7 +12,8 @@ import {
     Search,
     Bell,
     Building2,
-    ChevronDown
+    ChevronDown,
+    UserCog
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -31,6 +32,7 @@ const RecruiterLayout = () => {
 
     const menuItems = [
         { icon: <LayoutDashboard size={20} />, label: 'Bảng điều khiển', path: '/recruiter/dashboard' },
+        { icon: <UserCog size={20} />, label: 'Quản lý nhân viên', path: '/company/member' },
         { icon: <Users size={20} />, label: 'Ứng viên', path: '/recruiter/candidates', badge: 12 },
         { icon: <FileText size={20} />, label: 'Tin tuyển dụng', path: '/company/jd-list' },
         { icon: <CreditCard size={20} />, label: 'Gói dịch vụ', path: '/company/subscriptions' },

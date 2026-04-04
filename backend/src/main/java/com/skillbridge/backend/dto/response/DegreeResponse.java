@@ -27,6 +27,6 @@ public class DegreeResponse {
     String name;
     String year;
 
-    Double grade;
+    String level;
 
 }

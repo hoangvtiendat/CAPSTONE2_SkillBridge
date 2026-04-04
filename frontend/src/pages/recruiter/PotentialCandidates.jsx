@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import candidateService from '../../services/api/candidateService';
-import {
-    MapPin, Mail, Phone, User, Loader2, Send, CheckCircle, Trophy
-} from 'lucide-react';
 import { toast } from 'sonner';
 import CandidateProfileOverlay from './CandidateProfileOverlay';
 import './PotentialCandidates.css';
 
 const PotentialCandidates = () => {
     const { jobId } = useParams();
+    const navigate = useNavigate();
     const [candidates, setCandidates] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedCandidate, setSelectedCandidate] = useState(null); // Lưu object ứng viên được chọn
+    const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [invitedIds, setInvitedIds] = useState(new Set());
 
     useEffect(() => {
@@ -34,20 +32,9 @@ const PotentialCandidates = () => {
         toast.success("Đã gửi lời mời ứng tuyển thành công!");
     };
 
-    const maskInfo = (info, type, isInvited) => {
-        if (!info) return "N/A";
-        if (isInvited) return info;
-        if (type === 'email') {
-            const [name, domain] = info.split('@');
-            return `${name[0]}••••${name[name.length - 1]}@${domain}`;
-        }
-        if (type === 'phone') return `${info.slice(0, 3)}••••${info.slice(-3)}`;
-        return `${info.slice(0, 4)}••••`;
-    };
-
     if (loading) return (
         <div className="loading-state">
-            <Loader2 className="animate-spin" size={42} color="#2563eb" />
+            <span className="material-symbols-outlined loader-spin">progress_activity</span>
             <p>Hệ thống AI đang phân tích hồ sơ phù hợp...</p>
         </div>
     );
@@ -55,55 +42,69 @@ const PotentialCandidates = () => {
     return (
         <div className="potential-compact-wrapper">
             <div className="header-compact">
-                <h1><Trophy size={24} color="#fbbf24" style={{marginRight: '8px'}}/> Ứng Viên Tiềm Năng</h1>
+                <button className="btn-back-link" onClick={() => navigate(-1)}>
+                    <span className="material-symbols-outlined">arrow_back</span> Quay lại
+                </button>
+                <div className="title-area">
+                    <h1>Ứng Viên Tiềm Năng</h1>
+                </div>
             </div>
 
             <div className="candidates-grid-compact">
-                {candidates.map((can) => {
-                    const isInvited = invitedIds.has(can.id);
-                    const matchScore = (can.aiMatchingScore * 100).toFixed(0);
-                    const getScoreColor = (s) => s >= 80 ? '#10b981' : (s >= 50 ? '#3b82f6' : '#f59e0b');
+                {candidates.length > 0 ? (
+                    candidates.map((can) => {
+                        const isInvited = invitedIds.has(can.id);
+                        const matchScore = (can.aiMatchingScore * 100).toFixed(0);
+                        const displayAddress = isInvited ? (can.address || 'N/A') : "••••••••";
 
-                    return (
-                        <div key={can.id} className="candidate-card-compact">
-                            <div className="score-mini">
-                                <svg viewBox="0 0 36 36">
-                                    <path className="bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                    <path className="progress" stroke={getScoreColor(matchScore)} strokeDasharray={`${matchScore}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                </svg>
-                                <span>{matchScore}%</span>
-                            </div>
-
-                            <div className="card-top-compact">
-                                <div className="avatar-mini">
-                                    {can.avatar ? <img src={can.avatar} alt="" /> : <User size={24} color="#cbd5e1" />}
+                        return (
+                            <div key={can.id} className="candidate-card-compact">
+                                <div className="score-mini">
+                                    <svg viewBox="0 0 36 36">
+                                        <path className="bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path className="progress" stroke="#3b82f6" strokeDasharray={`${matchScore}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <span>{matchScore}%</span>
                                 </div>
-                                <div className="meta-mini">
-                                    <h3>{can.name}</h3>
-                                    <div className="loc-mini"><MapPin size={10} /> {maskInfo(can.address, 'address', isInvited)}</div>
+
+                                <div className="card-top-compact">
+                                    <div className="avatar-mini">
+                                        {can.avatar ?
+                                            <img src={can.avatar} alt="" /> :
+                                            <span className="material-symbols-outlined" style={{fontSize: '32px', color: '#cbd5e1'}}>person</span>
+                                        }
+                                    </div>
+                                    <div className="meta-mini">
+                                        <h3>{can.name}</h3>
+                                        <div className="loc-mini">
+                                            <span className="material-symbols-outlined" style={{fontSize: '14px'}}>location_on</span> {displayAddress}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="desc-mini">{can.description || "Chưa có giới thiệu về kỹ năng và kinh nghiệm."}</div>
+
+                                <div className="actions-mini">
+                                    <button
+                                        className={`btn-inv-mini ${isInvited ? 'invited' : ''}`}
+                                        onClick={() => handleSendInvitation(can.id)}
+                                        disabled={isInvited}
+                                    >
+                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>
+                                            {isInvited ? 'check_circle' : 'send'}
+                                        </span>
+                                        {isInvited ? 'Đã mời' : 'Mời ứng tuyển'}
+                                    </button>
+                                    <button className="btn-det-mini" onClick={() => setSelectedCandidate(can)}>Chi tiết</button>
                                 </div>
                             </div>
-
-                            <div className="desc-mini">{can.description || "Chưa có giới thiệu."}</div>
-
-                            <div className="contact-row-mini">
-                                <div className="pill-mini"><Mail size={12}/> {maskInfo(can.email, 'email', isInvited)}</div>
-                                <div className="pill-mini"><Phone size={12}/> {maskInfo(can.phoneNumber, 'phone', isInvited)}</div>
-                            </div>
-
-                            <div className="actions-mini">
-                                <button className={`btn-inv-mini ${isInvited ? 'invited' : ''}`} onClick={() => handleSendInvitation(can.id)} disabled={isInvited}>
-                                    {isInvited ? <CheckCircle size={14}/> : <Send size={14}/>} {isInvited ? 'Đã mời' : 'Mời'}
-                                </button>
-                                {/* CẬP NHẬT: Lưu nguyên object vào state */}
-                                <button className="btn-det-mini" onClick={() => setSelectedCandidate(can)}>Hồ sơ</button>
-                            </div>
-                        </div>
-                    );
-                })}
+                        )
+                    })
+                ) : (
+                    <div className="empty-state">Không tìm thấy ứng viên phù hợp.</div>
+                )}
             </div>
 
-            {/* CẬP NHẬT: Truyền prop candidateData */}
             {selectedCandidate && (
                 <CandidateProfileOverlay
                     candidateData={selectedCandidate}
