@@ -18,4 +18,9 @@ public class CategoryResponse {
     String name;
     LocalDateTime createdAt;
 
+
+    public CategoryResponse(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 }

@@ -18,6 +18,8 @@ public class SkillRequest {
     @JsonProperty("category_id")
     String categoryId;
 
+
+
     public void setName(String name) {
         this.name = (name != null) ? name.trim() : null;
     }

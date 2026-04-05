@@ -104,7 +104,7 @@ public class AiService {
             - Ngăn chặn Spam cơ bản: Chỉ từ chối khi nội dung hoàn toàn là các chuỗi ký tự gõ bừa vô nghĩa (ví dụ: "asdfgh", "qwerty") hoặc tin thử nghiệm quá ngắn (ví dụ: "test 123", "abc"). Nếu văn phong ngắn gọn, viết tắt, hoặc trình bày hơi lủng củng nhưng vẫn thể hiện rõ mục đích tuyển dụng, hãy CHẤP NHẬN.
             - An toàn cộng đồng: Từ chối các bài đăng vi phạm pháp luật rõ ràng (cờ bạc, lừa đảo, tình dục), hoặc chứa ngôn từ chửi thề, xúc phạm nặng nề. Đối với các từ ngữ đời thường, hãy bỏ qua.
             - Chấp nhận sự thiếu sót: Bài đăng không cần phải hoàn hảo 100%. Nếu thiếu một vài trường thông tin chi tiết, hoặc kỹ năng (skills) chưa khớp hoàn toàn với vị trí công việc, vẫn CHẤP NHẬN. Chỉ cần đảm bảo có thông tin vị trí công việc và mức lương không mang giá trị âm là được.
-            
+            - Bắt buộc các trường dữ liệu như tên địa chỉ thì phải dùng tiếng Việt các địa danh nước ngoài thì tiếng Anh đều được.
             ĐỊNH DẠNG ĐẦU RA:
             Bạn phải trả về kết quả dưới định dạng JSON với cấu trúc sau:
             {
@@ -164,6 +164,43 @@ public class AiService {
               "spam": true | false
             }
             """;
+
+    private static final String SEMANTIC_SEARCH = """
+    SYSTEM ROLE:
+    Bạn là Chuyên gia Nhân sự AI cao cấp của hệ thống SkillBridge. Nhiệm vụ của bạn là phân tích "YÊU CẦU NGƯỜI DÙNG" và đối chiếu với "DỮ LIỆU CV" để xuất ra đối tượng JSON chuẩn phục vụ truy vấn Database.
+
+    QUY TRÌNH XỬ LÝ DỮ LIỆU:
+    1. Xác định Ngành nghề (category_name): 
+       - Đối chiếu yêu cầu với danh sách ngành nghề của hệ thống.
+       - Nếu chỉ có kỹ năng (VD: "ReactJS", "Java"), hãy tự suy luận ngành nghề tương ứng (VD: "Công nghệ thông tin").
+
+    2. Chuẩn hóa Địa điểm (city):
+       - Trả về tên tiếng Việt chuẩn cho địa điểm ở Việt Nam (VD: "Hồ Chí Minh", "Đà Nẵng").
+       - Ràng buộc: Nếu người dùng yêu cầu "toàn quốc", "mọi nơi", hoặc không đề cập địa điểm -> BẮT BUỘC trả về null.
+
+    3. Xử lý Lương (salary_expect):
+       - Trả về giá trị số nguyên (Long) nếu người dùng có yêu cầu con số cụ thể.
+       - Nếu không đề cập hoặc yêu cầu chung chung -> BẮT BUỘC trả về null.
+
+    4. Phân loại Logic (typeTraVe):
+       - typeTraVe = 0: Người dùng tìm việc thuộc lĩnh vực và kỹ năng ĐÃ CÓ trong CV. skill_names chứa các kỹ năng liên quan được trích xuất.
+       - typeTraVe = 1: Người dùng muốn chuyển sang ngành MỚI hoặc tìm kỹ năng MỚI (không có trong CV). 
+         LƯU Ý: Trong trường hợp này, skill_names PHẢI là mảng rỗng [].
+       - typeTraVe = 2: Không xác định được ngành nghề phù hợp hoặc yêu cầu không hợp lệ.
+
+    ĐỊNH DẠNG ĐẦU RA (RÀNG BUỘC TUYỆT ĐỐI):
+    Chỉ trả về DUY NHẤT một khối JSON theo cấu trúc dưới đây. 
+    KHÔNG kèm theo lời giải thích, KHÔNG nằm trong dấu ngoặc kép hay khối mã (code block):
+
+    {
+      "typeTraVe": 0 | 1 | 2,
+      "category_name": "Tên ngành nghề",
+      "city": "Tên thành phố" | null,
+      "skill_names": ["Kỹ năng 1", "Kỹ năng 2"] | [],
+      "salary_expect": number | null
+    }
+    ----- Dữ liệu đây ------- 
+    """;
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {
         this.ollamaRestClient = ollamaRestClient;
         this.objectMapper = objectMapper;
@@ -181,7 +218,9 @@ public class AiService {
                     .build();
 
             String cvJsonString = objectMapper.writeValueAsString(cvData);
+            System.out.println("cvJsonString: " + cvJsonString);
             String jdJsonString = objectMapper.writeValueAsString(jdData);
+            System.out.println("jdJsonString: " + jdJsonString);
 
             String finalPrompt = SYSTEM_PROMPT_CHECK_CV_AND_JD +
                     "\n\n--- JD JSON ---\n" + jdJsonString +
@@ -209,8 +248,32 @@ public class AiService {
             return "{}";
         }
     }
+
+    public String optimizeCvText(String rawText) {
+        if (rawText == null || rawText.isBlank()) return "";
+
+        String cleaned = rawText.replaceAll("[—\u00a9\u00ae|©]", " ");
+
+        cleaned = cleaned.replaceAll("\\n+", "\n");
+
+        cleaned = cleaned.replaceAll("[ ]{2,}", " ");
+
+
+        String[] keywords = {"CONTACT", "PROGRAMMING LANGUAGES", "CERTIFICATES", "About me",
+                "Work Experiences", "Education", "Projects", "Prizes and Awards"};
+
+        for (String key : keywords) {
+            cleaned = cleaned.replace(key, "\n" + key.toUpperCase() + ": ");
+        }
+
+        return cleaned.trim();
+    }
+
     public String parsingCV_AI(String dataCV_Of_Candidate){
         try{
+            String optimizedText = optimizeCvText(dataCV_Of_Candidate);
+            System.out.println("optimizedText: " + optimizedText);
+            System.out.println(dataCV_Of_Candidate);
         OllamaOptions options = OllamaOptions.builder()
                 .temperature(0.0)
                 .top_k(10)
@@ -219,7 +282,7 @@ public class AiService {
                 .num_ctx(8192)
                 .build();
         String finalPrompt = PROMPT_PARSING_CV +
-                "\n\n--- CV JSON ---\n" + dataCV_Of_Candidate;
+                "\n\n--- CV JSON ---\n" + optimizedText;
         OllamaRequest requestPayload = OllamaRequest.builder()
                 .model(model)
                 .prompt(finalPrompt)
@@ -256,8 +319,15 @@ public class AiService {
                 finalPrompt = PROMPT_CHECK_APPROVAL +
                         "\n\n--- CV JSON ---\n" + dataJD_of_Company;
             }
+
+            ///   Kiểm tra nâng cao của JD so sánh cũ + mới  !!!!!!!!!!!!!!!!!!!!!!
             else if(type_Function == 2){
                 finalPrompt = PROMPT_CHECK_NEWJOV_VS_OLDJOB +
+                        "\n\n--- Data ---\n" + dataJD_of_Company;
+            }
+            ///  Bóc tách dữ liệu
+            else if(type_Function == 3){
+                finalPrompt = SEMANTIC_SEARCH +
                         "\n\n--- Data ---\n" + dataJD_of_Company;
             }
             OllamaRequest requestAI = OllamaRequest.builder()

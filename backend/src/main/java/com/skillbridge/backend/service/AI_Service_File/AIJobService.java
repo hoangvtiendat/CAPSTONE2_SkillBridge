@@ -1,15 +1,19 @@
 package com.skillbridge.backend.service.AI_Service_File;
 
 import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.dto.response.CheckApprovalResponse;
-import com.skillbridge.backend.dto.response.JobDetailResponse;
+import com.skillbridge.backend.dto.request.SemanticSearchRequest;
+import com.skillbridge.backend.dto.request.SkillRequest;
+import com.skillbridge.backend.dto.response.*;
+import com.skillbridge.backend.entity.Candidate;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.repository.CategoryRepository;
 import com.skillbridge.backend.repository.JobRepository;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.enums.JobStatus;
+import com.skillbridge.backend.service.CandidateService;
 import com.skillbridge.backend.service.MailService;
 import com.skillbridge.backend.service.NotificationService;
 import jakarta.transaction.Transactional;
@@ -18,11 +22,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import com.skillbridge.backend.utils.SecurityUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -35,8 +37,13 @@ public class AIJobService {
     @Autowired
     NotificationService notificationService;
     @Autowired
-    private ObjectMapper objectMapper;
-
+    ObjectMapper objectMapper;
+    @Autowired
+    CategoryRepository categoryRepository;
+    @Autowired
+    CandidateService candidateService;
+    @Autowired
+    SecurityUtils securityUtils;
     /// Lấy nội dung vector để so sánh
     public String getJobComparisonResponse(String jobId) {
         Job job = jobRepository.findById(jobId)
@@ -341,7 +348,151 @@ public class AIJobService {
         }
     }
 
+    ///  Tìm Job theo ngữ nghĩa
+    public List<Job> findJobBySemanticSearch(String requestOfCandidate) {
 
+        ArrayList<Job> jobs = new ArrayList<>();
+        ObjectMapper objectMapper = new ObjectMapper();
 
+        try {
+            String idOfUser = securityUtils.getCurrentUserId();
 
+            UpdateCandidateCvResponse cv = candidateService.getCv(idOfUser);
+            System.out.println("cvNe" + cv);
+            System.out.println(cv);
+            if (cv == null) {
+                throw new RuntimeException(ErrorCode.NOT_FOUND_DATA_CV.getMessage());
+            }
+            List<SkillRequest> skills = new ArrayList<>();
+
+            if (cv.getSkills() != null) {
+                for (CandidateSkillResponse s : cv.getSkills()) {
+                    SkillRequest skill = new SkillRequest();
+                    skill.setName(s.getSkillName());
+                    skill.setCategoryId(s.getSkillId());
+                    skills.add(skill);
+
+                }
+            }
+            System.out.println("SkillList " + skills);
+            List<dataDetailCanDiadateForAIReponse> getImportantDataOfCandidate = new ArrayList<>();
+
+            dataDetailCanDiadateForAIReponse data = dataDetailCanDiadateForAIReponse.builder()
+                    .category(cv.getCategory())
+                    .location(cv.getAddress())
+                    .degrees(cv.getDegrees())
+                    .skills(skills)
+                    .build();
+
+            getImportantDataOfCandidate.add(data);
+
+            ///  Lấy dũ liệu danh sách category của hệ thống
+            System.out.println("Hàm lấy Categories");
+            List<CategoryResponse> getAllCategories = categoryRepository.findActiveCategories();
+
+            String jsonStringCategory = objectMapper.writeValueAsString(getAllCategories);
+            ///  bóc tách dữ liệu chiwns
+            String jsonStringCandidate = objectMapper.writeValueAsString(getImportantDataOfCandidate);
+            String promptTemplate = """
+                    Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
+                    ... (Nội dung Prompt mình đưa ở trên) ...
+                    [DANH SÁCH CATEGORY HỆ THỐNG]: %s
+                    [DỮ LIỆU CV HIỆN TẠI]: %s
+                    [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
+                    """;
+            String requstForAI = String.format(promptTemplate,
+                    jsonStringCategory,
+                    jsonStringCandidate,
+                    requestOfCandidate
+            );
+            String aiResponse = aiService.Ai_OF_SKILLBRIDGE(requstForAI, 3);
+            JsonNode rootNode = objectMapper.readTree(aiResponse);
+            System.out.println("requstForAI");
+            System.out.println(requstForAI);
+            String categoryName, city;
+            Long salaryExpect;
+            List<String> skillIds = new ArrayList<>();
+            List<String> degreeNames = new ArrayList<>();
+
+            int type = rootNode.get("typeTraVe").asInt();
+            System.out.println("typeTraVe " + type);
+            System.out.println("rootNode"+ rootNode);
+            List<Job> resultList = new ArrayList<>();
+            categoryName = (rootNode.has("category_name") && !rootNode.get("category_name").asText().isEmpty())
+                    ? rootNode.get("category_name").asText() : null;
+
+            city = (rootNode.has("city") && !rootNode.get("city").asText().isEmpty())
+                    ? rootNode.get("city").asText() : null;
+
+            List<String> skillsName = new ArrayList<>();
+            JsonNode skillsNode = rootNode.get("skill_names");
+            if (skillsNode != null && skillsNode.isArray()) {
+                for (JsonNode skill : skillsNode) {
+                    String s = skill.asText();
+                    if (!s.isEmpty()) skillsName.add(s);
+                }
+            }
+
+            boolean hasSkills = !skillsName.isEmpty();
+            salaryExpect = rootNode.get("salary_expect").asLong();
+            List<String> querySkills = hasSkills ? skillsName : Collections.singletonList("");
+            if (type == 0) {
+
+                System.out.println("querySkills " + querySkills);
+                System.out.println("hasSkills " + hasSkills);
+                System.out.println("skillsName " + skillsName);
+                System.out.println("salaryExpect " + salaryExpect);
+                resultList = jobRepository.findJobsByRequirements(
+                        JobStatus.OPEN.name(),
+                        city,
+                        categoryName,
+                        querySkills,
+                        hasSkills,
+                        salaryExpect
+                );
+
+                System.out.println("Kết quả tìm kiếm: " + resultList.size() + " jobs found.");
+                if(resultList.size() > 0) {
+                    return resultList;
+                }
+                else {
+                    System.out.println("Kết qủa ko tìm thấy JD");
+                    throw new AppException(ErrorCode.JOB_NOT_FOUND);
+                }
+            }
+             else if (type == 1) {
+                resultList = jobRepository.findJobsByRequirements_Not_sameCategory(
+                        JobStatus.OPEN.name(),
+                        city,
+                        categoryName,
+                        querySkills,
+                        hasSkills,
+                        salaryExpect
+                );
+                System.out.println("Kết quả tìm kiếm: " + resultList.size() + " jobs found.");
+                if(resultList.size() > 0) {
+                    return resultList;
+                }
+                else {
+                    System.out.println("Kết qủa ko tìm thấy JD");
+                    throw new AppException(ErrorCode.JOB_NOT_FOUND);
+                }
+
+            }
+            else if(type == 2){
+                System.out.println("AI không tìm thấy ngành phù hợp.");
+                return new ArrayList<>();
+            }
+
+            System.out.println(type);
+            System.out.println("getDuLieuBocTachTuAI");
+            System.out.println(aiResponse);
+            return jobs;
+
+        } catch (Exception e) {
+            throw new RuntimeException("AI error", e);
+        } finally {
+            System.out.println("findJobBySemanticSearch đã chạy");
+        }
+    }
 }

@@ -1,8 +1,12 @@
 package com.skillbridge.backend.repository;
 
+import com.skillbridge.backend.dto.response.CategoryResponse;
 import com.skillbridge.backend.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface CategoryRepository  extends JpaRepository<Category, String> {
@@ -11,4 +15,13 @@ public interface CategoryRepository  extends JpaRepository<Category, String> {
 
     /** Kiểm tra sự tồn tại của tên danh mục trong hệ thống mà không phân biệt chữ hoa, chữ thường */
     boolean existsByNameIgnoreCase(String name);
+
+
+    @Query("""
+        SELECT new com.skillbridge.backend.dto.response.CategoryResponse(c.id, c.name)
+        FROM Category c 
+    """)
+    List<CategoryResponse> findActiveCategories();
+    @Query("SELECT c.id FROM Category c WHERE LOWER(c.name) = LOWER(:name)")
+    String findIdByName(@org.springframework.data.repository.query.Param("name") String name);
 }

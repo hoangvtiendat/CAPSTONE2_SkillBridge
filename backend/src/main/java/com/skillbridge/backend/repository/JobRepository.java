@@ -256,5 +256,74 @@ public interface JobRepository extends JpaRepository<Job, String> {
             @Param("jobId") String jobId,
             @Param("companyId") String companyId
     );
+    /// lệnh truy vấn theo nhu cầy của người dùng (lấy trheo đúng chuyên ngành ) ---  type: 0
+
+    @Query(value = """
+SELECT j.* FROM jobs j
+LEFT JOIN categories c ON j.category_id = c.id AND c.is_deleted = false
+LEFT JOIN job_skills js ON j.id = js.job_id AND js.is_deleted = false
+LEFT JOIN skills s ON js.skill_id = s.id AND s.is_deleted = false
+WHERE j.is_deleted = false
+  AND j.status = :status
+  -- Lọc theo thành phố
+    AND (:city IS NULL OR :city = '' OR j.location LIKE CONCAT('%', :city, '%'))   
+  AND (:categoryName IS NULL OR c.name LIKE CONCAT('%', :categoryName, '%'))
+  
+ 
+  AND (:salaryExpect IS NULL OR j.salary_max >= :salaryExpect OR j.salary_max = 0)
+  
+  -- Lọc theo danh sách kỹ năng
+  AND (:hasSkills = false OR s.name IN (:skillNames))
+GROUP BY j.id
+ORDER BY 
+  CASE WHEN :hasSkills = true THEN COUNT(s.id) ELSE 0 END DESC, 
+  j.created_at DESC
+""", nativeQuery = true)
+    List<Job> findJobsByRequirements(
+            @Param("status") String status,
+            @Param("city") String city,
+            @Param("categoryName") String categoryName,
+            @Param("skillNames") List<String> skillNames,
+            @Param("hasSkills") boolean hasSkills,
+            @Param("salaryExpect") Long salaryExpect
+
+    );
+    /// lệnh truy vấn theo nhu cầy của người dùng (lấy trheo khác chuyên ngành ) --   type: 1
+    @Query(value = """
+    SELECT j.* FROM jobs j
+    LEFT JOIN categories c ON j.category_id = c.id AND c.is_deleted = false
+    -- Chỉ Join skills khi thực sự cần lọc skill để tránh làm chậm câu query
+    LEFT JOIN job_skills js ON (:hasSkills = true AND j.id = js.job_id AND js.is_deleted = false)
+    LEFT JOIN skills s ON (:hasSkills = true AND js.skill_id = s.id AND s.is_deleted = false)
+    WHERE j.is_deleted = false
+      AND j.status = :status
+      
+      -- RÀNG BUỘC CITY: Nếu :city là null hoặc rỗng thì lấy toàn quốc
+      AND (:city IS NULL OR :city = '' OR j.location LIKE CONCAT('%', :city, '%'))
+      
+      -- RÀNG BUỘC CATEGORY: Bắt buộc khớp ngành (Marketing, IT, v.v.)
+      AND (:categoryName IS NULL OR c.name LIKE CONCAT('%', :categoryName, '%'))
+      
+      -- RÀNG BUỘC LƯƠNG
+      AND (:salaryExpect IS NULL OR j.salary_max >= :salaryExpect OR j.salary_max = 0)
+      
+      -- RÀNG BUỘC SKILLS: 
+      -- Nếu hasSkills = false (Type 1), điều kiện này luôn đúng -> Lấy hết JD trong ngành
+      -- Nếu hasSkills = true (Type 0), bắt buộc phải khớp ít nhất 1 skill trong list
+      AND (:hasSkills = false OR s.name IN (:skillNames))
+      
+    GROUP BY j.id
+    ORDER BY 
+      CASE WHEN :hasSkills = true THEN COUNT(s.id) ELSE 0 END DESC, 
+      j.created_at DESC
+    """, nativeQuery = true)
+    List<Job> findJobsByRequirements_Not_sameCategory(
+            @Param("status") String status,
+            @Param("city") String city,
+            @Param("categoryName") String categoryName,
+            @Param("skillNames") List<String> skillNames,
+            @Param("hasSkills") boolean hasSkills,
+            @Param("salaryExpect") Long salaryExpect
+    );
 }
 

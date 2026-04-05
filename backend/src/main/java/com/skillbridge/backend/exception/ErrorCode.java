@@ -47,6 +47,7 @@ public enum ErrorCode {
     PHONE_INVALID(3009, "Số điện thoại không hợp lệ (Phải có 10 số, bắt đầu bằng 0 hoặc +84)", HttpStatus.BAD_REQUEST),
     APPLICATION_ALREADY_EXISTS(3010, "Bạn đã nộp đơn cho công việc này rồi", HttpStatus.BAD_REQUEST),
     OCR_FAILED(3011,"Lỗi ocr không thể đọc được dữ liệu",HttpStatus.BAD_REQUEST),
+    NOT_FOUND_DATA_CV(3012, "Lỗi không thể Lấy được dữ liệu CV của bạn vui lòng kiểm tra lại CV của bạn", HttpStatus.BAD_REQUEST),
     // 4xxx: COMPANY & MEMBERSHIP
     COMPANY_NOT_FOUND(4000, "Mã số thuế chưa tồn tại. Vui lòng đăng ký mới!", HttpStatus.NOT_FOUND),
     COMPANY_EXIST(4001, "Công ty này đã được đăng ký trên hệ thống", HttpStatus.BAD_REQUEST),
@@ -83,6 +84,7 @@ public enum ErrorCode {
     JOB_STATUS_EXITS(5011, "Trạng thái này đã tồn tại cho bài tuyển dụng", HttpStatus.BAD_REQUEST),
     SKILL_EXITS_NAME(5012, "Tên kỹ năng này đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
     CATEGORY_PROFESSION(5013, "Danh mục ngành nghề chuyên môn không hợp lệ hoặc đã tồn tại", HttpStatus.BAD_REQUEST),
+    NOT_FOUND_CATEGORY_OF_CANDIDATE(5014, "Hiện tại cái trong CV của bạn không có category(lĩnh vực ngành nghề) vui lòng update để sử dụng chức năng này", HttpStatus.BAD_REQUEST),
 
     // 6xxx: SUBSCRIPTION & PAYMENT (TIER LOGIC)
     SUBSCRIPTION_NOT_FOUND(6000, "Không tìm thấy gói đăng ký của công ty", HttpStatus.NOT_FOUND),
