@@ -399,25 +399,93 @@
 }
 
 .skill-tag {
-    background: #eff6ff;
-    color: #1e40af;
-    border: 1px solid #dbeafe;
-    padding: 6px 12px;
+    background: #f8fafc;
+    color: #4e4e4e;
+    border: 1px solid #e2e8f0;
+    padding: 6px 20px 6px 12px;
+    /* Increased right padding for the absolute button */
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 13px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    width: fit-content;
+    position: relative;
+    /* Base for absolute positioning */
 }
 
-.skill-tag button {
+.skill-name {
+    font-weight: 500;
+}
+
+.no-id-text {
+    color: #ef4444;
+    font-size: 10px;
+    margin-left: 2px;
+}
+
+.skill-tag:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.skill-tag.no-id {
+    background: #fff1f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+.skill-tag .skill-year-input {
+    width: 30px;
+    height: 20px !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    /* Size match */
+    text-align: center;
+    border: none !important;
+    background: transparent !important;
+    color: #4f4f4f;
+    font-weight: 500;
+    cursor: text;
+}
+
+.skill-tag .skill-year-input:focus {
+    outline: none;
+    background: #fff !important;
+    border-color: #6366f1 !important;
+}
+
+.skill-tag .skill-exp-label {
+    font-size: 13px;
+    color: #4f4f4f;
+    /* Match black name color */
+    font-weight: 500;
+    margin-right: 4px;
+}
+
+.remove-skill-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
     background: none;
     border: none;
-    color: #1e40af;
+    color: #64748b;
     cursor: pointer;
-    font-weight: 700;
-    font-size: 16px;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.remove-skill-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    transform: scale(1.1);
 }
 
 .btn-primary {
