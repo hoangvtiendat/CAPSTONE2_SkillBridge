@@ -172,14 +172,17 @@ public class AiService {
     QUY TRÌNH XỬ LÝ DỮ LIỆU:
     1. Xác định Ngành nghề (category_name): 
        - Đối chiếu yêu cầu với danh sách ngành nghề của hệ thống.
+       - Với trường hợp mà người dùng không có đề cập đến ngành nghề thị mặc định sẽ tự động lấy ngành nghề theo CV 
        - Nếu chỉ có kỹ năng (VD: "ReactJS", "Java"), hãy tự suy luận ngành nghề tương ứng (VD: "Công nghệ thông tin").
 
     2. Chuẩn hóa Địa điểm (city):
        - Trả về tên tiếng Việt chuẩn cho địa điểm ở Việt Nam (VD: "Hồ Chí Minh", "Đà Nẵng").
        - Ràng buộc: Nếu người dùng yêu cầu "toàn quốc", "mọi nơi", hoặc không đề cập địa điểm -> BẮT BUỘC trả về null.
+       - Nếu mà liên quan đến các từ có ý nghĩa tương đồng như "quanh tôi","Khu vực tôi sống", .... thì mặc định lấy Địa điểm trong CV
 
     3. Xử lý Lương (salary_expect):
        - Trả về giá trị số nguyên (Long) nếu người dùng có yêu cầu con số cụ thể.
+       - Với trường hơp các câu nói tắt về giá như "12M", "12 Triệu", ... hay bất kì 1 cách gọn nào khác hãy viết lại thành số (Vd: 12M => 12000000, 12Ngàn => 12000)
        - Nếu không đề cập hoặc yêu cầu chung chung -> BẮT BUỘC trả về null.
 
     4. Phân loại Logic (typeTraVe):

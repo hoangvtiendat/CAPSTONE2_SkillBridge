@@ -211,7 +211,7 @@ public class AIJobService {
             System.out.println("id: " + dataOfJD);
             Optional<User> userOptional = jobRepository.findUserByJobAndCompany(dataOfJD, companyId);
             System.out.println("getIdOfReceiver: " + userOptional);
-
+            System.out.println("dataOfJD: " + dataOfJD);
             User receiver = userOptional.get();
             System.out.println("receiver (Email): " + receiver.getEmail());
 
@@ -233,7 +233,7 @@ public class AIJobService {
             /// 　String > json
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(resultOdAI);
-            /// Bóc tách dữ liệu nè
+            /// Bóc tách dữ liệu nèdd
             Boolean checkResultAI = jsonNode.get("isApproved").asBoolean();
             String subject = "Thông báo duyệt bài đăng";
             String messageBody= "";
@@ -406,6 +406,7 @@ public class AIJobService {
                     requestOfCandidate
             );
             String aiResponse = aiService.Ai_OF_SKILLBRIDGE(requstForAI, 3);
+            System.out.println("aiResponse " + aiResponse);
             JsonNode rootNode = objectMapper.readTree(aiResponse);
             System.out.println("requstForAI");
             System.out.println(requstForAI);
@@ -456,8 +457,7 @@ public class AIJobService {
                     return resultList;
                 }
                 else {
-                    System.out.println("Kết qủa ko tìm thấy JD");
-                    throw new AppException(ErrorCode.JOB_NOT_FOUND);
+                    return resultList;
                 }
             }
              else if (type == 1) {
@@ -474,8 +474,7 @@ public class AIJobService {
                     return resultList;
                 }
                 else {
-                    System.out.println("Kết qủa ko tìm thấy JD");
-                    throw new AppException(ErrorCode.JOB_NOT_FOUND);
+                   return resultList;
                 }
 
             }
@@ -484,10 +483,7 @@ public class AIJobService {
                 return new ArrayList<>();
             }
 
-            System.out.println(type);
-            System.out.println("getDuLieuBocTachTuAI");
-            System.out.println(aiResponse);
-            return jobs;
+            return resultList;
 
         } catch (Exception e) {
             throw new RuntimeException("AI error", e);
