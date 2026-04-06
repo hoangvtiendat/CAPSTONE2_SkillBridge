@@ -62,6 +62,15 @@ const candidateService = {
         const response = await api.get(`/candidates/potential/${jobId}`);
         return response.data;
     },
+    evaluateByRecruiter: async (candidateId, jobId) => {
+        try {
+            const response = await api.get(`/candidates/evaluate-by-recruiter/${candidateId}/${jobId}`);
+            return await response.data;
+        } catch (error) {
+            console.error("Error in evaluateByRecruiter service:", error);
+            throw error;
+        }
+    },
 };
 
 export default candidateService;

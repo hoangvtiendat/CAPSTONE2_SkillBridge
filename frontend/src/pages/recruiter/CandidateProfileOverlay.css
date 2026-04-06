@@ -1,4 +1,3 @@
-/* --- GOOGLE FONTS & ICONS --- */
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
 .material-symbols-outlined {
@@ -8,7 +7,6 @@
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-/* --- OVERLAY & CONTAINER --- */
 .profile-overlay-backdrop {
     position: fixed;
     top: 0;
@@ -20,8 +18,104 @@
     justify-content: flex-end;
     align-items: center;
     padding-right: 40px;
+    gap: 25px;
     background: rgba(15, 23, 42, 0.4);
     backdrop-filter: blur(10px);
+}
+.evaluation-result-panel {
+    width: 580px;
+    height: 94vh;
+    border-radius: 45px;
+    box-shadow: -10px 20px 60px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    padding: 35px;
+    animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    border: 1px solid #f1f5f9;
+    background: linear-gradient(to bottom, #ffffff, #fdfdff);
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-60px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.eval-header-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+    border-bottom: 2px dashed #f1f5f9;
+    padding-bottom: 20px;
+}
+.eval-title-area h3 { margin: 0; font-size: 1.5rem; color: #0f172a; letter-spacing: -0.02em; }
+.eval-title-area p { margin: 4px 0 0; color: #64748b; font-size: 0.85rem; }
+
+.eval-content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 12px;
+}
+
+.eval-content-scroll::-webkit-scrollbar { width: 5px; }
+.eval-content-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+.eval-box {
+    margin-bottom: 20px;
+    padding: 25px;
+    border-radius: 30px;
+}
+
+.eval-box.strength { background: #f0fdf4; border: 1.5px solid #dcfce7; color: #166534; }
+.eval-box.weakness { background: #fff1f2; border: 1.5px solid #ffe4e6; color: #9f1239; }
+
+.box-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+}
+.eval-text-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.eval-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.eval-list-item .bullet {
+    font-size: 1.2rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+    font-weight: bold;
+}
+
+.strength .bullet { color: #166534; }
+.weakness .bullet { color: #9f1239; }
+
+.eval-list-item .text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: inherit;
+    font-weight: 500;
+    white-space: normal;
+}
+
+.btn-rate-candidate.is-loading span:first-child {
+    animation: rotateIcon 2s linear infinite;
+}
+
+@keyframes rotateIcon {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .profile-bubble-content {
@@ -49,7 +143,6 @@
     }
 }
 
-/* --- SCROLL AREA --- */
 .bubble-scroll-area {
     flex: 1;
     padding: 20px 30px 140px 30px;
@@ -61,7 +154,6 @@
     display: none;
 }
 
-/* --- BUTTONS --- */
 .close-bubble-btn {
     position: absolute;
     top: 25px;
@@ -90,7 +182,6 @@
     transform: rotate(90deg) scale(1.1);
 }
 
-/* --- HEADER SECTION --- */
 .premium-header {
     width: 100%;
     padding: 20px 0 30px 0;
@@ -160,7 +251,6 @@
     font-weight: 500;
 }
 
-/* --- CONTACT INFO GRID --- */
 .modern-info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -218,7 +308,6 @@
     word-break: break-all;
 }
 
-/* --- CONTENT CARDS --- */
 .content-card {
     width: 100%;
     margin-bottom: 18px;
@@ -244,7 +333,6 @@
     font-size: 18px;
 }
 
-/* Experience */
 .rich-timeline {
     display: flex;
     flex-direction: column;
@@ -284,7 +372,6 @@
     font-size: 0.78rem;
 }
 
-/* Education */
 .education-list {
     display: flex;
     flex-direction: column;
@@ -354,7 +441,6 @@
     border-radius: 10px;
 }
 
-/* Certificates */
 .certificate-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -417,7 +503,6 @@
     text-transform: uppercase;
 }
 
-/* --- FOOTER ACTIONS --- */
 .fixed-footer-action.dual-actions {
     position: absolute;
     bottom: 0;
@@ -448,7 +533,7 @@
     transition: 0.2s;
 }
 
-.btn-rate-candidate:hover {
+.btn-rate-candidate:hover:not(:disabled) {
     background: #f8fafc;
     border-color: #cbd5e1;
     color: #0f172a;

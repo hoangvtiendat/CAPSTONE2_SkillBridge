@@ -332,13 +332,13 @@ public class CandidateService {
           "type": "CERTIFICATE",
           "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
           "year": 2025
-          "grade": 450
+          "level": 450
         },
         {
           "type": "CERTIFICATE",
           "name": "JLPT",
           "year": 2025
-          "grade": N4
+          "level": N4
         }
       ],
       "experience": [
@@ -533,13 +533,16 @@ public class CandidateService {
         Optional<CVJobEvaluation> existingEval = cvJobEvaluationRepository
                 .findByCandidateIdAndJobId(candidateId, jobId);
 
-        if (existingEval.isPresent()){
-            CVJobEvaluation eval = existingEval.get();
-            return eval;
-        }
+//        if (existingEval.isPresent()){
+//            CVJobEvaluation eval = existingEval.get();
+//            return eval;
+//        }
+
+        CVJobEvaluation eval = existingEval.get();
+        return eval;
 
 //        log.info("[SOURCING] Khởi tạo đánh giá mới từ Recruiter cho Candidate: {} - Job: {}", candidateId, jobId);
 //        return performNewEvaluationByRecruiter(candidateId, jobId);
-        return existingEval.get();
+//        return existingEval.get();
     }
 }

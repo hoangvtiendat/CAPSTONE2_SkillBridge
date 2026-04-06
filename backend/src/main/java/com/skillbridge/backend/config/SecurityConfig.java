@@ -49,6 +49,8 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/me/2fa").authenticated()
+
                         .requestMatchers(
                                 "/skill/set/**",
                                 "/identity/jobs/feedAdmin/**",
@@ -62,8 +64,8 @@ public class SecurityConfig {
                                 "/identity/subscription/**",
                                 "/identity/CategoryProfession/**",
                                 "/applications/jobs/**",
-                                "/candidates/potential/{jobId}"
-
+                                "/candidates/potential/{jobId}",
+                                "/candidates/evaluate-by-recruiter/{candidateId}/{jobId}"
                         ).hasRole("RECRUITER")
 
                         .requestMatchers(
@@ -76,8 +78,11 @@ public class SecurityConfig {
                                 "/jobs/feed",
                                 "/companies/feed",
                                 "/companies/{id}",
-                                "/admin/**",
-                                "/auth/**",
+                                "/auth/login",
+                                "/auth/register/**",
+                                "/auth/forgot-password",
+                                "/auth/reset-password",
+                                "/auth/login/verify-otp",
                                 "/users/**",
                                 "/api/public/**",
                                 "/oauth2/**",
@@ -98,6 +103,7 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
+
 
                 .oauth2Login(oauth -> oauth
                         .successHandler(successHandler)

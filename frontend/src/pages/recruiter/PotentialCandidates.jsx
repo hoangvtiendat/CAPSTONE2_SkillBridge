@@ -108,6 +108,7 @@ const PotentialCandidates = () => {
             {selectedCandidate && (
                 <CandidateProfileOverlay
                     candidateData={selectedCandidate}
+                    jobId={jobId}
                     isInvited={invitedIds.has(selectedCandidate.id)}
                     onClose={() => setSelectedCandidate(null)}
                 />

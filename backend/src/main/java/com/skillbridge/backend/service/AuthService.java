@@ -11,6 +11,7 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.InvalidatedTokenRepository;
 import com.skillbridge.backend.repository.UserRepository;
+import com.skillbridge.backend.utils.SecurityUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -34,6 +35,7 @@ public class AuthService {
     OtpService otpService;
     JwtService jwtService;
     SystemLogService systemLog;
+    SecurityUtils securityUtils;
 
     /**
      * Gửi OTP đăng ký tài khoản
@@ -276,9 +278,10 @@ public class AuthService {
         return new LoginResponse(user.getIs2faEnabled(), accessToken, refreshToken, user.getRole());
     }
 
-    public User toggleTwoFactor(boolean is2faEnabled, String userId) {
+    public User toggleTwoFactor(boolean is2faEnabled) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         System.out.println("is2faEnabled = " + is2faEnabled);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         user.setIs2faEnabled(String.valueOf(is2faEnabled));
         return userRepository.save(user);
     }

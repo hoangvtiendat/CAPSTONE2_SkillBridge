@@ -84,7 +84,6 @@ const JdList = () => {
         handGetRole();
     }, [handGetJdList, handGetRole]);
 
-    // Logic lọc danh sách
     const filteredJdList = jdList.filter(jd => {
         const matchesSearch = jd.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              jd.company?.name?.toLowerCase().includes(searchTerm.toLowerCase());

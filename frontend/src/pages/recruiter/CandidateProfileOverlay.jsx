@@ -1,29 +1,119 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './CandidateProfileOverlay.css';
+import candidateService from '../../services/api/candidateService';
+import { toast } from 'sonner';
 
-const CandidateProfileOverlay = ({ candidateData, isInvited, onClose, onRate }) => {
+const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) => {
+    const [evaluation, setEvaluation] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+
     if (!candidateData) return null;
+
+    const renderSmartText = (text) => {
+        if (!text) return null;
+        const cleanText = text.replace(/\\n/g, ' ').replace(/\n/g, ' ').trim();
+        const firstIndex = cleanText.search(/\d\.\s/);
+        let intro = cleanText;
+        let listItems = [];
+
+        if (firstIndex !== -1) {
+            intro = cleanText.substring(0, firstIndex).trim();
+            const remainder = cleanText.substring(firstIndex);
+            listItems = remainder.split(/(?=\d\.\s)/).map(item => item.trim());
+        }
+
+        return (
+            <div className="eval-smart-container">
+                <p className="eval-intro-text">{intro}</p>
+                {listItems.length > 0 && (
+                    <div className="eval-text-list">
+                        {listItems.map((item, index) => {
+                            const segments = item.split('**');
+                            return (
+                                <div key={index} className="eval-list-item">
+                                    <span className="bullet">•</span>
+                                    <span className="text">
+                                        {segments.map((seg, i) => (
+                                            i % 2 === 1 ?
+                                                <strong key={i}>{seg}</strong> :
+                                                seg.replace(/^\d\.\s*/, '').trim()
+                                        ))}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const handleRateCandidate = async () => {
+        setIsLoading(true);
+        try {
+            const response = await candidateService.evaluateByRecruiter(candidateData.id, jobId);
+            if (response && response.result) {
+                setEvaluation(response.result);
+            }
+        } catch (error) {
+            toast.error("Không thể đánh giá ứng viên");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const maskInfo = (info, type) => {
         if (!info) return "Chưa cập nhật";
         if (isInvited) return info;
-
         if (type === 'email') {
             const [name, domain] = info.split('@');
             return `${name[0]}••••@${domain}`;
         }
         if (type === 'phone') return `${info.slice(0, 3)}••••${info.slice(-2)}`;
         if (type === 'address') return "••••••••••••";
-
         return "••••••••";
     };
 
-    const matchScore = ((candidateData.aiMatchingScore || 0) * 100).toFixed(0);
+    // Logic tính toán màu sắc điểm số
+    const matchScore = Number(((candidateData.aiMatchingScore || 0) * 100).toFixed(0));
+    const getScoreClass = (score) => {
+        if (score < 50) return 'low';
+        if (score < 80) return 'medium';
+        return 'high';
+    };
+    const scoreClass = getScoreClass(matchScore);
+
     const degreesOnly = candidateData.degrees?.filter(d => d.type === 'DEGREE') || [];
     const certificatesOnly = candidateData.degrees?.filter(d => d.type === 'CERTIFICATE') || [];
 
     return (
         <div className="profile-overlay-backdrop" onClick={onClose}>
+            {evaluation && (
+                <div className="evaluation-result-panel" onClick={e => e.stopPropagation()}>
+                    <div className="eval-header-main">
+                        <div className="eval-title-area">
+                            <h3>Phân tích ứng viên</h3>
+                            <p>Kết quả đánh giá từ hệ thống AI</p>
+                        </div>
+                    </div>
+
+                    <div className="eval-content-scroll">
+                        <div className="eval-box strength">
+                            <h4 className="box-title">
+                                <span className="material-symbols-outlined">thumb_up</span> Điểm mạnh
+                            </h4>
+                            {renderSmartText(evaluation.strengths)}
+                        </div>
+                        <div className="eval-box weakness">
+                            <h4 className="box-title">
+                                <span className="material-symbols-outlined">thumb_down</span> Điểm yếu & Hạn chế
+                            </h4>
+                            {renderSmartText(evaluation.weaknesses)}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="profile-bubble-content floating-bubble" onClick={e => e.stopPropagation()}>
                 <button className="close-bubble-btn" onClick={onClose}>
                     <span className="material-symbols-outlined">close</span>
@@ -32,20 +122,23 @@ const CandidateProfileOverlay = ({ candidateData, isInvited, onClose, onRate }) 
                 <div className="bubble-scroll-area">
                     <header className="premium-header">
                         <div className="avatar-section">
-                            <div className="main-avatar-ring">
+                            {/* Thêm class màu vào viền avatar */}
+                            <div className={`main-avatar-ring ${scoreClass}`}>
                                 {candidateData.avatar ?
                                     <img src={candidateData.avatar} alt="Avatar" /> :
                                     <div className="avatar-alt">
                                         <span className="material-symbols-outlined" style={{fontSize: '48px', color: '#cbd5e1'}}>person</span>
                                     </div>
                                 }
-                                <div className="score-float-badge">{matchScore}%</div>
+                                {/* Thêm class màu vào badge điểm số */}
+                                <div className={`score-float-badge ${scoreClass}`}>{matchScore}%</div>
                             </div>
                         </div>
                         <div className="header-text-info">
                             <h2>{candidateData.name}</h2>
                             <div className="status-row">
                                 <span className="material-symbols-outlined verified-icon">verified_user</span>
+                                <span className="category-label">Hồ sơ ứng viên</span>
                             </div>
                         </div>
                     </header>
@@ -147,9 +240,13 @@ const CandidateProfileOverlay = ({ candidateData, isInvited, onClose, onRate }) 
                 </div>
 
                 <div className="fixed-footer-action dual-actions">
-                    <button className="btn-rate-candidate" onClick={() => onRate(candidateData)}>
-                        <span className="material-symbols-outlined">person_search</span>
-                        <span>Đánh giá</span>
+                    <button
+                        className={`btn-rate-candidate ${isLoading ? 'is-loading' : ''}`}
+                        onClick={handleRateCandidate}
+                        disabled={isLoading}
+                    >
+                        <span className="material-symbols-outlined">{isLoading ? 'sync' : 'person_search'}</span>
+                        <span>{isLoading ? 'Đang chấm...' : 'Đánh giá'}</span>
                     </button>
                     <button className={`btn-grand-invite ${isInvited ? 'success' : ''}`} disabled={isInvited}>
                         {isInvited ? 'Đã mời ứng tuyển' : 'Mời ứng tuyển'}
