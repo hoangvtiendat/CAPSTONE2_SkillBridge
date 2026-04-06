@@ -4,6 +4,7 @@ import com.skillbridge.backend.dto.MonthlyJobDTO;
 import com.skillbridge.backend.dto.response.AdminJobFeedItemResponse;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
 import com.skillbridge.backend.dto.response.JobResponse;
+import com.skillbridge.backend.dto.response.JobSemanticSearchResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.JobStatus;

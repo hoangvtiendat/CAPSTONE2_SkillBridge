@@ -3,6 +3,7 @@ package com.skillbridge.backend.controller;
 import com.skillbridge.backend.dto.request.MatchRequest;
 import com.skillbridge.backend.dto.request.SemanticSearchRequest;
 import com.skillbridge.backend.dto.response.JobResponse;
+import com.skillbridge.backend.dto.response.JobSemanticSearchResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.service.AI_Service_File.AIJobService;
 import com.skillbridge.backend.service.AI_Service_File.AiService;
@@ -47,7 +48,7 @@ public class AiController {
         }
 
 
-        List<Job> jobs = aiJobService.findJobBySemanticSearch(request.description());
+        List<JobSemanticSearchResponse> jobs = aiJobService.findJobBySemanticSearch(request.description());
 
         return ResponseEntity.ok(jobs);
     }

@@ -349,9 +349,7 @@ public class AIJobService {
     }
 
     ///  Tìm Job theo ngữ nghĩa
-    public List<Job> findJobBySemanticSearch(String requestOfCandidate) {
-
-        ArrayList<Job> jobs = new ArrayList<>();
+    public List<JobSemanticSearchResponse> findJobBySemanticSearch(String requestOfCandidate) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         try {
@@ -371,7 +369,6 @@ public class AIJobService {
                     skill.setName(s.getSkillName());
                     skill.setCategoryId(s.getSkillId());
                     skills.add(skill);
-
                 }
             }
             System.out.println("SkillList " + skills);
@@ -386,16 +383,16 @@ public class AIJobService {
 
             getImportantDataOfCandidate.add(data);
 
-            ///  Lấy dũ liệu danh sách category của hệ thống
+            /// Lấy dữ liệu danh sách category của hệ thống
             System.out.println("Hàm lấy Categories");
             List<CategoryResponse> getAllCategories = categoryRepository.findActiveCategories();
 
             String jsonStringCategory = objectMapper.writeValueAsString(getAllCategories);
-            ///  bóc tách dữ liệu chiwns
+            /// bóc tách dữ liệu
             String jsonStringCandidate = objectMapper.writeValueAsString(getImportantDataOfCandidate);
             String promptTemplate = """
                     Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
-                    ... (Nội dung Prompt mình đưa ở trên) ...
+                    ... (Nội dung Prompt của bạn) ...
                     [DANH SÁCH CATEGORY HỆ THỐNG]: %s
                     [DỮ LIỆU CV HIỆN TẠI]: %s
                     [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
@@ -405,11 +402,12 @@ public class AIJobService {
                     jsonStringCandidate,
                     requestOfCandidate
             );
+
             String aiResponse = aiService.Ai_OF_SKILLBRIDGE(requstForAI, 3);
             System.out.println("aiResponse " + aiResponse);
             JsonNode rootNode = objectMapper.readTree(aiResponse);
-            System.out.println("requstForAI");
-            System.out.println(requstForAI);
+            System.out.println("requstForAI\n" + requstForAI);
+
             String categoryName, city;
             Long salaryExpect;
             List<String> skillIds = new ArrayList<>();
@@ -417,8 +415,8 @@ public class AIJobService {
 
             int type = rootNode.get("typeTraVe").asInt();
             System.out.println("typeTraVe " + type);
-            System.out.println("rootNode"+ rootNode);
-            List<Job> resultList = new ArrayList<>();
+            System.out.println("rootNode" + rootNode);
+
             categoryName = (rootNode.has("category_name") && !rootNode.get("category_name").asText().isEmpty())
                     ? rootNode.get("category_name").asText() : null;
 
@@ -436,14 +434,17 @@ public class AIJobService {
 
             boolean hasSkills = !skillsName.isEmpty();
             salaryExpect = rootNode.get("salary_expect").asLong();
-            List<String> querySkills = hasSkills ? skillsName : Collections.singletonList("");
-            if (type == 0) {
 
+            List<Job> jobsFromDb = new ArrayList<>();
+            List<String> querySkills = hasSkills ? skillsName : Collections.singletonList("");
+
+            if (type == 0) {
                 System.out.println("querySkills " + querySkills);
                 System.out.println("hasSkills " + hasSkills);
                 System.out.println("skillsName " + skillsName);
                 System.out.println("salaryExpect " + salaryExpect);
-                resultList = jobRepository.findJobsByRequirements(
+
+                jobsFromDb = jobRepository.findJobsByRequirements(
                         JobStatus.OPEN.name(),
                         city,
                         categoryName,
@@ -451,17 +452,8 @@ public class AIJobService {
                         hasSkills,
                         salaryExpect
                 );
-
-                System.out.println("Kết quả tìm kiếm: " + resultList.size() + " jobs found.");
-                if(resultList.size() > 0) {
-                    return resultList;
-                }
-                else {
-                    return resultList;
-                }
-            }
-             else if (type == 1) {
-                resultList = jobRepository.findJobsByRequirements_Not_sameCategory(
+            } else if (type == 1) {
+                jobsFromDb = jobRepository.findJobsByRequirements_Not_sameCategory(
                         JobStatus.OPEN.name(),
                         city,
                         categoryName,
@@ -469,18 +461,58 @@ public class AIJobService {
                         hasSkills,
                         salaryExpect
                 );
-                System.out.println("Kết quả tìm kiếm: " + resultList.size() + " jobs found.");
-                if(resultList.size() > 0) {
-                    return resultList;
-                }
-                else {
-                   return resultList;
-                }
-
-            }
-            else if(type == 2){
+            } else if (type == 2) {
                 System.out.println("AI không tìm thấy ngành phù hợp.");
                 return new ArrayList<>();
+            }
+
+            System.out.println("Kết quả tìm kiếm: " + jobsFromDb.size() + " jobs found từ DB.");
+
+            List<JobSemanticSearchResponse> resultList = new ArrayList<>();
+            // lấy from cảu cty
+            for (Job job : jobsFromDb) {
+                JobResponse.CompanyDTO companyDTO = null;
+                if (job.getCompany() != null) {
+                    companyDTO = JobResponse.CompanyDTO.builder()
+                            .id(job.getCompany().getId())
+                            .name(job.getCompany().getName())
+                            .logoUrl(job.getCompany().getImageUrl())
+                            .build();
+                }
+            ///  láy ategory
+                JobResponse.CategoryDTO categoryDTO = null;
+                if (job.getCategory() != null) {
+                    categoryDTO = JobResponse.CategoryDTO.builder()
+                            .id(job.getCategory().getId())
+                            .name(job.getCategory().getName())
+                            .build();
+                }
+                /// Lấy skill của Job
+                List<JobResponse.JobSkillDTO> skillDTOList = new ArrayList<>();
+                if(job.getJobSkills() != null) {
+                    job.getJobSkills().forEach(jobSkill ->{
+                                JobResponse.JobSkillDTO skillDTO = JobResponse.JobSkillDTO.builder()
+                                        .name(jobSkill.getSkill().getName())
+                                        .build();
+                                skillDTOList.add(skillDTO);
+                            });
+                }
+                ///  xuẩt kết quả trả về
+                JobSemanticSearchResponse dto = JobSemanticSearchResponse.builder()
+                        .id(job.getId())
+                        .position(job.getPosition())
+                        .description(job.getDescription())
+                        .location(job.getLocation())
+                        .status(job.getStatus() != null ? job.getStatus().name() : null)
+                        .salaryMin(job.getSalaryMin())
+                        .salaryMax(job.getSalaryMax())
+                        .company(companyDTO)
+                        .category(categoryDTO)
+                        .skills(skillDTOList)
+                        .vectorEmbedding(job.getVectorEmbedding())
+                        .build();
+
+                resultList.add(dto);
             }
 
             return resultList;
@@ -488,7 +520,7 @@ public class AIJobService {
         } catch (Exception e) {
             throw new RuntimeException("AI error", e);
         } finally {
-            System.out.println("findJobBySemanticSearch đã chạy");
+            System.out.println("findJobBySemanticSearch đã chạy xong");
         }
     }
 }
