@@ -111,7 +111,7 @@ public class CandidateService {
         res.setGraduationYear(req.getGraduationYear() != null ? String.valueOf(req.getGraduationYear()) : null);
         res.setName(req.getName());
         res.setYear(req.getYear() != null ? String.valueOf(req.getYear()) : null);
-        req.setLevel(req.getLevel() != null ? req.getLevel(): null);
+        res.setLevel(req.getLevel());
         return res;
     }
 
@@ -325,20 +325,14 @@ public class CandidateService {
           "degree": "Tên bằng cấp (nếu là DEGREE)",
           "major": "Ngành học",
           "institution": "Tên trường/tổ chức cấp",
-          "graduationYear": 2023
-          "level": 3.5
+          "graduationYear": 2023,
+          "level": "3.5/4.0 hoặc Giỏi"
         },
         {
           "type": "CERTIFICATE",
           "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
-          "year": 2025
-          "level": 450
-        },
-        {
-          "type": "CERTIFICATE",
-          "name": "JLPT",
-          "year": 2025
-          "level": N4
+          "year": 2025,
+          "level": "450 hoặc N4 hoặc 7.5"
         }
       ],
       "experience": [

@@ -201,13 +201,12 @@ export const CVParser = () => {
                     const isObj = typeof s === 'object';
                     const id = isObj ? (s.skillId || s.id) : null;
                     const name = isObj ? (s.skillName || s.name || s.skillId) : s;
-
-                    if (isObj) console.log("Mapping AI skill:", s.skillName, "-> ID:", id);
+                    const exp = isObj && s.experienceYears ? s.experienceYears : 1;
 
                     return {
                         skillName: name,
                         skillId: id,
-                        experienceYears: 1
+                        experienceYears: exp
                     };
                 }).filter(s => s.skillId); // Only add skills mapped to database IDs
 
@@ -311,8 +310,8 @@ export const CVParser = () => {
 
     const addDegree = (type) => {
         const newItem = type === 'DEGREE'
-            ? { id: Date.now(), type, degree: '', major: '', institution: '', graduationYear: '' }
-            : { id: Date.now(), type, name: '', year: '' };
+            ? { id: Date.now(), type, degree: '', major: '', institution: '', graduationYear: '', level: '' }
+            : { id: Date.now(), type, name: '', year: '', level: '' };
 
         setCvData(prev => ({
             ...prev,
@@ -371,13 +370,15 @@ export const CVParser = () => {
                             degree: d.degree,
                             major: d.major,
                             institution: d.institution,
-                            graduationYear: isNaN(yearVal) ? 0 : yearVal
+                            graduationYear: isNaN(yearVal) ? 0 : yearVal,
+                            level: d.level || ''
                         };
                     } else {
                         return {
                             type: 'CERTIFICATE',
                             name: d.name,
-                            year: isNaN(yearVal) ? 0 : yearVal
+                            year: isNaN(yearVal) ? 0 : yearVal,
+                            level: d.level || ''
                         };
                     }
                 }),
@@ -388,7 +389,7 @@ export const CVParser = () => {
                 })),
                 skills: cvData.skills.map(s => ({
                     skillId: s.skillId || s.id || null,
-                    experienceYears: 1
+                    experienceYears: parseInt(s.experienceYears) || 0
                 })).filter(s => s.skillId) // Filter out skills without IDs as per strict backend requirement
             };
 
@@ -433,7 +434,7 @@ export const CVParser = () => {
                         <>
                             <div className="ai-results-container">
                                 {/* Personal Info */}
-                                <div className="ai-section">
+                                <div className="ai-section personal-info-section">
                                     <div className="ai-section-header">
                                         <span>Thông tin chung</span>
                                         <input type="checkbox" checked={selectedItems.personalInfo} onChange={(e) => setSelectedItems({ ...selectedItems, personalInfo: e.target.checked })} />
@@ -443,10 +444,23 @@ export const CVParser = () => {
                                             <strong>{parsedData.name}</strong>
                                             <p>{parsedData.address}</p>
                                             <p className="text-sm text-gray-500">{parsedData.description}</p>
-                                            {parsedData.categoryName && <p className="text-xs text-blue-600 mt-1">Lĩnh vực: <b>{parsedData.categoryName}</b></p>}
                                         </div>
                                     </div>
                                 </div>
+
+                                {parsedData.categoryName && (
+                                    <div className="ai-section category-section">
+                                        <div className="ai-section-header">
+                                            <span>Lĩnh vực</span>
+                                            <input type="checkbox" checked={selectedItems.personalInfo} onChange={(e) => setSelectedItems({ ...selectedItems, personalInfo: e.target.checked })} />
+                                        </div>
+                                        <div className="ai-item-row">
+                                            <div className="ai-item-content">
+                                                <p className="text-sm font-semibold text-blue-600"><b>{parsedData.categoryName}</b></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Degrees */}
                                 <div className="ai-section">
@@ -458,6 +472,7 @@ export const CVParser = () => {
                                             <div className="ai-item-content">
                                                 <strong>{d.degree} - {d.major}</strong>
                                                 <p>{d.institution} ({d.graduationYear})</p>
+                                                {d.level && <p className="text-xs text-green-600 font-medium">Bậc/Điểm: {d.level}</p>}
                                             </div>
                                         </label>
                                     ))}
@@ -473,6 +488,7 @@ export const CVParser = () => {
                                             <div className="ai-item-content">
                                                 <strong>{c.name}</strong>
                                                 <p>{c.year}</p>
+                                                {c.level && <p className="text-xs text-green-600 font-medium">Bậc/Điểm/Level: {c.level}</p>}
                                             </div>
                                         </label>
                                     ))}
@@ -486,7 +502,13 @@ export const CVParser = () => {
                                     </div>
                                     <div className="ai-item-row">
                                         <div className="ai-item-content">
-                                            <p>{parsedData.skills?.map(s => (typeof s === 'string' ? s : (s.skillName || s.name || s.skillId))).join(', ')}</p>
+                                            <ul className="list-none p-0 m-0">
+                                                {parsedData.skills?.map((s, idx) => {
+                                                    const name = typeof s === 'string' ? s : (s.skillName || s.name || s.skillId);
+                                                    const y = typeof s === 'object' && s.experienceYears ? ` (${s.experienceYears} năm)` : '';
+                                                    return <li key={idx} className="text-sm py-1 border-b border-gray-50 last:border-0"> {name}{y}</li>;
+                                                })}
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
@@ -594,6 +616,10 @@ export const CVParser = () => {
                                             <input type="number" value={item.graduationYear} onChange={(e) => updateDegreeItem(item.id, 'graduationYear', e.target.value)} />
                                         </div>
                                     </div>
+                                    <div className="form-group">
+                                        <label>Xếp loại / Điểm (Level)</label>
+                                        <input value={item.level || ''} onChange={(e) => updateDegreeItem(item.id, 'level', e.target.value)} placeholder="VD: Giỏi, 3.5/4.0..." />
+                                    </div>
                                 </div>
                             ))}
                             <button className="add-btn" onClick={() => addDegree('DEGREE')}><Plus size={18} /> Thêm bằng cấp</button>
@@ -614,6 +640,10 @@ export const CVParser = () => {
                                             <label>Năm</label>
                                             <input type="number" value={item.year} onChange={(e) => updateDegreeItem(item.id, 'year', e.target.value)} />
                                         </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Cấp độ / Điểm (Level/Score)</label>
+                                        <input value={item.level || ''} onChange={(e) => updateDegreeItem(item.id, 'level', e.target.value)} placeholder="VD: 750+, N3, B2..." />
                                     </div>
                                 </div>
                             ))}
@@ -651,8 +681,21 @@ export const CVParser = () => {
                             <div className="skills-container">
                                 {cvData.skills.map((skill, index) => (
                                     <div key={index} className={`skill-tag ${!skill.skillId ? 'no-id' : ''}`}>
-                                        <span>{skill.skillName} {!skill.skillId && <span className="text-red-500 text-[10px] ml-1">(No ID)</span>}</span>
-                                        <button onClick={() => removeSkill(index)}><X size={14} /></button>
+                                        <span className="skill-name">{skill.skillName} {!skill.skillId && <span className="no-id-text">(No ID)</span>}</span>
+                                        <input
+                                            type="number"
+                                            className="skill-year-input"
+                                            value={skill.experienceYears}
+                                            onChange={(e) => {
+                                                const newVal = e.target.value;
+                                                setCvData(prev => ({
+                                                    ...prev,
+                                                    skills: prev.skills.map((s, i) => i === index ? { ...s, experienceYears: newVal } : s)
+                                                }));
+                                            }}
+                                        />
+                                        <span className="skill-exp-label">năm</span>
+                                        <button onClick={() => removeSkill(index)} className="remove-skill-btn"><X size={14} /></button>
                                     </div>
                                 ))}
                             </div>
