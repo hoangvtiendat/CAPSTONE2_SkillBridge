@@ -245,7 +245,8 @@ const jobService = {
             params: { status }
         });
         return response.data;
-    }
+    },
+
 };
 
 export default jobService;

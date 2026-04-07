@@ -27,11 +27,43 @@
   gap: 20px;
 }
 
+.job-grid-title-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .job-grid-header h2 {
   font-size: 24px;
   font-weight: 850; /* Font cực đậm chuẩn Apple */
   color: var(--mac-text);
   letter-spacing: -0.03em;
+}
+
+.job-grid-title-copy p {
+  margin: 0;
+  max-width: 520px;
+  color: var(--mac-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.search-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: min(520px, 100%);
+}
+
+.search-panels {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ai-search-panel {
+  padding-top: 2px;
 }
 
 /* --- Thanh Tìm Kiếm (Liquid Search) --- */
@@ -40,7 +72,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 400px;
   padding: 10px 18px;
   border-radius: var(--lg-radius-md);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.34));
@@ -66,6 +97,11 @@
   flex-shrink: 0;
 }
 
+.search-leading-icon {
+  color: var(--mac-text-muted);
+  flex-shrink: 0;
+}
+
 .job-search {
   width: 100%;
   border: none;
@@ -77,6 +113,153 @@
 
 .job-search::placeholder {
   color: var(--mac-text-muted);
+}
+
+.search-clear-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: rgba(29, 29, 31, 0.06);
+  color: var(--mac-text-muted);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.search-clear-btn:hover {
+  background: rgba(29, 29, 31, 0.12);
+  color: var(--mac-text);
+  transform: scale(1.04);
+}
+
+.search-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-submit-btn,
+.search-mode-btn {
+  height: 44px;
+  border: none;
+  border-radius: 14px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.search-submit-btn {
+  background: linear-gradient(135deg, #007aff, #6a5cff);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(0, 122, 255, 0.24);
+}
+
+.search-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0, 122, 255, 0.32);
+}
+
+.search-submit-btn:disabled {
+  background: linear-gradient(135deg, rgba(142, 142, 147, 0.28), rgba(142, 142, 147, 0.18));
+  color: rgba(29, 29, 31, 0.42);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 1;
+}
+
+.search-submit-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.search-mode-btn {
+  background: rgba(255, 255, 255, 0.48);
+  color: var(--mac-text);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.search-mode-btn.active {
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--mac-blue);
+  border-color: rgba(0, 122, 255, 0.22);
+}
+
+.search-mode-btn:disabled {
+  background: rgba(142, 142, 147, 0.16);
+  color: rgba(29, 29, 31, 0.42);
+  border-color: rgba(142, 142, 147, 0.18);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.search-mode-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.search-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 26px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  color: var(--mac-text-muted);
+  box-shadow: var(--inner-light);
+}
+
+.search-hint-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--mac-blue);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.search-reset-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.search-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 122, 255, 0.22);
+  background: rgba(0, 122, 255, 0.08);
+  color: var(--mac-blue);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-reset-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 122, 255, 0.12);
+  border-color: rgba(0, 122, 255, 0.32);
+  box-shadow: 0 10px 24px rgba(0, 122, 255, 0.12);
 }
 
 /* --- Grid Layout --- */
@@ -164,13 +347,32 @@
     flex-direction: column;
     align-items: flex-start;
   }
-  .search-wrap {
+
+  .search-panels {
+    width: 100%;
+  }
+
+  .search-filter {
     min-width: 100%;
+    width: 100%;
+  }
+
+  .search-actions {
+    width: 100%;
   }
 }
 
 @media (max-width: 500px) {
   .job-grid {
     grid-template-columns: 1fr;
+  }
+
+  .search-submit-btn,
+  .search-mode-btn {
+    width: 100%;
+  }
+
+  .search-hint {
+    align-items: flex-start;
   }
 }

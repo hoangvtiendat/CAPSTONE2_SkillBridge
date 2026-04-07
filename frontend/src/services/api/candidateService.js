@@ -34,6 +34,15 @@ const candidateService = {
         } catch (error) {
             throw error;
         }
+    },
+    checkCVL: async() => {
+        try {
+            const response = await api.get('/candidates/cv/check');
+            return response.data;
+        }
+        catch (error) {
+            throw error;    
+        }
     }
 };
 

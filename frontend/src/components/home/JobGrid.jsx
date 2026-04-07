@@ -1,10 +1,13 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Sparkles, X } from 'lucide-react';
 import JobCard from './JobCard';
+import { useAuth } from '../../context/AuthContext';
 import jobService from '../../services/api/jobService';
 import './JobGrid.css';
+import aiService from '../../services/api/aiService';
 
 const JobGrid = () => {
+  const { token } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -13,15 +16,16 @@ const JobGrid = () => {
     totalElements: 0,
     totalPages: 0
   });
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchMode, setSearchMode] = useState('keyword');
 
   const fetchJobs = useCallback(async (page = 0) => {
     setLoading(true);
     try {
       const data = await jobService.getFeed({
         page,
-        limit: pagination.size,
-        // search: searchTerm // Add search if backend supports it in feed
+        limit: pagination.size
       });
 
       if (data) {
@@ -34,7 +38,7 @@ const JobGrid = () => {
         }));
       }
     } catch (error) {
-      console.error("Failed to fetch jobs", error);
+      console.error('Failed to fetch jobs', error);
     } finally {
       setLoading(false);
     }
@@ -46,41 +50,160 @@ const JobGrid = () => {
 
   const handlePageChange = (page) => {
     fetchJobs(page);
-    // Scroll to top of grid
     const element = document.getElementById('job-grid');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+
+    if (searchMode === 'semantic' && !token) {
+      return;
+    }
+
+    const query = searchInput.trim();
+    setSearchTerm(query);
+
+    if (isAiSearchMode) {
+      AIsemanticSearch(query);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearchTerm('');
+    setSearchMode('keyword');
+  };
+
+  const isAiSearchMode = searchMode === 'semantic';
+  const isAiSearchLocked = isAiSearchMode && !token;
+  const isAiModeSwitchLocked = !token && !isAiSearchMode;
+  const searchPlaceholder = isAiSearchMode
+    ? 'VD: Tìm công việc IT ở Đà Nẵng'
+    : 'Tìm kiếm...';
+    const AIsemanticSearch = useCallback(async (query) => {
+      if (!query) {
+        fetchJobs(0);
+        return;
+      }
+
+      setLoading(true);
+        try {
+            const data = await aiService.semanticSearch(query);
+            if (data) {
+                setJobs(data);
+                setPagination(prev => ({
+                    ...prev,
+                    page: 0,
+                    totalElements: data.length,
+                    totalPages: 1
+                }));
+            }
+        }
+        catch (error) {
+            console.error('Failed to perform AI semantic search', error);
+        } finally {
+          setLoading(false);
+        }
+      }, [fetchJobs]);
   const filteredJobs = useMemo(() => {
+    if (isAiSearchMode) {
+      return jobs;
+    }
+
     const q = searchTerm.trim().toLowerCase();
     if (!q) return jobs;
+
     return jobs.filter((job) => {
       const inTitle = job.position?.toLowerCase().includes(q);
       const inCompany = job.company?.toLowerCase().includes(q);
       const inLocation = job.location?.toLowerCase().includes(q);
+      const inTags = Array.isArray(job.tags)
+        ? job.tags.some((tag) => tag?.toLowerCase().includes(q))
+        : false;
+
       return inTitle || inCompany || inLocation;
     });
-  }, [jobs, searchTerm]);
+  }, [jobs, isAiSearchMode, searchTerm]);
 
   return (
     <section className="job-grid-section" id="job-grid">
       <div className="job-grid-header">
-        <h2>Việc Làm Mới Nhất & Nổi Bật</h2>
-        <div className="search-filter">
+        <div className="job-grid-title-copy">
+          <h2>Việc Làm Mới Nhất & Nổi Bật</h2>
+          <p>Tìm bằng từ khóa thường hoặc để AI hiểu ý định, kỹ năng và vị trí bạn muốn.</p>
+        </div>
+
+        <form className="search-filter" onSubmit={handleSearchSubmit}>
           <div className="search-wrap">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#666666"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" /></svg>
+            <Search size={18} className="search-leading-icon" />
             <input
               type="search"
               className="job-search"
-              placeholder="Tìm kiếm việc làm, công ty tại đây"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={searchPlaceholder}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               aria-label="Tìm kiếm việc làm"
             />
+            {searchInput ? (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={handleClearSearch}
+                aria-label="Xóa nội dung tìm kiếm"
+              >
+                <X size={16} />
+              </button>
+            ) : null}
           </div>
-        </div>
+
+          <div className="search-actions">
+            <button
+              type="submit"
+              className="search-submit-btn"
+              disabled={isAiSearchLocked}
+              title={
+                isAiSearchLocked
+                  ? 'Bạn cần đăng nhập để tìm kiếm AI'
+                  : isAiSearchMode
+                    ? 'Tìm kiếm AI'
+                    : 'Tìm kiếm'
+              }
+            >
+              {isAiSearchMode ? <Sparkles size={16} /> : <Search size={16} />}
+              {isAiSearchMode ? 'AI Search' : 'Tìm kiếm'}
+            </button>
+
+            <button
+              type="button"
+              className={`search-mode-btn ${isAiSearchMode ? 'active' : ''}`}
+              disabled={isAiModeSwitchLocked}
+              title={
+                isAiModeSwitchLocked
+                  ? 'Bạn cần đăng nhập để chuyển sang AI Search'
+                  : isAiSearchMode
+                    ? 'Đang ở AI Search'
+                    : 'Chuyển sang AI Search'
+              }
+              onClick={() => {
+                if (isAiModeSwitchLocked) {
+                  return;
+                }
+
+                setSearchMode((current) => (current === 'semantic' ? 'keyword' : 'semantic'));
+              }}
+            >
+              {isAiSearchMode ? 'Đang ở AI Search' : 'Chuyển sang AI Search'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="search-hint">
+        <span className="search-hint-pill">AI</span>
+        <span>Gợi ý: nhập mô tả tự nhiên như “tìm kiếm các công việc liên quan đến truyền thông”.</span>
       </div>
 
       <div className="job-grid">
@@ -125,12 +248,12 @@ const JobGrid = () => {
                   {index + 1}
                 </button>
               );
-            } else if (
-              index === pagination.page - 2 ||
-              index === pagination.page + 2
-            ) {
+            }
+
+            if (index === pagination.page - 2 || index === pagination.page + 2) {
               return <span key={index} className="pagination-ellipsis">...</span>;
             }
+
             return null;
           })}
 
