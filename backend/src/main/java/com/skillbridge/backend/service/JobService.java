@@ -972,7 +972,18 @@ public class JobService {
         }
         return request;
     }
-
-    ///  Duyệt bài đăng cho GD
+    ///  check điều kiện bài đăng có ái apply vào chưa
+    public Boolean checkUngVien(String idJD){
+        try{
+            Boolean result = false;
+            List<Application> getApplyOfJD = applicationRepository.findByJob_Id(idJD);
+            if(getApplyOfJD.size() > 0){
+                result = true;
+            }
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(ErrorCode.JOB_NOT_FOUND.getMessage());
+        }
+    }
 
 }
