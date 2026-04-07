@@ -66,9 +66,8 @@ const JdList = () => {
 
         try {
             await jobService.deleteJd(jdId);
-            setJdList(prevJdList => prevJdList.filter(jd => jd.id !== jdId));
-
             toast.success("Thành công", {description: "Xóa JD thành công!", style: toastStyles.success});
+            setStatusFilter('ALL');
             handGetJdList();
         } catch (error) {
             if (error.response && error.response.data && error.response.data.message) {
@@ -181,8 +180,8 @@ const JdList = () => {
                         Chờ duyệt ({statusCounts.PENDING})
                     </button>
                     <button
-                        className={`filter-btn ${statusFilter === 'DELETE' ? 'OPEN' : ''}`}
-                        onClick={() => setStatusFilter('DELETE')}
+                        className={`filter-btn ${statusFilter === 'LOCK' ? 'OPEN' : ''}`}
+                        onClick={() => setStatusFilter('LOCK')}
                     >
                         Khóa ({statusCounts.DELETE})
                     </button>
@@ -250,18 +249,20 @@ const JdList = () => {
                             <div className="jd-actions">
                                 <button onClick={(e) => handleViewDetails(e, jd)}>Xem thông tin</button>
 
-                                <button
-                                    className="view-applicants-btn"
-                                    onClick={(e) => handleViewApplicants(e, jd.id)}
-                                >
-                                    Xem ứng viên
-                                </button>
+                                {jd.status !== 'LOCK' && (
+                                    <>
+                                        <button
+                                            className="view-applicants-btn"
+                                            onClick={(e) => handleViewApplicants(e, jd.id)}
+                                        >
+                                            Xem ứng viên
+                                        </button>
 
-                                {jd.status !== "DELETE" && <span className="deleted-label">
-                                     <button onClick={(e) => handleDeleteJd(e, jd.id)}>Khóa</button>
-                                </span>}
-
-
+                                        <span className="deleted-label">
+                                            <button onClick={(e) => handleDeleteJd(e, jd.id)}>Khóa</button>
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         </li>
                     ))}

@@ -8,6 +8,7 @@ import { Plus, Search, Trash2, X } from 'lucide-react';
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
+import applicationService from '../../services/api/applicationService';
 
 import './DetailJD.css';
 
@@ -33,6 +34,7 @@ const DetailJD = () => {
     const [categories, setCategories] = useState([]);
     const [skillsList, setSkillsList] = useState([]);
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
+    const [hasAppliedCandidate, setHasAppliedCandidate] = useState(false);
 
     const fetchJdDetail = useCallback(async () => {
         try {
@@ -45,10 +47,27 @@ const DetailJD = () => {
         }
     }, [id]);
 
+    const checkAppliedStatus = useCallback(async () => {
+        try {
+            const response = await applicationService.CheckApplied(id);
+
+            const isApplied =
+                response === true ||
+                response?.result === true ||
+                response?.data === true ||
+                response?.isApplied === true;
+
+            setHasAppliedCandidate(Boolean(isApplied));
+        } catch (error) {
+            setHasAppliedCandidate(false);
+        }
+    }, [id]);
+
     useEffect(() => {
         fetchJdDetail();
         getListCategories();
-    }, [id, fetchJdDetail]);
+        checkAppliedStatus();
+    }, [id, fetchJdDetail, checkAppliedStatus]);
 
     const getListCategories = async () => {
         try {
@@ -78,6 +97,14 @@ const DetailJD = () => {
     }, [editForm?.categoryId]);
 
     const handleOpenModal = () => {
+        if (hasAppliedCandidate) {
+            toast.warning('Không thể chỉnh sửa JD', {
+                description: 'Hiện tại JD này đã có người ứng tuyển',
+                style: toastStyles.warning
+            });
+            return;
+        }
+
         let initialTitles = [];
         if (jdDetail.title && Object.keys(jdDetail.title).length > 0) {
             initialTitles = Object.entries(jdDetail.title).map(([k, v]) => ({ key: k, value: v }));
@@ -260,11 +287,19 @@ const DetailJD = () => {
                     <span className={`status-badge-modern ${getStatusClass(statusText)}`}>
                         {getStatusText(statusText)}
                     </span>
-                    <button className="btn-primary" onClick={handleOpenModal}>
-                        Chỉnh sửa JD
-                    </button>
+                    <span title={hasAppliedCandidate ? 'Hiện tại JD này đã có người ứng tuyển' : ''}>
+                        <button className="btn-primary" onClick={handleOpenModal} disabled={hasAppliedCandidate}>
+                            Chỉnh sửa JD
+                        </button>
+                    </span>
                 </div>
             </header>
+
+            {hasAppliedCandidate && (
+                <div className="jd-edit-locked-note" role="note">
+                    Hiện tại JD đang có người ứng tuyển nên không cho sửa JD.
+                </div>
+            )}
 
             <div className="jd-board-layout">
                 <div className="layout-main-column">
