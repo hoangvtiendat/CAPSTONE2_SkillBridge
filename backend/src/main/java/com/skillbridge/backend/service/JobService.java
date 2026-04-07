@@ -9,6 +9,7 @@ import com.skillbridge.backend.dto.request.JobSkillRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.enums.*;
+
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
@@ -18,7 +19,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -63,8 +66,10 @@ public class JobService {
     SimpMessagingTemplate messagingTemplate;
     SubscriptionOfCompanyRepository subcriptionOfCompanyRepository;
     AIJobService aiJobService;
-
-
+    MailServiceImpl mailService;
+    @NonFinal
+    @Value("${mail.username}")
+    String senderEmail;
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -824,7 +829,7 @@ public class JobService {
         return job;
     }
 
-    public Job deleteJD(String id) {
+    public Job updateStatus(String id, int type) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() ||
@@ -847,7 +852,42 @@ public class JobService {
         if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        job.setStatus(JobStatus.LOCK);
+        ///  thay đổi trạng thái thành khóa
+
+        if(type == 1){
+            List<Application> getListCandidateINJD = applicationRepository.findByJob_Id(id);
+            System.out.println("getList: " + getListCandidateINJD);
+            String nameJD = job.getPosition();
+
+            String companyName = job.getCompany().getName();
+            String subject = "[SkillBridge] Thông báo quan trọng về vị trí: " + nameJD;
+            String content = String.format(
+                    "<div style='font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>" +
+                            "   <h2 style='color: #2c3e50;'>Thông báo từ SkillBridge</h2>" +
+                            "   <p>Chào bạn,</p>" +
+                            "   <p>Công ty <b>%s</b> xin thông báo rằng tin tuyển dụng cho vị trí <b>%s</b> hiện đã bị chủ doanh nghiệp xóa bài đi.</p>" +
+                            "   <div style='background: #f9f9f9; padding: 15px; border-left: 4px solid #3498db;'>" +
+                            "       <b>Trạng thái hồ sơ:</b> Hệ thống đang trong quá trình tổng hợp và phản hồi kết quả cuối cùng." +
+                            "   </div>" +
+                            "   <p>Cảm ơn bạn đã tin tưởng và ứng tuyển qua hệ thống SkillBridge. Bạn có thể tiếp tục tìm kiếm các cơ hội khác phù hợp hơn trên nền tảng của chúng tôi.</p>" +
+                            "   <br><p>Trân trọng,<br><b>Đội ngũ hỗ trợ SkillBridge</b></p>" +
+                            "</div>",
+                    companyName, nameJD
+            );
+
+            getListCandidateINJD.forEach(application -> {
+                Candidate candidate = application.getCandidate();
+                if (candidate != null) {
+
+                    mailService.sendToEmail(senderEmail,application.getEmail(), subject, content);
+                }
+            });
+            job.setStatus(JobStatus.LOCK);
+        }
+        ///  thay đổi trạng thái thành đóng
+        else if(type == 2){
+
+        }
         job.setDeleted(true);
         jobRepository.save(job);
 

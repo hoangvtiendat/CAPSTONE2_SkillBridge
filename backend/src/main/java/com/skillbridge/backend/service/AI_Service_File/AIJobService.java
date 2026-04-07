@@ -216,7 +216,7 @@ public class AIJobService {
             System.out.println("receiver (Email): " + receiver.getEmail());
 
             JobDetailResponse in4JD = getIn4OfJD(dataOfJD);
-            String titleText = in4JD.getTitle() != null ? in4JD.getTitle().toString() : "";
+            String titleText = in4JD.getTitle() != null ? in4JD.getPosition() : "N/A";
             String skillsText = in4JD.getSkills() != null ? String.join(", ", in4JD.getSkills()) : "";
             String dataForAI = String.format(
                     "Position: %s\nTitle: %s\nCategory: %s\nSkills: %s\nSalary: %s - %s\nLocation: %s\nDescription: %s",
@@ -258,7 +258,7 @@ public class AIJobService {
                                 "<p><b>Từ khóa vi phạm:</b> <span style='color: #dc3545;'>%s</span></p>" +
                                 "<p>Vui lòng chỉnh sửa lại nội dung để phù hợp với tiêu chuẩn cộng đồng.</p>" +
                                 "<br><p>Trân trọng,<br>SkillBridge AI Moderator</p></div>",
-                        receiver.getName(), job.getTitle(), reason, keywordsString
+                        receiver.getName(), job.getPosition(), reason, keywordsString
                 );
                 job.setModerationStatus(ModerationStatus.RED);
 
