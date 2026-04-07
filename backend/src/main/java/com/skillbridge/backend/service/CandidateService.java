@@ -80,7 +80,45 @@ public class CandidateService {
                 experienceDetails
         );
     }
+    /// dùng để lấy CV cho chức năng tìm kiếm theo ngũ nghĩa khi chưa có CV
+    public UpdateCandidateCvResponse getCV_searchsenematic(String userId) {
+        Candidate candidate = candidateRepository.findById(userId).orElse(null);
 
+        if (candidate == null) {
+            return new UpdateCandidateCvResponse(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    new ArrayList<>()
+            );
+        }
+
+        List<DegreeResponse> degreeResponses = deserializeDegrees(candidate.getDegree());
+        List<ExperienceDetail> experienceDetails = deserializeExperience(candidate.getExperience());
+
+        List<CandidateSkill> currentSkills = candidateSkillRepository.findByCandidate(candidate);
+        List<CandidateSkillResponse> skillResponses = currentSkills.stream().map(s -> {
+            CandidateSkillResponse res = new CandidateSkillResponse(
+                    s.getSkill().getId(),
+                    s.getSkill().getName(),
+                    s.getExperienceYears()
+            );
+            return res;
+        }).toList();
+
+        return new UpdateCandidateCvResponse(
+                candidate.getName(),
+                candidate.getDescription(),
+                candidate.getAddress(),
+                candidate.getCategory() != null ? candidate.getCategory().getName() : null,
+                degreeResponses,
+                skillResponses,
+                experienceDetails
+        );
+    }
     /**
      * Chuyển đổi dữ liệu bằng cấp từ JSON/Object sang danh sách DegreeResponse
      * */
@@ -341,5 +379,18 @@ public class CandidateService {
             request.setSkills(skillRequests);
         }
         return request;
+    }
+    ///  check CV ccó kt đảy lên hay chưa
+    public Boolean checkCV(){
+        Boolean result = false;
+        String idOfUser = securityUtils.getCurrentUserId();
+        UpdateCandidateCvResponse cv = getCV_searchsenematic(idOfUser);
+        System.out.println("cvNe");
+        System.out.println(cv);
+        if(cv.getName() != null && cv.getDescription() != null && cv.getExperience() != null && cv.getSkills() != null) {
+            result = true;
+            return result;
+        }
+       return result;
     }
 }

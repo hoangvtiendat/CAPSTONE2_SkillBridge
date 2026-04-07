@@ -190,7 +190,7 @@ public class AiService {
        - typeTraVe = 1: Người dùng muốn chuyển sang ngành MỚI hoặc tìm kỹ năng MỚI (không có trong CV). 
          LƯU Ý: Trong trường hợp này, skill_names PHẢI là mảng rỗng [].
        - typeTraVe = 2: Không xác định được ngành nghề phù hợp hoặc yêu cầu không hợp lệ.
-
+    5. trường hợp nếu mà CV của candidate chưa cập nhật (tức các trường đều là null) thì hãy lấy theo yêu cầu của candidate và trả về dữ liệu dựa trên mô tả candidate
     ĐỊNH DẠNG ĐẦU RA (RÀNG BUỘC TUYỆT ĐỐI):
     Chỉ trả về DUY NHẤT một khối JSON theo cấu trúc dưới đây. 
     KHÔNG kèm theo lời giải thích, KHÔNG nằm trong dấu ngoặc kép hay khối mã (code block):

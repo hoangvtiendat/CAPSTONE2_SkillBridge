@@ -349,40 +349,47 @@ public class AIJobService {
     }
 
     ///  Tìm Job theo ngữ nghĩa
+    @Transactional
     public List<JobSemanticSearchResponse> findJobBySemanticSearch(String requestOfCandidate) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         try {
             String idOfUser = securityUtils.getCurrentUserId();
-
-            UpdateCandidateCvResponse cv = candidateService.getCv(idOfUser);
+            System.out.println("idOfUser" + idOfUser);
+            UpdateCandidateCvResponse cv = candidateService.getCV_searchsenematic(idOfUser);
             System.out.println("cvNe" + cv);
-            System.out.println(cv);
-            if (cv == null) {
-                throw new RuntimeException(ErrorCode.NOT_FOUND_DATA_CV.getMessage());
-            }
-            List<SkillRequest> skills = new ArrayList<>();
+            System.out.println("requestOfCandidate" + requestOfCandidate);
 
-            if (cv.getSkills() != null) {
-                for (CandidateSkillResponse s : cv.getSkills()) {
-                    SkillRequest skill = new SkillRequest();
-                    skill.setName(s.getSkillName());
-                    skill.setCategoryId(s.getSkillId());
-                    skills.add(skill);
+            List<SkillRequest> skills = new ArrayList<>();
+            String candidateCategory = null;
+            String candidateLocation = null;
+            Object candidateDegrees = new ArrayList<>();
+
+            if (cv != null) {
+                if (cv.getSkills() != null) {
+                    for (CandidateSkillResponse s : cv.getSkills()) {
+                        SkillRequest skill = new SkillRequest();
+                        skill.setName(s.getSkillName());
+                        skill.setCategoryId(s.getSkillId());
+                        skills.add(skill);
+                    }
                 }
+                candidateCategory = cv.getCategory();
+                candidateLocation = cv.getAddress();
+                candidateDegrees = cv.getDegrees() != null ? cv.getDegrees() : new ArrayList<>();
             }
+
             System.out.println("SkillList " + skills);
             List<dataDetailCanDiadateForAIReponse> getImportantDataOfCandidate = new ArrayList<>();
 
             dataDetailCanDiadateForAIReponse data = dataDetailCanDiadateForAIReponse.builder()
-                    .category(cv.getCategory())
-                    .location(cv.getAddress())
-                    .degrees(cv.getDegrees())
+                    .category(candidateCategory)
+                    .location(candidateLocation)
+                    .degrees((List<DegreeResponse>) candidateDegrees)
                     .skills(skills)
                     .build();
 
             getImportantDataOfCandidate.add(data);
-
             /// Lấy dữ liệu danh sách category của hệ thống
             System.out.println("Hàm lấy Categories");
             List<CategoryResponse> getAllCategories = categoryRepository.findActiveCategories();
@@ -469,7 +476,7 @@ public class AIJobService {
             System.out.println("Kết quả tìm kiếm: " + jobsFromDb.size() + " jobs found từ DB.");
 
             List<JobSemanticSearchResponse> resultList = new ArrayList<>();
-            // lấy from cảu cty
+            // lấy from của cty
             for (Job job : jobsFromDb) {
                 JobResponse.CompanyDTO companyDTO = null;
                 if (job.getCompany() != null) {
@@ -479,7 +486,7 @@ public class AIJobService {
                             .logoUrl(job.getCompany().getImageUrl())
                             .build();
                 }
-            ///  láy ategory
+                // lấy category
                 JobResponse.CategoryDTO categoryDTO = null;
                 if (job.getCategory() != null) {
                     categoryDTO = JobResponse.CategoryDTO.builder()
@@ -487,17 +494,17 @@ public class AIJobService {
                             .name(job.getCategory().getName())
                             .build();
                 }
-                /// Lấy skill của Job
+                // Lấy skill của Job
                 List<JobResponse.JobSkillDTO> skillDTOList = new ArrayList<>();
                 if(job.getJobSkills() != null) {
                     job.getJobSkills().forEach(jobSkill ->{
-                                JobResponse.JobSkillDTO skillDTO = JobResponse.JobSkillDTO.builder()
-                                        .name(jobSkill.getSkill().getName())
-                                        .build();
-                                skillDTOList.add(skillDTO);
-                            });
+                        JobResponse.JobSkillDTO skillDTO = JobResponse.JobSkillDTO.builder()
+                                .name(jobSkill.getSkill().getName())
+                                .build();
+                        skillDTOList.add(skillDTO);
+                    });
                 }
-                ///  xuẩt kết quả trả về
+                // xuất kết quả trả về
                 JobSemanticSearchResponse dto = JobSemanticSearchResponse.builder()
                         .id(job.getId())
                         .position(job.getPosition())
@@ -514,10 +521,11 @@ public class AIJobService {
 
                 resultList.add(dto);
             }
-
+            System.out.println("resultListSIZE " + resultList.size());
             return resultList;
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("AI error", e);
         } finally {
             System.out.println("findJobBySemanticSearch đã chạy xong");

@@ -78,4 +78,11 @@ public class CandidateController {
         response.setResult(result);
         return ResponseEntity.ok(response);
     }
+
+
+    /// check Khách hàng đã cập nhật CV hay chưa
+    @GetMapping("/cv/check")
+    public Boolean checkCV(){
+        return candidateService.checkCV();
+    }
 }
