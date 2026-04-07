@@ -42,5 +42,6 @@ public class CVJobEvaluation extends BaseEntity {
     @Convert(converter = RoadmapConverter.class)
     List<RoadmapDTO> roadmap;
 
-
+    @Column(name = "create_by_user_id", columnDefinition = "TEXT")
+    String createByUserId;
 }
