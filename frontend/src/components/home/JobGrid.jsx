@@ -74,7 +74,7 @@ const JobGrid = () => {
             <input
               type="search"
               className="job-search"
-              placeholder="Tìm kiếm việc làm, công ty tại đây"
+              placeholder="Tìm kiếm việc làm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               aria-label="Tìm kiếm việc làm"

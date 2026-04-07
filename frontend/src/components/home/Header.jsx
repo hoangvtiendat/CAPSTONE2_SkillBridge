@@ -98,13 +98,6 @@ const Header = () => {
                   >
                     Quản lý hồ sơ cá nhân
                   </Link>
-                  <Link
-                    to="/settings"
-                    className="user-dropdown-item"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    Cài đặt
-                  </Link>
                   <div className="dropdown-divider"></div>
                   <button
                     className="user-dropdown-item logout-btn"
