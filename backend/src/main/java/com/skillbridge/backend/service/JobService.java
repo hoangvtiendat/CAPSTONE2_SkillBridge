@@ -3,6 +3,7 @@ package com.skillbridge.backend.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.request.CVJobEvaluationRequest;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
@@ -866,7 +867,7 @@ public class JobService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId, MultipartFile cv) throws IOException {
+    public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId, MultipartFile cv ) throws IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -898,6 +899,11 @@ public class JobService {
         }
         String cvUrl = fileStorageService.saveFile(cv, "CVs");
 
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String json = objectMapper.writeValueAsString(request.getParsedContent());
+        System.out.println("json: " + json);
+
         Application application = Application.builder()
                 .job(job)
                 .candidate(candidate)
@@ -909,6 +915,7 @@ public class JobService {
                 .qualifications(qualificationsSnapshot)
                 .status(ApplicationStatus.PENDING)
                 .aiMatchingScore(0.0f)
+                .parsedContentJson(json)
                 .build();
 
         Application savedApp = applicationRepository.saveAndFlush(application);

@@ -148,7 +148,6 @@ public class CompanyController {
     ) {
         try {
             String rs = companyService.joinCompany(companyId);
-
             ApiResponse<String> response = new ApiResponse<>(
                     HttpStatus.OK.value(),
                     "Yêu cầu tham gia",

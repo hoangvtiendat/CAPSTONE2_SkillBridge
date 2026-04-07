@@ -118,8 +118,9 @@ public enum ErrorCode {
 
     // 7xxx: APPLICATION
     APPLICATION_NOT_FOUND(7000, "Không tìm thấy hồ sơ ứng tuyển", HttpStatus.NOT_FOUND),
-    ALREADY_APPLIED(7001, "Bạn đã ứng tuyển vào vị trí này trước đó rồi", HttpStatus.BAD_REQUEST);
+    ALREADY_APPLIED(7001, "Bạn đã ứng tuyển vào vị trí này trước đó rồi", HttpStatus.BAD_REQUEST),
 
+    EVALUATION_NOT_FOUND(8002, "Hiện tại chưa có đánh giá của ứng viên này đối với bài đăng", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private final HttpStatus httpStatus;

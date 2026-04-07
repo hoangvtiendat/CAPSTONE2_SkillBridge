@@ -78,25 +78,6 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/feedAdmin")
-//    public ResponseEntity<ApiResponse<PageResponse<AdminJobFeedItemResponse>>> getAllJobsForAdmin(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size,
-//            @RequestParam(defaultValue = "createdAt") String sortBy,
-//            @RequestParam(defaultValue = "desc") String direction,
-//            @RequestParam(required = false) String status,
-//            @RequestParam(required = false) String modStatus
-//    ) {
-//        Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
-//        PageResponse<AdminJobFeedItemResponse> result = jobService.adminGetJob(status, modStatus,pageable);
-//
-//        return ResponseEntity.ok(ApiResponse.<PageResponse<AdminJobFeedItemResponse>>builder()
-//                .code(HttpStatus.OK.value())
-//                .message("Lấy danh sách quản trị tin tuyển dụng thành công")
-//                .result(result)
-//                .build());
-//    }
-
     @GetMapping("/feedAdmin")
     public ResponseEntity<ApiResponse<AdminJobFeedResponse>> getAllJobsForAdmin(
             @RequestParam(required = false) String cursor,

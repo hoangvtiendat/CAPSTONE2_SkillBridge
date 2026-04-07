@@ -3,6 +3,7 @@ package com.skillbridge.backend.repository;
 import com.skillbridge.backend.entity.Application;
 import com.skillbridge.backend.entity.Candidate;
 import com.skillbridge.backend.entity.Job;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,9 @@ public interface ApplicationRepository extends JpaRepository<Application, String
 
     /** Lấy danh sách tất cả các đơn ứng tuyển của một bài đăng tuyển dụng cụ thể */
     List<Application> findByJob_Id(String jobId);
+
+    Application findByCandidate(@NotNull(message = "Ứng viên không được để trống") Candidate candidate);
+    List<Application> findAllByCandidate(Candidate candidate);
+
+    void deleteByCandidate(@NotNull(message = "Ứng viên không được để trống") Candidate candidate);
 }

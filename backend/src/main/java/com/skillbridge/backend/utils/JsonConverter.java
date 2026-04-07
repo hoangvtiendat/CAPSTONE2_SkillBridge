@@ -43,4 +43,5 @@ public class JsonConverter implements AttributeConverter<Object, String> {
             throw new AppException(ErrorCode.JSON_PROCESSING_ERROR);
         }
     }
+
 }

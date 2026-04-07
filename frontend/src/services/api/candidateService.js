@@ -26,10 +26,13 @@ const candidateService = {
         }
     },
 
-    updateCv: async (cvData) => {
+    updateCv: async (formData) => {
         try {
-            //console.log("SEND DATA:", JSON.stringify(cvData, null, 2));
-            const response = await api.put('/candidates/cv', cvData);
+            const response = await api.put('/candidates/cv', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             return response.data;
         } catch (error) {
             throw error;

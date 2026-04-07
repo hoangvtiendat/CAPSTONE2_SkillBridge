@@ -1,10 +1,15 @@
 package com.skillbridge.backend.dto.request;
 
+import com.skillbridge.backend.dto.DegreeDTO;
+import com.skillbridge.backend.dto.ExperienceDTO;
+import com.skillbridge.backend.dto.ParsedContentDTO;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -25,4 +30,6 @@ public class JobApplicationRequest {
     String numberPhone;
 
     String recommendationLetter;
+
+    ParsedContentDTO parsedContent;
 }

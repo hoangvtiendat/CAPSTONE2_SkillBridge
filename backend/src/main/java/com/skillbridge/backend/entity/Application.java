@@ -66,5 +66,8 @@ public class Application extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private ApplicationStatus status = ApplicationStatus.PENDING;
+
+    @Column(name = "parsed_content_json", columnDefinition = "JSON")
+    private String parsedContentJson;
 }
 

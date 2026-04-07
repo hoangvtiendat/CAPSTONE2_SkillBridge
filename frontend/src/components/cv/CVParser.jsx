@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Wand2, Upload, Plus, X, ArrowRight, Save, Trash2 } from 'lucide-react';
+import React, {useState, useEffect} from 'react';
+import {FileText, Wand2, Upload, Plus, X, ArrowRight, Save, Trash2} from 'lucide-react';
 import candidateService from '../../services/api/candidateService';
-import { toast } from 'sonner';
+import {toast} from 'sonner';
 import './CVParser.css';
 
 export const CVParser = () => {
@@ -19,7 +19,7 @@ export const CVParser = () => {
         certificates: {}, // { index: true/false }
         skills: true
     });
-
+    const [cvFile, setCvFile] = useState(null);
     // State for CV Form (Right Column)
     const [cvData, setCvData] = useState({
         name: '',
@@ -69,6 +69,8 @@ export const CVParser = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        setCvFile(file);
+
         setParsingState('scanning');
         setScanProgress(30);
 
@@ -85,9 +87,18 @@ export const CVParser = () => {
                     // Initialize selected items
                     setSelectedItems({
                         personalInfo: true,
-                        experience: result.experience ? result.experience.reduce((acc, _, idx) => ({ ...acc, [idx]: true }), {}) : {},
-                        degrees: result.degrees ? result.degrees.filter(d => d.type === 'DEGREE').reduce((acc, _, idx) => ({ ...acc, [idx]: true }), {}) : {},
-                        certificates: result.degrees ? result.degrees.filter(d => d.type === 'CERTIFICATE').reduce((acc, _, idx) => ({ ...acc, [idx]: true }), {}) : {},
+                        experience: result.experience ? result.experience.reduce((acc, _, idx) => ({
+                            ...acc,
+                            [idx]: true
+                        }), {}) : {},
+                        degrees: result.degrees ? result.degrees.filter(d => d.type === 'DEGREE').reduce((acc, _, idx) => ({
+                            ...acc,
+                            [idx]: true
+                        }), {}) : {},
+                        certificates: result.degrees ? result.degrees.filter(d => d.type === 'CERTIFICATE').reduce((acc, _, idx) => ({
+                            ...acc,
+                            [idx]: true
+                        }), {}) : {},
                         skills: true
                     });
                 }
@@ -117,7 +128,7 @@ export const CVParser = () => {
         // Logic change: Allow multiple fills, but check for duplicates (Smart Merge)
 
         setCvData(prev => {
-            const newData = { ...prev };
+            const newData = {...prev};
 
             // Apply Personal Info (Overwrite if selected, as these are single fields)
             if (selectedItems.personalInfo) {
@@ -164,7 +175,7 @@ export const CVParser = () => {
                             existing.institution === deg.institution
                         );
                         if (!exists) {
-                            degreesToAdd.push({ ...deg, id: Date.now() + Math.random() });
+                            degreesToAdd.push({...deg, id: Date.now() + Math.random()});
                         }
                     }
                 });
@@ -179,7 +190,7 @@ export const CVParser = () => {
                             existing.name === cert.name
                         );
                         if (!exists) {
-                            degreesToAdd.push({ ...cert, id: Date.now() + Math.random() });
+                            degreesToAdd.push({...cert, id: Date.now() + Math.random()});
                         }
                     }
                 });
@@ -217,29 +228,29 @@ export const CVParser = () => {
 
     /* ================= FORM HANDLERS ================= */
     const updateField = (field, value) => {
-        setCvData(prev => ({ ...prev, [field]: value }));
+        setCvData(prev => ({...prev, [field]: value}));
     };
 
     const addExperience = () => {
         setCvData(prev => ({
             ...prev,
-            experience: [...prev.experience, { id: Date.now(), startDate: '', endDate: '', description: '' }]
+            experience: [...prev.experience, {id: Date.now(), startDate: '', endDate: '', description: ''}]
         }));
     };
     const updateExperience = (id, field, value) => {
         setCvData(prev => ({
             ...prev,
-            experience: prev.experience.map(item => item.id === id ? { ...item, [field]: value } : item)
+            experience: prev.experience.map(item => item.id === id ? {...item, [field]: value} : item)
         }));
     };
     const removeExperience = (id) => {
-        setCvData(prev => ({ ...prev, experience: prev.experience.filter(item => item.id !== id) }));
+        setCvData(prev => ({...prev, experience: prev.experience.filter(item => item.id !== id)}));
     };
 
     const addDegree = (type) => {
         const newItem = type === 'DEGREE'
-            ? { id: Date.now(), type, degree: '', major: '', institution: '', graduationYear: '' }
-            : { id: Date.now(), type, name: '', year: '' };
+            ? {id: Date.now(), type, degree: '', major: '', institution: '', graduationYear: ''}
+            : {id: Date.now(), type, name: '', year: ''};
 
         setCvData(prev => ({
             ...prev,
@@ -249,11 +260,11 @@ export const CVParser = () => {
     const updateDegreeItem = (id, field, value) => {
         setCvData(prev => ({
             ...prev,
-            degrees: prev.degrees.map(item => item.id === id ? { ...item, [field]: value } : item)
+            degrees: prev.degrees.map(item => item.id === id ? {...item, [field]: value} : item)
         }));
     };
     const removeDegreeItem = (id) => {
-        setCvData(prev => ({ ...prev, degrees: prev.degrees.filter(item => item.id !== id) }));
+        setCvData(prev => ({...prev, degrees: prev.degrees.filter(item => item.id !== id)}));
     };
 
     const addSkill = (e) => {
@@ -263,7 +274,7 @@ export const CVParser = () => {
             if (!cvData.skills.some(s => s.skillName?.toLowerCase() === normalizedName.toLowerCase())) {
                 setCvData(prev => ({
                     ...prev,
-                    skills: [...prev.skills, { skillName: normalizedName, skillId: null, experienceYears: newSkillExp }]
+                    skills: [...prev.skills, {skillName: normalizedName, skillId: null, experienceYears: newSkillExp}]
                 }));
             }
             setNewSkillName('');
@@ -280,14 +291,16 @@ export const CVParser = () => {
     // Save
     const handleSave = async () => {
         try {
-            // STRICT PAYLOAD CONSTRUCTION
+            if (!cvFile) {
+                toast.error("Vui lòng upload CV trước khi lưu!");
+                return;
+            }
             const payload = {
                 name: cvData.name,
                 description: cvData.description,
                 address: cvData.address,
-                categoryId: cvData.categoryId || null, // FIX: Send null if empty
+                categoryId: cvData.categoryId || null,
                 degrees: cvData.degrees.map(d => {
-                    // Type-cast years to numbers
                     const yearVal = d.type === 'DEGREE' ? parseInt(d.graduationYear) : parseInt(d.year);
 
                     if (d.type === 'DEGREE') {
@@ -314,16 +327,21 @@ export const CVParser = () => {
                 skills: cvData.skills.map(s => ({
                     skillId: s.skillId || null,
                     experienceYears: parseInt(s.experienceYears) || 1
-                })).filter(s => s.skillId) // Filter out skills without IDs as per strict backend requirement
+                })).filter(s => s.skillId)
             };
-            // xử lí phần categoryId
-            // if (!payload.categoryId) {
-            //     toast.error("Thiếu Category ID (Chưa có ID danh mục từ hệ thống)");
-            //     // return; // Let it try?
-            // }
 
-            console.log("Saving Payload:", payload);
-            await candidateService.updateCv(payload);
+            // ✅ QUAN TRỌNG: dùng FormData
+            const formData = new FormData();
+            formData.append("data", new Blob([JSON.stringify(payload)], {type: "application/json"}));
+
+            if (cvFile) {
+                formData.append("cv", cvFile);
+            }
+
+            console.log("Sending multipart:", payload);
+
+            await candidateService.updateCv(formData);
+
             toast.success("Đã lưu hồ sơ thành công!");
         } catch (error) {
             console.error("Save CV failed:", error);
@@ -337,22 +355,29 @@ export const CVParser = () => {
             <div className="cv-layout">
                 {/* LEFT - AI PARSER */}
                 <div className="cv-left">
-                    <h2><Wand2 className="text-blue-500" /> AI CV Parser</h2>
+                    <h2><Wand2 className="text-blue-500"/> AI CV Parser</h2>
 
                     {parsingState === 'idle' && (
-                        <label className="upload-box">
-                            <input type="file" accept=".pdf,.doc,.docx" hidden onChange={handleFileUpload} />
-                            <Upload size={48} className="text-blue-500 mb-3 mx-auto" />
-                            <h3>Tải lên CV (PDF)</h3>
-                            <p>Hệ thống sẽ tự động quét thông tin</p>
-                        </label>
+                        <>
+                            <label className="upload-box">
+                                <input type="file" accept=".pdf,.doc,.docx" hidden onChange={handleFileUpload}/>
+                                <Upload size={48} className="text-blue-500 mb-3 mx-auto"/>
+                                <h3>Tải lên CV (PDF)</h3>
+                                <p>Hệ thống sẽ tự động quét thông tin</p>
+                            </label>
+
+                        {cvFile && (
+                            <div className="mt-2 text-sm text-green-600 text-center">
+                                ✅ Đã chọn file: {cvFile.name}
+                            </div>
+                        )} </>
                     )}
 
                     {parsingState === 'scanning' && (
                         <div className="scan-box">
                             <div className="scan-line"></div>
                             <div className="scan-content">
-                                <FileText size={64} className="pdf-icon" />
+                                <FileText size={64} className="pdf-icon"/>
                                 <h3>Đang phân tích...</h3>
                                 <div className="processing-text">{scanProgress}%</div>
                             </div>
@@ -366,7 +391,11 @@ export const CVParser = () => {
                                 <div className="ai-section">
                                     <div className="ai-section-header">
                                         <span>Thông tin chung</span>
-                                        <input type="checkbox" checked={selectedItems.personalInfo} onChange={(e) => setSelectedItems({ ...selectedItems, personalInfo: e.target.checked })} />
+                                        <input type="checkbox" checked={selectedItems.personalInfo}
+                                               onChange={(e) => setSelectedItems({
+                                                   ...selectedItems,
+                                                   personalInfo: e.target.checked
+                                               })}/>
                                     </div>
                                     <div className="ai-item-row">
                                         <div className="ai-item-content">
@@ -374,7 +403,8 @@ export const CVParser = () => {
                                             <p>{parsedData.address}</p>
                                             <p className="text-sm text-gray-500">{parsedData.description}</p>
                                             {/* Display ID if Name is missing, assuming parser returns ID for now based on user feedback */}
-                                            {parsedData.categoryId && <p className="text-xs text-blue-600">Category ID: {parsedData.categoryId}</p>}
+                                            {parsedData.categoryId && <p className="text-xs text-blue-600">Category
+                                                ID: {parsedData.categoryId}</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -385,7 +415,10 @@ export const CVParser = () => {
                                     {parsedData.degrees?.filter(d => d.type === 'DEGREE').map((d, idx) => (
                                         <label key={idx} className="ai-item-row">
                                             <input type="checkbox" checked={!!selectedItems.degrees[idx]}
-                                                onChange={() => setSelectedItems(prev => ({ ...prev, degrees: { ...prev.degrees, [idx]: !prev.degrees[idx] } }))} />
+                                                   onChange={() => setSelectedItems(prev => ({
+                                                       ...prev,
+                                                       degrees: {...prev.degrees, [idx]: !prev.degrees[idx]}
+                                                   }))}/>
                                             <div className="ai-item-content">
                                                 <strong>{d.degree} - {d.major}</strong>
                                                 <p>{d.institution} ({d.graduationYear})</p>
@@ -400,7 +433,13 @@ export const CVParser = () => {
                                     {parsedData.degrees?.filter(d => d.type === 'CERTIFICATE').map((c, idx) => (
                                         <label key={idx} className="ai-item-row">
                                             <input type="checkbox" checked={!!selectedItems.certificates[idx]}
-                                                onChange={() => setSelectedItems(prev => ({ ...prev, certificates: { ...prev.certificates, [idx]: !prev.certificates[idx] } }))} />
+                                                   onChange={() => setSelectedItems(prev => ({
+                                                       ...prev,
+                                                       certificates: {
+                                                           ...prev.certificates,
+                                                           [idx]: !prev.certificates[idx]
+                                                       }
+                                                   }))}/>
                                             <div className="ai-item-content">
                                                 <strong>{c.name}</strong>
                                                 <p>{c.year}</p>
@@ -413,7 +452,11 @@ export const CVParser = () => {
                                 <div className="ai-section">
                                     <div className="ai-section-header">
                                         <span>Kỹ năng</span>
-                                        <input type="checkbox" checked={selectedItems.skills} onChange={(e) => setSelectedItems({ ...selectedItems, skills: e.target.checked })} />
+                                        <input type="checkbox" checked={selectedItems.skills}
+                                               onChange={(e) => setSelectedItems({
+                                                   ...selectedItems,
+                                                   skills: e.target.checked
+                                               })}/>
                                     </div>
                                     <div className="ai-item-row">
                                         <div className="ai-item-content">
@@ -428,7 +471,13 @@ export const CVParser = () => {
                                     {parsedData.experience?.map((exp, idx) => (
                                         <label key={idx} className="ai-item-row">
                                             <input type="checkbox" checked={!!selectedItems.experience[idx]}
-                                                onChange={() => setSelectedItems(prev => ({ ...prev, experience: { ...prev.experience, [idx]: !prev.experience[idx] } }))} />
+                                                   onChange={() => setSelectedItems(prev => ({
+                                                       ...prev,
+                                                       experience: {
+                                                           ...prev.experience,
+                                                           [idx]: !prev.experience[idx]
+                                                       }
+                                                   }))}/>
                                             <div className="ai-item-content">
                                                 <strong>{exp.startDate} - {exp.endDate || 'Hiện tại'}</strong>
                                                 <p className="text-sm">{exp.description}</p>
@@ -443,13 +492,13 @@ export const CVParser = () => {
                                     className="btn-primary flex-1 flex items-center justify-center gap-2"
                                     onClick={applySelectedData}
                                 >
-                                    <ArrowRight size={18} /> Điền vào mẫu
+                                    <ArrowRight size={18}/> Điền vào mẫu
                                 </button>
                                 <button
                                     className="btn-secondary flex items-center justify-center gap-2 px-4 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md transition-colors"
                                     onClick={handleCancel}
                                 >
-                                    <X size={18} /> Hủy kết quả
+                                    <X size={18}/> Hủy kết quả
                                 </button>
                             </div>
                         </>
@@ -465,21 +514,28 @@ export const CVParser = () => {
                             <h3>Thông tin chung</h3>
                             <div className="form-group">
                                 <label>Họ và tên</label>
-                                <input value={cvData.name} onChange={(e) => updateField('name', e.target.value)} placeholder="Nhập họ tên" />
+                                <input value={cvData.name} onChange={(e) => updateField('name', e.target.value)}
+                                       placeholder="Nhập họ tên"/>
                             </div>
                             <div className="form-group">
                                 <label>Địa chỉ</label>
-                                <input value={cvData.address} onChange={(e) => updateField('address', e.target.value)} placeholder="Nhập địa chỉ" />
+                                <input value={cvData.address}
+                                       onChange={(e) => updateField('address', e.target.value)}
+                                       placeholder="Nhập địa chỉ"/>
                             </div>
                             <div className="form-group">
                                 <label>Mô tả bản thân</label>
-                                <textarea rows={3} value={cvData.description} onChange={(e) => updateField('description', e.target.value)} placeholder="Giới thiệu ngắn gọn..." />
+                                <textarea rows={3} value={cvData.description}
+                                          onChange={(e) => updateField('description', e.target.value)}
+                                          placeholder="Giới thiệu ngắn gọn..."/>
                             </div>
                             <div className="form-group">
                                 <label>Lĩnh vực (Category)</label>
-                                <input value={cvData.category} onChange={(e) => updateField('category', e.target.value)} placeholder="VD: IT Software..." />
+                                <input value={cvData.category}
+                                       onChange={(e) => updateField('category', e.target.value)}
+                                       placeholder="VD: IT Software..."/>
                                 {/* Hidden input to track ID if present */}
-                                <input type="hidden" value={cvData.categoryId || ''} />
+                                <input type="hidden" value={cvData.categoryId || ''}/>
                             </div>
                         </div>
 
@@ -488,30 +544,40 @@ export const CVParser = () => {
                             <h3>Bằng cấp (Degrees)</h3>
                             {cvData.degrees.filter(d => d.type === 'DEGREE').map(item => (
                                 <div key={item.id} className="dynamic-item">
-                                    <button className="remove-btn" onClick={() => removeDegreeItem(item.id)}><Trash2 size={14} /></button>
+                                    <button className="remove-btn" onClick={() => removeDegreeItem(item.id)}>
+                                        <Trash2
+                                            size={14}/></button>
                                     <div className="form-row">
                                         <div className="form-group">
                                             <label>Trường / Tổ chức</label>
-                                            <input value={item.institution} onChange={(e) => updateDegreeItem(item.id, 'institution', e.target.value)} />
+                                            <input value={item.institution}
+                                                   onChange={(e) => updateDegreeItem(item.id, 'institution', e.target.value)}/>
                                         </div>
                                         <div className="form-group">
                                             <label>Chuyên ngành</label>
-                                            <input value={item.major} onChange={(e) => updateDegreeItem(item.id, 'major', e.target.value)} />
+                                            <input value={item.major}
+                                                   onChange={(e) => updateDegreeItem(item.id, 'major', e.target.value)}/>
                                         </div>
                                     </div>
                                     <div className="form-row">
                                         <div className="form-group">
                                             <label>Bằng cấp</label>
-                                            <input value={item.degree} onChange={(e) => updateDegreeItem(item.id, 'degree', e.target.value)} placeholder="Cử nhân, Kỹ sư..." />
+                                            <input value={item.degree}
+                                                   onChange={(e) => updateDegreeItem(item.id, 'degree', e.target.value)}
+                                                   placeholder="Cử nhân, Kỹ sư..."/>
                                         </div>
                                         <div className="form-group">
                                             <label>Năm tốt nghiệp</label>
-                                            <input type="number" value={item.graduationYear} onChange={(e) => updateDegreeItem(item.id, 'graduationYear', e.target.value)} />
+                                            <input type="number" value={item.graduationYear}
+                                                   onChange={(e) => updateDegreeItem(item.id, 'graduationYear', e.target.value)}/>
                                         </div>
                                     </div>
                                 </div>
                             ))}
-                            <button className="add-btn" onClick={() => addDegree('DEGREE')}><Plus size={18} /> Thêm bằng cấp</button>
+                            <button className="add-btn" onClick={() => addDegree('DEGREE')}><Plus
+                                size={18}/> Thêm bằng
+                                cấp
+                            </button>
                         </div>
 
                         {/* Certificates */}
@@ -519,20 +585,27 @@ export const CVParser = () => {
                             <h3>Chứng chỉ (Certificates)</h3>
                             {cvData.degrees.filter(d => d.type === 'CERTIFICATE').map(item => (
                                 <div key={item.id} className="dynamic-item">
-                                    <button className="remove-btn" onClick={() => removeDegreeItem(item.id)}><Trash2 size={14} /></button>
+                                    <button className="remove-btn" onClick={() => removeDegreeItem(item.id)}>
+                                        <Trash2
+                                            size={14}/></button>
                                     <div className="form-row">
                                         <div className="form-group">
                                             <label>Tên chứng chỉ</label>
-                                            <input value={item.name} onChange={(e) => updateDegreeItem(item.id, 'name', e.target.value)} />
+                                            <input value={item.name}
+                                                   onChange={(e) => updateDegreeItem(item.id, 'name', e.target.value)}/>
                                         </div>
                                         <div className="form-group">
                                             <label>Năm</label>
-                                            <input type="number" value={item.year} onChange={(e) => updateDegreeItem(item.id, 'year', e.target.value)} />
+                                            <input type="number" value={item.year}
+                                                   onChange={(e) => updateDegreeItem(item.id, 'year', e.target.value)}/>
                                         </div>
                                     </div>
                                 </div>
                             ))}
-                            <button className="add-btn" onClick={() => addDegree('CERTIFICATE')}><Plus size={18} /> Thêm chứng chỉ</button>
+                            <button className="add-btn" onClick={() => addDegree('CERTIFICATE')}><Plus
+                                size={18}/> Thêm
+                                chứng chỉ
+                            </button>
                         </div>
 
                         {/* Experience - REVERTED */}
@@ -540,24 +613,31 @@ export const CVParser = () => {
                             <h3>Kinh nghiệm làm việc</h3>
                             {cvData.experience.map(item => (
                                 <div key={item.id} className="dynamic-item">
-                                    <button className="remove-btn" onClick={() => removeExperience(item.id)}><Trash2 size={14} /></button>
+                                    <button className="remove-btn" onClick={() => removeExperience(item.id)}>
+                                        <Trash2
+                                            size={14}/></button>
                                     <div className="form-row">
                                         <div className="form-group">
                                             <label>Ngày bắt đầu</label>
-                                            <input type="date" value={item.startDate} onChange={(e) => updateExperience(item.id, 'startDate', e.target.value)} />
+                                            <input type="date" value={item.startDate}
+                                                   onChange={(e) => updateExperience(item.id, 'startDate', e.target.value)}/>
                                         </div>
                                         <div className="form-group">
                                             <label>Ngày kết thúc</label>
-                                            <input type="date" value={item.endDate || ''} onChange={(e) => updateExperience(item.id, 'endDate', e.target.value)} />
+                                            <input type="date" value={item.endDate || ''}
+                                                   onChange={(e) => updateExperience(item.id, 'endDate', e.target.value)}/>
                                         </div>
                                     </div>
                                     <div className="form-group">
                                         <label>Mô tả công việc</label>
-                                        <textarea rows={2} value={item.description} onChange={(e) => updateExperience(item.id, 'description', e.target.value)} />
+                                        <textarea rows={2} value={item.description}
+                                                  onChange={(e) => updateExperience(item.id, 'description', e.target.value)}/>
                                     </div>
                                 </div>
                             ))}
-                            <button className="add-btn" onClick={addExperience}><Plus size={18} /> Thêm kinh nghiệm</button>
+                            <button className="add-btn" onClick={addExperience}><Plus size={18}/> Thêm kinh
+                                nghiệm
+                            </button>
                         </div>
 
                         {/* Skills */}
@@ -567,18 +647,21 @@ export const CVParser = () => {
                                 {cvData.skills.map((skill, index) => (
                                     <div key={index} className="skill-tag">
                                         <span>{skill.skillName} ({skill.experienceYears} năm)</span>
-                                        <button onClick={() => removeSkill(index)}><X size={14} /></button>
+                                        <button onClick={() => removeSkill(index)}><X size={14}/></button>
                                     </div>
                                 ))}
                             </div>
                             <div className="form-row items-end">
                                 <div className="form-group flex-1">
                                     <label>Tên kỹ năng</label>
-                                    <input value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} onKeyDown={addSkill} placeholder="Nhập và Enter" />
+                                    <input value={newSkillName}
+                                           onChange={(e) => setNewSkillName(e.target.value)}
+                                           onKeyDown={addSkill} placeholder="Nhập và Enter"/>
                                 </div>
                                 <div className="form-group w-24">
                                     <label>Số năm</label>
-                                    <input type="number" min="0" value={newSkillExp} onChange={(e) => setNewSkillExp(e.target.value)} />
+                                    <input type="number" min="0" value={newSkillExp}
+                                           onChange={(e) => setNewSkillExp(e.target.value)}/>
                                 </div>
                             </div>
                         </div>
@@ -586,8 +669,12 @@ export const CVParser = () => {
 
                     {/* MOVED Save Button to Bottom Center */}
                     <div className="p-4 border-t border-gray-100 flex justify-center bg-white sticky bottom-0">
-                        <button className="btn-primary flex items-center gap-2 px-8 py-3 text-lg" onClick={handleSave}>
-                            <Save size={20} /> Lưu Hồ Sơ
+                        <button
+                            className="btn-primary flex items-center gap-2 px-8 py-3 text-lg"
+                            onClick={handleSave}
+                            disabled={!cvFile}
+                        >
+                            <Save size={20}/> Lưu Hồ Sơ
                         </button>
                     </div>
 

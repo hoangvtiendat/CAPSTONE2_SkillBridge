@@ -273,7 +273,6 @@
 .loading {
     display: flex;
     justify-content: center;
-    padding: 100px;
     font-weight: 800;
     color: var(--sf-blue);
 }

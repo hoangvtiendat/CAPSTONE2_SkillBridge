@@ -226,4 +226,20 @@ public interface JobRepository extends JpaRepository<Job, String> {
             @Param("modStatus") ModerationStatus modStatus,
             Pageable pageable
     );
+
+
+    @Query(value = """
+    SELECT JSON_OBJECT(
+        'title', j.title,
+        'description', j.description,
+        'location', j.location,
+        'salaryMin', j.salary_min,
+        'salaryMax', j.salary_max,
+        'viewCount', j.view_count,
+        'position', j.position
+    )
+    FROM jobs j
+    WHERE j.id = :jobId
+    """, nativeQuery = true)
+    String getJobAsJson(@Param("jobId") String jobId);
 }

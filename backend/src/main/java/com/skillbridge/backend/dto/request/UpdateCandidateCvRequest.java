@@ -18,6 +18,7 @@ public class UpdateCandidateCvRequest {
     String address;
     Boolean isOpenToWork;
     String categoryId;
+    String cvUrl;
     List<ExperienceDetail> experience;
     List<CandidateSkillRequest> skills;
     List<DegreeRequest> degrees;

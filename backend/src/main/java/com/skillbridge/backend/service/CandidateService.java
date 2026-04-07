@@ -27,6 +27,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,10 @@ public class CandidateService {
     SecurityUtils securityUtils;
     SimpMessagingTemplate messagingTemplate;
     EmbeddingService embeddingService;
+    FileStorageService fileStorageService;
+    private final ApplicationRepository applicationRepository;
+    private final InterviewRepository interviewRepository;
+
 
     @NonFinal
     @Value("${gemini.api.key}")
@@ -73,6 +78,7 @@ public class CandidateService {
                 candidate.getDescription(),
                 candidate.getAddress(),
                 candidate.getCategory() != null ? candidate.getCategory().getName() : null,
+                candidate.getCvUrl(),
                 degreeResponses,
                 skillResponses,
                 experienceDetails
@@ -81,7 +87,7 @@ public class CandidateService {
 
     /**
      * Chuyển đổi dữ liệu bằng cấp từ JSON/Object sang danh sách DegreeResponse
-     * */
+     */
     private List<DegreeResponse> deserializeDegrees(Object degreeObj) {
         if (degreeObj == null) return new ArrayList<>();
         try {
@@ -111,7 +117,7 @@ public class CandidateService {
 
     /**
      * Chuyển đổi dữ liệu kinh nghiệm làm việc sang danh sách ExperienceDetail
-     * */
+     */
     private List<ExperienceDetail> deserializeExperience(Object expObj) {
         if (expObj == null) return new ArrayList<>();
         try {
@@ -131,7 +137,7 @@ public class CandidateService {
      * Cập nhật thông tin CV
      */
     @Transactional
-    public UpdateCandidateCvResponse updateCv(String userId, UpdateCandidateCvRequest request) {
+    public UpdateCandidateCvResponse updateCv(String userId, UpdateCandidateCvRequest request, MultipartFile cv) throws IOException {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         try {
             User user = userRepository.findById(userId)
@@ -143,13 +149,19 @@ public class CandidateService {
                         newCandidate.setUser(user);
                         return newCandidate;
                     });
+
             if (request.getName() != null) candidate.setName(request.getName());
             if (request.getIsOpenToWork() != null) candidate.setIsOpenToWork(request.getIsOpenToWork());
             if (request.getDescription() != null) candidate.setDescription(request.getDescription());
             if (request.getAddress() != null) candidate.setAddress(request.getAddress());
-            Category category = null ;
+            if (cv != null) {
+                String cvUrl = fileStorageService.saveFile(cv, "CVs");
+                candidate.setCvUrl(cvUrl);
+            }
+
+            Category category = null;
             if (request.getCategoryId() != null) {
-                 category = categoryRepository.findById(request.getCategoryId())
+                category = categoryRepository.findById(request.getCategoryId())
                         .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
                 candidate.setCategory(category);
             }
@@ -247,6 +259,14 @@ public class CandidateService {
             UpdateCandidateCvResponse response = getCv(userId);
             messagingTemplate.convertAndSend("/topic/candidate/" + userId + "/cv-update", response);
             systemLog.info(currentUser, "Cập nhật hồ sơ cá nhân thành công");
+
+            List<Application> applications = applicationRepository.findAllByCandidate(candidate);
+
+            for (Application app : applications) {
+                interviewRepository.deleteByApplication(app); // xoá con trước
+            }
+
+            applicationRepository.deleteByCandidate(candidate); // xoá
             return response;
         } catch (AppException e) {
             log.warn("[CV_UPDATE] Lỗi nghiệp vụ khi cập nhật hồ sơ cho {}: {}", userId, e.getErrorCode().getMessage());
@@ -274,58 +294,58 @@ public class CandidateService {
     }
 
     private static final String PROMPT = """
-    Phân tích CV sau và trả về JSON chuẩn dựa trên danh sách ngành và kỹ năng cho sẵn.
-    
-    DANH SÁCH NGÀNH VÀ KỸ NĂNG TỪ HỆ THỐNG:
-    %s
-    
-    YÊU CẦU NGHIÊM NGẶT:
-    1. Chỉ trả về JSON, không giải thích.
-    2. Ánh xạ 'categoryId' từ danh sách ngành phù hợp nhất.
-    3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%%, hãy chọn cái gần nhất.
-    4. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
-    5. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
-    6. Nếu endDate là hiện tại thì trả ngày hiện tại theo định dạng yyyy-MM-dd.
-    
-    Cấu trúc JSON yêu cầu:
-    {
-      "name": "Họ và tên",
-      "address": "Địa chỉ liên lạc",
-      "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
-      "categoryId": "ID của ngành từ danh sách trên",
-      "degrees": [
-        {
-          "type": "DEGREE",
-          "degree": "Tên bằng cấp (nếu là DEGREE)",
-          "major": "Ngành học",
-          "institution": "Tên trường/tổ chức cấp",
-          "graduationYear": 2023
-        },
-        {
-          "type": "CERTIFICATE",
-          "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
-          "year": 2025
-        }
-      ],
-      "experience": [
-        {
-          "startDate": "yyyy-MM-dd",
-          "endDate": "yyyy-MM-dd hoặc null",
-          "description": "Chi tiết công việc"
-        }
-      ],
-      "skills": [
-        {
-          "skillId": "ID của kỹ năng từ danh sách trên",
-          "skillName": "Tên kỹ năng gốc từ CV",
-          "experienceYears": 3
-        }
-      ]
-    }
-    
-    VĂN BẢN CV:
-    %s
-    """;
+            Phân tích CV sau và trả về JSON chuẩn dựa trên danh sách ngành và kỹ năng cho sẵn.
+            
+            DANH SÁCH NGÀNH VÀ KỸ NĂNG TỪ HỆ THỐNG:
+            %s
+            
+            YÊU CẦU NGHIÊM NGẶT:
+            1. Chỉ trả về JSON, không giải thích.
+            2. Ánh xạ 'categoryId' từ danh sách ngành phù hợp nhất.
+            3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%%, hãy chọn cái gần nhất.
+            4. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
+            5. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
+            6. Nếu endDate là hiện tại thì trả ngày hiện tại theo định dạng yyyy-MM-dd.
+            
+            Cấu trúc JSON yêu cầu:
+            {
+              "name": "Họ và tên",
+              "address": "Địa chỉ liên lạc",
+              "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+              "categoryId": "ID của ngành từ danh sách trên",
+              "degrees": [
+                {
+                  "type": "DEGREE",
+                  "degree": "Tên bằng cấp (nếu là DEGREE)",
+                  "major": "Ngành học",
+                  "institution": "Tên trường/tổ chức cấp",
+                  "graduationYear": 2023
+                },
+                {
+                  "type": "CERTIFICATE",
+                  "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+                  "year": 2025
+                }
+              ],
+              "experience": [
+                {
+                  "startDate": "yyyy-MM-dd",
+                  "endDate": "yyyy-MM-dd hoặc null",
+                  "description": "Chi tiết công việc"
+                }
+              ],
+              "skills": [
+                {
+                  "skillId": "ID của kỹ năng từ danh sách trên",
+                  "skillName": "Tên kỹ năng gốc từ CV",
+                  "experienceYears": 3
+                }
+              ]
+            }
+            
+            VĂN BẢN CV:
+            %s
+            """;
 
     private String buildPrompt(String rawText, List<Category> categories, List<Skill> allSkills) {
         StringBuilder metaData = new StringBuilder();

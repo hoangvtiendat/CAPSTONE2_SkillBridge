@@ -1,11 +1,14 @@
 package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.config.CustomUserDetails;
+import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.request.UpdateCandidateCvRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.UpdateCandidateCvResponse;
 import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.entity.Skill;
+import com.skillbridge.backend.exception.AppException;
+import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.CandidateService;
 import com.skillbridge.backend.service.CategoryProfessionService;
 import com.skillbridge.backend.service.SkillService;
@@ -30,6 +33,7 @@ public class CandidateController {
     CandidateService candidateService;
     CategoryProfessionService categoryProfessionService;
     SkillService skillService;
+
     /**
      * Upload và phân tích CV bằng AI/OCR
      */
@@ -52,6 +56,7 @@ public class CandidateController {
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         UpdateCandidateCvResponse result = candidateService.getCv(user.getUserId());
+        System.out.println("result: " + result);
         ApiResponse<UpdateCandidateCvResponse> response = new ApiResponse<>();
         response.setResult(result);
         return ResponseEntity.ok(response);
@@ -86,12 +91,21 @@ public class CandidateController {
      */
     @PutMapping("/cv")
     public ResponseEntity<ApiResponse<UpdateCandidateCvResponse>> updateCv(
-        @AuthenticationPrincipal CustomUserDetails user,
-        @RequestBody UpdateCandidateCvRequest request
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestPart("data") UpdateCandidateCvRequest request,
+            @RequestPart("cv") MultipartFile cv
     ) {
-        UpdateCandidateCvResponse result = candidateService.updateCv(user.getUserId(), request);
-        ApiResponse<UpdateCandidateCvResponse> response = new ApiResponse<>();
-        response.setResult(result);
-        return ResponseEntity.ok(response);
+        try {
+            UpdateCandidateCvResponse result = candidateService.updateCv(user.getUserId(), request, cv);
+            ApiResponse<UpdateCandidateCvResponse> response = new ApiResponse<>();
+            response.setResult(result);
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            ex.printStackTrace();
+            throw ex;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 }

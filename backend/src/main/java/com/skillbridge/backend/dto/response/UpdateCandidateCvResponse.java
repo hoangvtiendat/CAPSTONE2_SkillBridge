@@ -19,7 +19,7 @@ public class UpdateCandidateCvResponse {
     private String description;
     private String address;
     private String category;
-
+    private String cvUrl;
     private List<DegreeResponse> degrees;
     private List<CandidateSkillResponse> skills;
     private List<ExperienceDetail> experience;

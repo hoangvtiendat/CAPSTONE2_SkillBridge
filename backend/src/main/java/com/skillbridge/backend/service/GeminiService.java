@@ -12,6 +12,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
@@ -32,7 +33,9 @@ public class GeminiService {
 
     public GeminiService(ObjectMapper objectMapper) {
         this.restTemplate = new RestTemplate();
-        this.objectMapper = objectMapper;
+//        this.objectMapper = objectMapper;
+        this.objectMapper = objectMapper.copy();
+
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
@@ -67,12 +70,11 @@ public class GeminiService {
                     .path("text").asText();
 
             log.debug("AI Raw Response: {}", aiRawResponse);
-            String jsonStr = aiRawResponse.trim()
-                    .replaceAll("^```json", "")
-                    .replaceAll("```$", "")
-                    .trim();
-            jsonStr = DataParserUtils.cleanJson(jsonStr);
+
+            String jsonStr = DataParserUtils.cleanJsonString(aiRawResponse);
+            jsonStr = DataParserUtils.ensureValidJson(jsonStr);
             try {
+                System.out.println("JSON: " + jsonStr);
                 return objectMapper.readValue(jsonStr, responseType);
             } catch (Exception e) {
                 log.error("JSON vẫn không thể parse sau khi sửa: {}", jsonStr);
