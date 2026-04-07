@@ -96,4 +96,26 @@ public class FileStorageService {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
+
+    /**
+     * Xóa file khỏi hệ thống lưu trữ dựa trên đường dẫn lưu trong DB
+     * @param fileUrl: Đường dẫn lưu trong DB (Ví dụ: /Avatars/uuid_name.jpg)
+     */
+    public void deleteFile(String fileUrl) {
+        if (!StringUtils.hasText(fileUrl)) {
+            return;
+        }
+        try {
+            String relativePath = fileUrl.startsWith("/") ? fileUrl.substring(1) : fileUrl;
+            Path filePath = this.rootLocation.resolve(relativePath).normalize();
+            if (Files.exists(filePath) && filePath.startsWith(this.rootLocation)) {
+                Files.delete(filePath);
+                log.info("[FILE-STORAGE] Đã xóa file thành công: {}", filePath);
+            } else {
+                log.warn("[FILE-STORAGE] Không tìm thấy file để xóa hoặc đường dẫn không hợp lệ: {}", fileUrl);
+            }
+        } catch (IOException e) {
+            log.error("[FILE-STORAGE] Lỗi khi xóa file {}: {}", fileUrl, e.getMessage());
+        }
+    }
 }

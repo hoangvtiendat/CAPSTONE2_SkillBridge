@@ -55,7 +55,6 @@ const PotentialCandidates = () => {
                     candidates.map((can) => {
                         const isInvited = invitedIds.has(can.id);
                         const matchScore = (can.aiMatchingScore * 100).toFixed(0);
-                        const displayAddress = isInvited ? (can.address || 'N/A') : "••••••••";
 
                         return (
                             <div key={can.id} className="candidate-card-compact">
@@ -77,7 +76,7 @@ const PotentialCandidates = () => {
                                     <div className="meta-mini">
                                         <h3>{can.name}</h3>
                                         <div className="loc-mini">
-                                            <span className="material-symbols-outlined" style={{fontSize: '14px'}}>location_on</span> {displayAddress}
+                                            <span className="material-symbols-outlined" style={{fontSize: '14px'}}>location_on</span> {can.address}
                                         </div>
                                     </div>
                                 </div>

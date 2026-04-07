@@ -44,7 +44,7 @@ const ApplicationDetailPage = () => {
                         currentBlobUrl = URL.createObjectURL(blob);
                         setCvBlobUrl(currentBlobUrl);
                     } else {
-                        console.error("❌ Lỗi tải file. Status:", response.status);
+                        console.error("Lỗi tải file. Status:", response.status);
                         setCvError(true);
                     }
                 }

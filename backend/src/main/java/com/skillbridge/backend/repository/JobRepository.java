@@ -133,13 +133,14 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT DISTINCT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
-            c.name, c.imageUrl, cs.name, cat.name
+            c.name, c.imageUrl, soc.name, cat.name
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN SubscriptionOfCompany soc ON soc.company.id = c.id
         WHERE j.status = :status
+        AND soc.status = SubscriptionOfCompanyStatus.OPEN
         AND j.company.id = :companyId
         AND j.isDeleted = false
         AND (:categoryIds IS NULL OR (cat.id IN :categoryIds))

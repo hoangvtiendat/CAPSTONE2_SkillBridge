@@ -326,13 +326,13 @@ public class CandidateService {
           "major": "Ngành học",
           "institution": "Tên trường/tổ chức cấp",
           "graduationYear": 2023,
-          "level": "3.5/4.0 hoặc Giỏi"
+          "level": "Số điểm/ level của bằng cấp đó"
         },
         {
           "type": "CERTIFICATE",
           "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
           "year": 2025,
-          "level": "450 hoặc N4 hoặc 7.5"
+          "level": "Số điểm/ level của chứng chỉ đó"
         }
       ],
       "experience": [

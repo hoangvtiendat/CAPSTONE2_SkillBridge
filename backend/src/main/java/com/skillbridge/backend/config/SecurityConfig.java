@@ -49,7 +49,10 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/me/2fa").authenticated()
+                        .requestMatchers(
+                                "/auth/me/2fa",
+                                "/auth/change-password"
+                                ).authenticated()
 
                         .requestMatchers(
                                 "/skill/set/**",
@@ -97,6 +100,7 @@ public class SecurityConfig {
                                 "/payments/webhook",
                                 "/CategoryProfession/**",
                                 "/logos/**",
+                                "/avatars/**",
                                 "/licenses/**",
                                 "/companies/*",
                                 "/CVs/**").permitAll()

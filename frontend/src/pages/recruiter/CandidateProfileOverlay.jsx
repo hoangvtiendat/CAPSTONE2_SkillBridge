@@ -168,7 +168,7 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                             </div>
                             <div className="c-text">
                                 <label>Địa chỉ</label>
-                                <p>{maskInfo(candidateData.address, 'address')}</p>
+                                <p>{candidateData.address}</p>
                             </div>
                         </div>
                     </div>

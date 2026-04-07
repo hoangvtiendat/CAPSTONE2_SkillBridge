@@ -10,6 +10,7 @@ import candidateService from '../../services/api/candidateService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import './ProfilePage.css';
+import { ChangePasswordModal } from '../../components/auth/ChangePasswordModal';
 
 const ProfilePage = () => {
     const { user, fetchProfile } = useAuth();
@@ -20,6 +21,7 @@ const ProfilePage = () => {
     const [is2faEnabledLocal, setIs2faEnabledLocal] = useState(
             user?.is2faEnabled === "true" || user?.is2faEnabled === "1"
         );
+    const [isChangePassOpen, setIsChangePassOpen] = useState(false);
     const fetchCandidateStatus = async () => {
         if (!user?.id) return;
         try {
@@ -119,6 +121,7 @@ const ProfilePage = () => {
                                     user={user}
                                     isOpenToWork={isOpenToWork}
                                     onToggleOpenToWork={handleToggleOpenToWork}
+                                    onAvatarUpdate={fetchProfile}
                                 />
 
                                 <div className="security-box">
@@ -148,10 +151,19 @@ const ProfilePage = () => {
                                         </label>
                                     </div>
 
-                                    <button className="security-action-btn">
+                                    <button
+                                        className="security-action-btn"
+                                        onClick={() => setIsChangePassOpen(true)}
+                                    >
                                         <KeyRound size={16} />
                                         Đổi mật khẩu
                                     </button>
+
+                                    {/* 3. Chèn Modal vào cuối Component */}
+                                    <ChangePasswordModal
+                                        isOpen={isChangePassOpen}
+                                        onClose={() => setIsChangePassOpen(false)}
+                                    />
                                 </div>
                             </aside>
 

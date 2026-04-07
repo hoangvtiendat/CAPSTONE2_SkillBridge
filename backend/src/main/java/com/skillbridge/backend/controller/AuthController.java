@@ -17,6 +17,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 
 @RestController
@@ -200,5 +205,29 @@ public class AuthController {
             System.out.println("[LOGOUT] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<String>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        authService.changePassword(request);
+        ApiResponse<String> response = new ApiResponse<>(
+                HttpStatus.OK.value(), "Đổi mật khẩu thành công", null
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping(value = "/me/avatar", consumes = MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<String>> updateAvatar(
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        String imageUrl = authService.updateAvatar(file);
+        ApiResponse<String> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Cập nhật ảnh đại diện thành công",
+                imageUrl
+        );
+        return ResponseEntity.ok(response);
     }
 }
