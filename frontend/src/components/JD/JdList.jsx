@@ -65,7 +65,7 @@ const JdList = () => {
         if (!window.confirm('Bạn có chắc chắn muốn xóa công việc này không?')) return;
 
         try {
-            await jobService.deleteJd(jdId);
+            await jobService.deleteJd(jdId, 1);
             toast.success("Thành công", {description: "Xóa JD thành công!", style: toastStyles.success});
             setStatusFilter('ALL');
             handGetJdList();

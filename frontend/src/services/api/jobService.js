@@ -99,9 +99,9 @@ const jobService = {
         }
     },
 
-    deleteJd: async (jdId) => {
+    deleteJd: async (jdId, type) => {
         try {
-            await api.delete(`/jobs/my-company/delete/${jdId}`);
+            await api.delete(`/jobs/my-company/update-Status-JD/${jdId}/${type}`);
         } catch (error) {
             console.error('Error deleting JD:', error);
             throw error;
