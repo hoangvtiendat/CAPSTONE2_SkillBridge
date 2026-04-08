@@ -41,6 +41,10 @@ public class Job extends BaseEntity {
     @Column(columnDefinition = "JSON")
     private Map<String, Object> title;
 
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "moderation_status")
     @Builder.Default
@@ -68,9 +72,6 @@ public class Job extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
 
     @Column(name = "salary_min", precision = 19, scale = 2)
     private BigDecimal salaryMin;

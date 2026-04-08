@@ -25,6 +25,25 @@ const candidateService = {
             throw error;
         }
     },
+    getAutoCategory: async (query) => {
+        try {
+            const response = await api.get('/candidates/auto-category', {params: {query}});
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAutoSkill: async (query, categoryId) => {
+        try {
+            const params = {query};
+            if (categoryId) params.categoryId = categoryId;
+            const response = await api.get('/candidates/auto-skill', {params});
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 
     updateCv: async (formData) => {
         try {
@@ -37,7 +56,24 @@ const candidateService = {
         } catch (error) {
             throw error;
         }
-    }
+    },
+    toggleOpenToWork: async (status) => {
+        const response = await api.patch(`/candidates/open-to-work?isOpenToWork=${status}`);
+        return response.data;
+    },
+    getPotentialCandidates: async (jobId) => {
+        const response = await api.get(`/candidates/potential/${jobId}`);
+        return response.data;
+    },
+    evaluateByRecruiter: async (candidateId, jobId) => {
+        try {
+            const response = await api.get(`/candidates/evaluate-by-recruiter/${candidateId}/${jobId}`);
+            return await response.data;
+        } catch (error) {
+            console.error("Error in evaluateByRecruiter service:", error);
+            throw error;
+        }
+    },
 };
 
 export default candidateService;

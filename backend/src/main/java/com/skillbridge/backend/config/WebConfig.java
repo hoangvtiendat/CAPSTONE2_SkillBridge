@@ -3,7 +3,6 @@ package com.skillbridge.backend.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import java.io.File;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -27,6 +26,10 @@ public class WebConfig implements WebMvcConfigurer {
         String finalPath = "file:" + uploadPath;
 
         // 3. Đăng ký các Resource Handler
+        // Mapping /avatars/** -> uploads/avatars/
+        registry.addResourceHandler("/avatars/**")
+                .addResourceLocations(finalPath + "avatars/");
+
         // Mapping /logos/** -> uploads/logos/
         registry.addResourceHandler("/logos/**")
                 .addResourceLocations(finalPath + "logos/");

@@ -6,15 +6,13 @@ import com.skillbridge.backend.dto.request.CompanyIdentificationRequest;
 import com.skillbridge.backend.dto.request.DeactivateRequest;
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyFeedResponse;
-import com.skillbridge.backend.entity.Company;
-import com.skillbridge.backend.entity.CompanyJoinRequest;
-import com.skillbridge.backend.entity.CompanyMember;
-import com.skillbridge.backend.entity.User;
+import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.enums.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.utils.SecurityUtils;
+import com.skillbridge.backend.utils.ValidateUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -31,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,6 +50,9 @@ public class CompanyService {
     SecurityUtils securityUtils;
     NotificationService notificationService;
     SimpMessagingTemplate messagingTemplate;
+    ValidateUtils validate;
+    SubscriptionOfCompanyRepository subscriptionOfCompanyRepository;
+    SubscriptionPlanRepository subscriptionPlanRepository;
 
     public Map<String, Object> getCompanies(int page, CompanyStatus status, int limit, String keyword, String categoryId) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -120,6 +122,28 @@ public class CompanyService {
             if("ACTIVE".equals(status)){
                 company.setStatus(CompanyStatus.ACTIVE);
                 user.setRole("RECRUITER");
+
+                SubscriptionPlan freePlan = subscriptionPlanRepository.findByName(SubscriptionPlanStatus.FREE)
+                        .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION));
+
+                SubscriptionOfCompany freeSubscription = SubscriptionOfCompany.builder()
+                        .company(company)
+                        .name(freePlan.getName())
+                        .jobLimit(freePlan.getJobLimit())
+                        .candidateViewLimit(freePlan.getCandidateViewLimit())
+                        .postingDuration(freePlan.getPostingDuration())
+                        .hasPriorityDisplay(freePlan.getHasPriorityDisplay())
+                        .price(freePlan.getPrice())
+                        .currentJobCount(0)
+                        .currentViewCount(0)
+                        .status(SubscriptionOfCompanyStatus.OPEN)
+                        .startDate(LocalDateTime.now())
+                        .endDate(LocalDateTime.now().plusYears(10))
+                        .isActive(true)
+                        .build();
+
+                subscriptionOfCompanyRepository.save(freeSubscription);
+
                 content = String.format(
                     "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
                             "<h2 style='color: #28a745;'>Chúc mừng! Công ty của bạn đã được duyệt</h2>" +
@@ -181,6 +205,7 @@ public class CompanyService {
 
     /** Tra cứu công ty theo mã số thuế trên trang tratenongty */
     public CompanyDTO lookupByTaxCode(String mst) {
+        validate.validateTaxId(mst);
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String cleanMst = mst.trim();
         try {
@@ -265,6 +290,7 @@ public class CompanyService {
 
     /** Lấy thông tin công ty dựa vào mã số thuế */
     public CompanyFeedItemResponse getCompanyByTax(String taxCode) {
+        validate.validateTaxId(taxCode);
         Optional<Company> companyOpt = companyRepository.findByTaxId(taxCode);
 
         if (companyOpt.isPresent()) {
@@ -283,6 +309,8 @@ public class CompanyService {
     public CompanyFeedItemResponse identifyCompany(CompanyIdentificationRequest request,
                                                    MultipartFile logo,
                                                    MultipartFile license) throws IOException {
+        validate.validateTaxId(request.getTaxcode());
+
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
         User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));

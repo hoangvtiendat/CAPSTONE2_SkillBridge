@@ -45,7 +45,35 @@ const authService = {
         } catch (error) {
             throw error;
         }
-    }
+    },
+
+    changePassword: async (oldPassword, newPassword) => {
+        try {
+            const response = await api.post('/auth/change-password', {
+                oldPassword,
+                newPassword
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    updateAvatar: async (file) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await api.patch('/auth/me/avatar', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 };
 
 export default authService;

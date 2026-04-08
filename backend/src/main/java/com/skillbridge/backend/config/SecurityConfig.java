@@ -50,6 +50,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/auth/me/2fa",
+                                "/auth/change-password"
+                                ).authenticated()
+
+                        .requestMatchers(
                                 "/skill/set/**",
                                 "/identity/jobs/feedAdmin/**",
                                 "/jobs/feedAdminPending/**",
@@ -61,20 +66,26 @@ public class SecurityConfig {
                                 "/company-member/**",
                                 "/identity/subscription/**",
                                 "/identity/CategoryProfession/**",
-                                "/applications/jobs/**"
+                                "/applications/jobs/**",
+                                "/candidates/potential/{jobId}",
+                                "/candidates/evaluate-by-recruiter/{candidateId}/{jobId}"
                         ).hasRole("RECRUITER")
 
                         .requestMatchers(
                                 "/candidates/**",
-                                "/jobs/apply/**"
+                                "/jobs/apply/**",
+                                "/evaluate-self/{id}"
                         ).hasRole("CANDIDATE")
 
                         .requestMatchers(
                                 "/jobs/feed",
                                 "/companies/feed",
                                 "/companies/{id}",
-                                "/admin/**",
-                                "/auth/**",
+                                "/auth/login",
+                                "/auth/register/**",
+                                "/auth/forgot-password",
+                                "/auth/reset-password",
+                                "/auth/login/verify-otp",
                                 "/users/**",
                                 "/api/public/**",
                                 "/oauth2/**",
@@ -89,12 +100,14 @@ public class SecurityConfig {
                                 "/payments/webhook",
                                 "/CategoryProfession/**",
                                 "/logos/**",
+                                "/avatars/**",
                                 "/licenses/**",
                                 "/companies/*",
                                 "/CVs/**").permitAll()
 
                         .anyRequest().authenticated()
                 )
+
 
                 .oauth2Login(oauth -> oauth
                         .successHandler(successHandler)

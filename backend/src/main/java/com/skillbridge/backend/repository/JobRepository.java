@@ -103,7 +103,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title,j.description, j.location,
+            j.id, j.title, j.position,j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
             c.name,c.imageUrl,soc.name, cat.name
         )
@@ -131,15 +131,16 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT DISTINCT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
-            j.id, j.title, j.description, j.location,
+            j.id, j.title, j.position, j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
-            c.name, c.imageUrl, cs.name, cat.name
+            c.name, c.imageUrl, soc.name, cat.name
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN SubscriptionOfCompany soc ON soc.company.id = c.id
         WHERE j.status = :status
+        AND soc.status = SubscriptionOfCompanyStatus.OPEN
         AND j.company.id = :companyId
         AND j.isDeleted = false
         AND (:categoryIds IS NULL OR (cat.id IN :categoryIds))
@@ -152,31 +153,9 @@ public interface JobRepository extends JpaRepository<Job, String> {
             Pageable pageable
     );
 
-//    @Query("""
-//        SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
-//            j.id, j.title, j.description, j.location, j.salaryMin,
-//            j.salaryMax, j.createdAt, c.name, c.imageUrl,
-//            sp.name, cat.name, j.status, j.moderationStatus
-//        )
-//        FROM Job j
-//        LEFT JOIN j.company c
-//        LEFT JOIN j.category cat
-//        LEFT JOIN c.subscriptions cs ON cs.isActive = true
-//        LEFT JOIN cs.subscriptionPlan sp
-//        WHERE j.isDeleted = false
-//        AND (:status IS NULL OR j.status = :status)
-//        AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
-//        ORDER BY j.createdAt DESC
-//    """)
-//    Page<AdminJobFeedItemResponse> adminGetJobs(
-//            @Param("status") JobStatus status,
-//            @Param("modStatus") ModerationStatus modStatus,
-//            Pageable pageable
-//    );
-
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
-            j.id, j.title, j.description, j.location, j.salaryMin,
+            j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
             cs.name, cat.name, j.status, j.moderationStatus
         )
@@ -203,7 +182,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
-            j.id, j.title, j.description, j.location, j.salaryMin,
+            j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
             cs.name, cat.name, j.status, j.moderationStatus
         )

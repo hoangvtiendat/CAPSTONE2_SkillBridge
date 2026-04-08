@@ -59,7 +59,8 @@ public class JobService {
     NotificationRepository notificationRepository;
     NotificationService notificationService;
     SimpMessagingTemplate messagingTemplate;
-    SubscriptionOfCompanyRepository subcriptionOfCompanyRepository;
+    SubscriptionOfCompanyRepository subscriptionOfCompanyRepository;
+    CVJobEvaluationRepository cvJobEvaluationRepository;
 
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -191,8 +192,6 @@ public class JobService {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
-
-
 
     private void enrichSkills(List<JobFeedItemResponse> items) {
         if (items == null || items.isEmpty()) {
@@ -488,14 +487,8 @@ public class JobService {
 
 
     public Job createJD(CreateJobRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUserId();
-
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
         var recruiter = companyMemberRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -507,7 +500,7 @@ public class JobService {
             throw new AppException(ErrorCode.EXIT_STATUS_COMPANY);
         }
 
-        SubscriptionOfCompany getSubscriptionOfCompany = subcriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(),SubscriptionOfCompanyStatus.OPEN)
+        SubscriptionOfCompany getSubscriptionOfCompany = subscriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(),SubscriptionOfCompanyStatus.OPEN)
                 .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_OF_COMPANY));
 
     if(getSubscriptionOfCompany.getCurrentJobCount() > getSubscriptionOfCompany.getJobLimit())
@@ -577,7 +570,7 @@ public class JobService {
         }
         String textFinal = textBuilder.toString();
         getSubscriptionOfCompany.setCurrentJobCount(getSubscriptionOfCompany.getCurrentJobCount()+1);
-        subcriptionOfCompanyRepository.save(getSubscriptionOfCompany);
+        subscriptionOfCompanyRepository.save(getSubscriptionOfCompany);
         //  Text > Vector
         try {
             float[] vector = embeddingService.createEmbedding(textFinal);
@@ -597,14 +590,14 @@ public class JobService {
     @Transactional
     public void handleExpiredSubscriptions() {
         LocalDateTime now = LocalDateTime.now();
-        List<SubscriptionOfCompany> expiredPremiumSubs = subcriptionOfCompanyRepository
-                .findAllByEndDateBeforeAndStatusAndNameNot(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
+        List<SubscriptionOfCompany> expiredPremiumSubs = subscriptionOfCompanyRepository
+                .findAllByEndDateBeforeAndStatus(now, SubscriptionOfCompanyStatus.OPEN);
 
         for (SubscriptionOfCompany expiredSub : expiredPremiumSubs) {
             expiredSub.setStatus(SubscriptionOfCompanyStatus.CLOSE);
-            subcriptionOfCompanyRepository.save(expiredSub);
+            subscriptionOfCompanyRepository.save(expiredSub);
 
-            Optional<SubscriptionOfCompany> oldFreeSubOpt = subcriptionOfCompanyRepository
+            Optional<SubscriptionOfCompany> oldFreeSubOpt = subscriptionOfCompanyRepository
                     .findByCompanyIdAndName(expiredSub.getCompany().getId(), SubscriptionPlanStatus.FREE);
 
             if (oldFreeSubOpt.isPresent()) {
@@ -615,34 +608,27 @@ public class JobService {
                 freeSub.setStartDate(now);
                 freeSub.setEndDate(now.plusMonths(1));
 
-                subcriptionOfCompanyRepository.save(freeSub);
+                subscriptionOfCompanyRepository.save(freeSub);
                 System.out.println("Doanh nghiệp " + expiredSub.getCompany().getName() + " đã quay lại dùng gói FREE cũ.");
             }
         }
 
-        List<SubscriptionOfCompany> expiredFreeSubs = subcriptionOfCompanyRepository
+        List<SubscriptionOfCompany> expiredFreeSubs = subscriptionOfCompanyRepository
                 .findAllByEndDateBeforeAndStatusAndName(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
 
         for (SubscriptionOfCompany freeSub : expiredFreeSubs) {
             freeSub.setCurrentJobCount(0);
             freeSub.setStartDate(now);
             freeSub.setEndDate(now.plusMonths(1));
-            subcriptionOfCompanyRepository.save(freeSub);
+            subscriptionOfCompanyRepository.save(freeSub);
             System.out.println("Đã tự động gia hạn chu kỳ FREE mới cho doanh nghiệp: " + freeSub.getCompany().getName());
         }
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<JobResponse> find_JD_of_Company() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUserId();
-
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
         var companyMember = companyMemberRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -656,14 +642,8 @@ public class JobService {
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public JobResponse getIn4_of_JD_of_Company(String id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUserId();
-
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
         companyMemberRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -710,18 +690,8 @@ public class JobService {
 
     @Transactional
     public Job updateJD(String jobId, CreateJobRequest request) {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        System.out.println("Auth---: " + authentication);
-        System.out.println("Principal: " + (authentication != null ? authentication.getPrincipal() : null));
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUserId();
-
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
         var recruiter = companyMemberRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -804,16 +774,8 @@ public class JobService {
     }
 
     public Job deleteJD(String id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() ||
-                !(authentication.getPrincipal() instanceof CustomUserDetails)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUserId();
-
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
         var recruiter = companyMemberRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -834,15 +796,8 @@ public class JobService {
     }
 
     public Job repost(String id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() ||
-                !(authentication.getPrincipal() instanceof CustomUserDetails)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUserId();
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
 
         var recruiter = companyMemberRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
@@ -867,14 +822,9 @@ public class JobService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId, MultipartFile cv ) throws IOException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String userId = userDetails.getUserId();
+    public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId, MultipartFile cv) throws IOException {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
 
         Candidate candidate = candidateRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));

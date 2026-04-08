@@ -11,6 +11,9 @@ import java.util.Optional;
 
 @Repository
 public interface CVJobEvaluationRepository extends JpaRepository<CVJobEvaluation, String> {
+    /** Tìm kiếm bản đánh giá dựa vào mã candidate và mã job */
+    Optional<CVJobEvaluation> findByCandidateIdAndJobId(String candidateId, String jobId);
+
     Optional<CVJobEvaluation> findByCandidateAndJob(Candidate candidate, Job job);
 
     // Lấy danh sách tất cả các bài đánh giá của một ứng viên (để hiện lịch sử ở Profile)

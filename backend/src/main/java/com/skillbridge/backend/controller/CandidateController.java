@@ -4,7 +4,10 @@ import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.request.UpdateCandidateCvRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
+import com.skillbridge.backend.dto.response.CandidateResponse;
 import com.skillbridge.backend.dto.response.UpdateCandidateCvResponse;
+import com.skillbridge.backend.entity.CVJobEvaluation;
+import com.skillbridge.backend.dto.response.LLMResumeResponse;
 import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.entity.Skill;
 import com.skillbridge.backend.exception.AppException;
@@ -16,6 +19,7 @@ import com.skillbridge.backend.utils.PageableUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
+@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/candidates")
@@ -38,11 +43,11 @@ public class CandidateController {
      * Upload và phân tích CV bằng AI/OCR
      */
     @PostMapping("/parse-cv")
-    public ResponseEntity<ApiResponse<UpdateCandidateCvRequest>> parseCv(
+    public ResponseEntity<ApiResponse<LLMResumeResponse>> parseCv(
             @RequestParam("file") MultipartFile file
     ) {
-        UpdateCandidateCvRequest response = candidateService.parsingCV(file);
-        ApiResponse<UpdateCandidateCvRequest> apiResponse = new ApiResponse<>();
+        LLMResumeResponse response = candidateService.parsingCV(file);
+        ApiResponse<LLMResumeResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(response);
         apiResponse.setMessage("CV đã được tải lên và phân tích thành công");
         return ResponseEntity.ok(apiResponse);
@@ -64,10 +69,10 @@ public class CandidateController {
 
     @GetMapping("/auto-skill")
     public ResponseEntity<ApiResponse<List<Skill>>> autoSkill(
-            @RequestParam String query,
-            String CategoryId) {
+            @RequestParam("query") String query,
+            @RequestParam(value = "categoryId", required = false) String categoryId) {
         Pageable pageable = PageableUtils.createPageable(0, 10, "name", "asc");
-        List<Skill> suggestions = skillService.getAutocompleteSkills(query, CategoryId, pageable);
+        List<Skill> suggestions = skillService.getAutocompleteSkills(query, categoryId, pageable);
         return ResponseEntity.ok(ApiResponse.<List<Skill>>builder()
                 .code(HttpStatus.OK.value())
                 .message("Gợi ý kỹ năng cho từ khóa: " + query)
@@ -107,5 +112,50 @@ public class CandidateController {
             ex.printStackTrace();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
+    }
+
+    @PatchMapping("/open-to-work")
+    public ResponseEntity<ApiResponse<UpdateCandidateCvResponse>> toggleOpenToWork(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam boolean isOpenToWork) {
+
+        UpdateCandidateCvResponse response = candidateService.updateOpenToWork(user.getUserId(),isOpenToWork);
+
+        return ResponseEntity.ok(ApiResponse.<UpdateCandidateCvResponse>builder()
+                .result(response)
+                .message("Cập nhật trạng thái tìm việc thành công")
+                .build());
+    }
+    /**
+     * 2. Nhà tuyển dụng săn nhân tài - tìm 10 ứng viên match nhất (chưa apply)
+     * URL: GET /candidates/potential/{jobId}
+     */
+    @GetMapping("/potential/{jobId}")
+    public ResponseEntity<ApiResponse<List<CandidateResponse>>> findPotentialCandidates(
+            @PathVariable String jobId
+    ) {
+        List<CandidateResponse> result = candidateService.findPotentialCandidates(jobId);
+        return ResponseEntity.ok(ApiResponse.<List<CandidateResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Tìm được " + result.size() + " ứng viên tiềm năng")
+                .result(result)
+                .build());
+    }
+
+    /**
+     * 3. Nhà tuyển dụng thực hiện đánh giá một ứng viên cụ thể
+     * URL: GET /candidates/evaluate-by-recruiter/{candidateId}/{jobId}
+     */
+    @GetMapping("/evaluate-by-recruiter/{candidateId}/{jobId}")
+    public ResponseEntity<ApiResponse<CVJobEvaluation>> evaluateByRecruiter(
+            @PathVariable String candidateId,
+            @PathVariable String jobId
+    ) {
+        CVJobEvaluation result = candidateService.getOrInitiateRecruiterEvaluation(candidateId, jobId);
+        return ResponseEntity.ok(ApiResponse.<CVJobEvaluation>builder()
+            .code(HttpStatus.OK.value())
+            .message("Nhà tuyển dụng đánh giá ứng viên thành công")
+            .result(result)
+            .build());
     }
 }

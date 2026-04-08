@@ -1,22 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Camera } from 'lucide-react';
 import Swal from 'sweetalert2';
 import './UserCard.css';
+import { toast } from 'sonner';
+import authService from '../../services/api/authService';
 
-export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork }) => {
+const API_BASE_URL = "http://localhost:8081/identity";
+
+const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.jpg`;
+export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork, onAvatarUpdate }) => {
     const fileInputRef = React.useRef(null);
     const [avatarPreview, setAvatarPreview] = React.useState(null);
+    const [isUploading, setIsUploading] = useState(false);
 
+    useEffect(() => {
+        setAvatarPreview(null);
+    }, [user?.avatar]);
+
+    const getImageUrl = (path) => {
+        if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
+       if (path.startsWith('http')) return path;
+
+       const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+       const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+       return `${baseUrl}${cleanPath}`;
+    };
     const handleAvatarClick = () => {
         fileInputRef.current.click();
     };
 
-    const handleFileChange = (event) => {
+    const handleFileChange = async (event) => {
         const file = event.target.files[0];
-        if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            setAvatarPreview(imageUrl);
-            // In a real app, you would upload the file here
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            toast.error("Vui lòng chọn tệp hình ảnh!");
+            return;
+        }
+
+        const localUrl = URL.createObjectURL(file);
+        setAvatarPreview(localUrl);
+
+        setIsUploading(true);
+        try {
+            const response = await authService.updateAvatar(file);
+            toast.success("Cập nhật ảnh đại diện thành công!");
+            if (onAvatarUpdate) {
+                await onAvatarUpdate();
+            }
+        } catch (error) {
+            console.error("Lỗi upload avatar:", error);
+            toast.error("Không thể tải ảnh lên server");
+            setAvatarPreview(null);
+        } finally {
+            setIsUploading(false);
+            event.target.value = null;
         }
     };
 
@@ -33,7 +72,7 @@ export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork }) => {
                     />
                     <div className="profile-avatar">
                         <img
-                            src={avatarPreview || user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
+                            src={avatarPreview || getImageUrl(user?.avatar) || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
                             alt="Avatar"
                             className="avatar-image"
                         />

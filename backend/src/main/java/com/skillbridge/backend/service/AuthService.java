@@ -11,15 +11,18 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.InvalidatedTokenRepository;
 import com.skillbridge.backend.repository.UserRepository;
+import com.skillbridge.backend.utils.SecurityUtils;
 import io.jsonwebtoken.Claims;
-import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Date;
 
 @Slf4j
@@ -34,6 +37,8 @@ public class AuthService {
     OtpService otpService;
     JwtService jwtService;
     SystemLogService systemLog;
+    SecurityUtils securityUtils;
+    FileStorageService fileStorageService;
 
     /**
      * Gửi OTP đăng ký tài khoản
@@ -276,9 +281,10 @@ public class AuthService {
         return new LoginResponse(user.getIs2faEnabled(), accessToken, refreshToken, user.getRole());
     }
 
-    public User toggleTwoFactor(boolean is2faEnabled, String userId) {
+    public User toggleTwoFactor(boolean is2faEnabled) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         System.out.println("is2faEnabled = " + is2faEnabled);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         user.setIs2faEnabled(String.valueOf(is2faEnabled));
         return userRepository.save(user);
     }
@@ -309,5 +315,51 @@ public class AuthService {
             }
             throw e;
         }
+    }
+    public void changePassword(ChangePasswordRequest request) {
+        try {
+            CustomUserDetails currentUser = securityUtils.getCurrentUser();
+
+            User user = userRepository.findById(currentUser.getUserId())
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+            if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+                log.warn("[CHANGE-PASSWORD] Sai mật khẩu cũ cho user: {}", user.getEmail());
+                throw new AppException(ErrorCode.PASSWORD_INVALID);
+            }
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            userRepository.save(user);
+
+            systemLog.info(currentUser, "Người dùng " + user.getEmail() + " đã đổi mật khẩu thành công");
+            log.info("[CHANGE-PASSWORD] Change password success for user: {}", user.getEmail());
+
+        } catch (AppException ex) {
+            log.error("[CHANGE-PASSWORD] AppException occurred: {}", ex.getErrorCode());
+            throw ex;
+        } catch (Exception ex) {
+            log.error("[CHANGE-PASSWORD] Unexpected error: ", ex);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public String updateAvatar(MultipartFile file) throws IOException {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (file == null || file.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_KEY);
+        }
+        if (user.getAvatar() != null) {
+            fileStorageService.deleteFile(user.getAvatar());
+        }
+        String avatarUrl = fileStorageService.saveFile(file, "avatars");
+
+        user.setAvatar(avatarUrl);
+        userRepository.save(user);
+        return avatarUrl;
     }
 }

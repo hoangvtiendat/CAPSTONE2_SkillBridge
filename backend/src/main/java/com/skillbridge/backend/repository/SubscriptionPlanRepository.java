@@ -8,4 +8,8 @@ import java.util.Optional;
 
 @Repository
 public interface SubscriptionPlanRepository extends JpaRepository<SubscriptionPlan, String> {
+    /**
+     * Tìm kiếm cấu hình gói dịch vụ dựa trên tên gói (Enum)
+     */
+    Optional<SubscriptionPlan> findByName(SubscriptionPlanStatus name);
 }

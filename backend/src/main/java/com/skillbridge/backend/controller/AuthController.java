@@ -1,30 +1,27 @@
 package com.skillbridge.backend.controller;
 
-import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.*;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.LoginResponse;
 import com.skillbridge.backend.dto.response.RegisterResponse;
-import com.skillbridge.backend.entity.InvalidatedToken;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
-import com.skillbridge.backend.repository.InvalidatedTokenRepository;
-import com.skillbridge.backend.service.OtpService;
+import com.skillbridge.backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.skillbridge.backend.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 
 @RestController
@@ -172,12 +169,11 @@ public class AuthController {
 
     @PatchMapping("/me/2fa")
     public ResponseEntity<ApiResponse<User>> toggleTwoFactor(
-            @Valid @RequestBody TwoFactorToggleRequest request,
-            @AuthenticationPrincipal CustomUserDetails user
+            @Valid @RequestBody TwoFactorToggleRequest request
     ) {
         try {
             System.out.println("aa: " + request.getIsEnabled());
-            User rs = authService.toggleTwoFactor(request.getIsEnabled(), user.getUserId());
+            User rs = authService.toggleTwoFactor(request.getIsEnabled());
             ApiResponse<User> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Cập nhật 2FA", rs
             );
@@ -209,5 +205,29 @@ public class AuthController {
             System.out.println("[LOGOUT] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<String>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        authService.changePassword(request);
+        ApiResponse<String> response = new ApiResponse<>(
+                HttpStatus.OK.value(), "Đổi mật khẩu thành công", null
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping(value = "/me/avatar", consumes = MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<String>> updateAvatar(
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        String imageUrl = authService.updateAvatar(file);
+        ApiResponse<String> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Cập nhật ảnh đại diện thành công",
+                imageUrl
+        );
+        return ResponseEntity.ok(response);
     }
 }

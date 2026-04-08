@@ -1,7 +1,6 @@
 package com.skillbridge.backend.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.skillbridge.backend.dto.request.ExperienceDetail;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -17,7 +16,9 @@ import java.util.List;
 public class UpdateCandidateCvResponse {
     private String name;
     private String description;
+    private Boolean isOpenToWork;
     private String address;
+    private String categoryId;
     private String category;
     private String cvUrl;
     private List<DegreeResponse> degrees;

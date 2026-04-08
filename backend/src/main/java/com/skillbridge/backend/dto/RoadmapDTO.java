@@ -16,6 +16,6 @@ public class RoadmapDTO {
     private String priority;
     private String duration;
 
-    @JsonProperty("relatedWeakness") // Đảm bảo khớp chính xác với JSON từ Gemini
+    @JsonProperty("relatedWeakness")
     private String relatedWeakness;
 }

@@ -6,20 +6,41 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Shield, KeyRound, ChevronRight, ArrowLeft } from 'lucide-react';
 import authService from '../../services/api/authService';
+import candidateService from '../../services/api/candidateService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import './ProfilePage.css';
+import { ChangePasswordModal } from '../../components/auth/ChangePasswordModal';
 
 const ProfilePage = () => {
     const { user, fetchProfile } = useAuth();
     const navigate = useNavigate();
     const [viewMode, setViewMode] = useState('profile');
-    const [isOpenToWork, setIsOpenToWork] = useState(true);
+    const [isOpenToWork, setIsOpenToWork] = useState(false)
     const [isToggling2FA, setIsToggling2FA] = useState(false);
-    const [is2faEnabledLocal, setIs2faEnabledLocal] = useState(user?.is2faEnabled || false);
+    const [is2faEnabledLocal, setIs2faEnabledLocal] = useState(
+            user?.is2faEnabled === "true" || user?.is2faEnabled === "1"
+        );
+    const [isChangePassOpen, setIsChangePassOpen] = useState(false);
+    const fetchCandidateStatus = async () => {
+        if (!user?.id) return;
+        try {
+            const response = await candidateService.getCv(user.id);
+            const status = response?.result ? !!response.result.isOpenToWork : !!response.isOpenToWork;
+            setIsOpenToWork(status);
+        } catch (error) {
+            console.error("Lỗi lấy trạng thái Candidate:", error);
+            setIsOpenToWork(false); // Lỗi thì mặc định tắt
+        }
+    };
 
     useEffect(() => {
-        setIs2faEnabledLocal(user?.is2faEnabled || false);
+        if (user?.id) {
+            fetchCandidateStatus();
+        }
+    }, [user?.id]);
+    useEffect(() => {
+        const isEnabled = user?.is2faEnabled === "true" || user?.is2faEnabled === "1";
     }, [user?.is2faEnabled]);
 
     useEffect(() => {
@@ -28,10 +49,61 @@ const ProfilePage = () => {
         }
     }, [user, navigate]);
 
-    const handleToggleOpenToWork = () => {
-        setIsOpenToWork(prev => !prev);
+    const handleToggleOpenToWork = async () => {
+        const newValue = !isOpenToWork;
+        try {
+            setIsOpenToWork(newValue);
+            await candidateService.toggleOpenToWork(newValue);
+
+            toast.success(`Đã ${newValue ? 'bật' : 'tắt'} trạng thái tìm việc`);
+            Swal.fire({
+                title: 'Thành công!',
+                text: `Đã cập nhật trạng thái tìm việc.`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            console.error("Lỗi cập nhật trạng thái:", error);
+            setIsOpenToWork(!newValue);
+            toast.error("Không thể cập nhật trạng thái tìm việc");
+        }
     };
 
+    const handleToggle2FA = async (e) => {
+        const newValue = e.target.checked;
+
+        const result = await Swal.fire({
+            title: newValue ? 'Bật xác thực 2 bước?' : 'Tắt xác thực 2 bước?',
+            text: newValue ? "Tài khoản sẽ an toàn hơn." : "Bảo mật sẽ giảm đi.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (!result.isConfirmed) {
+            setIs2faEnabledLocal(!newValue);
+            return;
+        }
+
+        setIsToggling2FA(true);
+        try {
+            await authService.toggleTwoFactor(newValue);
+
+            setIs2faEnabledLocal(newValue);
+            toast.success("Cập nhật bảo mật thành công!");
+            if (fetchProfile) await fetchProfile();
+        } catch (error) {
+            console.error("Lỗi 2FA:", error);
+            setIs2faEnabledLocal(!newValue);
+            toast.error("Không thể cập nhật bảo mật. Vui lòng thử lại.");
+        } finally {
+            setIsToggling2FA(false);
+        }
+    };
     return (
         <div className="profile-page-root">
             <div className="profile-page-container">
@@ -49,6 +121,7 @@ const ProfilePage = () => {
                                     user={user}
                                     isOpenToWork={isOpenToWork}
                                     onToggleOpenToWork={handleToggleOpenToWork}
+                                    onAvatarUpdate={fetchProfile}
                                 />
 
                                 <div className="security-box">
@@ -72,59 +145,25 @@ const ProfilePage = () => {
                                                 type="checkbox"
                                                 checked={is2faEnabledLocal}
                                                 disabled={isToggling2FA}
-                                                onChange={async (e) => {
-                                                    if (isToggling2FA) return;
-                                                    const newValue = e.target.checked;
-
-                                                    // Visual feedback immediately
-                                                    setIs2faEnabledLocal(newValue);
-
-                                                    const result = await Swal.fire({
-                                                        title: newValue ? 'Bật xác thực 2 bước?' : 'Tắt xác thực 2 bước?',
-                                                        text: newValue
-                                                            ? "Tài khoản của bạn sẽ an toàn hơn với xác thực 2 lớp."
-                                                            : "Bảo mật tài khoản sẽ giảm đi nếu bạn tắt tính năng này.",
-                                                        icon: 'warning',
-                                                        showCancelButton: true,
-                                                        confirmButtonColor: '#667eea',
-                                                        cancelButtonColor: '#d33',
-                                                        confirmButtonText: 'Đồng ý',
-                                                        cancelButtonText: 'Hủy',
-                                                        background: '#ffffff',
-                                                        borderRadius: '16px'
-                                                    });
-
-                                                    if (!result.isConfirmed) {
-                                                        // Revert if cancelled
-                                                        setIs2faEnabledLocal(!newValue);
-                                                        return;
-                                                    }
-
-                                                    setIsToggling2FA(true);
-                                                    try {
-                                                        await authService.toggleTwoFactor(newValue);
-                                                        toast.success(newValue ? "Đã bật xác thực 2 bước" : "Đã tắt xác thực 2 bước");
-                                                        if (typeof fetchProfile === 'function') {
-                                                            await fetchProfile();
-                                                        }
-                                                    } catch (error) {
-                                                        console.error("Toggle 2FA failed", error);
-                                                        toast.error("Không thể thay đổi trạng thái 2FA");
-                                                        // Revert on error
-                                                        setIs2faEnabledLocal(!newValue);
-                                                    } finally {
-                                                        setIsToggling2FA(false);
-                                                    }
-                                                }}
+                                                onChange={handleToggle2FA}
                                             />
                                             <span className="toggle-slider"></span>
                                         </label>
                                     </div>
 
-                                    <button className="security-action-btn">
+                                    <button
+                                        className="security-action-btn"
+                                        onClick={() => setIsChangePassOpen(true)}
+                                    >
                                         <KeyRound size={16} />
                                         Đổi mật khẩu
                                     </button>
+
+                                    {/* 3. Chèn Modal vào cuối Component */}
+                                    <ChangePasswordModal
+                                        isOpen={isChangePassOpen}
+                                        onClose={() => setIsChangePassOpen(false)}
+                                    />
                                 </div>
                             </aside>
 

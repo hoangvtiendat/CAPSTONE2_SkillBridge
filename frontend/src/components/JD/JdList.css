@@ -1,10 +1,11 @@
-/* --- HỆ BIẾN SỐ LIQUID GLASS (ĐỒNG BỘ DỰ ÁN) --- */
+/* --- HỆ BIẾN SỐ LIQUID GLASS (ĐỒNG BỘ TOÀN DỰ ÁN) --- */
 :root {
     --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%);
     --glass-border: rgba(255, 255, 255, 0.45);
     --glass-saturate: blur(30px) saturate(200%);
     --inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.6);
     --sf-blue: #007aff;
+    --sf-purple: #a855f7;
     --sf-red: #ff3b30;
     --text-main: #1d1d1f;
     --text-mute: #86868b;
@@ -16,7 +17,7 @@
     animation: sf-pop-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* --- HEADER & TOP ACTIONS --- */
+/* --- 1. HEADER & TOP ACTIONS --- */
 .jd-header-container {
     display: flex;
     justify-content: space-between;
@@ -66,7 +67,7 @@
     box-shadow: 0 15px 30px rgba(0, 122, 255, 0.35);
 }
 
-/* --- FILTER SECTION (KHAY KÍNH) --- */
+/* --- 2. FILTER SECTION (KHAY KÍNH) --- */
 .jd-filter-section {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
     backdrop-filter: blur(20px) saturate(160%);
@@ -119,7 +120,7 @@
     box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
 }
 
-/* --- JD ITEM CARD --- */
+/* --- 3. JD ITEM CARD (THE SLAB) --- */
 .jd-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
@@ -128,157 +129,26 @@
 }
 
 .jd-item {
+    display: flex;
+    flex-direction: column;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-saturate);
     border: 1px solid var(--glass-border);
     border-radius: 35px;
-    padding: 32px;
-    list-style: none;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: pointer;
-    box-shadow: var(--inner-light), 0 15px 35px rgba(0,0,0,0.04);
-    display: flex;
-    flex-direction: column;
-}
-
-.jd-item:hover {
-    transform: translateY(-12px) scale(1.02);
-    border-color: rgba(103, 114, 255, 0.32);
-    box-shadow: 0 35px 70px rgba(0, 122, 255, 0.12);
-}
-
-.jd-company-logo {
-    width: 65px;
-    height: 65px;
-    border-radius: 18px; /* Squircle */
-    background: white;
-    padding: 10px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-    object-fit: contain;
-}
-
-.jd-title {
-    font-size: 1.4rem;
-    font-weight: 850;
-    color: var(--text-main);
-    letter-spacing: -0.02em;
-}
-
-/* --- CỤM NÚT HÀNH ĐỘNG (LIQUID GLASS BUTTONS) --- */
-.jd-actions {
-    display: grid;
-    grid-template-columns: 1fr 1.3fr auto; /* Phân bổ: Thông tin - Ứng viên - Khóa */
-    gap: 12px;
-    margin-top: 25px;
-    padding-top: 22px;
-    border-top: 1px dashed rgba(0, 0, 0, 0.1);
-}
-
-.jd-actions button {
-    height: 48px;
-    border-radius: 16px; /* Squircle radius */
-    border: 1px solid;
-    font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-/* Nút 1: "Xem thông tin" (Secondary Glass) */
-.jd-actions button:not(.view-applicants-btn):not(.deleted-label button) {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
-    border-color: rgba(255, 255, 255, 0.6);
-    color: var(--text-main);
-    box-shadow: var(--inner-light), 0 5px 15px rgba(0, 0, 0, 0.02);
-}
-
-/* Nút 2: "Xem ứng viên" (Primary Liquid Blue) */
-.view-applicants-btn {
-    background: linear-gradient(135deg, var(--sf-blue) 0%, #00c6ff 100%) !important;
-    border-color: rgba(255, 255, 255, 0.35) !important;
-    color: white !important;
-    box-shadow: 0 10px 20px rgba(0, 122, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
-}
-
-/* Nút 3: "Khóa" (Danger Red Glass) */
-.deleted-label button {
-    width: 60px; /* Nhỏ gọn kiểu icon-button nhưng có chữ */
-    background: rgba(255, 59, 48, 0.12) !important;
-    backdrop-filter: blur(8px);
-    border-color: rgba(255, 59, 48, 0.3) !important;
-    color: var(--sf-red) !important;
-    font-size: 13px !important;
-    letter-spacing: -0.01em;
-}
-
-/* Hover Effects cho cụm nút */
-.jd-actions button:hover {
-    transform: translateY(-3px) scale(1.03);
-    filter: brightness(1.1);
-}
-
-.view-applicants-btn:hover {
-    box-shadow: 0 15px 30px rgba(0, 122, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
-}
-
-.deleted-label button:hover {
-    background: rgba(255, 59, 48, 0.25) !important;
-    color: #991b1b !important;
-}
-
-/* --- PHẦN KỸ NĂNG & MÔ TẢ --- */
-.jd-skills-list li {
-    background: rgba(255, 255, 255, 0.55);
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #475569;
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-}
-
-.required-skill {
-    background: rgba(0, 122, 255, 0.08) !important;
-    color: var(--sf-blue) !important;
-    border-color: rgba(0, 122, 255, 0.2) !important;
-}
-
-.text-truncate {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    background: rgba(0, 0, 0, 0.035);
-    padding: 14px;
-    border-radius: 18px;
-    font-size: 14px !important;
-    line-height: 1.6;
-    color: #4b5563;
-}
-/* --- 1. KHUNG CHỨA CHÍNH (THE SLAB) --- */
-.jd-item {
-    display: flex;
-    flex-direction: column;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-saturate);
-    -webkit-backdrop-filter: var(--glass-saturate);
-    border: 1px solid var(--glass-border);
-    border-radius: 35px; /* Squircle radius */
     padding: 30px;
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: var(--inner-light), 0 15px 35px rgba(0, 0, 0, 0.04);
     height: 100%;
+    cursor: pointer;
 }
 
-/* --- 2. HEADER: LOGO & TÊN (THE IDENTITY) --- */
-.jd-item .jd-header {
+.jd-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px rgba(0, 122, 255, 0.1);
+}
+
+/* IDENTITY HEADER */
+.jd-header {
     display: flex;
     align-items: center;
     gap: 20px;
@@ -289,17 +159,11 @@
     width: 68px;
     height: 68px;
     background: #fff;
-    border-radius: 18px; /* Bo góc Apple */
+    border-radius: 18px;
     padding: 10px;
     object-fit: contain;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
     flex-shrink: 0;
-}
-
-.jd-header-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
 }
 
 .jd-title {
@@ -307,29 +171,22 @@
     font-weight: 850;
     color: var(--text-main);
     letter-spacing: -0.03em;
-    line-height: 1.2;
+    margin: 0;
 }
 
 .jd-company-name {
     font-size: 15px;
     font-weight: 700;
     color: var(--sf-blue);
-    opacity: 0.9;
+    margin: 4px 0 0 0;
 }
 
-/* --- 3. DETAILS WRAPPER: THÔNG TIN CHI TIẾT (THE CONTENT) --- */
+/* CONTENT WRAPPER */
 .jd-details-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Khoảng cách giữa các khối thông tin */
-    flex-grow: 1; /* Đẩy cụm nút xuống đáy */
-}
-
-/* Khối chung cho Location/Skills */
-.jd-section-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    gap: 20px;
+    flex-grow: 1;
 }
 
 .jd-section-content h3 {
@@ -338,36 +195,29 @@
     color: var(--text-mute);
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin: 0;
+    margin-bottom: 8px;
 }
 
-.jd-section-content p {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-main);
-    margin: 0;
-}
-
-/* Khối mô tả công việc (Dìm nhẹ để nổi bật Tiêu đề) */
 .text-truncate {
-    background: rgba(0, 0, 0, 0.03); /* Nền mờ nhẹ */
+    background: rgba(0, 0, 0, 0.03);
     padding: 15px;
     border-radius: 20px;
     font-size: 14px;
     line-height: 1.6;
     color: #4b5563;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     font-style: italic;
 }
 
-/* Danh sách Skills dạng Pills */
 .jd-skills-list {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     list-style: none;
     padding: 0;
-    margin: 0;
 }
 
 .jd-skills-list li {
@@ -378,45 +228,80 @@
     font-size: 12px;
     font-weight: 700;
     color: #475569;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
 }
 
 .jd-skills-list li.required-skill {
     background: rgba(0, 122, 255, 0.08);
-    border-color: rgba(0, 122, 255, 0.2);
     color: var(--sf-blue);
+    border-color: rgba(0, 122, 255, 0.2);
 }
 
-.req-badge {
-    background: var(--sf-blue);
-    color: white;
-    font-size: 9px;
-    padding: 1px 6px;
-    border-radius: 4px;
-    margin-left: 5px;
-    font-weight: 800;
-}
-
-/* --- 4. ACTIONS: CỤM NÚT (THE INTERACTION) --- */
+/* --- 4. ACTIONS: CỤM NÚT CHỨC NĂNG (TỐI ƯU GRID 4 CỘT) --- */
 .jd-actions {
     display: grid;
-    grid-template-columns: 1fr 1.2fr auto; /* Phân cấp: Phụ - Chính - Nguy hiểm */
+    grid-template-columns: 1fr 1fr 1.2fr auto; /* Phân cấp: Thông tin | Ứng viên | Săn tài năng | Khóa */
     gap: 12px;
     margin-top: 30px;
     padding-top: 25px;
     border-top: 1px dashed rgba(0, 0, 0, 0.1);
 }
 
-/* Tinh chỉnh nút Khóa ở cuối */
-.deleted-label button {
-    width: 48px;
+.jd-actions button {
     height: 48px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+/* Nút Thông tin (Secondary Glass) */
+.btn-info-glass {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: var(--glass-border) !important;
+    color: var(--text-main);
+}
+
+/* Nút Ứng viên (Primary Blue) */
+.view-applicants-btn {
+    background: linear-gradient(135deg, var(--sf-blue), #00c6ff) !important;
+    color: white !important;
+    box-shadow: 0 10px 20px rgba(0, 122, 255, 0.2);
+}
+
+/* Nút Săn tài năng (AI Purple) */
+.hunt-talents-btn {
+    background: linear-gradient(135deg, #6366f1 0%, var(--sf-purple) 100%) !important;
+    color: white !important;
+    gap: 6px;
+    box-shadow: 0 10px 20px rgba(168, 85, 247, 0.25);
+}
+
+/* Nút Khóa (Danger Red) */
+.deleted-label button {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 59, 48, 0.1) !important;
+    color: var(--sf-red) !important;
+    border-color: rgba(255, 59, 48, 0.2) !important;
     font-size: 12px !important;
 }
-/* Animations */
+
+/* Hover Effects */
+.jd-actions button:hover {
+    transform: translateY(-3px) scale(1.02);
+    filter: brightness(1.1);
+}
+
+.hunt-talents-btn:hover {
+    box-shadow: 0 15px 30px rgba(168, 85, 247, 0.4) !important;
+}
+
 @keyframes sf-pop-up {
     from { opacity: 0; transform: scale(0.98) translateY(20px); }
     to { opacity: 1; transform: scale(1) translateY(0); }

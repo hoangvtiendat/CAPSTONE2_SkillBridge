@@ -1,7 +1,6 @@
 package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.UserRepository;
@@ -33,8 +32,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         return path.startsWith("/oauth2/")
-                || path.startsWith("/login/")
-                || path.startsWith("/auth/")
+                || path.equals("/auth/login")
+                || path.equals("/auth/register")
+                || path.startsWith("/auth/forgot-password")
                 || path.startsWith("/public/");
     }
 

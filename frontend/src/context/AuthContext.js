@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }) => {
         } catch (err) {
             console.error('Failed to fetch profile:', err);
 
-
             if (err.response && err.response.status === 401) {
                 setUser(null);
                 setToken(null);

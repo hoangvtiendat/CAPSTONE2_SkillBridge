@@ -69,10 +69,9 @@ public interface SubscriptionOfCompanyRepository extends JpaRepository<Subscript
     List<SubscriptionOfCompany> findAllByEndDateBefore(LocalDateTime now);
 
     /** Tìm các gói cước hết hạn nhưng ngoại trừ một loại tên gói cụ thể */
-    List<SubscriptionOfCompany> findAllByEndDateBeforeAndStatusAndNameNot(
+    List<SubscriptionOfCompany> findAllByEndDateBeforeAndStatus(
             LocalDateTime date,
-            SubscriptionOfCompanyStatus status,
-            SubscriptionPlanStatus name
+            SubscriptionOfCompanyStatus status
     );
 
     /** Tìm các gói cước hết hạn theo chính xác trạng thái và tên gói */

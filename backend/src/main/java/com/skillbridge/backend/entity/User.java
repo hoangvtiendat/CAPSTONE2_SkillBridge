@@ -38,6 +38,8 @@ public class User extends BaseEntity {
 
     private String address;
 
+    private String avatar;
+
     private String password;
 
     @Builder.Default

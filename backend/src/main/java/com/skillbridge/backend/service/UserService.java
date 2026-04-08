@@ -148,6 +148,7 @@ public class UserService {
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
+                .avatar(user.getAvatar())
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())

@@ -53,4 +53,7 @@ public class Candidate extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @Transient
+    private Float aiMatchingScore;
 }
