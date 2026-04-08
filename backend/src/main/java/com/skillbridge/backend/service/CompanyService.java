@@ -74,20 +74,18 @@ public class CompanyService {
         );
     }
 
-    public CompanyFeedResponse getCompanyPending(String cursor, int limit){
+    public CompanyFeedResponse getCompanyPending(int page, int limit){
         try{
-            Pageable pageable = PageRequest.of(0,limit+1);
+            Pageable pageable = PageRequest.of(page, limit);
 
-            List<CompanyFeedItemResponse> companies = companyRepository.getCompanyFeedPending(cursor,pageable);
+            Page<CompanyFeedItemResponse> companies = companyRepository.getCompanyFeedPending(pageable);
 
             if(companies.isEmpty()){
-                return new CompanyFeedResponse(List.of(), null, false);
+                return new CompanyFeedResponse(List.of(), 0, 0, page);
             }
-            Boolean hasMore = companies.size() > limit;
-            List<CompanyFeedItemResponse> result = hasMore ? companies.subList(0,limit):companies;
-            String nextCursor = hasMore ? companies.get(limit).getId():null;
+            List<CompanyFeedItemResponse> result = companies.getContent();
 
-            return new CompanyFeedResponse(result, nextCursor,hasMore);
+            return new CompanyFeedResponse(result, companies.getTotalPages(), companies.getTotalElements(), companies.getNumber());
         }catch(Exception e){
             System.out.println("Loi" + e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);

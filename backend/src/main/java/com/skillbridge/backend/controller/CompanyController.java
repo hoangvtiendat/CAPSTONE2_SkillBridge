@@ -62,10 +62,10 @@ public class CompanyController {
 
     @GetMapping("/feedPending")
     public ResponseEntity<ApiResponse<CompanyFeedResponse>> getCompanyFeedPending(
-            @RequestParam(value = "cursor", required = false) String cursor,
+            @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "limit", defaultValue = "10") int limit
     ){
-        CompanyFeedResponse rs = companyService.getCompanyPending(cursor,limit);
+        CompanyFeedResponse rs = companyService.getCompanyPending(page,limit);
         ApiResponse<CompanyFeedResponse> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Pending Company",

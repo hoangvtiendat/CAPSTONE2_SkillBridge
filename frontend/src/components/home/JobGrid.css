@@ -35,7 +35,8 @@
 
 .job-grid-header h2 {
   font-size: 24px;
-  font-weight: 850; /* Font cực đậm chuẩn Apple */
+  font-weight: 850;
+  /* Font cực đậm chuẩn Apple */
   color: var(--mac-text);
   letter-spacing: -0.03em;
 }
@@ -266,7 +267,8 @@
 .job-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 28px; /* Khoảng cách rộng rãi để lộ nền */
+  gap: 28px;
+  /* Khoảng cách rộng rãi để lộ nền */
 }
 
 /* --- Phân Trang (Glass Pagination) --- */
@@ -322,7 +324,7 @@
 }
 
 /* --- States (Loading/Empty) --- */
-.job-grid > div {
+.job-grid>div {
   font-weight: 600;
   color: var(--mac-text-muted);
 }
@@ -335,6 +337,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -343,6 +346,13 @@
 
 /* Responsive */
 @media (max-width: 900px) {
+  .job-grid-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .search-wrap {
+    min-width: 100%;
+  }
   .job-grid-header {
     flex-direction: column;
     align-items: flex-start;

@@ -104,23 +104,14 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, cs.name, c.createdAt,
-            (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
+            c.description, c.address, c.websiteUrl, c.status, cs.name,c.createdAt,
+            (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.isDeleted = false AND j.status = JobStatus.OPEN)
         )
         FROM Company c
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        WHERE c.isDeleted = false
-        AND c.status = CompanyStatus.PENDING
-        AND (
-            :cursor IS NULL OR
-            c.createdAt > (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) OR
-            (c.createdAt = (SELECT c2.createdAt FROM Company c2 WHERE c2.id = :cursor) AND c.id > :cursor)
-        )
+        WHERE c.status = CompanyStatus.PENDING
         ORDER BY c.createdAt ASC
     """)
-    List<CompanyFeedItemResponse> getCompanyFeedPending(
-            @Param("cursor") String cursor,
-            Pageable pageable
-    );
+    Page<CompanyFeedItemResponse> getCompanyFeedPending(Pageable pageable);
 
 }

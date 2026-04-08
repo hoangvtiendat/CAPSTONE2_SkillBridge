@@ -16,37 +16,39 @@ import {
     Clock,
     Trash2,
     Eye,
-    Loader2
+    Loader2,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 
 const AdminJobPage = () => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [cursor, setCursor] = useState(null);
     const [filters, setFilters] = useState({ status: '', modStatus: '' });
+
+    const [pagination, setPagination] = useState({
+        page: 0,
+        totalPages: 0,
+        totalElements: 0
+    });
+
     const navigate = useNavigate();
 
-    const observerTarget = useRef(null);
-
-    const loadJobs = useCallback(async (isMore = false, currentCursor = null) => {
-        if (loading) return;
+    const loadJobs = useCallback(async (pageIdx) => {
         setLoading(true);
         try {
             const data = await jobService.getAdminJobs({
-                cursor: currentCursor,
+                page: pageIdx,
+                limit: 6,
                 status: filters.status,
                 modStatus: filters.modStatus
             });
-
-            setJobs(prev => {
-                const newJobs = data.jobs;
-                if (!isMore) return newJobs;
-                const existingIds = new Set(prev.map(j => j.id));
-                const uniqueNewJobs = newJobs.filter(j => !existingIds.has(j.id));
-                return [...prev, ...uniqueNewJobs];
+            setJobs(data.jobs || []);
+            setPagination({
+                page: data.currentPage || 0,
+                totalPages: data.totalPages || 0,
+                totalElements: data.totalElements || 0
             });
-
-            setCursor(data.nextCursor);
         } catch (err) {
             toast.error("Không thể tải dữ liệu");
         } finally {
@@ -55,23 +57,8 @@ const AdminJobPage = () => {
     }, [filters.status, filters.modStatus]);
 
     useEffect(() => {
-        setCursor(null);
-        loadJobs(false, null);
-    }, [filters.status, filters.modStatus]);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            entries => {
-                if (entries[0].isIntersecting && cursor && !loading) {
-                    loadJobs(true, cursor);
-                }
-            },
-            { threshold: 0.1 }
-        );
-        const currentTarget = observerTarget.current;
-        if (currentTarget) observer.observe(currentTarget);
-        return () => { if (currentTarget) observer.disconnect(); };
-    }, [loadJobs, cursor, loading]);
+        loadJobs(0);
+    }, [filters.status, filters.modStatus, loadJobs]);
 
     const handleResetFilters = () => {
         setFilters({ status: '', modStatus: '' });
@@ -317,14 +304,45 @@ const AdminJobPage = () => {
                         </tbody>
                     </table>
 
-                    <div ref={observerTarget} style={{ height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {loading && jobs.length > 0 && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px' }}>
-                                <Loader2 className="spinning-icon" size={18} />
-                                <span>Đang tải thêm...</span>
+                    {/* Page based pagination control */}
+                    {pagination.totalPages > 1 && (
+                        <div className="modern-pagination">
+                            <div className="pagination-info">
+                                Đang xem trang <b>{pagination.page + 1} / {pagination.totalPages}</b>
                             </div>
-                        )}
-                    </div>
+                            <div className="pagination-controls">
+                                <button
+                                    disabled={pagination.page === 0}
+                                    onClick={() => loadJobs(pagination.page - 1)}
+                                    className="pagination-btn"
+                                    title="Trang trước"
+                                >
+                                    <ChevronLeft size={18} />
+                                </button>
+
+                                {[...Array(pagination.totalPages)].map((_, index) => {
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => loadJobs(index)}
+                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    );
+                                })}
+
+                                <button
+                                    disabled={pagination.page >= pagination.totalPages - 1}
+                                    onClick={() => loadJobs(pagination.page + 1)}
+                                    className="pagination-btn"
+                                    title="Trang sau"
+                                >
+                                    <ChevronRight size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

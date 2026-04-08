@@ -23,10 +23,10 @@ const companyService = {
         }
     },
 
-    getCompanyFeedPending: async (cursor = null, limit = 10) => {
+    getCompanyFeedPending: async (page = 0, limit = 10) => {
         try {
             const queryParams = new URLSearchParams();
-            if (cursor) queryParams.append('cursor', cursor);
+            queryParams.append('page', page);
             queryParams.append('limit', limit);
 
             const response = await api.get(`/companies/feedPending?${queryParams.toString()}`);
@@ -96,7 +96,7 @@ const companyService = {
 
     checkTaxCode: (taxCode) => {
         return api.get(`/companies/taxcode`, {
-            params: {taxCode}
+            params: { taxCode }
         });
     },
 

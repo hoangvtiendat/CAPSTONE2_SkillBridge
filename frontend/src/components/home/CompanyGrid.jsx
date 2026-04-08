@@ -1,6 +1,6 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {ChevronLeft, ChevronRight, Search} from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import companyService from '../../services/api/companyService';
 import './CompanyGrid.css';
 
@@ -11,7 +11,7 @@ const CompanyGrid = () => {
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
         page: 0,
-        size: 6,
+        size: 8,
         totalElements: 0,
         totalPages: 0
     });
@@ -66,7 +66,7 @@ const CompanyGrid = () => {
         fetchCompanies(page);
         const element = document.getElementById('company-grid');
         if (element) {
-            element.scrollIntoView({behavior: 'smooth'});
+            element.scrollIntoView({ behavior: 'smooth' });
         }
     };
 
@@ -81,9 +81,9 @@ const CompanyGrid = () => {
                 <div className="company-search-filter">
                     <div className="company-search-wrap">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
-                             fill="#666666">
+                            fill="#666666">
                             <path
-                                d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
+                                d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" />
                         </svg>
                         <input
                             type="search"
@@ -97,7 +97,7 @@ const CompanyGrid = () => {
             </div>
 
             {loading ? (
-                <div style={{textAlign: 'center', padding: '100px 0'}}>Đang tải danh sách công ty...</div>
+                <div style={{ textAlign: 'center', padding: '100px 0' }}>Đang tải danh sách công ty...</div>
             ) : (
                 <div className="company-grid">
                     {companies.length > 0 ? companies.map(company => (
@@ -108,7 +108,7 @@ const CompanyGrid = () => {
                         >
                             <div className="company-grid-logo-wrapper">
                                 <div className="company-grid-logo">
-                                    {company.imageUrl ? (<img src={getImageUrl(company.imageUrl)} alt="logo"/>
+                                    {company.imageUrl ? (<img src={getImageUrl(company.imageUrl)} alt="logo" />
                                     ) : 'C'}
                                 </div>
                             </div>
@@ -117,7 +117,7 @@ const CompanyGrid = () => {
                             <span className="company-jobs-count">{company.jobCount || 0} việc làm đang tuyển</span>
                         </div>
                     )) : (
-                        <p style={{gridColumn: '1/-1', textAlign: 'center', padding: '100px 0'}}>Không tìm thấy công ty
+                        <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0' }}>Không tìm thấy công ty
                             nào.</p>
                     )}
                 </div>
@@ -131,7 +131,7 @@ const CompanyGrid = () => {
                         onClick={() => handlePageChange(pagination.page - 1)}
                         title="Trang trước"
                     >
-                        <ChevronLeft size={18}/>
+                        <ChevronLeft size={18} />
                     </button>
 
                     {[...Array(pagination.totalPages)].map((_, index) => {
@@ -164,7 +164,7 @@ const CompanyGrid = () => {
                         onClick={() => handlePageChange(pagination.page + 1)}
                         title="Trang sau"
                     >
-                        <ChevronRight size={18}/>
+                        <ChevronRight size={18} />
                     </button>
                 </div>
             )}

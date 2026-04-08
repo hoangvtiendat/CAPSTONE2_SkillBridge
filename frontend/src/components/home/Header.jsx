@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Header.css';
 
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,7 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, logout } = useAuth(); // Get user and logout from AuthContext
   const navigate = useNavigate();
+  const location = useLocation();
   const dropdownRef = useRef(null);
 
   const getImageUrl = (path) => {
@@ -23,6 +24,18 @@ const Header = () => {
 
     // Thêm timestamp để khi cập nhật ở Profile, Header cũng đổi ảnh ngay
     return `${baseUrl}/${cleanPath}?t=${new Date().getTime()}`;
+  };
+
+  const handleNavClick = (e, targetId) => {
+    e.preventDefault();
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   // Close dropdown when clicking outside
@@ -56,9 +69,9 @@ const Header = () => {
         {/* Navigation */}
         <nav className={`nav ${isMobileMenuOpen ? 'open' : ''}`}>
           <Link to="/" className="nav-link">Trang Chủ</Link>
-          <Link to="/job-search" className="nav-link">Tìm Việc Làm</Link>
-          <Link to="/" className="nav-link">Công Ty</Link>
-          <Link to="/" className="nav-link">Về Chúng Tôi</Link>
+          <a href="#job-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'job-grid')}>Tìm Việc Làm</a>
+          <a href="#company-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'company-grid')}>Công Ty</a>
+          <Link to="/about" className="nav-link">Về Chúng Tôi</Link>
         </nav>
 
         {/* Auth Buttons */}
@@ -98,13 +111,6 @@ const Header = () => {
                     onClick={() => setIsUserMenuOpen(false)}
                   >
                     Quản lý hồ sơ cá nhân
-                  </Link>
-                  <Link
-                    to="/settings"
-                    className="user-dropdown-item"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    Cài đặt
                   </Link>
                   <div className="dropdown-divider"></div>
                   <button

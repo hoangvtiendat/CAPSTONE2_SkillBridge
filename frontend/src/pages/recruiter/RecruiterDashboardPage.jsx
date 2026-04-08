@@ -109,10 +109,6 @@ const RecruiterDashboardPage = () => {
                 </div>
             </div>
 
-            {/* Floating Action Button */}
-            <div className="bot-floating-btn" title="Trợ lý AI">
-                <Bot size={28} />
-            </div>
         </div>
     );
 };

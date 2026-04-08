@@ -10,10 +10,10 @@ const CTA = () => {
         <p>Tham gia hàng nghìn ứng viên và nhà tuyển dụng đã tìm thấy công việc phù hợp</p>
 
         <div className="cta-buttons">
-          <Link to="/signup?role=candidate" className="btn-home btn-home-primary btn-home-lg">
+          <Link to="/login" className="btn-home btn-home-primary btn-home-lg">
             Đăng Ký Là Ứng Viên
           </Link>
-          <Link to="/signup?role=recruiter" className="btn-home btn-home-secondary btn-home-lg">
+          <Link to="/recruiter/identity" className="btn-home btn-home-secondary btn-home-lg">
             Đăng Ký Là Nhà Tuyển Dụng
           </Link>
         </div>

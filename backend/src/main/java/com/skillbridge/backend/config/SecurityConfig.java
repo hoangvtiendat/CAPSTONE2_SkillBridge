@@ -102,6 +102,8 @@ public class SecurityConfig {
                                 "/logos/**",
                                 "/avatars/**",
                                 "/licenses/**",
+                                "/api/chat",
+                                "/api/chat/**",
                                 "/companies/*",
                                 "/CVs/**").permitAll()
 
