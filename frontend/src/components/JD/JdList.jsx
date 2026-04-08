@@ -7,6 +7,14 @@ import './JdList.css';
 import { useAuth } from '../../context/AuthContext';
 import { Zap } from 'lucide-react';
 
+const STATUS_LABELS = {
+    'ALL': 'Tất cả',
+    'OPEN': 'Đang mở',
+    'PENDING': 'Đang chờ',
+    'LOCK': 'Đã khoá',
+    'CLOSED': 'Đã đóng'
+};
+
 const toastStyles = {
     warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
     success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
@@ -47,15 +55,13 @@ const JdList = () => {
         }
     }, [token]);
 
-    const handleDeleteJd = async (e, jdId) => {
+    const handleLockJd = async (e, jdId) => {
         e.stopPropagation();
         if (!window.confirm('Bạn có chắc chắn muốn khóa công việc này không?')) return;
         try {
             await jobService.deleteJd(jdId);
-
-            // QUAN TRỌNG: Cập nhật status thay vì filter xóa hẳn để bộ lọc "DELETE" vẫn tìm thấy
             setJdList(prev => prev.map(jd =>
-                jd.id === jdId ? { ...jd, status: 'DELETE' } : jd
+                jd.id === jdId ? { ...jd, status: 'LOCK' } : jd
             ));
 
             toast.success("Thành công", { description: "Đã khóa JD thành công!", style: toastStyles.success });
@@ -88,9 +94,7 @@ const JdList = () => {
         const matchesSearch = jd.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              jd.company?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // Fix lọc: Status DELETE hoặc LOCK đều hiển thị khi chọn tab DELETE
-        const currentStatus = (jd.status === 'LOCK' || jd.status === 'DELETE') ? 'DELETE' : jd.status;
-        const matchesStatus = statusFilter === 'ALL' || currentStatus === statusFilter;
+        const matchesStatus = statusFilter === 'ALL' || jd.status === statusFilter;
 
         return matchesSearch && matchesStatus;
     });
@@ -99,7 +103,7 @@ const JdList = () => {
         ALL: jdList.length,
         OPEN: jdList.filter(jd => jd.status === 'OPEN').length,
         PENDING: jdList.filter(jd => jd.status === 'PENDING').length,
-        DELETE: jdList.filter(jd => jd.status === 'DELETE' || jd.status === 'LOCK').length,
+        LOCK: jdList.filter(jd => jd.status === 'LOCK').length,
         CLOSED: jdList.filter(jd => jd.status === 'CLOSED').length
     };
 
@@ -130,13 +134,13 @@ const JdList = () => {
                     />
                 </div>
                 <div className="status-filters">
-                    {['ALL', 'OPEN', 'PENDING', 'DELETE', 'CLOSED'].map(s => (
+                    {['ALL', 'OPEN', 'PENDING', 'LOCK', 'CLOSED'].map(s => (
                         <button
                             key={s}
                             className={`filter-btn ${statusFilter === s ? 'active' : ''}`}
                             onClick={() => setStatusFilter(s)}
                         >
-                            {s} ({statusCounts[s]})
+                            {STATUS_LABELS[s] || s} ({statusCounts[s] || 0})
                         </button>
                     ))}
                 </div>
@@ -171,9 +175,9 @@ const JdList = () => {
                                 <button className="hunt-talents-btn" onClick={(e) => handleHuntTalents(e, jd.id)}>
                                     Săn tài năng
                                 </button>
-                                {jd.status !== "DELETE" && jd.status !== "LOCK" && (
+                                {jd.status !== "LOCK" && (
                                     <span className="deleted-label">
-                                        <button onClick={(e) => handleDeleteJd(e, jd.id)}>Khóa</button>
+                                        <button onClick={(e) => handleLockJd(e, jd.id)}>Khoá</button>
                                     </span>
                                 )}
                             </div>
