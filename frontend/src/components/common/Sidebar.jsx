@@ -15,10 +15,28 @@ import {
     Search
 } from 'lucide-react';
 import './AdminSidebar.css';
+import { useEffect } from 'react';
+import axios from 'axios';
+
 
 const AdminSidebar = () => {
+    useEffect(() => {
+        const fetchPendingCompanies = async () => {
+            try {
+                const res = await axios.get('/api/admin/companies/pending-count');
+                setPendingCompanies(res.data); // giả sử API trả về số
+            } catch (error) {
+                console.error('Lỗi khi lấy số lượng pending:', error);
+            }
+        };
+
+        fetchPendingCompanies();
+    }, []);
+
     const location = useLocation();
     const [isManagementOpen, setIsManagementOpen] = useState(false);
+
+    const [pendingCompanies, setPendingCompanies] = useState(0);
 
     const menuItems = [
         {
@@ -30,7 +48,7 @@ const AdminSidebar = () => {
             title: 'Duyệt Doanh Nghiệp',
             path: '/admin/approve-companies',
             icon: <Building2 />,
-            badge: 3
+            badge: pendingCompanies
         },
         {
             title: 'Duyệt Tin Đăng (AI)',
@@ -72,7 +90,7 @@ const AdminSidebar = () => {
                                     {item.icon}
                                     <span>{item.title}</span>
                                     {/* Badge xử lý thủ công vì CSS không có badge */}
-                                    {item.badge && (
+                                    {item.badge > 0 && (
                                         <div className="sidebar-badge-custom" style={{
                                             marginLeft: 'auto',
                                             backgroundColor: isActive(item.path) ? '#fff' : '#ff3b30',
@@ -82,7 +100,9 @@ const AdminSidebar = () => {
                                             fontSize: '10px',
                                             fontWeight: 800
                                         }}>
-                                            {item.badge}
+                                            <div className="sidebar-badge">
+                                                {item.badge}
+                                            </div>
                                         </div>
                                     )}
                                 </Link>

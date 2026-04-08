@@ -206,6 +206,23 @@
 .animate-in {
     animation: sidebarPop 0.6s var(--bezier) forwards;
 }
+.sidebar-badge {
+    margin-left: auto;
+    background-color: #ff3b30;
+    color: #fff;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Khi active thì đổi màu */
+.sidebar-link.active .sidebar-badge {
+    background-color: #fff;
+    color: #007aff;
+}
 
 @keyframes sidebarPop {
     from { opacity: 0; transform: translateY(-40%) scale(0.95); }

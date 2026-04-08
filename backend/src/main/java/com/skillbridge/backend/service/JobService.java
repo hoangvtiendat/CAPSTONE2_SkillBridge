@@ -705,6 +705,70 @@ public class JobService {
                 .build();
     }
 
+    public Job updateStatus(String id, int type) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String userId = userDetails.getUserId();
+
+        var recruiter = companyMemberRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Job job = jobRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+        boolean isAdmin = recruiter.getRole() == CompanyRole.ADMIN;
+        boolean isJobOwner = job.getCompanyMember().getId().equals(recruiter.getId());
+
+        if (!isAdmin && !isJobOwner) {
+            throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
+        }
+        ///  thay đổi trạng thái thành khóa
+
+        if(type == 1){
+            List<Application> getListCandidateINJD = applicationRepository.findByJob_Id(id);
+            System.out.println("getList: " + getListCandidateINJD);
+            String nameJD = job.getPosition();
+
+            String companyName = job.getCompany().getName();
+            String subject = "[SkillBridge] Thông báo quan trọng về vị trí: " + nameJD;
+            String content = String.format(
+                    "<div style='font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>" +
+                            "   <h2 style='color: #2c3e50;'>Thông báo từ SkillBridge</h2>" +
+                            "   <p>Chào bạn,</p>" +
+                            "   <p>Công ty <b>%s</b> xin thông báo rằng tin tuyển dụng cho vị trí <b>%s</b> hiện đã bị chủ doanh nghiệp xóa bài đi.</p>" +
+                            "   <div style='background: #f9f9f9; padding: 15px; border-left: 4px solid #3498db;'>" +
+                            "       <b>Trạng thái hồ sơ:</b> Hệ thống đang trong quá trình tổng hợp và phản hồi kết quả cuối cùng." +
+                            "   </div>" +
+                            "   <p>Cảm ơn bạn đã tin tưởng và ứng tuyển qua hệ thống SkillBridge. Bạn có thể tiếp tục tìm kiếm các cơ hội khác phù hợp hơn trên nền tảng của chúng tôi.</p>" +
+                            "   <br><p>Trân trọng,<br><b>Đội ngũ hỗ trợ SkillBridge</b></p>" +
+                            "</div>",
+                    companyName, nameJD
+            );
+
+            getListCandidateINJD.forEach(application -> {
+                Candidate candidate = application.getCandidate();
+                if (candidate != null) {
+                    mailService.sendToEmail(senderEmail,application.getEmail(), subject, content);
+                }
+            });
+            job.setStatus(JobStatus.LOCK);
+        }
+        ///  thay đổi trạng thái thành đóng
+        else if(type == 2){
+
+        }
+        job.setDeleted(true);
+        jobRepository.save(job);
+
+        return job;
+    }
+
     @Transactional
     public Job updateJD(String jobId, CreateJobRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();

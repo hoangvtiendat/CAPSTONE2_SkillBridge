@@ -346,6 +346,7 @@ const JobDetailPage = () => {
         <div className="loader-spinner"></div>
     </div>;
 
+
     return (<div className="candidate-job-detail-wrapper">
         <Toaster position="top-right" richColors/>
 
@@ -356,19 +357,24 @@ const JobDetailPage = () => {
             <div className="detail-card header-combined animate-in">
                 <div className="header-main-content">
                     <div className="company-info-section">
-                        <img src={job.companyImageUrl ? `http://localhost:8081/identity${job.companyImageUrl}` : ''}
-                             alt="logo" className="company-logo-large"/>
+                        <img
+                            src={job?.companyImageUrl ? `http://localhost:8081/identity${job.companyImageUrl}` : ''}
+                            alt="logo"
+                            className="company-logo-large"
+                        />
                         <div className="job-title-info">
-                            <h1>{job.position}</h1>
+                            <h1>{job?.position}</h1>
                             <p className="company-name-text"
                                onClick={() => navigate(`/companies/${job.companyId}`)}><Building2
-                                size={18}/> {job.companyName}</p>
+                                size={18}/> {job?.companyName}</p>
                             <div className="job-meta-tags">
-                                <span><MapPin size={16}/> {job.location}</span>
+                                <span><MapPin size={16}/> {job?.location}</span>
                                 <span className="salary-tag"><Banknote
                                     size={16}/> {formatSalary(job.salaryMin)} - {formatSalary(job.salaryMax)}</span>
-                                <span><Clock size={16}/> {formatDistanceToNow(new Date(job.createdAt), {
-                                    locale: vi, addSuffix: true
+                                <span><Clock
+                                    size={16}/> {job?.createdAt && formatDistanceToNow(new Date(job.createdAt), {
+                                    locale: vi,
+                                    addSuffix: true
                                 })}</span>
                             </div>
                         </div>
@@ -388,7 +394,7 @@ const JobDetailPage = () => {
                 style={{whiteSpace: 'pre-line'}}>{job.description}</p></div>
 
             <div className="detail-grid">
-                {parsedData.slice(1).map((sec, i) => (<div key={i} className="detail-card section animate-in">
+                {parsedData?.slice(1).map((sec, i) => (<div key={i} className="detail-card section animate-in">
                     <h3>{sec.name}</h3>
                     <ul className="check-list">{sec.description?.map((li, j) => <li key={j}><span>{li}</span>
                     </li>)}</ul>
@@ -666,16 +672,16 @@ const JobDetailPage = () => {
                     </div>
 
                     <div className="ai-modal-body">
-                        <h3 style={{ marginBottom: '15px' }}>Điểm phù hợp: {aiResults.matchScore}</h3>
+                        <h3 style={{marginBottom: '15px'}}>Điểm phù hợp: {aiResults.matchScore}</h3>
 
                         <div className="ai-section">
                             <h4>Điểm mạnh</h4>
-                            <p style={{ lineHeight: '1.6' }}>
+                            <p style={{lineHeight: '1.6'}}>
                                 {/* Xử lý xuống dòng cho điểm mạnh (nếu có) */}
                                 {aiResults.strengths?.split(/\\n|\n/).map((line, idx) => (
                                     <React.Fragment key={idx}>
                                         {line}
-                                        <br />
+                                        <br/>
                                     </React.Fragment>
                                 ))}
                             </p>
@@ -683,12 +689,12 @@ const JobDetailPage = () => {
 
                         <div className="ai-section">
                             <h4>Điểm yếu</h4>
-                            <p style={{ lineHeight: '1.6' }}>
+                            <p style={{lineHeight: '1.6'}}>
                                 {/* Tách chuỗi theo \n hoặc \\n và render kèm thẻ <br /> */}
                                 {aiResults.weaknesses?.split(/\\n|\n/).map((line, idx) => (
                                     <React.Fragment key={idx}>
                                         {line}
-                                        <br />
+                                        <br/>
                                     </React.Fragment>
                                 ))}
                             </p>

@@ -15,7 +15,26 @@
 
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+/* Tùy chỉnh thẻ div chứa nội dung chữ */
+.info-item-modern > div:last-child {
+    display: flex;
+    flex-direction: column; /* Xếp dọc từ trên xuống */
+    gap: 4px; /* Khoảng cách giữa label và value */
+}
 
+/* Làm đẹp thêm cho Label (tùy chọn) */
+.info-label {
+    font-size: 13px;
+    color: #64748b; /* Màu xám nhạt để phân biệt */
+    font-weight: 500;
+}
+
+/* Làm đẹp thêm cho Value (tùy chọn) */
+.info-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a; /* Màu chữ đậm để nổi bật thông tin chính */
+}
 /* ================= CONTAINER ================= */
 .detail-view-container {
     padding: 30px;

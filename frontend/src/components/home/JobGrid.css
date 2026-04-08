@@ -94,7 +94,6 @@
 }
 
 .search-wrap svg {
-  fill: var(--mac-text-muted);
   flex-shrink: 0;
 }
 
