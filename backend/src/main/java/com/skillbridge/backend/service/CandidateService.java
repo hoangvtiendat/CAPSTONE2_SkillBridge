@@ -1,6 +1,7 @@
 package com.skillbridge.backend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CandidateSkillRequest;
@@ -13,6 +14,7 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.utils.CosineSimilarityUtils;
+import com.skillbridge.backend.service.AI_Service_File.AiService;
 import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -56,6 +58,7 @@ public class CandidateService {
     CVJobEvaluationRepository cvJobEvaluationRepository;
     JobRepository jobRepository;
     CosineSimilarityUtils cosineSimilarityUtils;
+    AiService aiService;
 
     @NonFinal
     @Value("${gemini.api.key}")
@@ -90,7 +93,40 @@ public class CandidateService {
                 .experience(experienceDetails)
                 .build();
     }
+    /// dùng để lấy CV cho chức năng tìm kiếm theo ngũ nghĩa khi chưa có CV
+    public UpdateCandidateCvResponse getCV_searchsenematic(String userId) {
+        Candidate candidate = candidateRepository.findById(userId).orElse(null);
 
+        if (candidate == null) {
+            return new UpdateCandidateCvResponse();
+        }
+
+        List<DegreeResponse> degreeResponses = deserializeDegrees(candidate.getDegree());
+        List<ExperienceDetail> experienceDetails = deserializeExperience(candidate.getExperience());
+
+        List<CandidateSkill> currentSkills = candidateSkillRepository.findByCandidate(candidate);
+        List<CandidateSkillResponse> skillResponses = currentSkills.stream().map(s -> {
+            CandidateSkillResponse res = new CandidateSkillResponse(
+                    s.getSkill().getId(),
+                    s.getSkill().getName(),
+                    s.getExperienceYears()
+            );
+            return res;
+        }).toList();
+
+        return new UpdateCandidateCvResponse(
+                candidate.getName(),
+                candidate.getDescription(),
+                candidate.getIsOpenToWork(),
+                candidate.getAddress(),
+                candidate.getCategory() != null ? candidate.getCategory().getId() : null,
+                candidate.getCategory() != null ? candidate.getCategory().getName() : null,
+                candidate.getCvUrl(),
+                degreeResponses,
+                skillResponses,
+                experienceDetails
+        );
+    }
     /**
      * Chuyển đổi dữ liệu bằng cấp từ JSON/Object sang danh sách DegreeResponse
      */
@@ -475,6 +511,25 @@ public class CandidateService {
             }
 
             systemLog.info(currentUser, "AI đã phân tích thành công CV tải lên");
+//            String dataParsing = aiService.parsingCV_AI(rawText);
+//            log.info("[AI_PARSING] Dữ liệu nhận được: {}", dataParsing);
+//
+//            if (dataParsing != null && dataParsing.contains("```")) {
+//                dataParsing = dataParsing.replaceAll("```json|```", "").trim();
+//            }
+//
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            ///  check lỗi dữ liệu data
+//            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//            ///  register ngày cho objmapper
+//            objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+//
+//            LLMResumeResponse llmRes = objectMapper.readValue(dataParsing, LLMResumeResponse.class);
+//
+//            if (llmRes == null) {
+//                throw new AppException(ErrorCode.AI_PARSING_FAILED);
+//            }
+
             return llmRes;
 
         } catch (Exception e) {
@@ -557,5 +612,18 @@ public class CandidateService {
 //        log.info("[SOURCING] Khởi tạo đánh giá mới từ Recruiter cho Candidate: {} - Job: {}", candidateId, jobId);
 //        return performNewEvaluationByRecruiter(candidateId, jobId);
 //        return existingEval.get();
+    }
+    ///  check CV ccó kt đảy lên hay chưa
+    public Boolean checkCV(){
+        Boolean result = false;
+        String idOfUser = securityUtils.getCurrentUserId();
+        UpdateCandidateCvResponse cv = getCV_searchsenematic(idOfUser);
+        System.out.println("cvNe");
+        System.out.println(cv);
+        if(cv.getName() != null && cv.getDescription() != null && cv.getExperience() != null && cv.getSkills() != null) {
+            result = true;
+            return result;
+        }
+       return result;
     }
 }

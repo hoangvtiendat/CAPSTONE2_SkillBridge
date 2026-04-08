@@ -158,4 +158,11 @@ public class CandidateController {
             .result(result)
             .build());
     }
+
+
+    /// check Khách hàng đã cập nhật CV hay chưa
+    @GetMapping("/cv/check")
+    public Boolean checkCV(){
+        return candidateService.checkCV();
+    }
 }

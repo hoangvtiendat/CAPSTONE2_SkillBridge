@@ -199,10 +199,10 @@ public class JobController {
                 new ApiResponse<>(200, "Update bài đăng thành công ", updatedJob)
         );
     }
-
-    @DeleteMapping("/my-company/delete/{id}")
-    public ResponseEntity<ApiResponse<Job>> deleteJD(@PathVariable String id) {
-        Job updatedJob = jobService.deleteJD(id);
+///  update trạng thái bài đăng ----- 1: lock 2 closed
+    @DeleteMapping("/my-company/update-Status-JD/{id}/{type}")
+    public ResponseEntity<ApiResponse<Job>> deleteJD(@PathVariable String id, @PathVariable Integer type) {
+        Job updatedJob = jobService.updateStatus(id, type);
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Xóa bài đăng thành công", updatedJob)
         );

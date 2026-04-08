@@ -120,7 +120,9 @@ public class PaymentService {
     public void handleSuccessfulPayment(WebhookData data) {
         long orderCode = data.getOrderCode();
         String code = data.getCode();
-
+        if (orderCode == 123) {
+            return;
+        }
         if ("00".equals(code)) {
             try {
                 PaymentTransaction transaction = paymentTransactionRepository.findById(orderCode)
@@ -139,7 +141,6 @@ public class PaymentService {
                 }
 
                 systemLog.info(null, "Giao dịch #" + orderCode + " hoàn tất. Công ty ID: " + transaction.getCompanyId() + " đã được nâng cấp.");
-
                 messagingTemplate.convertAndSend("/topic/payments", "SUCCESS:" + orderCode);
 
             } catch (Exception e) {

@@ -1,22 +1,28 @@
-/* --- HỆ BIẾN SỐ ĐỒNG BỘ --- */
+/* ================= ROOT VARIABLES ================= */
 :root {
     --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.12) 100%);
     --glass-border: rgba(255, 255, 255, 0.45);
     --glass-saturate: blur(30px) saturate(200%);
     --inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+
     --sf-blue: #007aff;
     --sf-green: #34c759;
+    --sf-red: #ff3b30;
+    --sf-amber: #ff9f0a;
+
     --text-main: #1d1d1f;
     --text-mute: #86868b;
+
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ================= CONTAINER ================= */
 .detail-view-container {
     padding: 30px;
     animation: sf-pop-up 0.6s ease-out;
 }
 
-/* --- HEADER --- */
+/* ================= HEADER ================= */
 .detail-header-card {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-saturate);
@@ -26,33 +32,121 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: var(--inner-light), 0 20px 40px rgba(0, 0, 0, 0.05);
     margin-bottom: 25px;
-    box-shadow: var(--inner-light), 0 20px 40px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
 }
 
-.header-company-info { display: flex; gap: 25px; align-items: center; }
-.company-logo-large { width: 90px; height: 90px; border-radius: 20px; background: white; padding: 10px; }
-.job-title-large { font-size: 2.2rem; font-weight: 850; letter-spacing: -0.04em; color: var(--text-main); }
+/* Accent line */
+.detail-header-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%;
+    height: 60%;
+    width: 6px;
+    background: var(--sf-blue);
+    border-radius: 0 100px 100px 0;
+    box-shadow: 2px 0 15px rgba(0, 122, 255, 0.4);
+}
 
-/* --- GRID LAYOUT --- */
-.jd-board-layout { display: grid; grid-template-columns: 1fr 350px; gap: 25px; }
+.header-company-info {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
 
-/* --- CARD NỘI DUNG --- */
+.company-logo-large {
+    width: 90px;
+    height: 90px;
+    background: white;
+    border-radius: 20px;
+    padding: 10px;
+    object-fit: contain;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.job-title-large {
+    font-size: 2.2rem;
+    font-weight: 850;
+    color: var(--text-main);
+    letter-spacing: -0.04em;
+    margin-bottom: 8px;
+}
+
+.company-name-large {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--sf-blue);
+}
+
+/* ================= STATUS ================= */
+.status-badge-modern {
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    backdrop-filter: blur(10px);
+}
+
+.status-open {
+    background: rgba(52, 199, 89, 0.15);
+    color: var(--sf-green);
+}
+
+.status-closed {
+    background: rgba(255, 59, 48, 0.15);
+    color: var(--sf-red);
+}
+
+.status-pending {
+    background: rgba(255, 159, 10, 0.15);
+    color: var(--sf-amber);
+}
+
+/* ================= GRID ================= */
+.jd-board-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+}
+
+/* ================= CARD ================= */
 .content-card {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-saturate);
     border: 1px solid var(--glass-border);
     border-radius: 35px;
     padding: 40px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+    box-shadow: var(--inner-light), 0 20px 50px rgba(0, 0, 0, 0.03);
 }
 
+/* ================= TEXT BLOCK ================= */
 .card-title {
-    font-size: 12px; font-weight: 800; color: var(--sf-blue);
-    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 25px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 25px;
 }
 
-/* --- HIỂN THỊ DÒNG LIQUID (MỚI) --- */
+/* ===== OLD STYLE (BOX TEXT) ===== */
+.text-content {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #3a3a3c;
+    background: rgba(255, 255, 255, 0.35);
+    padding: 25px;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    margin-bottom: 24px;
+}
+
+/* ===== NEW STYLE (LINE LIQUID) ===== */
 .text-content-wrapper {
     display: flex;
     flex-direction: column;
@@ -66,7 +160,6 @@
     gap: 15px;
     padding: 12px 18px;
     background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 18px;
     transition: all 0.3s ease;
 }
@@ -83,49 +176,111 @@
     background: var(--sf-blue);
     border-radius: 50%;
     margin-top: 8px;
-    box-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
 }
 
 .line-text {
     margin: 0;
     font-size: 15px;
-    line-height: 1.6;
     color: #2c2c2e;
-    font-weight: 500;
 }
 
-/* --- SIDEBAR --- */
+/* ================= SIDEBAR ================= */
 .info-item-modern {
     background: rgba(255, 255, 255, 0.3);
-    padding: 18px;
+    padding: 16px;
     border-radius: 20px;
-    display: flex;
-    gap: 15px;
-    margin-bottom: 15px;
     border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: var(--transition);
+}
+
+.info-item-modern:hover {
+    background: white;
+    transform: translateY(-3px);
 }
 
 .icon-box {
-    width: 45px; height: 45px; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.icon-box.blue { background: rgba(0, 122, 255, 0.1); color: var(--sf-blue); }
+
 .icon-box.green { background: rgba(52, 199, 89, 0.1); color: var(--sf-green); }
+.icon-box.blue { background: rgba(0, 122, 255, 0.1); color: var(--sf-blue); }
 
-.info-label { font-size: 11px; font-weight: 800; color: var(--text-mute); text-transform: uppercase; }
-.info-value { font-size: 15px; font-weight: 700; color: var(--text-main); display: block; }
-.highlight { color: var(--sf-green); font-size: 17px; }
-
-/* --- SKILLS --- */
-.skills-tags-container { display: flex; flex-wrap: wrap; gap: 10px; }
-.skill-tag-modern {
-    padding: 8px 18px; border-radius: 100px;
-    background: rgba(255, 255, 255, 0.5); border: 1px solid var(--glass-border);
-    font-size: 13px; font-weight: 700;
+.info-label {
+    font-size: 12px;
+    color: var(--text-mute);
+    font-weight: 700;
 }
-.skill-tag-modern.required { background: rgba(0, 122, 255, 0.08); color: var(--sf-blue); }
 
+.info-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.highlight {
+    color: var(--sf-green);
+}
+
+/* ================= SKILLS ================= */
+.skills-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skill-tag-modern {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--glass-border);
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.skill-tag-modern.required {
+    background: rgba(0, 122, 255, 0.08);
+    color: var(--sf-blue);
+}
+
+/* ================= BUTTON ================= */
+.btn-primary {
+    background: linear-gradient(135deg, var(--sf-blue), #00c6ff);
+    color: white;
+    border-radius: 100px;
+    padding: 14px 28px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 100px;
+    padding: 14px 28px;
+    border: 1px solid var(--glass-border);
+}
+
+/* ================= ANIMATION ================= */
 @keyframes sf-pop-up {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }

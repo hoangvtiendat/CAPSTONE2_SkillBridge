@@ -10,15 +10,19 @@ import com.skillbridge.backend.dto.request.JobSkillRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.enums.*;
+
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
+import com.skillbridge.backend.service.AI_Service_File.AIJobService;
 import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +33,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -61,7 +67,11 @@ public class JobService {
     SimpMessagingTemplate messagingTemplate;
     SubscriptionOfCompanyRepository subscriptionOfCompanyRepository;
     CVJobEvaluationRepository cvJobEvaluationRepository;
-
+    AIJobService aiJobService;
+    MailServiceImpl mailService;
+    @NonFinal
+    @Value("${mail.username}")
+    String senderEmail;
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -545,7 +555,7 @@ public class JobService {
             }
         }
 
-        job.setModerationStatus(ModerationStatus.YELLOW);
+//        job.setModerationStatus(ModerationStatus.YELLOW);
 
         //object > Text
         textBuilder.append(job.getPosition()).append(". ");
@@ -554,8 +564,8 @@ public class JobService {
             textBuilder.append(job.getCompany().getName()).append(". ");
         }
         Object titleObj = job.getTitle();
-        if (titleObj instanceof java.util.Map) {
-            String titleText = String.join(" - ", ((java.util.Map<String, String>) titleObj).values());
+        if (titleObj instanceof Map) {
+            String titleText = String.join(" - ", ((Map<String, String>) titleObj).values());
             textBuilder.append(titleText).append(". ");
         } else if (titleObj != null) {
             textBuilder.append(titleObj.toString()).append(". ");
@@ -580,10 +590,21 @@ public class JobService {
             e.printStackTrace();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-
         jobSkillRepository.saveAll(jobSkills);
-        jobRepository.save(job);
-        return savedJob;
+        Job finalSavedJob =  jobRepository.save(job);
+        String IdJob = finalSavedJob.getId();
+
+
+        /// kiểm duyệt nội dung
+        System.out.println("đã chạy chức năng check bài spam");
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                System.out.println("ddang chayj chuc nang sapm");
+                aiJobService.ai_Check_Approval(IdJob);
+            }
+        });
+        return finalSavedJob;
     }
 
     @Scheduled(cron = "0 0 0 * * *") // Tự động chạy vào 00:00 mỗi ngày
@@ -625,7 +646,7 @@ public class JobService {
         }
     }
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<JobResponse> find_JD_of_Company() {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();
@@ -640,7 +661,7 @@ public class JobService {
                 .collect(Collectors.toList());
     }
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public JobResponse getIn4_of_JD_of_Company(String id) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();
@@ -740,7 +761,6 @@ public class JobService {
         }
 
         jobSkillRepository.saveAll(jobSkills);
-
         textBuilder.append(job.getPosition()).append(". ");
         textBuilder.append(job.getDescription()).append(". ");
 
@@ -769,11 +789,18 @@ public class JobService {
             e.printStackTrace();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-
-        return jobRepository.save(job);
+        jobRepository.save(job);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                System.out.println("ddang chayj chuc nang sapm");
+                aiJobService.ai_Check_Approval(jobId);
+            }
+        });
+        return job;
     }
 
-    public Job deleteJD(String id) {
+    public Job deleteJD(String id, int type) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();
         var recruiter = companyMemberRepository.findByUser_Id(userId)
@@ -788,7 +815,42 @@ public class JobService {
         if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        job.setStatus(JobStatus.LOCK);
+        ///  thay đổi trạng thái thành khóa
+
+        if(type == 1){
+            List<Application> getListCandidateINJD = applicationRepository.findByJob_Id(id);
+            System.out.println("getList: " + getListCandidateINJD);
+            String nameJD = job.getPosition();
+
+            String companyName = job.getCompany().getName();
+            String subject = "[SkillBridge] Thông báo quan trọng về vị trí: " + nameJD;
+            String content = String.format(
+                    "<div style='font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>" +
+                            "   <h2 style='color: #2c3e50;'>Thông báo từ SkillBridge</h2>" +
+                            "   <p>Chào bạn,</p>" +
+                            "   <p>Công ty <b>%s</b> xin thông báo rằng tin tuyển dụng cho vị trí <b>%s</b> hiện đã bị chủ doanh nghiệp xóa bài đi.</p>" +
+                            "   <div style='background: #f9f9f9; padding: 15px; border-left: 4px solid #3498db;'>" +
+                            "       <b>Trạng thái hồ sơ:</b> Hệ thống đang trong quá trình tổng hợp và phản hồi kết quả cuối cùng." +
+                            "   </div>" +
+                            "   <p>Cảm ơn bạn đã tin tưởng và ứng tuyển qua hệ thống SkillBridge. Bạn có thể tiếp tục tìm kiếm các cơ hội khác phù hợp hơn trên nền tảng của chúng tôi.</p>" +
+                            "   <br><p>Trân trọng,<br><b>Đội ngũ hỗ trợ SkillBridge</b></p>" +
+                            "</div>",
+                    companyName, nameJD
+            );
+
+            getListCandidateINJD.forEach(application -> {
+                Candidate candidate = application.getCandidate();
+                if (candidate != null) {
+
+                    mailService.sendToEmail(senderEmail,application.getEmail(), subject, content);
+                }
+            });
+            job.setStatus(JobStatus.LOCK);
+        }
+        ///  thay đổi trạng thái thành đóng
+        else if(type == 2){
+
+        }
         job.setDeleted(true);
         jobRepository.save(job);
 
@@ -907,4 +969,18 @@ public class JobService {
         }
         return request;
     }
+    ///  check điều kiện bài đăng có ái apply vào chưa
+    public Boolean checkUngVien(String idJD){
+        try{
+            Boolean result = false;
+            List<Application> getApplyOfJD = applicationRepository.findByJob_Id(idJD);
+            if(getApplyOfJD.size() > 0){
+                result = true;
+            }
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(ErrorCode.JOB_NOT_FOUND.getMessage());
+        }
+    }
+
 }

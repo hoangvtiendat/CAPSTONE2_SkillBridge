@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record ollamaOptions(
+public record OllamaOptions(
         Double temperature,
         Integer top_k,
         Double top_p,

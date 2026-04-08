@@ -23,7 +23,9 @@ public enum ErrorCode {
     INVALID_STATUS(1012, "Trạng thái không hợp lệ", HttpStatus.BAD_REQUEST),
     ACCESS_DENIED(1013, "Truy cập bị từ chối, bạn không có quyền thực hiện hành động này", HttpStatus.FORBIDDEN),
     LOG_NOT_FOUND(1014, "Không tìm thấy log", HttpStatus.NOT_FOUND),
-    INVALID_TAX_ID(1015, "Mã số thuế không hợp lệ, phải bao gồm đúng 10 chữ số", HttpStatus.BAD_REQUEST),
+    AI_EXITS(1015,"Chức năng liên quan đến AI đang bị lỗi", HttpStatus.INTERNAL_SERVER_ERROR),
+    CHECK_VECTOR(1016,"Lỗi chức năng lấy vector của duyệt bài đăng",HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_TAX_ID(1017, "Mã số thuế không hợp lệ, phải bao gồm đúng 10 chữ số", HttpStatus.BAD_REQUEST),
     // 2xxx: AUTH & SECURITY
     UNAUTHORIZED(2000, "Bạn chưa đăng nhập hoặc phiên làm việc hết hạn", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(2001, "Bạn không có quyền truy cập chức năng này", HttpStatus.FORBIDDEN),
@@ -46,6 +48,7 @@ public enum ErrorCode {
     PHONE_INVALID(3009, "Số điện thoại không hợp lệ (Phải có 10 số, bắt đầu bằng 0 hoặc +84)", HttpStatus.BAD_REQUEST),
     APPLICATION_ALREADY_EXISTS(3010, "Bạn đã nộp đơn cho công việc này rồi", HttpStatus.BAD_REQUEST),
     OCR_FAILED(3011,"Lỗi ocr không thể đọc được dữ liệu",HttpStatus.BAD_REQUEST),
+    NOT_FOUND_DATA_CV(3012, "Lỗi không thể Lấy được dữ liệu CV của bạn vui lòng kiểm tra lại CV của bạn", HttpStatus.BAD_REQUEST),
     // 4xxx: COMPANY & MEMBERSHIP
     COMPANY_NOT_FOUND(4000, "Mã số thuế chưa tồn tại. Vui lòng đăng ký mới!", HttpStatus.NOT_FOUND),
     COMPANY_EXIST(4001, "Công ty này đã được đăng ký trên hệ thống", HttpStatus.BAD_REQUEST),
@@ -82,6 +85,7 @@ public enum ErrorCode {
     JOB_STATUS_EXITS(5011, "Trạng thái này đã tồn tại cho bài tuyển dụng", HttpStatus.BAD_REQUEST),
     SKILL_EXITS_NAME(5012, "Tên kỹ năng này đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
     CATEGORY_PROFESSION(5013, "Danh mục ngành nghề chuyên môn không hợp lệ hoặc đã tồn tại", HttpStatus.BAD_REQUEST),
+    NOT_FOUND_CATEGORY_OF_CANDIDATE(5014, "Hiện tại cái trong CV của bạn không có category(lĩnh vực ngành nghề) vui lòng update để sử dụng chức năng này", HttpStatus.BAD_REQUEST),
 
     // 6xxx: SUBSCRIPTION & PAYMENT (TIER LOGIC)
     SUBSCRIPTION_NOT_FOUND(6000, "Không tìm thấy gói đăng ký của công ty", HttpStatus.NOT_FOUND),
@@ -118,8 +122,8 @@ public enum ErrorCode {
 
     // 7xxx: APPLICATION
     APPLICATION_NOT_FOUND(7000, "Không tìm thấy hồ sơ ứng tuyển", HttpStatus.NOT_FOUND),
+    AI_PARSING_FAILED(8001, "Không thể phân tích được CV của chức năng parsingCV", HttpStatus.BAD_REQUEST),
     ALREADY_APPLIED(7001, "Bạn đã ứng tuyển vào vị trí này trước đó rồi", HttpStatus.BAD_REQUEST),
-
     EVALUATION_NOT_FOUND(8002, "Hiện tại chưa có đánh giá của ứng viên này đối với bài đăng", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;

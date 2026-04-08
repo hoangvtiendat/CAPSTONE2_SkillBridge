@@ -57,6 +57,14 @@ const candidateService = {
             throw error;
         }
     },
+    checkCVL: async() => {
+        try {
+            const response = await api.get('/candidates/cv/check');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
     toggleOpenToWork: async (status) => {
         const response = await api.patch(`/candidates/open-to-work?isOpenToWork=${status}`);
         return response.data;

@@ -6,6 +6,7 @@ import com.skillbridge.backend.entity.Application;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.ApplicationService;
+import com.skillbridge.backend.service.JobService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -22,7 +24,7 @@ import java.util.List;
 @RequestMapping("/applications")
 public class ApplicationController {
     ApplicationService applicationService;
-
+    JobService jobService;
     /**
      * Lấy thông tin chi tiết một đơn ứng tuyển
      */
@@ -93,5 +95,17 @@ public class ApplicationController {
             System.out.println("[RESPOND APPLICATION] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
+    }
+    @GetMapping("/JD/Check-apply/{id}")
+    public Boolean checkApply(@PathVariable String id) {
+        Boolean result;
+        try {
+            result = jobService.checkUngVien(id);
+            return result;
+        }
+        catch (AppException ex) {
+            System.out.println("[CHECK-APPLY] AppException occurred");
+        }
+        return null;
     }
 }
