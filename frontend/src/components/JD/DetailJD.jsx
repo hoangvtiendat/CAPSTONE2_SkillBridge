@@ -334,7 +334,7 @@ const DetailJD = () => {
 
             {hasAppliedCandidate && (
                 <div className="jd-edit-locked-note" role="note">
-                    Hiện tại JD đang có người ứng tuyển nên không cho sửa JD.
+                    Hiện tại JD đang có người ứng tuyển nên bạn không thể chỉnh sửa nội dung !
                 </div>
             )}
 

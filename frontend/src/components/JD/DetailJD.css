@@ -133,6 +133,19 @@
     gap: 24px;
 }
 
+.detail-view-container .layout-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-self: start;
+}
+
+.detail-view-container .layout-sidebar .sidebar-card {
+    position: static;
+    top: auto;
+    margin: 0;
+}
+
 /* ================= CARD ================= */
 .content-card {
     background: var(--glass-bg);
