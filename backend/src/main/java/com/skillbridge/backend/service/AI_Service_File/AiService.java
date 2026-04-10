@@ -184,6 +184,7 @@ public class AiService {
        - Trả về giá trị số nguyên (Long) nếu người dùng có yêu cầu con số cụ thể.
        - Với trường hơp các câu nói tắt về giá như "12M", "12 Triệu", ... hay bất kì 1 cách gọn nào khác hãy viết lại thành số (Vd: 12M => 12000000, 12Ngàn => 12000)
        - Nếu không đề cập hoặc yêu cầu chung chung -> BẮT BUỘC trả về null.
+       - Với trường hợp mà Lương quá thấp lương mà dưới 1M, thì sẽ trả về cảnh báo
 
     4. Phân loại Logic (typeTraVe):
        - typeTraVe = 0: Người dùng tìm việc thuộc lĩnh vực và kỹ năng ĐÃ CÓ trong CV. skill_names chứa các kỹ năng liên quan được trích xuất.

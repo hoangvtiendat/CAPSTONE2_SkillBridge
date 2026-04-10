@@ -127,9 +127,9 @@ public class AIJobService {
 
             }
             System.out.println("maxSimilarity" + maxSimilarity);
-            if (maxSimilarity >= 0.45 && maxSimilarity < 0.6)
+            if (maxSimilarity >= 0.6 && maxSimilarity < 0.8)
             {return 2;}
-            if (maxSimilarity >= 0.6){
+            if (maxSimilarity >= 0.8){
             ///  Lây detail của JD mới
             String detailNewJD = getJobComparisonResponse(idOfJob);
             ///  Lấy detail cảu JD cũ
