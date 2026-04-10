@@ -285,6 +285,7 @@ const DetailJD = () => {
         switch(status.toUpperCase()) {
             case 'OPEN': return 'status-open';
             case 'CLOSED': return 'status-closed';
+            case 'LOCK': return 'status-closed';
             case 'PENDING': return 'status-pending';
             default: return 'status-pending';
         }
@@ -295,6 +296,7 @@ const DetailJD = () => {
         switch(status.toUpperCase()) {
             case 'OPEN': return 'Đang mở';
             case 'CLOSED': return 'Đã đóng';
+            case 'LOCK': return 'Đã khóa';
             case 'PENDING': return 'Đang chờ';
             default: return 'Đang chờ';
         }
