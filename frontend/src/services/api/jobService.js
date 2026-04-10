@@ -101,9 +101,17 @@ const jobService = {
 
     deleteJd: async (jdId) => {
         try {
-            await api.delete(`/jobs/my-company/delete/${jdId}`);
+            await api.put(`/jobs/my-company/update-Status-JD/${jdId}/${1}/lock`);
         } catch (error) {
             console.error('Error deleting JD:', error);
+            throw error;
+        }
+    },
+    closedJd: async (jdId) => {
+        try{
+            await api.put(`/jobs/my-company/update-Status-JD/${jdId}/${2}/closed`);
+        }catch(error){
+            console.error('Error closing JD:', error);
             throw error;
         }
     },
@@ -248,6 +256,19 @@ const jobService = {
         });
         return response.data;
     },
+    repostJob: async (jobId) => {
+    try {
+        const response = await api.post(`/jobs/report-Job/${jobId}`);
+        
+        if (!response) {
+            throw new Error("Không nhận được phản hồi từ server");
+        }
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi khi đăng lại bài:', error);
+        throw error;
+    }
+}
 
 };
 
