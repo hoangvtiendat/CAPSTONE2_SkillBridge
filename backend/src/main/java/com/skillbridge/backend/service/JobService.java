@@ -797,13 +797,17 @@ public class JobService {
         job.setModerationStatus(ModerationStatus.YELLOW);
         job.setModerationScore(0f);
 
-        jobSkillRepository.deleteByJobId(jobId);
+        job.getJobSkills().clear();
 
-        List<JobSkill> jobSkills = new ArrayList<>();
+        Set<String> processedSkillIds = new HashSet<>();
         StringBuilder textBuilder = new StringBuilder();
         StringBuilder skillBuilder = new StringBuilder();
 
         for (JobSkillRequest skillRequest : request.getSkills()) {
+            if (processedSkillIds.contains(skillRequest.getSkillId())) {
+                continue;
+            }
+
             Skill skill = skillRepository.findById(skillRequest.getSkillId())
                     .orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_FOUND));
 
@@ -813,14 +817,13 @@ public class JobService {
                     .isRequired(skillRequest.getIsRequired())
                     .build();
 
-            jobSkills.add(jobSkill);
+            job.getJobSkills().add(jobSkill);
+            processedSkillIds.add(skillRequest.getSkillId());
 
             if (skill.getName() != null) {
                 skillBuilder.append(skill.getName()).append(", ");
             }
         }
-
-        jobSkillRepository.saveAll(jobSkills);
         textBuilder.append(job.getPosition()).append(". ");
         textBuilder.append(job.getDescription()).append(". ");
 
@@ -836,30 +839,30 @@ public class JobService {
         textBuilder.append(job.getSalaryMin()).append(". ");
         textBuilder.append(job.getSalaryMax()).append(". ");
 
-        if (skillBuilder.length() > 0) {
+        if (!skillBuilder.isEmpty()) {
             textBuilder.append(skillBuilder.substring(0, skillBuilder.length() - 2));
         }
 
-        String textFinal = textBuilder.toString();
-
         try {
-            float[] vector = embeddingService.createEmbedding(textFinal);
+            float[] vector = embeddingService.createEmbedding(textBuilder.toString());
             job.setVectorEmbedding(vector);
         } catch (Exception e) {
             e.printStackTrace();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
+
         jobRepository.save(job);
+
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                System.out.println("ddang chayj chuc nang sapm");
+                System.out.println("Đang chạy chức năng duyệt AI bất đồng bộ...");
                 aiJobService.ai_Check_Approval(jobId);
             }
         });
+
         return job;
     }
-
     public Job deleteJD(String id, int type) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();

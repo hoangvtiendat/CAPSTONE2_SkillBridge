@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { toast, Toaster } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons";
-import { Plus, Search, Trash2, X } from 'lucide-react';
+import { Plus, Search, Trash2, X } from 'lucide-react'; 
 
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
@@ -19,7 +19,41 @@ const toastStyles = {
     error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
 };
 
-const API_BASE_URL = "http://localhost:8081/identity";
+const normalizeSkillName = (value) => String(value || '').trim().toLowerCase();
+
+const dedupeSkills = (skills = []) => {
+    const deduped = [];
+
+    skills.forEach((skill) => {
+        const skillId = String(skill?.skillId || '').trim();
+        const skillName = normalizeSkillName(skill?.name);
+        if (!skillId && !skillName) return;
+
+        const existingIndex = deduped.findIndex((item) => {
+            const sameId = skillId && item.skillId && item.skillId === skillId;
+            const sameName = skillName && item.name && item.name === skillName;
+            return sameId || sameName;
+        });
+
+        if (existingIndex === -1) {
+            deduped.push({
+                skillId,
+                name: skillName,
+                isRequired: Boolean(skill?.isRequired)
+            });
+            return;
+        }
+
+        const prev = deduped[existingIndex];
+        deduped[existingIndex] = {
+            skillId: prev.skillId || skillId,
+            name: prev.name || skillName,
+            isRequired: Boolean(prev.isRequired || skill?.isRequired)
+        };
+    });
+
+    return deduped;
+};
 
 const DetailJD = () => {
     const { id } = useParams();
@@ -28,7 +62,7 @@ const DetailJD = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
-
+    
     const [editForm, setEditForm] = useState(null);
     const [dynamicTitles, setDynamicTitles] = useState([]);
     const [initialFormState, setInitialFormState] = useState(null);
@@ -75,7 +109,7 @@ const DetailJD = () => {
         try {
             const response = await categoryJDService.getListCategories();
             const data = response?.data?.data || response?.data || response || [];
-            setCategories(Array.isArray(data) ? data : []);
+            setCategories(Array.isArray(data) ? data : []); 
         } catch (error) {
             toast.error("Lỗi khi tải danh mục", { style: toastStyles.error });
         }
@@ -99,42 +133,25 @@ const DetailJD = () => {
     }, [editForm?.categoryId]);
 
     const handleOpenModal = () => {
-        if (hasAppliedCandidate) {
-            toast.warning('Không thể chỉnh sửa JD', {
-                description: 'Hiện tại JD này đã có người ứng tuyển',
-                style: toastStyles.warning
-            });
-            return;
-        }
 
         let initialTitles = [];
-        // Xử lý an toàn trường hợp title là String hoặc Object
-        let parsedTitle = jdDetail.title;
-        if (typeof parsedTitle === 'string') {
-            try {
-                parsedTitle = JSON.parse(parsedTitle);
-            } catch (e) {
-                parsedTitle = {};
-            }
-        }
-
-        if (parsedTitle && Object.keys(parsedTitle).length > 0) {
-            initialTitles = Object.entries(parsedTitle).map(([k, v]) => ({ key: k, value: v }));
+        if (jdDetail.title && Object.keys(jdDetail.title).length > 0) {
+            initialTitles = Object.entries(jdDetail.title).map(([k, v]) => ({ key: k, value: v }));
         } else {
             initialTitles = [{ key: "Quyền lợi", value: "" }, { key: "Yêu cầu", value: "" }];
         }
-
+        
         const mappedSkills = (jdDetail.skills || []).map(s => {
             let extractedId = s.skillId || s.id || s._id;
             if (!extractedId && s.skill) extractedId = s.skill.id || s.skill._id;
             let extractedName = s.name || s.skillName || s.title;
             if (!extractedName && s.skill) extractedName = s.skill.name || s.skill.title;
             const extractedRequired = s.isRequired !== undefined ? s.isRequired : (s.required || false);
-
+            
             return {
-                skillId: String(extractedId || ""),
+                skillId: String(extractedId || ""), 
                 isRequired: extractedRequired,
-                name: String(extractedName || "").trim().toLowerCase()
+                name: normalizeSkillName(extractedName)
             };
         });
 
@@ -145,7 +162,7 @@ const DetailJD = () => {
             location: jdDetail.location || "",
             salaryMin: jdDetail.salaryMin || "",
             salaryMax: jdDetail.salaryMax || "",
-            skills: mappedSkills
+            skills: dedupeSkills(mappedSkills)
         };
 
         setDynamicTitles(initialTitles);
@@ -157,9 +174,10 @@ const DetailJD = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditForm(null);
-        setInitialFormState(null);
+        setInitialFormState(null); 
         setSkillSearchTerm("");
     };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setEditForm(prev => ({ ...prev, [name]: value }));
@@ -234,7 +252,9 @@ const DetailJD = () => {
             return { skillId: realSkill ? String(realSkill.id || realSkill._id) : s.skillId, isRequired: s.isRequired };
         });
 
-        const payloadToSubmit = { ...editForm, title: titleObject, skills: cleanSkills };
+        const dedupedCleanSkills = dedupeSkills(cleanSkills).filter(s => s.skillId);
+
+        const payloadToSubmit = { ...editForm, title: titleObject, skills: dedupedCleanSkills };
 
         setIsUpdating(true);
         try {
@@ -259,7 +279,7 @@ const DetailJD = () => {
     if (loading) return <div className="loading-container"><div className="spinner"></div><p>Đang tải dữ liệu...</p></div>;
     if (!jdDetail) return <div className="error-container">Không tìm thấy thông tin JD</div>;
 
-    const statusText = jdDetail.status || "PENDING";
+    const statusText = jdDetail.status || "PENDING"; 
     const getStatusClass = (status) => {
         if (!status) return 'status-pending';
         switch(status.toUpperCase()) {
@@ -283,19 +303,14 @@ const DetailJD = () => {
     return (
         <div className="jd-board-container detail-view-container">
             <Toaster position="top-right" />
-
+            
             <header className="detail-header-card form-card">
                 <div className="header-company-info">
-                    <img
-                        src={jdDetail.company?.logoUrl ? `${API_BASE_URL}${jdDetail.company.logoUrl}` : "https://via.placeholder.com/80"}
-                        alt="Logo"
-                        className="company-logo-large"
-                    />
+                    <img src={jdDetail.company?.logoUrl || "https://via.placeholder.com/80"} alt="Logo" className="company-logo-large" />
                     <div>
                         <h1 className="job-title-large">{jdDetail.position}</h1>
                         <p className="company-name-large">
-                            <FontAwesomeIcon icon={faBuilding}
-                                             className="icon-sm"/> {jdDetail.company?.name || "Tên công ty chưa cập nhật"}
+                            <FontAwesomeIcon icon={faBuilding} className="icon-sm" /> {jdDetail.company?.name || "Tên công ty chưa cập nhật"}
                         </p>
                     </div>
                 </div>
@@ -304,7 +319,13 @@ const DetailJD = () => {
                         {getStatusText(statusText)}
                     </span>
                     <span title={hasAppliedCandidate ? 'Hiện tại JD này đã có người ứng tuyển' : ''}>
-                        <button className="btn-primary" onClick={handleOpenModal} disabled={hasAppliedCandidate}>
+                        <button
+                            className={`btn-primary ${hasAppliedCandidate ? 'btn-edit-locked' : ''}`}
+                            type="button"
+                            onClick={handleOpenModal}
+                            disabled={hasAppliedCandidate}
+                            aria-disabled={hasAppliedCandidate}
+                        >
                             Chỉnh sửa JD
                         </button>
                     </span>
@@ -376,11 +397,11 @@ const DetailJD = () => {
                 </div>
             </div>
 
-
+         
             {isModalOpen && editForm && (
                 <div className="modal-overlay-modern">
                     <div className="modal-container-modern">
-
+                        
                         <div className="modal-header-modern">
                             <h2>Cập nhật mô tả công việc (JD)</h2>
                             <button onClick={handleCloseModal} className="btn-close-icon"><X size={24} /></button>
@@ -388,7 +409,7 @@ const DetailJD = () => {
 
                         <form onSubmit={handleUpdateSubmit} className="modal-body-scroll">
                             <div className="jd-board-layout" style={{ gap: '20px' }}>
-
+                                
                                 {/* Cột Trái Modal */}
                                 <div className="layout-main-column">
                                     <div className="form-card">
@@ -404,7 +425,7 @@ const DetailJD = () => {
                                                     <option value="">-- Chọn --</option>
                                                     {categories.map(cat => (
                                                         <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name || cat.categoryName}</option>
-                                                    ))}
+                                                     ))}
                                                 </select>
                                             </div>
                                         </div>
@@ -424,7 +445,7 @@ const DetailJD = () => {
                                                     <Plus size={16} /> Thêm mục
                                                 </button>
                                             </div>
-                                            <div className="dynamic-body job-feed">
+                                            <div className="dynamic-body">
                                                 {dynamicTitles.map((item, index) => (
                                                     <div key={index} className="dynamic-row">
                                                         <input
@@ -468,7 +489,7 @@ const DetailJD = () => {
                                         <div className="salary-group">
                                             <div className="input-item">
                                                 <label>Lương Tối thiểu</label>
-                                                <input
+                                               <input
                                                     type="text"
                                                     name="salaryMin"
                                                     value={editForm.salaryMin ? Number(editForm.salaryMin).toLocaleString('vi-VN') : ''}
@@ -484,7 +505,7 @@ const DetailJD = () => {
                                             </div>
                                             <div className="input-item">
                                                 <label>Lương Tối đa</label>
-                                                <input
+                                                 <input
                                                     type="text"
                                                     name="salaryMax"
                                                     value={editForm.salaryMax ? Number(editForm.salaryMax).toLocaleString('vi-VN') : ''}
@@ -541,7 +562,7 @@ const DetailJD = () => {
                                     </div>
                                 </div>
                             </div>
-
+                            
                             <div className="modal-footer-modern">
                                 <button type="button" className="btn-secondary" onClick={handleCloseModal}>Hủy bỏ</button>
                                 {isFormChanged && (
