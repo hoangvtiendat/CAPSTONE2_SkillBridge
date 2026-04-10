@@ -851,8 +851,6 @@ public class JobService {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
 
-        jobRepository.save(job);
-
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
@@ -860,6 +858,8 @@ public class JobService {
                 aiJobService.ai_Check_Approval(jobId);
             }
         });
+        jobRepository.save(job);
+
 
         return job;
     }
