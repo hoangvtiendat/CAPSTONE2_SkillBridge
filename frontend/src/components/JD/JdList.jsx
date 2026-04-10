@@ -301,9 +301,14 @@ const JdList = () => {
                                                 )}
                                                 
                                                 {canReopenJob(jd.status) && (
-                                                    <button className="text-success" onClick={(e) => handleReopenJd(e, jd.id)}>
-                                                        <RefreshCcw size={14} /> Đăng lại bài
-                                                    </button>
+                                                    <>
+                                                        <button onClick={(e) => { e.stopPropagation(); navigate(`/recruiter/jobs/${jd.id}/potential`); }}>
+                                                            <Target size={14} /> Săn nhân tài
+                                                        </button>
+                                                        <button className="text-success" onClick={(e) => handleReopenJd(e, jd.id)}>
+                                                            <RefreshCcw size={14} /> Đăng lại bài
+                                                        </button>
+                                                    </>
                                                 )}
 
                                                 {jd.status !== 'CLOSED' && (
