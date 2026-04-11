@@ -2,10 +2,7 @@ package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
-import com.skillbridge.backend.dto.response.AdminJobFeedResponse;
-import com.skillbridge.backend.dto.response.ApiResponse;
-import com.skillbridge.backend.dto.response.JobDetailResponse;
-import com.skillbridge.backend.dto.response.JobResponse;
+import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -236,5 +233,15 @@ public class JobController {
             ex.printStackTrace();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
+    }
+
+    @GetMapping("/applied")
+    public ResponseEntity<ApiResponse<List<AppliedJobResponse>>> getAppliedJobs() {
+        List<AppliedJobResponse> result = jobService.getMyAppliedJobs();
+        ApiResponse<List<AppliedJobResponse>> response = ApiResponse.<List<AppliedJobResponse>>builder()
+                .result(result)
+                .message("Lấy danh sách công việc đã ứng tuyển thành công")
+                .build();
+        return ResponseEntity.ok(response);
     }
 }

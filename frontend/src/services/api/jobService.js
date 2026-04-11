@@ -249,6 +249,16 @@ const jobService = {
         return response.data;
     },
 
+    getAppliedJobs: async () => {
+        try {
+            const response = await api.get('/jobs/applied');
+            return response.data.result;
+        } catch (error) {
+            console.error('Error fetching applied jobs:', error);
+            throw error;
+        }
+    },
+
 };
 
 export default jobService;

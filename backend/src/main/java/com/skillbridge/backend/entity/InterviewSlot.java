@@ -30,8 +30,26 @@ public class InterviewSlot extends BaseEntity {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
+    @Column(name = "location_link", length = 500)
+    private String locationLink;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "capacity", nullable = false)
+    @Builder.Default
+    private Integer capacity = 1;
+
+    @Column(name = "current_occupancy", nullable = false)
+    @Builder.Default
+    private Integer currentOccupancy = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private SlotStatus status = SlotStatus.AVAILABLE;
+
+    public boolean isFull() {
+        return currentOccupancy >= capacity;
+    }
 }

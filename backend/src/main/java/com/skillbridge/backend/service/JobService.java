@@ -3,14 +3,12 @@ package com.skillbridge.backend.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.dto.request.CVJobEvaluationRequest;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.enums.*;
-
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
@@ -20,10 +18,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -69,6 +67,7 @@ public class JobService {
     CVJobEvaluationRepository cvJobEvaluationRepository;
     AIJobService aiJobService;
     MailServiceImpl mailService;
+
     @NonFinal
     @Value("${mail.username}")
     String senderEmail;
@@ -1042,5 +1041,29 @@ public class JobService {
             throw new RuntimeException(ErrorCode.JOB_NOT_FOUND.getMessage());
         }
     }
+
+    /**
+     * Lấy danh sách apply của tôi
+     */
+    public List<AppliedJobResponse> getMyAppliedJobs() {
+        String currentUserId = securityUtils.getCurrentUser().getUserId();
+
+        List<Application> applications = applicationRepository.findAllByCandidateIdOrderByCreatedAtDesc(currentUserId);
+        return applications.stream()
+            .map(app -> AppliedJobResponse.builder()
+                .applicationId(app.getId())
+                .jobId(app.getJob().getId())
+                .jobPosition(app.getJob().getPosition())
+                .companyName(app.getJob().getCompany().getName())
+                .companyLogo(app.getJob().getCompany().getImageUrl())
+                .location(app.getJob().getLocation())
+                .salaryMin(app.getJob().getSalaryMin())
+                .salaryMax(app.getJob().getSalaryMax())
+                .status(app.getStatus())
+                .appliedAt(app.getCreatedAt())
+                .build())
+            .collect(Collectors.toList());
+    }
+
 
 }
