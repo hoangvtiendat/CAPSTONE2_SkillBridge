@@ -1,15 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
 import { toast, Toaster } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons";
-import { Plus, Search, Trash2, X } from 'lucide-react';
-
+import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons"
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 import applicationService from '../../services/api/applicationService';
-
+import { useParams, useNavigate } from 'react-router-dom';
+import { Plus, Search, Trash2, X, Users } from 'lucide-react';
 import './DetailJD.css';
 
 
@@ -22,10 +20,10 @@ const toastStyles = {
 const API_BASE_URL = "http://localhost:8081/identity";
 
 const DetailJD = () => {
-    const { id } = useParams();
     const [jdDetail, setJdDetail] = useState(null);
     const [loading, setLoading] = useState(true);
-
+    const { id } = useParams();
+    const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
 
@@ -303,6 +301,21 @@ const DetailJD = () => {
                     <span className={`status-badge-modern ${getStatusClass(statusText)}`}>
                         {getStatusText(statusText)}
                     </span>
+                    <button
+                        className="btn-secondary flex items-center gap-2"
+                        onClick={() => navigate(`/recruiter/jobs/${id}/applications`)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            backgroundColor: '#f1f5f9',
+                            color: '#334155',
+                            border: '1px solid #cbd5e1'
+                        }}
+                    >
+                        <Users size={18}/>
+                        Xem danh sách ứng tuyển
+                    </button>
                     <span title={hasAppliedCandidate ? 'Hiện tại JD này đã có người ứng tuyển' : ''}>
                         <button className="btn-primary" onClick={handleOpenModal} disabled={hasAppliedCandidate}>
                             Chỉnh sửa JD
@@ -319,7 +332,7 @@ const DetailJD = () => {
 
             <div className="jd-board-layout">
                 <div className="layout-main-column">
-                    <section className="form-card content-card">
+                <section className="form-card content-card">
                         <h3 className="card-title">Mô tả công việc</h3>
                         <div className="text-content">{jdDetail.description}</div>
 

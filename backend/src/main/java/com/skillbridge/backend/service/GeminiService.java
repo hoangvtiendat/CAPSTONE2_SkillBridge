@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -42,6 +44,11 @@ public class GeminiService {
     /**
      * Gọi Gemini API và tự động parse kết quả về Object mong muốn
      */
+    @Retryable(
+            retryFor = { HttpStatusCodeException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000, multiplier = 2)
+    )
     public <T> T callGemini(String prompt, Class<T> responseType) {
         String url = String.format("https://generativelanguage.googleapis.com/v1/models/%s:generateContent?key=%s",
                 modelName, apiKey);
@@ -80,9 +87,18 @@ public class GeminiService {
                 log.error("JSON vẫn không thể parse sau khi sửa: {}", jsonStr);
                 throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
             }
+        } catch (HttpStatusCodeException e) {
+            // Đạt chú ý: Đây là nơi bắt các lỗi HTTP như 429 (Rate Limit) hoặc 503 (Overloaded)
+            log.error("Gemini API HTTP Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+
+            if (e.getStatusCode().value() == 503 || e.getStatusCode().value() == 429) {
+                throw new AppException(ErrorCode.AI_SERVICE_BUSY);
+            }
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         } catch (Exception e) {
             log.error("Gemini API Error: {}", e.getMessage());
             throw new AppException(ErrorCode.INVALID_JSON_FORMAT);
         }
+
     }
 }

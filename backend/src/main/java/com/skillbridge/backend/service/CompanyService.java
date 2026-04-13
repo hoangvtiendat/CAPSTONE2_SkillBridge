@@ -441,6 +441,7 @@ public class CompanyService {
             throw new AppException(ErrorCode.INVALID_STATUS);
         }
 
+
         if (newStatus == JoinRequestStatus.APPROVED) {
             joinRequest.setStatus(JoinRequestStatus.APPROVED);
             boolean alreadyMember = companyMemberRepository
@@ -461,7 +462,11 @@ public class CompanyService {
         } else {
             throw new AppException(ErrorCode.INVALID_STATUS);
         }
+
         companyJoinRequestRepository.save(joinRequest);
+        User user = userRepository.findById(joinRequest.getUser().getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setRole("RECRUITER");
+
 
         String subject = "[SkillBridge] Kết quả yêu cầu tham gia công ty";
         String content =

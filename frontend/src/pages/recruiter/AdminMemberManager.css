@@ -10,7 +10,29 @@
     align-items: center;
     margin-bottom: 24px;
 }
+/* 1. Đặt relative cho thẻ cha để làm gốc tọa độ */
+.section-card.pending-section {
+    position: relative;
+}
 
+/* 2. Style chính xác cho thanh màu bên trái theo ảnh DevTools */
+.section-card.pending-section::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 15%;          /* Căn từ trên xuống 15% */
+    height: 70%;       /* Chiều cao chỉ chiếm 70% thẻ */
+    width: 6px;        /* Độ dày 6px */
+    border-radius: 0 100px 100px 0; /* Bo tròn hoàn toàn góc trên-phải và dưới-phải */
+
+    /* Màu sắc và hiệu ứng Glow */
+    background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+    box-shadow: 2px 0 15px rgba(245, 158, 11, 0.5);
+
+    /* Hiệu ứng chuyển động (nếu có hover) */
+    transition: all 0.4s ease; /* Trong ảnh của bạn là var(--bezier), tôi dùng 'ease' thay thế nếu bạn chưa định nghĩa biến đó */
+    z-index: 2;
+}
 .manager-header h2 {
     font-size: 24px;
     font-weight: 700;
@@ -46,7 +68,6 @@
 }
 
 .pending-section {
-    border-left: 4px solid #f59e0b;
 }
 
 .section-title {

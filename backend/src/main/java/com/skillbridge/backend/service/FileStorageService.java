@@ -39,7 +39,15 @@ public class FileStorageService {
     @PostConstruct
     public void init() {
         try {
-            this.rootLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+            String userDir = System.getProperty("user.dir");
+            String targetDir = uploadDir; // mặc định là "uploads" lấy từ application.properties
+
+            // Ép buộc thư mục uploads phải nằm trong thư mục backend/
+            if (!userDir.endsWith("backend")) {
+                targetDir = "backend/" + uploadDir;
+            }
+
+            this.rootLocation = Paths.get(targetDir).toAbsolutePath().normalize();
             Files.createDirectories(this.rootLocation);
             log.info("Thư mục lưu trữ file đã sẵn sàng: {}", this.rootLocation);
         } catch (IOException e) {

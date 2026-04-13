@@ -98,7 +98,7 @@ public class CandidateController {
     public ResponseEntity<ApiResponse<UpdateCandidateCvResponse>> updateCv(
             @AuthenticationPrincipal CustomUserDetails user,
             @RequestPart("data") UpdateCandidateCvRequest request,
-            @RequestPart("cv") MultipartFile cv
+            @RequestPart(value = "cv", required = false) MultipartFile cv
     ) {
         try {
             UpdateCandidateCvResponse result = candidateService.updateCv(user.getUserId(), request, cv);

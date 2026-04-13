@@ -62,8 +62,14 @@ export const CVParser = () => {
                             skillName: s.skillName || s.name || 'Không có kĩ năng',
                             experienceYears: s.experienceYears || 1
                         })) : [],
-                        degrees: res.degrees || [],
-                        experience: res.experience || []
+                        degrees: (res.degrees || []).map(d => ({
+                            ...d,
+                            id: d.id || Date.now() + Math.random()
+                        })),
+                        experience: (res.experience || []).map(e => ({
+                            ...e,
+                            id: e.id || Date.now() + Math.random()
+                        }))
                     }));
                 }
             } catch (error) {
@@ -368,10 +374,6 @@ export const CVParser = () => {
     // Save
     const handleSave = async () => {
         try {
-            if (!cvFile) {
-                toast.error("Vui lòng upload CV trước khi lưu!");
-                return;
-            }
             const payload = {
                 name: cvData.name,
                 description: cvData.description,
@@ -445,7 +447,7 @@ export const CVParser = () => {
 
                         {cvFile && (
                             <div className="mt-2 text-sm text-green-600 text-center">
-                                ✅ Đã chọn file: {cvFile.name}
+                                Đã chọn file: {cvFile.name}
                             </div>
                         )} </>
                     )}
@@ -816,7 +818,6 @@ export const CVParser = () => {
                         <button
                             className="btn-primary flex items-center gap-2 px-8 py-3 text-lg"
                             onClick={handleSave}
-                            disabled={!cvFile}
                         >
                             <Save size={20}/> Lưu Hồ Sơ
                         </button>

@@ -1,257 +1,397 @@
-/* --- 1. Tổng thể & Layout --- */
-.app-detail-wrapper {
-    padding: 32px 24px;
-    max-width: 1440px; /* Tăng độ rộng để xem CV thoải mái hơn */
+/* ================================
+   WRAPPER
+================================ */
+.apd-wrapper {
+    position: relative;
+    font-family: 'Inter', sans-serif;
+    color: var(--lg-text);
+    z-index: 1;
+    /*background:*/
+    /*        radial-gradient(circle at top left, rgba(96,165,250,0.18), transparent 28%),*/
+    /*        radial-gradient(circle at top right, rgba(236,72,153,0.12), transparent 26%),*/
+    /*        radial-gradient(circle at bottom center, rgba(59,130,246,0.10), transparent 30%),*/
+    /*        linear-gradient(180deg, var(--lg-bg-1) 0%, var(--lg-bg-2) 55%, var(--lg-bg-3) 100%);*/
+}
+
+.apd-wrapper::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+            linear-gradient(135deg, rgba(255,255,255,0.22), transparent 30%),
+            linear-gradient(315deg, rgba(255,255,255,0.12), transparent 35%);
+    opacity: 0.8;
+
+}
+
+
+/* ================================
+   BACK BUTTON
+================================ */
+.apd-btn-back {
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--lg-border);
+    backdrop-filter: var(--lg-blur);
+    border-radius: 999px;
+    padding: 10px 16px;
+    font-weight: 700;
+    box-shadow: var(--lg-shadow-soft);
+    transition: all 0.25s ease;
+}
+
+.apd-btn-back:hover {
+    transform: translateY(-2px);
+    color: var(--lg-accent-strong);
+    border-color: rgba(59,130,246,0.3);
+}
+
+
+/* ================================
+   CARD BASE
+================================ */
+.apd-card,
+.apd-sidebar-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255,255,255,0.65), rgba(255,255,255,0.35));
+    border: 1px solid var(--lg-border);
+    border-radius: var(--lg-radius-xl);
+    backdrop-filter: var(--lg-blur);
+    box-shadow: var(--lg-shadow);
+    overflow: hidden;
+    transition: all 0.25s ease;
+    margin: 20px;
+    padding: 20px;
+}
+.apd-btn-back{
+    margin-left: 20px;
+}
+
+.apd-card:hover,
+.apd-sidebar-card:hover {
+    transform: translateY(-3px);
+}
+
+.apd-card::before,
+.apd-sidebar-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.05));
+    pointer-events: none;
+    z-index: 0;
+}
+
+
+/* ================================
+   PROFILE
+================================ */
+.apd-avatar {
+    width: 96px;
+    height: 96px;
     margin: 0 auto;
-    background-color: #f8fafc;
-    min-height: 100vh;
-    box-sizing: border-box;
-    animation: fadeIn 0.4s ease-in-out;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(135deg, #dbeafe, #f0f9ff);
+    border: 4px solid white;
+    box-shadow: 0 10px 25px rgba(59,130,246,0.2);
 }
 
-.detail-grid {
-    display: grid;
-    grid-template-columns: 350px 1fr; /* Cố định sidebar, content tự giãn */
-    gap: 28px;
-    align-items: start;
+.apd-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 16px;
 }
 
-.btn-back {
+.apd-role {
+    font-size: 13px;
+    color: var(--lg-accent);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.apd-contact {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--lg-text-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+
+/* ================================
+   ACTION BUTTON
+================================ */
+.apd-actions {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 300px;
+}
+
+.apd-btn-primary {
+    background: linear-gradient(135deg, rgb(188 209 255 / 90%) 0%, rgb(255 255 255 / 90%) 100%);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    color: #225de4d1;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 20px rgb(85 139 255 / 32%), inset 0 1px 0 rgb(255 255 255 / 60%);
+    height: 45px;
+    border-radius: 48px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1)
+}
+
+.apd-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(59,130,246,0.35);
+}
+
+.apd-btn-danger {
+    background: linear-gradient(135deg, rgb(255 181 181 / 90%) 0%, rgb(255 255 255 / 90%) 100%);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    color: #db0a44d1;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 20px rgb(255 85 85 / 17%), inset 0 1px 0 rgb(255 255 255 / 60%);
+    height: 45px;
+    border-radius: 48px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.apd-btn-danger:hover {
+    background: rgba(239,68,68,0.2);
+}
+
+
+/* ================================
+   SECTION TITLE
+================================ */
+.apd-section-title {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #64748b;
-    font-weight: 600;
-    margin-bottom: 24px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: 0.2s;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--lg-text-muted);
+    margin-bottom: 16px;
 }
 
-.btn-back:hover {
-    color: #1e293b;
-    transform: translateX(-4px);
-}
 
-/* --- 2. Sidebar (Cột trái) --- */
-.sidebar-card {
-    background: white;
-    border-radius: 20px;
-    padding: 32px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-    position: sticky;
-    top: 24px; /* Giữ sidebar luôn hiện diện khi cuộn trang */
-    border: 1px solid #f1f5f9;
-}
-
-.profile-header h3 {
-    margin-top: 16px;
-    color: #1e293b;
-    font-size: 1.25rem;
-}
-
-/* --- 3. Content Area (Cột phải) --- */
-.main-content-area {
+/* ================================
+   TIMELINE
+================================ */
+.apd-timeline {
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    width: 100%; /* Đảm bảo luôn chiếm hết phần còn lại */
+    gap: 20px;
+    border-left: 2px solid rgba(59,130,246,0.2);
+    padding-left: 14px;
 }
 
-.info-card {
-    background: white;
-    border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-    width: 100% !important;
-    box-sizing: border-box;
-    border: 1px solid #f1f5f9;
+.apd-timeline-item {
+    position: relative;
 }
 
-.section-title {
-    font-size: 18px;
+.apd-timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    background: var(--lg-accent);
+    border-radius: 50%;
+}
+
+.apd-title {
     font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.apd-sub {
+    font-size: 12px;
+    color: var(--lg-text-muted);
+}
+
+.apd-major {
+    font-size: 12px;
+    color: var(--lg-accent);
+    font-weight: 600;
+}
+
+
+/* ================================
+   TEXT + SKILLS
+================================ */
+.apd-card-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    border-bottom: 2px solid #f1f5f9;
+    gap: 8px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.apd-border {
+    border-bottom: 1px solid rgba(255,255,255,0.4);
     padding-bottom: 12px;
 }
 
-/* --- 4. Nút bấm hành động --- */
-.action-group {
+.apd-text {
+    font-size: 14px;
+    color: var(--lg-text-soft);
+    line-height: 1.6;
+}
+
+.apd-skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.apd-skill {
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.2);
+    color: var(--lg-success-text);
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+
+.apd-skill:hover {
+    transform: translateY(-2px);
+}
+
+
+/* ================================
+   EXPERIENCE
+================================ */
+.apd-exp-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-top: 24px;
+    gap: 20px;
 }
 
-.btn-accept, .btn-reject {
+.apd-exp-item {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid rgba(255,255,255,0.5);
+    transition: all 0.25s ease;
+}
+
+.apd-exp-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(59,130,246,0.3);
+}
+
+.apd-exp-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.apd-exp-date {
+    font-size: 11px;
     font-weight: 700;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 15px;
+    background: rgba(255,255,255,0.6);
+    padding: 4px 8px;
+    border-radius: 8px;
 }
 
-.btn-accept {
-    background: #16a34a;
-    color: white;
-}
 
-.btn-accept:hover {
-    background: #15803d;
-    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
-}
-
-.btn-reject {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.btn-reject:hover {
-    background: #fecaca;
-}
-
-/* --- 5. CV Viewer (Xử lý giãn ngang triệt để) --- */
-.info-card.cv-viewer-container {
-    padding: 0 !important; /* Bỏ padding để khung đen sát mép card */
+/* ================================
+   CV VIEWER
+================================ */
+.apd-cv {
     overflow: hidden;
 }
 
-.cv-viewer-header {
+.apd-cv-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    background: #1e293b;
+    gap: 10px;
+    padding: 14px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
     color: white;
-    padding: 14px 24px;
-}
-
-.cv-iframe-responsive {
-    width: 100% !important;
-    min-width: 100% !important;
-    height: 850px !important; /* Chiều cao cố định chuẩn để đọc CV */
-    border: none !important;
-    display: block !important;
-}
-
-/* Container bọc iframe để đảm bảo layout không bị vỡ */
-.pdf-container-full {
-    width: 100% !important;
-    display: block !important;
-    background-color: #f1f5f9;
-}
-
-/* --- 6. Qualifications Timeline --- */
-.qualification-item {
-    border-left: 3px solid #3b82f6;
-    padding-left: 20px;
-    margin-bottom: 24px;
-    position: relative;
-}
-
-
-
-.recommendation-text {
-    color: #475569;
-    font-style: italic;
-    line-height: 1.6;
-    padding: 16px;
-    background: #f8fafc;
-    border-radius: 12px;
-}
-/* Tạo dấu chấm cho Timeline */
-.qualification-item {
-    position: relative;
-}
-
-
-.qualification-item:last-child {
-    border-left-color: transparent;
-}
-
-.qualification-item:hover {
-    background-color: #f8fafc;
-    transition: 0.2s;
-}
-
-.qualification-item:hover::before {
-    background-color: #1d4ed8;
-    transform: scale(1.2);
-}
-
-.qualification-item {
-    position: relative;
-    padding-left: 28px;   /* Khoảng cách từ đường kẻ đến chữ */
-    padding-bottom: 28px; /* Dùng padding thay vì margin để đường kẻ liên tục */
-    border-left: 2px solid #3b82f6; /* Đường kẻ xanh */
-}
-
-/* Dấu chấm tròn */
-.qualification-item::before {
-    content: '';
-    position: absolute;
-    left: -9px;
-    top: 4px;
-    width: 12px;
-    height: 12px;
-    background-color: #3b82f6;
-    border: 2px solid white; /* Viền trắng để nổi bật trên đường kẻ */
-    border-radius: 50%;
-    z-index: 2;
-}
-
-/* Xử lý mục cuối cùng: Không cho đường kẻ thừa đâm xuống dưới */
-.qualification-item:last-child {
-    border-left: 2px solid transparent;
-}
-
-/* Tạo một đoạn kẻ ngắn phía trên dấu chấm cuối cùng để nối mạch */
-.qualification-item:last-child::after {
-    content: '';
-    position: absolute;
-    left: -2px;
-    top: 0;
-    height: 10px;
-    border-left: 2px solid #3b82f6;
-}
-
-/* Styling cho chữ */
-.qualification-title {
     font-weight: 700;
-    font-size: 14px;
-    color: #1e293b;
-    line-height: 1.4;
 }
 
-.qualification-sub {
-    font-size: 13px;
-    color: #64748b;
-    margin-top: 2px;
+.apd-download {
+    margin-left: auto;
+    background: white;
+    color: #1e293b;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    transition: all 0.2s;
 }
-/* --- 7. Animations & Responsive --- */
+
+.apd-download:hover {
+    transform: translateY(-1px);
+}
+
+.apd-cv-body {
+    background: #e5e7eb;
+    min-height: 700px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.apd-cv-body iframe {
+    width: 100%;
+    height: 700px;
+    border: none;
+}
+
+
+/* ================================
+   STATES
+================================ */
+.apd-error {
+    text-align: center;
+    color: var(--lg-danger-text);
+}
+
+.apd-loading {
+    text-align: center;
+    color: var(--lg-text-soft);
+}
+
+.apd-empty {
+    color: var(--lg-text-muted);
+    font-style: italic;
+}
+.apd-card {
+    animation: fadeIn 0.4s ease;
+}
+
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 1100px) {
-    .detail-grid {
-        grid-template-columns: 1fr; /* Chuyển sang 1 cột trên iPad/Mobile */
-    }
+.apd-skill:hover {
+    box-shadow: 0 4px 12px rgba(34,197,94,0.3);
+}
 
-    .sidebar-card {
-        position: relative;
-        top: 0;
-    }
-
-    .cv-iframe-responsive {
-        height: 600px !important; /* Giảm chiều cao trên màn hình nhỏ */
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 1024px) {
+    .apd-grid {
+        grid-template-columns: 1fr;
     }
 }

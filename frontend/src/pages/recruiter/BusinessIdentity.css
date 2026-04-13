@@ -189,10 +189,10 @@
     width: 221px !important;
     height: 48px;
     margin-top: 0;
-    background: linear-gradient(135deg, rgb(255 210 210 / 37%) 0%, rgb(255 255 255 / 90%) 100%);
+    background: linear-gradient(135deg, rgba(216, 255, 210, 0.37) 0%, rgb(255 255 255 / 90%) 100%);
     backdrop-filter: blur(8px) saturate(150%);
     -webkit-backdrop-filter: blur(8px) saturate(150%);
-    color: #ff0000d1 !important;
+    color: rgba(55, 227, 35, 0.82) !important;
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 44px !important;
     font-weight: 700;
@@ -202,7 +202,28 @@
     align-items: center;
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    box-shadow: 0 15px 14px rgb(255 144 144 / 10%), inset 0 1px 0 rgb(255 255 255 / 60%) !important;
+    box-shadow: 0 15px 14px rgba(155, 255, 144, 0.1), inset 0 1px 0 rgb(255 255 255 / 60%) !important;
+
+}
+
+
+.btn-success:hover:not(:disabled) {
+    transform: scale(1.01) translateY(0px);
+    background: linear-gradient(135deg, rgba(142, 255, 125, 0.46) 0%, rgb(255 255 255 / 90%) 100%);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+    cursor: pointer;
+}
+
+.btn-success:active {
+    transform: scale(0.98);
+}
+
+.btn-success:disabled {
+    background: rgba(148, 163, 184, 0.3);
+    color: rgba(255, 255, 255, 0.5);
+    border-color: transparent;
+    box-shadow: none;
+    cursor: not-allowed;
 }
 
 /* --- Step 3: Info List (Glass Rows) --- */
