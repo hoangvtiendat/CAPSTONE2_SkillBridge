@@ -57,6 +57,29 @@ public class ApplicationService {
         return applications;
     }
 
+    public List<Application> getApplicationsByCompanyId(String companyId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        
+        // Verify user is member of the company
+        companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+        
+        return applicationRepository.findByJob_Company_Id(companyId);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteApplication(String id) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+        
+        // Verify recruiter belongs to the company that owns the job
+        companyMemberRepository.findByCompany_IdAndUser_Id(application.getJob().getCompany().getId(), currentUser.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+        
+        applicationRepository.delete(application);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public String respondToApplication(String id, RespondToApplicationRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
@@ -118,6 +141,7 @@ public class ApplicationService {
             case INTERVIEW -> "Mời phỏng vấn";
             case HIRED -> "Đã thuê";
             case REJECTED -> "Từ chối hồ sơ";
+            case TALENT_POOL -> "Kho ứng viên tiềm năng";
             default -> status.toString();
         };
     }

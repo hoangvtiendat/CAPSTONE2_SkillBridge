@@ -108,4 +108,22 @@ public class ApplicationController {
         }
         return null;
     }
+
+    /**
+     * Lấy toàn bộ đơn ứng tuyển của một công ty
+     */
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<ApiResponse<List<Application>>> getApplicationsByCompanyId(@PathVariable String companyId) {
+        List<Application> rs = applicationService.getApplicationsByCompanyId(companyId);
+        return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Lấy danh sách ứng viên công ty thành công", rs));
+    }
+
+    /**
+     * Xóa đơn ứng tuyển
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteApplication(@PathVariable String id) {
+        applicationService.deleteApplication(id);
+        return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Xóa ứng viên thành công", null));
+    }
 }

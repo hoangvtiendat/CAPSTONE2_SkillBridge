@@ -2,8 +2,8 @@ package com.skillbridge.backend.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skillbridge.backend.entity.ChatDocument;
-import com.skillbridge.backend.repository.ChatDocumentRepository;
+import com.skillbridge.backend.entity.KnowledgeBase;
+import com.skillbridge.backend.repository.KnowledgeBaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,14 +17,14 @@ import java.util.PriorityQueue;
 @RequiredArgsConstructor
 public class VectorSearchService {
 
-    private final ChatDocumentRepository repository;
+    private final KnowledgeBaseRepository repository;
     private final ObjectMapper objectMapper;
 
     /**
      * Tìm top K văn bản có độ tương đồng cosine cao nhất với query vector.
      */
-    public List<ChatDocument> searchTopK(float[] queryEmbedding, int k) {
-        List<ChatDocument> allDocs = repository.findAll();
+    public List<KnowledgeBase> searchTopK(float[] queryEmbedding, int k) {
+        List<KnowledgeBase> allDocs = repository.findAll();
 
         if (allDocs.isEmpty()) {
             return List.of();
@@ -35,7 +35,7 @@ public class VectorSearchService {
                 Comparator.comparingDouble(DocumentScore::score)
         );
 
-        for (ChatDocument doc : allDocs) {
+        for (KnowledgeBase doc : allDocs) {
             try {
                 float[] docEmbedding = objectMapper.readValue(doc.getEmbedding(), float[].class);
                 double score = cosineSimilarity(queryEmbedding, docEmbedding);
@@ -71,5 +71,5 @@ public class VectorSearchService {
         return dotProduct / (Math.sqrt(normV1) * Math.sqrt(normV2));
     }
 
-    private record DocumentScore(ChatDocument document, double score) {}
+    private record DocumentScore(KnowledgeBase document, double score) {}
 }

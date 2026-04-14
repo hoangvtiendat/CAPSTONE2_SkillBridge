@@ -1,7 +1,7 @@
 package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.dto.response.ChatResponse;
-import com.skillbridge.backend.entity.ChatDocument;
+import com.skillbridge.backend.entity.KnowledgeBase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -55,11 +55,11 @@ public class ChatService {
         float[] queryEmbedding = embeddingService.createEmbedding(message);
         log.debug("Embedded message in {} ms", (System.currentTimeMillis() - startTime));
 
-        // 2. Tìm top K documents (K=3)
-        List<ChatDocument> topDocs = vectorSearchService.searchTopK(queryEmbedding, 3);
+        // 2. Tìm top K documents (K=4)
+        List<KnowledgeBase> topDocs = vectorSearchService.searchTopK(queryEmbedding, 4);
         
         String context = topDocs.stream()
-                .map(ChatDocument::getContent)
+                .map(KnowledgeBase::getContent)
                 .collect(Collectors.joining("\n\n---\n\n"));
 
         log.debug("Found {} relevant documents for context", topDocs.size());

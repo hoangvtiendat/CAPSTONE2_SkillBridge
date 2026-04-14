@@ -80,12 +80,12 @@ jwt:
 # Cấu hình Gemini đã sửa lỗi
 gemini:
   api-key: ${GEMINI_API_KEY}
-  model: ${GEMINI_MODEL:gemini-1.5-flash}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
 
 file:
   upload-dir: ${FILE_UPLOAD_DIR:uploads}
 
 ai:
   ollama:
-    url: https://917d-118-69-176-76.ngrok-free.app
+    url: https://c558-113-176-195-9.ngrok-free.app
     model: skillbridge-qwen

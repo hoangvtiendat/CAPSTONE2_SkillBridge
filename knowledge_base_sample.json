@@ -1,18 +1,146 @@
 [
   {
-    "title": "Cách đăng bài tuyển dụng",
-    "content": "Để đăng bài tuyển dụng (JD) trên SkillBridge, bạn làm theo các bước sau:\n1. Đăng nhập với tài khoản Nhà tuyển dụng (Recruiter).\n2. Truy cập vào Dashboard hoặc menu Quản lý Tuyển dụng.\n3. Chọn mục 'Đăng tin mới' (Create JD).\n4. Điền đầy đủ thông tin vị trí cần tuyển dụng, mô tả công việc, mức lương và yêu cầu kỹ năng.\n5. Bấm 'Đăng bài' để lưu lên hệ thống."
+    "title": "Hướng dẫn đăng tin tuyển dụng (JD) hiệu quả cho doanh nghiệp",
+    "content": "Để thu hút ứng viên chất lượng cao, bạn cần thực hiện các bước sau:\n1. Vào mục 'Tạo tin tuyển dụng' (Create JD).\n2. Điền thông tin cơ bản: Vị trí (Position), Địa điểm (Location).\n3. Chọn Danh mục kỹ năng (Category): Đây là bước quan trọng để hệ thống gợi ý đúng kỹ năng chuyên môn.\n4. Mô tả chi tiết: Ngoài phần mô tả chung, hãy sử dụng tính năng 'Thêm mục' để bổ sung các phần như: 'Quyền lợi', 'Yêu cầu kỹ năng', 'Văn hóa công ty'.\n5. Thiết lập lương: Nhập mức lương tối thiểu và tối đa (VNĐ) để tăng tính minh bạch.\n6. Chọn Kỹ năng yêu cầu: Tích chọn các kỹ năng cần thiết và đánh dấu 'Bắt buộc' nếu kỹ năng đó là tiên quyết."
   },
   {
-    "title": "Quên mật khẩu",
-    "content": "Nếu bạn quên mật khẩu đăng nhập, vui lòng:\n1. Bấm vào nút 'Quên mật khẩu' tại màn hình Đăng nhập.\n2. Nhập địa chỉ Email đã đăng ký.\n3. Hệ thống sẽ gửi một mã OTP qua Email của bạn.\n4. Nhập mã OTP đó vào màn hình xác nhận.\n5. Tạo mật khẩu mới và đăng nhập lại."
+    "title": "Tính năng nổi bật: Chấm điểm tương thích AI (AI Matching Score)",
+    "content": "Điểm khác biệt lớn nhất của SkillBridge là khả năng chấm điểm tự động:\n1. Hệ thống sử dụng AI (Google Gemini) để quét CV ứng viên và so sánh với yêu cầu của JD.\n2. Điểm số được tính toán dựa trên độ phủ kỹ năng, số năm kinh nghiệm và mức độ phù hợp của bằng cấp.\n3. Nhà tuyển dụng có thể lọc danh sách theo điểm số từ cao xuống thấp để tìm ra những người phù hợp nhất chỉ trong vài giây."
   },
   {
-    "title": "Cập nhật thông tin",
-    "content": "Để cập nhật thông tin cá nhân hoặc thông tin công ty:\n1. Nếu là Ứng viên: Bấm vào Avatar góc trên bên phải, chọn 'Hồ sơ cá nhân'. Ở đó bạn có thể đổi ảnh, cập nhật kinh nghiệm, học vấn và kỹ năng.\n2. Nếu là Nhà tuyển dụng: Truy cập vào 'Settings' (Cài đặt) trong Dashboard, sau đó chọn 'Business Identity' để cập nhật giấy phép kinh doanh, hoặc cập nhật thông tin giới thiệu công ty."
+    "title": "Tính năng nổi bật: Tìm kiếm Ứng viên tiềm năng (Potential Candidates)",
+    "content": "SkillBridge không đợi ứng viên đến với bạn, hệ thống chủ động tìm kiếm họ:\n1. Ngay khi bạn đăng JD, AI sẽ quét toàn bộ data ứng viên trên nền tảng.\n2. Những ứng viên có Profile khớp với JD nhưng chưa nộp đơn sẽ xuất hiện trong tab 'Potential Candidates'.\n3. Bạn có thể nhấn 'Mời ứng tuyển' để gửi thông báo trực tiếp tới họ, giúp rút ngắn thời gian tìm kiếm talent."
   },
   {
-    "title": "Ứng dụng có chức năng gì",
-    "content": "SkillBridge là nền tảng kết nối ứng viên và nhà tuyển dụng. \nTính năng cho ứng viên: Tìm việc làm theo kỹ năng, tạo CV, gửi đơn ứng tuyển, theo dõi trạng thái, và tra cứu thông tin doanh nghiệp.\nTính năng cho nhà tuyển dụng: Đăng tin tuyển dụng (JD), quản lý hồ sơ ứng viên, đặt lịch phỏng vấn và quảng bá hình ảnh doanh nghiệp."
+    "title": "Tính năng nổi bật: Trợ lý AI (RAG Chatbot) hỗ trợ 24/7",
+    "content": "Hệ thống tích hợp Chatbot thông minh sử dụng công nghệ RAG (Retrieval-Augmented Generation):\n1. Chatbot được đào tạo dựa trên cơ sở dữ liệu (Knowledge Base) của chính hệ thống.\n2. Bạn có thể hỏi chatbot về mọi thứ: 'Làm sao để đổi mật khẩu?', 'Tìm cho tôi các việc làm ReactJS lương trên 20tr', 'Quy trình định danh công ty là gì?'.\n3. Trợ lý AI giúp giải đáp thắc mắc của người dùng ngay lập tức mà không cần đợi nhân viên hỗ trợ."
+  },
+  {
+    "title": "Tính năng nổi bật: Tự động trích xuất CV (AI CV Parsing)",
+    "content": "Tính năng này giúp ứng viên tiết kiệm 90% thời gian tạo hồ sơ:\n1. Ứng viên chỉ cần tải lên file CV (PDF/Word).\n2. AI sẽ tự động bóc tách: Họ tên, Email, SĐT, Kỹ năng, Công ty cũ, Học vấn và tự động điền vào Profile.\n3. Công cụ này cũng giúp chuẩn hóa dữ liệu CV để AI Matching hoạt động chính xác hơn."
+  },
+  {
+    "title": "Tính năng nổi bật: Báo cáo phân tích chuyên sâu (Recruitment Analytics)",
+    "content": "Dashboard dành cho nhà tuyển dụng cung cấp các chỉ số 'biết nói':\n1. Biểu đồ theo dõi lượt view và lượt ứng tuyển theo thời gian.\n2. Chỉ số Time-to-Hire: Thời gian trung bình từ lúc đăng tin đến lúc tuyển được người.\n3. Chỉ số Time-to-Fill: Tốc độ đóng các bài tuyển dụng.\n4. Phễu ứng tuyển: Giúp bạn nhận diện nút thắt cổ chai trong quy trình tuyển dụng (ví dụ: nhiều người xem nhưng ít người apply)."
+  },
+  {
+    "title": "Định danh doanh nghiệp (Business Verification) có vai trò gì?",
+    "content": "Định danh giúp bảo vệ cả ứng viên và doanh nghiệp:\n1. Doanh nghiệp được 'Tích xanh' xác thực sẽ tăng 50% tỉ lệ ứng tuyển.\n2. Quy trình bao gồm kiểm tra Mã số thuế và Giấy phép kinh doanh (GPKD).\n3. Admin hệ thống trực tiếp duyệt từng hồ sơ để loại bỏ các công ty 'ma' hoặc lừa đảo."
+  },
+  {
+    "title": "Hướng dẫn lấy lại mật khẩu khi bị quên",
+    "content": "Nếu bạn không thể đăng nhập do quên mật khẩu:\n1. Tại màn hình Đăng nhập, nhấn 'Quên mật khẩu?'.\n2. Nhập Email bạn đã dùng để đăng ký tài khoản.\n3. Một mã xác thực OTP sẽ được gửi đến Email của bạn.\n4. Nhập mã OTP vào hệ thống, sau đó bạn sẽ được chuyển đến trang 'Đặt lại mật khẩu'.\n5. Nhập mật khẩu mới và nhấn Xác nhận."
+  },
+  {
+    "title": "Cách cập nhật thông tin hồ sơ cá nhân (Ứng viên)",
+    "content": "Để hồ sơ luôn chuyên nghiệp:\n1. Nhấn vào Avatar góc trên bên phải, chọn 'Hồ sơ cá nhân'.\n2. Cập nhật Thông tin cơ bản, Kỹ năng, Kinh nghiệm làm việc và Học vấn.\n3. Nhấn 'Lưu thay đổi'. AI sẽ cập nhật lại điểm số Matching của bạn đối với các JD hiện có trên hệ thống."
+  },
+  {
+    "title": "Cách tìm kiếm công ty và việc làm hiệu quả",
+    "content": "Sử dụng bộ lọc thông minh:\n1. 'Tìm việc làm': Lọc theo mức lương, kỹ năng, địa điểm hoặc loại hình (Remote/Full-time).\n2. 'Tìm công ty': Xem văn hóa, môi trường làm việc và các đánh giá trước khi quyết định ứng tuyển.\n3. Bạn có thể 'Lưu công việc' để xem lại sau nếu chưa sẵn sàng nộp đơn ngay."
+  },
+  {
+    "title": "Quản lý nhân viên trong công ty (Company Member Management)",
+    "content": "Admin công ty có thể quản lý đội ngũ tuyển dụng của mình:\n1. Vào 'Member Management' để mời nhân viên qua email.\n2. Phân quyền: 'Admin' (quyền quản trị) hoặc 'Member' (quyền đăng tin & quản lý hồ sơ).\n3. Vô hiệu hóa tài khoản khi nhân viên nghỉ việc để đảm bảo bảo mật dữ liệu công ty."
+  },
+  {
+    "title": "Sử dụng hệ thống thông báo (Real-time Notifications)",
+    "content": "Không bỏ lỡ bất kỳ cơ hội nào nhờ công nghệ WebSocket:\n1. Thông báo tức thời khi có ứng viên mới apply.\n2. Thông báo khi JD được duyệt hoặc bị từ chối.\n3. Nhắc lịch phỏng vấn sắp diễn ra.\n4. Thông báo cũng được đồng bộ gửi qua Email đăng ký."
+  },
+  {
+    "title": "Quy trình duyệt Doanh nghiệp & JD (Dành cho Admin hệ thống)",
+    "content": "Quản trị viên hệ thống đóng vai trò quan trọng trong việc giữ sạch nền tảng:\n1. Phê duyệt doanh nghiệp dựa trên giấy tờ pháp lý (GPKD).\n2. Phê duyệt JD để đảm bảo không vi phạm nội dung và mức lương hợp lý.\n3. Quản lý hệ thống Log để theo dõi mọi hành vi bất thường."
+  },
+  {
+    "title": "Hướng dẫn quản lý Ngành nghề & Kỹ năng (Dành cho Admin)",
+    "content": "Hệ thống phân cấp dữ liệu giúp AI hoạt động chuẩn xác:\n1. Admin tạo 'Category' (Ngành nghề) chính.\n2. Admin thêm các 'Skill' (Kỹ năng) vào từng Category.\n3. Việc tổ chức kỹ năng tốt giúp ứng viên dễ dàng chọn lựa và nhà tuyển dụng lọc đúng người cần tìm."
+  },
+  {
+    "title": "Lợi ích của việc nâng cấp Gói dịch vụ (Subscription)",
+    "content": "SkillBridge cung cấp các gói dịch vụ linh hoạt:\n1. 'Gói Cơ bản': Phù hợp cho tuyển dụng nhỏ lẻ.\n2. 'Gói Nâng cao': Tăng giới hạn tin đăng, hỗ trợ xuất báo cáo CSV, và mở khóa AI Potential Candidates.\n3. 'Gói Doanh nghiệp': Ưu tiên hiển thị JD (Hiring Now) và hỗ trợ kỹ thuật riêng biệt."
+  },
+  {
+    "title": "Cách nạp tiền hoặc gia hạn gói dịch vụ công ty",
+    "content": "Toàn bộ quy trình thanh toán diễn ra tự động:\n1. Chọn gói cần đăng ký tại menu 'Subscriptions'.\n2. Thanh toán qua PayOS (Quét mã QR chuyển khoản).\n3. Hệ thống sẽ kích hoạt gói ngay sau khi giao dịch thành công."
+  },
+  {
+    "title": "Ứng viên có thể rút lại hồ sơ và ứng tuyển lại không?",
+    "content": "Ứng viên có quyền kiểm soát hồ sơ của mình:\n1. Bạn có thể rút hồ sơ đã nộp tại 'My Applications'.\n2. Khi rút, nhà tuyển dụng sẽ không thấy hồ sơ của bạn trong danh sách nữa.\n3. Lưu ý: Tùy bài đăng mà bạn có thể được phép ứng tuyển lại hoặc không sau khi đã rút."
+  },
+  {
+    "title": "Lỗi không nhận được mã OTP xác thực và cách xử lý",
+    "content": "1. Kiểm tra hòm thư Spam.\n2. Đảm bảo Email nhập đúng chính tả.\n3. Đợi 2 phút trước khi nhấn 'Gửi lại mã'.\n4. Liên hệ hotline nếu vẫn gặp sự cố sau 3 lần thử."
+  },
+  {
+    "title": "Cách cấu hình bảo mật tài khoản 2 lớp (2FA)",
+    "content": "Bảo vệ tài khoản tối đa:\n1. Nhấn vào avatar -> Hồ sơ cá nhân -> .\n2. Bật tính năng 'Xác thực 2 lớp' cho mỗi lần đăng nhập mới."
+  },
+  {
+    "title": "Chức năng AI CV Analytics bảo mật như thế nào?",
+    "content": "Chúng tôi ưu tiên quyền riêng tư của bạn:\n1. Dữ liệu chỉ được dùng để phân tích matching, không chia sẻ cho bên thứ ba.\n2. Toàn bộ thông tin được mã hóa trên server.\n3. Bạn có thể xóa hồ sơ và mọi dữ liệu AI bất kỳ lúc nào."
+  },
+  {
+    "title": "Tại sao tôi không thấy nút Ứng tuyển?",
+    "content": "1. Bạn đang đăng nhập bằng quyền Nhà tuyển dụng.\n2. JD đã đóng hoặc hết hạn.\n3. Bạn đã ứng tuyển vào vị trí này rồi."
+  },
+  {
+    "title": "Làm sao để lọc ứng viên theo kỹ năng cụ thể?",
+    "content": "Trong danh sách ứng viên của JD:\n1. Nhập kỹ năng vào thanh tìm kiếm.\n2. Hệ thống sẽ quét từ khóa trong CV và kết quả phân tích AI để trả về danh sách hồ sơ tương ứng."
+  },
+  {
+    "title": "Cách xem nhật ký hệ thống (System Logs) dành cho Admin",
+    "content": "Dành cho duy trì và bảo mật:\n1. Truy cập trang 'Logs' tại Dashboard Admin.\n2. Theo dõi: User login, các thay đổi cài đặt hệ thống, và các lỗi treo server API.\n3. Xuất log khi cần báo cáo định kỳ."
+  },
+  {
+    "title": "Hành trình của một hồ sơ ứng tuyển (Application Lifecycle)",
+    "content": "Hồ sơ đi qua các trạng thái:\n1. PENDING (Chờ duyệt): Mới nộp.\n2. REVIEWING (Đang xem): Nhà tuyển dụng đã mở xem CV.\n3. INTERVIEWING (Phỏng vấn): Đang trao đổi trực tiếp.\n4. HIRED/REJECTED (Kết quả): Kết thúc hành trình."
+  },
+  {
+    "title": "Làm thế nào để thay đổi người phỏng vấn trong lịch đã hẹn?",
+    "content": "Nhà tuyển dụng có thể linh hoạt điều chỉnh:\n1. Vào chi tiết phỏng vấn tại 'Interview Management'.\n2. Nhấn 'Edit' để đổi cán bộ phỏng vấn hoặc Link họp (Zoom/Meet).\n3. Hệ thống sẽ gửi email cập nhật ngay cho ứng viên tránh nhầm lẫn."
+  },
+  {
+    "title": "Tầm quan trọng của mức lương Min/Max trong tin đăng",
+    "content": "Mức lương rõ ràng giúp:\n1. Tăng 40% tỉ lệ ứng viên quan tâm.\n2. AI Matching tính toán chính xác hơn nếu ứng viên có kỳ vọng lương khớp.\n3. Giảm thiểu các cuộc phỏng vấn không đạt thỏa thuận về tài chính."
+  },
+  {
+    "title": "Quy trình xóa tài khoản vĩnh viễn và lưu ý dữ liệu",
+    "content": "Sau khi yêu cầu xóa:\n1. Toàn bộ CV và lịch sử ứng tuyển sẽ bị ẩn ngay lập tức.\n2. Dữ liệu sẽ được xóa sạch khỏi DB sau 30 ngày (khoảng thời gian để bạn có thể khôi phục nếu đổi ý).\n3. Tài khoản doanh nghiệp cần thanh toán hết các hóa đơn trước khi xóa."
+  },
+  {
+    "title": "Cách thiết lập 'Hiring Now' để tăng sự chú ý",
+    "content": "Tính năng cao cấp dành cho tin hot:\n1. Khi đăng hoặc sửa JD, chọn option 'Highlight as Hiring Now'.\n2. JD của bạn sẽ có gắn nhãn nổi bật và xuất hiện ở vị trí đầu tiên trên trang chủ ứng viên."
+  },
+  {
+    "title": "SkillBridge hỗ trợ những định dạng CV nào?",
+    "content": "1. Chỉ hỗ trợ PDF."
+  },
+  {
+    "title": "Yêu cầu gia nhập Công ty (Join Request) hoạt động như thế nào?",
+    "content": "Bạn nhập mã số thuế để tìm công ty -> Nhấn 'Yêu cầu gia nhập' -> Đợi quản trị viên công ty duyệt là bạn chính thức trở thành nhân viên trong hệ thống công ty đó."
+  },
+  {
+    "title": "Tại sao mức lương của tôi lại hiển thị 'Thỏa thuận'?",
+    "content": "Nếu bạn để trống cả Salary Min và Max khi tạo JD, hệ thống sẽ tự động hiển thị là 'Thỏa thuận'. Tuy nhiên chúng tôi khuyên nên để khoảng lương để thu hút ứng viên tốt hơn."
+  },
+  {
+    "title": "Công nghệ WebSocket giúp gì cho ứng dụng?",
+    "content": "Giúp việc đẩy thông báo không cần tải lại trang, tiết kiệm tài nguyên mạng và đảm bảo bạn nhận tin nhắn/thông báo ngay khi sự kiện xảy ra."
+  },
+  {
+    "title": "Cách liên hệ với bộ phận CSKH SkillBridge",
+    "content": "Bạn có thể dùng Chatbot AI 24/7 hoặc nhấn vào Hotline/Email hiển thị ở chân trang (Footer) để được nhân viên hỗ trợ trực tiếp từ 8:00 - 18:00."
+  },
+  {
+    "title": "Quản lý Skills: Phân biệt Kỹ năng cứng và Kỹ năng mềm",
+    "content": "Hệ thống hỗ trợ cả hai loại. Kỹ năng cứng thường được AI dùng để so khớp matching, kỹ năng mềm giúp hoàn thiện hồ sơ ứng viên chuyên nghiệp hơn."
+  },
+  {
+    "title": "Làm sao để biết JD của mình đã hết hạn?",
+    "content": "Trạng thái sẽ tự động chuyển sang 'EXPIRED'. Bạn có thể đăng lại JD."
+  },
+  {
+    "title": "Gia nhập cộng đồng SkillBridge có mất phí không?",
+    "content": "Hoàn toàn MIỄN PHÍ cho ứng viên tìm việc và tạo hồ sơ. Nhà tuyển dụng có các gói dịch vụ linh hoạt tùy theo nhu cầu quy mô công ty."
   }
 ]

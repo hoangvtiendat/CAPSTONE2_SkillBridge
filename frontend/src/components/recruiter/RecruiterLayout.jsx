@@ -8,10 +8,13 @@ import {
     Plus,
     LogOut,
     Settings,
+    User,
+    Building2,
+    Briefcase,
+    Star,
     CreditCard,
     Search,
     Bell,
-    Building2,
     ChevronDown,
     UserCog
 } from 'lucide-react';
@@ -42,15 +45,23 @@ const RecruiterLayout = () => {
 
     const currentLabel = menuItems.find(i => i.path === location.pathname)?.label || 'Tổng quan';
 
+    const API_BASE_URL = "http://localhost:8081/identity";
+    const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
+
+    const getImageUrl = (path) => {
+        if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
+        if (path.startsWith('http')) return path;
+        const baseUrl = API_BASE_URL;
+        const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+        return `${baseUrl}/${cleanPath}?t=${new Date().getTime()}`;
+    };
+
     return (
         <div className="recruiter-layout">
             {/* --- SIDEBAR (Mini-to-Full) --- */}
             <aside className="recruiter-sidebar">
-                <div className="sidebar-brand">
-                    <div className="brand-icon">
-                        <Building2 size={24} color="#007aff" />
-                    </div>
-                    <span className="brand-name">SkillBridge</span>
+                <div className="sidebar-section">
+                    <h4 className="sidebar-section-header">Danh Mục</h4>
                 </div>
 
                 <nav className="sidebar-nav">
@@ -92,7 +103,11 @@ const RecruiterLayout = () => {
                         {/* Thông tin người dùng di chuyển lên đây */}
                         <div className="header-user-profile">
                             <div className="user-avatar-mini">
-                                {user?.name?.charAt(0).toUpperCase() || 'R'}
+                                <img
+                                    src={getImageUrl(user?.avatar)}
+                                    alt={user?.name || "User Avatar"}
+                                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                />
                             </div>
                             <div className="user-details-mini">
                                 <span className="u-name">{user?.name || 'Recruiter'}</span>
@@ -102,6 +117,10 @@ const RecruiterLayout = () => {
 
                             {/* Dropdown Logout (Ẩn hiện khi hover hoặc click) */}
                             <div className="user-dropdown-glass">
+                                <button onClick={() => navigate('/recruiter/profile')} className="dropdown-item-logout" style={{ marginBottom: '8px', background: 'rgba(0, 122, 255, 0.1)', color: 'var(--sf-blue)', fontSize: '13px' }}>
+                                    <User size={16} />
+                                    <span>Quản lý hồ sơ</span>
+                                </button>
                                 <button onClick={handleLogout} className="dropdown-item-logout">
                                     <LogOut size={16} />
                                     <span>Đăng xuất</span>

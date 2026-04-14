@@ -19,12 +19,12 @@ export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork, onAvatarUpdat
 
     const getImageUrl = (path) => {
         if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
-       if (path.startsWith('http')) return path;
+        if (path.startsWith('http')) return path;
 
-       const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-       const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
-       return `${baseUrl}${cleanPath}`;
+        return `${baseUrl}${cleanPath}`;
     };
     const handleAvatarClick = () => {
         fileInputRef.current.click();
@@ -91,40 +91,42 @@ export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork, onAvatarUpdat
                 </p>
             </div>
 
-            <div className="open-to-work-section">
-                <div
-                    onClick={async () => {
-                        const newValue = !isOpenToWork;
-                        const result = await Swal.fire({
-                            title: newValue ? 'Bật trạng thái tìm việc?' : 'Tắt trạng thái tìm việc?',
-                            text: newValue
-                                ? "Hệ thống sẽ ưu tiên hiển thị hồ sơ của bạn cho các nhà tuyển dụng."
-                                : "Bạn sẽ tạm thời không xuất hiện trong danh sách tìm kiếm của nhà tuyển dụng.",
-                            icon: 'info',
-                            showCancelButton: true,
-                            confirmButtonColor: '#667eea',
-                            cancelButtonColor: '#d33',
-                            confirmButtonText: 'Xác nhận',
-                            cancelButtonText: 'Hủy'
-                        });
+            {user?.role === 'CANDIDATE' && (
+                <div className="open-to-work-section">
+                    <div
+                        onClick={async () => {
+                            const newValue = !isOpenToWork;
+                            const result = await Swal.fire({
+                                title: newValue ? 'Bật trạng thái tìm việc?' : 'Tắt trạng thái tìm việc?',
+                                text: newValue
+                                    ? "Hệ thống sẽ ưu tiên hiển thị hồ sơ của bạn cho các nhà tuyển dụng."
+                                    : "Bạn sẽ tạm thời không xuất hiện trong danh sách tìm kiếm của nhà tuyển dụng.",
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonColor: '#667eea',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Xác nhận',
+                                cancelButtonText: 'Hủy'
+                            });
 
-                        if (result.isConfirmed) {
-                            onToggleOpenToWork();
-                        }
-                    }}
-                    className={`open-to-work-toggle ${isOpenToWork ? 'active' : 'inactive'}`}
-                >
-                    <div className="toggle-label">
-                        OPEN TO WORK
-                        <span className="toggle-sublabel">
-                            {isOpenToWork ? 'Đang tìm kiếm việc làm' : 'Tắt trạng thái tìm việc'}
-                        </span>
-                    </div>
-                    <div className="toggle-switch">
-                        <div className="toggle-switch-dot" />
+                            if (result.isConfirmed) {
+                                onToggleOpenToWork();
+                            }
+                        }}
+                        className={`open-to-work-toggle ${isOpenToWork ? 'active' : 'inactive'}`}
+                    >
+                        <div className="toggle-label">
+                            OPEN TO WORK
+                            <span className="toggle-sublabel">
+                                {isOpenToWork ? 'Đang tìm kiếm việc làm' : 'Tắt trạng thái tìm việc'}
+                            </span>
+                        </div>
+                        <div className="toggle-switch">
+                            <div className="toggle-switch-dot" />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

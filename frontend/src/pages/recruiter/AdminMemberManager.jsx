@@ -80,8 +80,8 @@ const AdminMemberManager = () => {
                                         <td><span className="badge-role">{m.role}</span></td>
                                         <td>
                                             <div className="contact-info">
-                                                <div className="contact-item"><Phone size={14} color="#6366f1"/> {m.recruiterPhoneNumber || 'N/A'}</div>
-                                                <div className="contact-item"><MapPin size={14} color="#ef4444"/> <span className="address-text">{m.recruiterAddress || 'Chưa cập nhật'}</span></div>
+                                                <div className="contact-item"><Phone size={14} color="#6366f1" /> {m.recruiterPhoneNumber || 'N/A'}</div>
+                                                <div className="contact-item"><MapPin size={14} color="#ef4444" /> <span className="address-text">{m.recruiterAddress || 'Chưa cập nhật'}</span></div>
                                             </div>
                                         </td>
                                         <td className="action-cell">
@@ -128,13 +128,13 @@ const AdminMemberManager = () => {
                                     </td>
                                     <td>
                                         <span className={`badge-role ${m.role === 'ADMIN' ? 'role-admin' : ''}`}>
-                                            {m.role === 'ADMIN' ? <Shield size={12}/> : null} {m.role}
+                                            {m.role === 'ADMIN' ? <Shield size={12} /> : null} {m.role}
                                         </span>
                                     </td>
                                     <td>
                                         <div className="contact-info">
-                                            <div className="contact-item"><Phone size={14} color="#6366f1"/> {m.recruiterPhoneNumber || 'N/A'}</div>
-                                            <div className="contact-item"><MapPin size={14} color="#ef4444"/> <span className="address-text">{m.recruiterAddress || 'Chưa cập nhật'}</span></div>
+                                            <div className="contact-item"><Phone size={14} color="#6366f1" /> {m.recruiterPhoneNumber || 'N/A'}</div>
+                                            <div className="contact-item"><MapPin size={14} color="#ef4444" /> <span className="address-text">{m.recruiterAddress || 'Chưa cập nhật'}</span></div>
                                         </div>
                                     </td>
                                     <td className="text-center">{m.totalPosts || 0}</td>
