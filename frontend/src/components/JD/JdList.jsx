@@ -5,45 +5,54 @@ import jobService from '../../services/api/jobService';
 import companyMemberService from '../../services/api/companyMemberService';
 import './JdList.css';
 import { useAuth } from '../../context/AuthContext';
-import { Zap } from 'lucide-react';
+import { Zap, Users, Search, Info, Lock, Target, Plus, CalendarPlus, MoreVertical } from 'lucide-react'; // Thêm MoreVertical
+
+const API_BASE_URL = "http://localhost:8081/identity";
 
 const STATUS_LABELS = {
     ALL: 'Tất cả',
     OPEN: 'Đang mở',
-    PENDING: 'Đang chờ',
+    PENDING: 'Chờ duyệt',
     LOCK: 'Đã khoá',
-    CLOSED: 'Đã đóng'
-};
-
-const toastStyles = {
-    warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
-    success: { borderRadius: '9px', background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46' },
-    error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
+    CLOSED: 'Đóng'
 };
 
 const JdList = () => {
     const { user, token } = useAuth();
-
     const [jdList, setJdList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [role, setRole] = useState(null);
 
+    // Quản lý menu 3 chấm nào đang mở
+    const [activeMenu, setActiveMenu] = useState(null);
+
     const navigate = useNavigate();
     const hasShownError = useRef(false);
 
-    /* ================= FETCH ================= */
+    // Đóng menu khi click ra ngoài
+    useEffect(() => {
+        const handleClickOutside = () => setActiveMenu(null);
+        window.addEventListener('click', handleClickOutside);
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, []);
+
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        return `${baseUrl}${cleanPath}`;
+    };
+
     const fetchJdList = useCallback(async () => {
         try {
             const res = await jobService.getMyJd_of_Company(token);
             setJdList(res.result || []);
         } catch (error) {
             if (!hasShownError.current) {
-                toast.error("Lỗi khi tải dữ liệu", {
-                    description: error.response?.data?.message || '',
-                    style: toastStyles.error
-                });
+                toast.error("Lỗi khi tải dữ liệu");
                 hasShownError.current = true;
             }
         } finally {
@@ -56,7 +65,7 @@ const JdList = () => {
             const r = await companyMemberService.getCompanyMembersRole(token);
             setRole(r);
         } catch {
-            toast.error("Không xác định được role", { style: toastStyles.error });
+            console.error("Không xác định được role");
         }
     }, [token]);
 
@@ -65,205 +74,150 @@ const JdList = () => {
         fetchRole();
     }, [fetchJdList, fetchRole]);
 
-    /* ================= ACTION ================= */
-    const handleViewDetails = (e, jd) => {
-        e.stopPropagation();
-        navigate(`/detail-jd/${jd.id}`);
-    };
-
-    const handleViewApplicants = (e, jdId) => {
-        e.stopPropagation();
-        navigate(`/recruiter/jobs/${jdId}/applications`);
-    };
-
-    const handleHuntTalents = (e, jdId) => {
-        e.stopPropagation();
-        navigate(`/recruiter/jobs/${jdId}/potential`);
-    };
-
     const handleLockJd = async (e, jdId) => {
         e.stopPropagation();
-
         if (!window.confirm('Bạn có chắc muốn khoá JD này?')) return;
-
         try {
             await jobService.deleteJd(jdId);
-
-            // update UI ngay (không reload)
-            setJdList(prev =>
-                prev.map(jd =>
-                    jd.id === jdId ? { ...jd, status: 'LOCK' } : jd
-                )
-            );
-
-            toast.success("Đã khoá JD", { style: toastStyles.success });
+            setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'LOCK' } : jd));
+            toast.success("Đã khoá JD thành công");
         } catch {
-            toast.error("Không thể khoá JD", { style: toastStyles.error });
+            toast.error("Không thể khoá JD");
         }
     };
 
-    /* ================= FILTER ================= */
     const filteredJdList = jdList.filter(jd => {
         const search = searchTerm.toLowerCase();
-
-        const matchesSearch =
-            jd.position?.toLowerCase().includes(search) ||
-            jd.company?.name?.toLowerCase().includes(search) ||
-            jd.location?.toLowerCase().includes(search) ||
-            jd.description?.toLowerCase().includes(search);
-
-        const matchesStatus =
-            statusFilter === 'ALL' || jd.status === statusFilter;
-
-        return matchesSearch && matchesStatus;
+        return (jd.position?.toLowerCase().includes(search) ||
+                jd.company?.name?.toLowerCase().includes(search)) &&
+               (statusFilter === 'ALL' || jd.status === statusFilter);
     });
 
-    const statusCounts = {
-        ALL: jdList.length,
-        OPEN: jdList.filter(j => j.status === 'OPEN').length,
-        PENDING: jdList.filter(j => j.status === 'PENDING').length,
-        LOCK: jdList.filter(j => j.status === 'LOCK').length,
-        CLOSED: jdList.filter(j => j.status === 'CLOSED').length
-    };
-
-    /* ================= RENDER ================= */
     return (
         <main className="jd-list-container">
-            <Toaster position="top-right" />
+            <Toaster richColors position="top-right" />
 
-            {/* HEADER */}
-            <div className="jd-header-container">
-                <h1 className="jd-list-title">Danh sách JD của công ty</h1>
-
+            <div className="jd-page-header">
+                <div>
+                    <h1 className="jd-list-title">Quản lý tuyển dụng</h1>
+                    <p className="jd-subtitle">Hệ thống quản lý {jdList.length} tin đăng của công ty</p>
+                </div>
                 <div className="header-actions">
-                    {user && (
-                        <button
-                            className="create-jd-button"
-                            onClick={() => navigate('/create-jd')}
-                        >
-                            Tạo JD mới
-                        </button>
-                    )}
-
                     {role === 'ADMIN' && (
-                        <button
-                            className="subscription-button"
-                            onClick={() => navigate('/company/subscriptions')}
-                        >
-                            <Zap size={16} /> Đăng ký gói
+                        <button className="btn-subscription" onClick={() => navigate('/company/subscriptions')}>
+                            <Zap size={16} fill="currentColor" /> Gói dịch vụ
                         </button>
                     )}
+                    <button className="btn-create-jd" onClick={() => navigate('/create-jd')}>
+                        <Plus size={18} /> Tạo JD mới
+                    </button>
                 </div>
             </div>
 
-            {/* FILTER */}
-            <div className="jd-filter-section">
-                <div className="search-box">
+            <div className="filter-bar">
+                <div className="search-wrapper">
+                    <Search size={18} className="search-icon" />
                     <input
                         type="text"
-                        placeholder="Tìm kiếm JD..."
+                        placeholder="Tìm theo vị trí..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="search-input"
                     />
                 </div>
-
-                <div className="status-filters">
+                <div className="status-group">
                     {Object.keys(STATUS_LABELS).map(s => (
-                        <button
-                            key={s}
-                            className={`filter-btn ${statusFilter === s ? 'active' : ''}`}
-                            onClick={() => setStatusFilter(s)}
-                        >
-                            {STATUS_LABELS[s]} ({statusCounts[s] || 0})
+                        <button key={s} className={`status-btn ${statusFilter === s ? 'active' : ''}`} onClick={() => setStatusFilter(s)}>
+                            {STATUS_LABELS[s]}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* STATES */}
-            {loading && <p className="loading-text">Đang tải...</p>}
-
-            {!loading && filteredJdList.length === 0 && (
-                <p className="empty-state">Không có JD phù hợp</p>
-            )}
-
-            {/* LIST */}
-            {!loading && filteredJdList.length > 0 && (
-                <ul className="jd-list">
+            {loading ? (
+                <div className="loader">Đang tải dữ liệu...</div>
+            ) : (
+                <div className="jd-grid">
                     {filteredJdList.map(jd => (
-                        <li
-                            key={jd.id}
-                            className={`jd-item status-${jd.status?.toLowerCase()}`}
-                            onClick={(e) => handleViewDetails(e, jd)}
-                        >
-                            {/* HEADER */}
-                            <div className="jd-header">
-                                <img
-                                    src={jd.company?.logoUrl}
-                                    alt="logo"
-                                    className="jd-company-logo"
-                                />
-                                <div className="jd-header-info">
-                                    <h2 className="jd-title">{jd.position}</h2>
-                                    <p className="jd-company-name">{jd.company?.name}</p>
+                        <div key={jd.id} className={`jd-card status-${jd.status?.toLowerCase()}`}>
+                            <div className="jd-card-body" onClick={() => navigate(`/detail-jd/${jd.id}`)}>
+                                <div className="jd-card-top">
+                                    <div className="logo-box">
+                                        <img
+                                            src={getImageUrl(jd.company?.imageUrl || jd.company?.logoUrl)}
+                                            alt="logo"
+                                            onError={(e) => e.target.src = 'https://via.placeholder.com/100'}
+                                        />
+                                    </div>
+                                    <div className="title-box">
+                                        <h2 className="position-title">{jd.position}</h2>
+                                        <span className={`status-badge ${jd.status}`}>{jd.status}</span>
+                                    </div>
+                                </div>
+                                <div className="jd-meta">
+                                    <div className="meta-item">
+                                        <span className="meta-label">Địa điểm:</span>
+                                        <span className="meta-value">{jd.location}</span>
+                                    </div>
+                                    <p className="description-preview">{jd.description}</p>
+                                </div>
+                                <div className="skills-mini-list">
+                                    {jd.skills?.slice(0, 3).map((s, i) => (
+                                        <span key={i} className="skill-tag">{s.name}</span>
+                                    ))}
                                 </div>
                             </div>
 
-                            {/* CONTENT */}
-                            <div className="jd-details-wrapper">
-                                <div className="jd-section-content">
-                                    <h3>Địa điểm</h3>
-                                    <p>{jd.location}</p>
-                                </div>
-
-                                <div className="jd-section-content">
-                                    <h3>Mô tả</h3>
-                                    <p className="text-truncate">{jd.description}</p>
-                                </div>
-
-                                <div className="jd-section-content">
-                                    <h3>Kỹ năng</h3>
-                                    <ul className="jd-skills-list">
-                                        {jd.skills?.map((s, i) => (
-                                            <li key={i} className={s.required ? 'required-skill' : ''}>
-                                                {s.name}
-                                                {s.required && <span className="req-badge">Bắt buộc</span>}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-
-                            {/* ACTION */}
-                            <div className="jd-actions">
-                                <button onClick={(e) => handleViewDetails(e, jd)}>
-                                    Thông tin
+                            {/* --- PHẦN ACTION ĐÃ SỬA --- */}
+                            <div className="jd-card-actions">
+                                {/* Luôn hiện nút Chi tiết */}
+                                <button className="act-btn info" onClick={(e) => { e.stopPropagation(); navigate(`/detail-jd/${jd.id}`); }}>
+                                    <Info size={16} />
                                 </button>
 
-                                <button
-                                    className="view-applicants-btn"
-                                    onClick={(e) => handleViewApplicants(e, jd.id)}
-                                >
-                                    Ứng viên
+                                {/* Luôn hiện nút CV */}
+                                <button className="act-btn applicants" onClick={(e) => { e.stopPropagation(); navigate(`/recruiter/jobs/${jd.id}/applications`); }}>
+                                    <Users size={16} /> <span>CV</span>
                                 </button>
 
-                                <button
-                                    className="hunt-talents-btn"
-                                    onClick={(e) => handleHuntTalents(e, jd.id)}
-                                >
-                                    Săn tài năng
-                                </button>
+                                {/* Nếu là OPEN thì hiện 3 chấm, ngược lại không hiện gì thêm hoặc hiện nút Khóa nếu muốn */}
+                                {jd.status === 'OPEN' ? (
+                                    <div className="more-menu-container">
+                                        <button
+                                            className="act-btn more"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveMenu(activeMenu === jd.id ? null : jd.id);
+                                            }}
+                                        >
+                                            <MoreVertical size={16} />
+                                        </button>
 
-                                {jd.status !== 'LOCK' && (
-                                    <button onClick={(e) => handleLockJd(e, jd.id)}>
-                                        Khoá
-                                    </button>
+                                        {activeMenu === jd.id && (
+                                            <div className="dropdown-menu">
+                                                <button onClick={(e) => { e.stopPropagation(); navigate(`/recruiter/jobs/${jd.id}/potential`); }}>
+                                                    <Target size={14} /> Săn nhân tài
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); navigate(`/recruiter/jobs/${jd.id}/batch-slots`); }}>
+                                                    <CalendarPlus size={14} /> Tạo lịch
+                                                </button>
+                                                <button className="text-danger" onClick={(e) => handleLockJd(e, jd.id)}>
+                                                    <Lock size={14} /> Khóa tin
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    // Nếu không phải OPEN (ví dụ PENDING, CLOSED) và chưa LOCK thì vẫn cho nút Khóa nhanh
+                                    jd.status !== 'LOCK' && (
+                                        <button className="act-btn lock" onClick={(e) => handleLockJd(e, jd.id)}>
+                                            <Lock size={16} />
+                                        </button>
+                                    )
                                 )}
                             </div>
-                        </li>
+                        </div>
                     ))}
-                </ul>
+                </div>
             )}
         </main>
     );

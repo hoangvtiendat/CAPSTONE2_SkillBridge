@@ -1,7 +1,6 @@
 package com.skillbridge.backend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CandidateSkillRequest;
@@ -13,8 +12,8 @@ import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
-import com.skillbridge.backend.utils.CosineSimilarityUtils;
 import com.skillbridge.backend.service.AI_Service_File.AiService;
+import com.skillbridge.backend.utils.CosineSimilarityUtils;
 import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -572,7 +571,7 @@ public class CandidateService {
     /**
      * Hàm hỗ trợ ánh xạ dữ liệu từ Entity Candidate sang CandidateResponse DTO
      */
-    private CandidateResponse mapToCandidateResponse(Candidate candidate) {
+     public CandidateResponse mapToCandidateResponse(Candidate candidate) {
         User user = candidate.getUser();
         List<CandidateSkill> currentSkills = candidateSkillRepository.findByCandidate(candidate);
         List<CandidateSkillResponse> skillResponses = currentSkills.stream().map(s ->

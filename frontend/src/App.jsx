@@ -11,7 +11,7 @@ import { useAuth } from './context/AuthContext';
 
 // Components
 import Header from './components/home/Header';
-import Sidebar from './components/home/Sidebar'; // Import Sidebar để dùng cho trang Identity
+import Sidebar from './components/home/Sidebar';
 import NotificationCard from './components/notifications/NotificationCard';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminRoute from './components/admin/AdminRoute';
@@ -33,6 +33,8 @@ import OAuthSuccess from './pages/auth/OAuthSuccess';
 import JobDetailPage from './pages/candidate/JobDetailPage';
 import CompanyDetailPage from './pages/candidate/CompanyDetailPage';
 import TaxLookup from './pages/company/TaxLookup';
+import AppliedJobsPage from './pages/candidate/AppliedJobsPage';
+import InterviewBookingPage from './pages/candidate/InterviewBookingPage';
 
 // Pages: Recruiter
 import RecruiterDashboardPage from './pages/recruiter/RecruiterDashboardPage';
@@ -48,6 +50,7 @@ import DetailJD_Page from './pages/JD/detailJD';
 import SubscriptionOfCompany from "./pages/subscription/SubscriptionOfCompany";
 import RegisterSubscriptionPage from "./pages/subscription/RegisterSubscriptionPage";
 import PotentialCandidates from './pages/recruiter/PotentialCandidates';
+import BatchSlotCreate from './pages/recruiter/BatchSlotCreate';
 
 // Pages: Admin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -184,6 +187,40 @@ function App() {
                         }
                     />
 
+                    <Route
+                        path="/my-applied-jobs"
+                        element={
+                            user ? (
+                                <div className="home-page">
+                                    <div className="home-container">
+                                        <Sidebar />
+                                        <main className="home-main">
+                                            <AppliedJobsPage />
+                                        </main>
+                                    </div>
+                                </div>
+                            ) : (
+                                <Navigate to="/login" replace />
+                            )
+                        }
+                    />
+<Route
+    path="/interviews/book/:jobId"
+    element={
+        user ? (
+            <div className="home-page">
+                <div className="home-container">
+                    <Sidebar />
+                    <main className="home-main">
+                        <InterviewBookingPage />
+                    </main>
+                </div>
+            </div>
+        ) : (
+            <Navigate to="/login" replace />
+        )
+    }
+/>
                     {/* Recruiter Routes (Wrapped in Layout & Guard) */}
                     <Route element={<RecruiterRoute><RecruiterLayout /></RecruiterRoute>}>
                         <Route path="/recruiter">
@@ -195,7 +232,7 @@ function App() {
                             <Route path="settings" element={<CompanySettings />} />
                             <Route path="candidates" element={<div className="p-8 text-center text-slate-500">Quản lý ứng viên - Sắp ra mắt</div>} />
                             <Route path="jobs/:jobId/potential" element={<PotentialCandidates/>} />
-
+                            <Route path="jobs/:jobId/batch-slots" element={<BatchSlotCreate />} />
                         </Route>
 
                         <Route path='/create-jd' element={<CreateJd />} />

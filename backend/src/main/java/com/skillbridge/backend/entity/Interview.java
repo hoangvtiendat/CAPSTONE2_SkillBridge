@@ -18,16 +18,19 @@ public class Interview extends BaseEntity {
     @Setter(AccessLevel.NONE)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id", nullable = false)
     private Application application;
+
+    @Column(name = "location_link", length = 500)
+    private String locationLink;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slot_id", nullable = false)
     private InterviewSlot slot;
 
-    @Column(name = "location_link", length = 500)
-    private String locationLink;
+    @Column(name = "meeting_notes", columnDefinition = "TEXT")
+    private String meetingNotes;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

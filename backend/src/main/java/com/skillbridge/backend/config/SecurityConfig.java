@@ -62,19 +62,29 @@ public class SecurityConfig {
                                 "/Logs/**",
                                 "/companies/taxLook"
                         ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                "/interviews/jobs/*/slots"
+                        ).hasAnyRole("RECRUITER", "CANDIDATE")
+
                         .requestMatchers(
                                 "/company-member/**",
                                 "/identity/subscription/**",
                                 "/identity/CategoryProfession/**",
                                 "/applications/jobs/**",
                                 "/candidates/potential/{jobId}",
-                                "/candidates/evaluate-by-recruiter/{candidateId}/{jobId}"
+                                "/candidates/evaluate-by-recruiter/{candidateId}/{jobId}",
+                                "/interviews/batch-slots",
+                                "/interviews/slots/{slotId}",
+                                "/interviews/slots/{slotId}/candidates"
                         ).hasRole("RECRUITER")
 
                         .requestMatchers(
                                 "/candidates/**",
                                 "/jobs/apply/**",
-                                "/evaluate-self/{id}"
+                                "/evaluate-self/{id}",
+                                "/jobs/applied",
+                                "/interviews/my-interviews"
                         ).hasRole("CANDIDATE")
 
                         .requestMatchers(
