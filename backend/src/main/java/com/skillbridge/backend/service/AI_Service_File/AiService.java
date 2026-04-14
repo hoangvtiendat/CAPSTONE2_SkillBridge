@@ -52,66 +52,78 @@ public class AiService {
                             }
             """;
     private static final String PROMPT_PARSING_CV = """
-            Phân tích CV sau và trả về JSON chuẩn. 
-        YÊU CẦU NGHIÊM NGẶT: 
-        1. Chỉ trả về JSON, không giải thích.
-        2. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
-        3. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
-        4. Nếu endDate là hiện tại thì trả  ngày hiện tại theo định dạng yyyy-MM-dd
-        
-         Cấu trúc JSON yêu cầu:
-             {
-               "name": "Họ và tên",
-               "address": "Địa chỉ liên lạc",
-               "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
-               "degrees": [
-                 {
-                   "type": "DEGREE",
-                   "degree": "Tên bằng cấp (nếu là DEGREE)",
-                   "major": "Ngành học",
-                   "institution": "Tên trường/tổ chức cấp",
-                   "graduationYear": 2023
-                 },
-                 {
-                   "type": "CERTIFICATE",
-                   "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
-                   "year" 2025
-                 }
-               ],
-               "experience": [
-                 {
-                   "startDate": "yyyy-MM-dd",
-                   "endDate": "yyyy-MM-dd hoặc null",
-                   "description": "Chi tiết công việc"
-                 }
-               ],
-               "skills": [
-                 {
-                   "skillName": "Tên kỹ năng",
-                   "experienceYears": 3
-                 }
-               ]
-             }
-        
-        VĂN BẢN CV:
-        %s
-            """;
+             Phân tích CV sau và trả về JSON chuẩn dựa trên danh sách ngành và kỹ năng cho sẵn.
+                       \s
+                        DANH SÁCH NGÀNH VÀ KỸ NĂNG TỪ HỆ THỐNG:
+                        %s
+                       \s
+                        YÊU CẦU NGHIÊM NGẶT:
+                        1. Chỉ trả về JSON, không giải thích.
+                        2. Ánh xạ 'categoryId' từ danh sách ngành phù hợp nhất.
+                        3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%%, hãy chọn cái gần nhất.
+                        4. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
+                        5. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
+                        6. Nếu endDate là hiện tại thì trả ngày hiện tại theo định dạng yyyy-MM-dd.
+                       \s
+                        Cấu trúc JSON yêu cầu:
+                        {
+                          "name": "Họ và tên",
+                          "address": "Địa chỉ liên lạc",
+                          "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+                          "categoryId": "ID của ngành từ danh sách trên",
+                          "degrees": [
+                            {
+                              "type": "DEGREE",
+                              "degree": "Tên bằng cấp (nếu là DEGREE)",
+                              "major": "Ngành học",
+                              "institution": "Tên trường/tổ chức cấp",
+                              "graduationYear": 2023,
+                               "level": "Số điểm/ level của bằng cấp đó"
+                            },
+                            {
+                              "type": "CERTIFICATE",
+                              "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+                              "year": 2025,
+                              "level": "Số điểm/ level của chứng chỉ đó"
+                            }
+                          ],
+                          "experience": [
+                            {
+                              "startDate": "yyyy-MM-dd",
+                              "endDate": "yyyy-MM-dd hoặc null",
+                              "description": "Chi tiết công việc"
+                            }
+                          ],
+                          "skills": [
+                            {
+                              "skillId": "ID của kỹ năng từ danh sách trên",
+                              "skillName": "Tên kỹ năng gốc từ CV",
+                              "experienceYears": 3
+                            }
+                          ]
+                        }
+                       \s
+                        VĂN BẢN CV:
+                        %s
+                        ""\";
+       """;
     private static final String PROMPT_CHECK_APPROVAL = """
             Bạn là một trợ lý AI kiểm duyệt nội dung tuyển dụng (Job Moderation AI) cho nền tảng SkillBridge. Nhiệm vụ của bạn là phân tích dữ liệu JSON của một Tin tuyển dụng (Job Description - JD) và quyết định xem bài đăng này có hợp lệ để hiển thị công khai hay không.
-            
-            Hãy đánh giá JD dựa trên các tiêu chí cởi mở và linh hoạt sau:
-            
-            - Ngăn chặn Spam cơ bản: Chỉ từ chối khi nội dung hoàn toàn là các chuỗi ký tự gõ bừa vô nghĩa (ví dụ: "asdfgh", "qwerty") hoặc tin thử nghiệm quá ngắn (ví dụ: "test 123", "abc"). Nếu văn phong ngắn gọn, viết tắt, hoặc trình bày hơi lủng củng nhưng vẫn thể hiện rõ mục đích tuyển dụng, hãy CHẤP NHẬN.
-            - An toàn cộng đồng: Từ chối các bài đăng vi phạm pháp luật rõ ràng (cờ bạc, lừa đảo, tình dục), hoặc chứa ngôn từ chửi thề, xúc phạm nặng nề. Đối với các từ ngữ đời thường, hãy bỏ qua.
-            - Chấp nhận sự thiếu sót: Bài đăng không cần phải hoàn hảo 100%. Nếu thiếu một vài trường thông tin chi tiết, hoặc kỹ năng (skills) chưa khớp hoàn toàn với vị trí công việc, vẫn CHẤP NHẬN. Chỉ cần đảm bảo có thông tin vị trí công việc và mức lương không mang giá trị âm là được.
-            - Bắt buộc các trường dữ liệu như tên địa chỉ thì phải dùng tiếng Việt các địa danh nước ngoài thì tiếng Anh đều được.
-            ĐỊNH DẠNG ĐẦU RA:
-            Bạn phải trả về kết quả dưới định dạng JSON với cấu trúc sau:
-            {
-              "isApproved": true/false,
-              "reason": "Giải thích ngắn gọn lý do. Nếu duyệt (true), chỉ cần ghi 'Nội dung hợp lệ'.",
-              "flaggedKeywords": ["danh sách các từ khóa cấm phát hiện được, nếu không có hãy để mảng rỗng"]
-            }   
+                       \s
+                        Hãy đánh giá JD dựa trên các tiêu chí cởi mở và linh hoạt sau:
+                       \s
+                        - Ngăn chặn Spam cơ bản: Chỉ từ chối khi nội dung hoàn toàn là các chuỗi ký tự gõ bừa vô nghĩa (ví dụ: "asdfgh", "qwerty") hoặc tin thử nghiệm quá ngắn (ví dụ: "test 123", "abc"). Nếu văn phong ngắn gọn, viết tắt, hoặc trình bày hơi lủng củng nhưng vẫn thể hiện rõ mục đích tuyển dụng, hãy CHẤP NHẬN.
+                        - An toàn cộng đồng: Từ chối các bài đăng vi phạm pháp luật rõ ràng (cờ bạc, lừa đảo, tình dục), hoặc chứa ngôn từ chửi thề, xúc phạm nặng nề. Đối với các từ ngữ đời thường, hãy bỏ qua.
+                        - Chấp nhận sự thiếu sót: Bài đăng không cần phải hoàn hảo 100%. Nếu thiếu một vài trường thông tin chi tiết, hoặc kỹ năng (skills) chưa khớp hoàn toàn với vị trí công việc, vẫn CHẤP NHẬN. Chỉ cần đảm bảo có thông tin vị trí công việc và mức lương không mang giá trị âm là được.
+                        - Bắt buộc các trường dữ liệu như tên địa chỉ thì phải dùng tiếng Việt các địa danh nước ngoài thì tiếng Anh đều được.
+                        ĐỊNH DẠNG ĐẦU RA:
+                        Bạn phải trả về kết quả dưới định dạng JSON với cấu trúc sau:
+                        {
+                          "isApproved": true/false,
+                          "reason": "Giải thích ngắn gọn lý do. Nếu duyệt (true), chỉ cần ghi 'Nội dung hợp lệ'.",
+                          "flaggedKeywords": ["danh sách các từ khóa cấm phát hiện được, nếu không có hãy để mảng rỗng"]
+                        }  \s
+                        ""\";
             """;
     private static final String PROMPT_CHECK_NEWJOV_VS_OLDJOB = """
             Bạn là hệ thống AI Chuyên gia Kiểm duyệt Nội dung Tuyển dụng (Job Description - JD) cấp cao.
@@ -320,9 +332,8 @@ public class AiService {
             ///  chức năng AI duyệt bài đăng
             if(type_Function == 1){
                 finalPrompt = PROMPT_CHECK_APPROVAL +
-                        "\n\n--- CV JSON ---\n" + dataJD_of_Company;
+                        "\n\n--- JD JSON ---\n" + dataJD_of_Company;
             }
-
             ///   Kiểm tra nâng cao của JD so sánh cũ + mới  !!!!!!!!!!!!!!!!!!!!!!
             else if(type_Function == 2){
                 finalPrompt = PROMPT_CHECK_NEWJOV_VS_OLDJOB +

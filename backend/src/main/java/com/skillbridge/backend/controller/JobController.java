@@ -197,20 +197,26 @@ public class JobController {
                 new ApiResponse<>(200, "Update bài đăng thành công ", updatedJob)
         );
     }
-
-    ///  update trạng thái bài đăng ----- 1: lock 2 closed
-    @DeleteMapping("/my-company/update-Status-JD/{id}/{type}")
-    public ResponseEntity<ApiResponse<Job>> deleteJD(@PathVariable String id, @PathVariable Integer type) {
+///  update trạng thái bài đăng ----- 1: lock 2 closed
+    @PutMapping("/my-company/update-Status-JD/{id}/{type}/lock")
+    public ResponseEntity<ApiResponse<Job>> LockJD(@PathVariable String id, @PathVariable Integer type) {
         Job updatedJob = jobService.updateStatus(id, type);
         return ResponseEntity.ok(
-                new ApiResponse<>(200, "Xóa bài đăng thành công", updatedJob)
+                new ApiResponse<>(200, "Khóa bài đăng thành công", updatedJob)
         );
     }
-
-    ///  chưa làm nha
-    @PostMapping("/repost/{id}")
+    /// đóng bài
+    @PutMapping("/my-company/update-Status-JD/{id}/{type}/closed")
+        public ResponseEntity<ApiResponse<Job>> CloseJD(@PathVariable String id, @PathVariable Integer type) {
+        Job updatedJob = jobService.updateStatus(id, type);
+            return ResponseEntity.ok(
+                    new ApiResponse<>(200, "Đóng bài đăng thành công", updatedJob)
+            );
+        }
+///  đăng lại bài
+    @PostMapping("/report-Job/{id}")
     public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
-        Job rePost = jobService.repost(id);
+        Job rePost = jobService.repostJD(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Đăng lại bài đăng thành ", rePost)
         );

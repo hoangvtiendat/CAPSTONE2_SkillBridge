@@ -83,9 +83,23 @@ const RegisterSubscription = () => {
                 candidateViewLimit: Number(customForm.candidateViewLimit),
                 hasPriorityDisplay: customForm.hasPriorityDisplay
             };
-            await subscriptionService.createSubscriptionOfCompany(data, token);
-            toast.success('Tạo gói thành công!', { description: 'Đang chuyển hướng về trang quản lý...' });
-            setTimeout(() => navigate('/company/subscriptions'), 1500);
+            const created = await subscriptionService.createSubscriptionOfCompany(data, token);
+            const createdId =
+                created?.id ||
+                created?.result?.id ||
+                created?.data?.id ||
+                created?.subscriptionId ||
+                created?.result?.subscriptionId ||
+                created?.data?.subscriptionId;
+
+            if (createdId) {
+                toast.success('Tạo gói thành công!', { description: 'Đang chuyển hướng đến cổng thanh toán...' });
+                await postPayment(createdId, 1);
+                return;
+            }
+
+            toast.success('Tạo gói thành công!', { description: 'Không tìm thấy mã giao dịch để thanh toán tự động. Vui lòng thanh toán tại trang quản lý.' });
+            setTimeout(() => navigate('/company/subscriptions'), 1200);
         } catch (error) {
             toast.error('Lỗi tạo gói', { description: error.response?.data?.message || 'Không thể tạo gói đăng ký' });
         } finally {

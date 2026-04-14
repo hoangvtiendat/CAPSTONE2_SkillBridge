@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { toast, Toaster } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons";
+import { Plus, Search, Trash2, X } from 'lucide-react';
+
 import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons"
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
@@ -18,11 +21,45 @@ const toastStyles = {
 };
 
 const API_BASE_URL = "http://localhost:8081/identity";
+const normalizeSkillName = (value) => String(value || '').trim().toLowerCase();
 
+const dedupeSkills = (skills = []) => {
+    const deduped = [];
+
+    skills.forEach((skill) => {
+        const skillId = String(skill?.skillId || '').trim();
+        const skillName = normalizeSkillName(skill?.name);
+        if (!skillId && !skillName) return;
+
+        const existingIndex = deduped.findIndex((item) => {
+            const sameId = skillId && item.skillId && item.skillId === skillId;
+            const sameName = skillName && item.name && item.name === skillName;
+            return sameId || sameName;
+        });
+
+        if (existingIndex === -1) {
+            deduped.push({
+                skillId,
+                name: skillName,
+                isRequired: Boolean(skill?.isRequired)
+            });
+            return;
+        }
+
+        const prev = deduped[existingIndex];
+        deduped[existingIndex] = {
+            skillId: prev.skillId || skillId,
+            name: prev.name || skillName,
+            isRequired: Boolean(prev.isRequired || skill?.isRequired)
+        };
+    });
+
+    return deduped;
+};
 const DetailJD = () => {
+    const { id } = useParams();
     const [jdDetail, setJdDetail] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { id } = useParams();
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -106,18 +143,8 @@ const DetailJD = () => {
         }
 
         let initialTitles = [];
-        // Xử lý an toàn trường hợp title là String hoặc Object
-        let parsedTitle = jdDetail.title;
-        if (typeof parsedTitle === 'string') {
-            try {
-                parsedTitle = JSON.parse(parsedTitle);
-            } catch (e) {
-                parsedTitle = {};
-            }
-        }
-
-        if (parsedTitle && Object.keys(parsedTitle).length > 0) {
-            initialTitles = Object.entries(parsedTitle).map(([k, v]) => ({ key: k, value: v }));
+        if (jdDetail.title && Object.keys(jdDetail.title).length > 0) {
+            initialTitles = Object.entries(jdDetail.title).map(([k, v]) => ({ key: k, value: v }));
         } else {
             initialTitles = [{ key: "Quyền lợi", value: "" }, { key: "Yêu cầu", value: "" }];
         }
@@ -132,7 +159,7 @@ const DetailJD = () => {
             return {
                 skillId: String(extractedId || ""),
                 isRequired: extractedRequired,
-                name: String(extractedName || "").trim().toLowerCase()
+                name: normalizeSkillName(extractedName)
             };
         });
 
@@ -143,7 +170,7 @@ const DetailJD = () => {
             location: jdDetail.location || "",
             salaryMin: jdDetail.salaryMin || "",
             salaryMax: jdDetail.salaryMax || "",
-            skills: mappedSkills
+            skills: dedupeSkills(mappedSkills)
         };
 
         setDynamicTitles(initialTitles);
@@ -158,6 +185,7 @@ const DetailJD = () => {
         setInitialFormState(null);
         setSkillSearchTerm("");
     };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setEditForm(prev => ({ ...prev, [name]: value }));
@@ -232,7 +260,9 @@ const DetailJD = () => {
             return { skillId: realSkill ? String(realSkill.id || realSkill._id) : s.skillId, isRequired: s.isRequired };
         });
 
-        const payloadToSubmit = { ...editForm, title: titleObject, skills: cleanSkills };
+        const dedupedCleanSkills = dedupeSkills(cleanSkills).filter(s => s.skillId);
+
+        const payloadToSubmit = { ...editForm, title: titleObject, skills: dedupedCleanSkills };
 
         setIsUpdating(true);
         try {
@@ -263,6 +293,7 @@ const DetailJD = () => {
         switch(status.toUpperCase()) {
             case 'OPEN': return 'status-open';
             case 'CLOSED': return 'status-closed';
+            case 'LOCK': return 'status-closed';
             case 'PENDING': return 'status-pending';
             default: return 'status-pending';
         }
@@ -273,6 +304,7 @@ const DetailJD = () => {
         switch(status.toUpperCase()) {
             case 'OPEN': return 'Đang mở';
             case 'CLOSED': return 'Đã đóng';
+            case 'LOCK': return 'Đã khóa';
             case 'PENDING': return 'Đang chờ';
             default: return 'Đang chờ';
         }
@@ -292,8 +324,7 @@ const DetailJD = () => {
                     <div>
                         <h1 className="job-title-large">{jdDetail.position}</h1>
                         <p className="company-name-large">
-                            <FontAwesomeIcon icon={faBuilding}
-                                             className="icon-sm"/> {jdDetail.company?.name || "Tên công ty chưa cập nhật"}
+                            <FontAwesomeIcon icon={faBuilding} className="icon-sm" /> {jdDetail.company?.name || "Tên công ty chưa cập nhật"}
                         </p>
                     </div>
                 </div>
@@ -317,7 +348,13 @@ const DetailJD = () => {
                         Xem danh sách ứng tuyển
                     </button>
                     <span title={hasAppliedCandidate ? 'Hiện tại JD này đã có người ứng tuyển' : ''}>
-                        <button className="btn-primary" onClick={handleOpenModal} disabled={hasAppliedCandidate}>
+                        <button
+                            className={`btn-primary ${hasAppliedCandidate ? 'btn-edit-locked' : ''}`}
+                            type="button"
+                            onClick={handleOpenModal}
+                            disabled={hasAppliedCandidate}
+                            aria-disabled={hasAppliedCandidate}
+                        >
                             Chỉnh sửa JD
                         </button>
                     </span>
@@ -326,7 +363,7 @@ const DetailJD = () => {
 
             {hasAppliedCandidate && (
                 <div className="jd-edit-locked-note" role="note">
-                    Hiện tại JD đang có người ứng tuyển nên không cho sửa JD.
+                    Hiện tại JD đang có người ứng tuyển nên bạn không thể chỉnh sửa nội dung !
                 </div>
             )}
 
@@ -417,7 +454,7 @@ const DetailJD = () => {
                                                     <option value="">-- Chọn --</option>
                                                     {categories.map(cat => (
                                                         <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name || cat.categoryName}</option>
-                                                    ))}
+                                                     ))}
                                                 </select>
                                             </div>
                                         </div>
@@ -437,7 +474,7 @@ const DetailJD = () => {
                                                     <Plus size={16} /> Thêm mục
                                                 </button>
                                             </div>
-                                            <div className="dynamic-body job-feed">
+                                            <div className="dynamic-body">
                                                 {dynamicTitles.map((item, index) => (
                                                     <div key={index} className="dynamic-row">
                                                         <input
@@ -481,7 +518,7 @@ const DetailJD = () => {
                                         <div className="salary-group">
                                             <div className="input-item">
                                                 <label>Lương Tối thiểu</label>
-                                                <input
+                                               <input
                                                     type="text"
                                                     name="salaryMin"
                                                     value={editForm.salaryMin ? Number(editForm.salaryMin).toLocaleString('vi-VN') : ''}
@@ -497,7 +534,7 @@ const DetailJD = () => {
                                             </div>
                                             <div className="input-item">
                                                 <label>Lương Tối đa</label>
-                                                <input
+                                                 <input
                                                     type="text"
                                                     name="salaryMax"
                                                     value={editForm.salaryMax ? Number(editForm.salaryMax).toLocaleString('vi-VN') : ''}

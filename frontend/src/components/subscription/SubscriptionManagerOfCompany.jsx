@@ -15,12 +15,14 @@ const SubscriptionManagerOfCompany = () => {
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-    const [historyFilter, setHistoryFilter] = useState('CLOSE');
+    const [historyFilter, setHistoryFilter] = useState('ALL');
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [pendingTransaction, setPendingTransaction] = useState(null);
     const [countdown, setCountdown] = useState(0);
     const [showNotification, setShowNotification] = useState(false);
     const [systemPackages, setSystemPackages] = useState([]);
+
+    const pendingStatuses = ['PENDING_PAYMENT', 'PENDING', 'WAITING_PAYMENT'];
 
 const fetchSystemPackages = async () => {
     try {
@@ -99,7 +101,9 @@ const getListSubscriptionOfCompany = async () => {
 
             setSubscriptions(subscriptionList);
 
-            const pending = subscriptionList.find(sub => sub.status === 'PENDING_PAYMENT');
+            const pending = subscriptionList.find(
+                sub => !sub.deleted && pendingStatuses.includes(sub.status)
+            );
 
             if (returnFromPayment && paymentStatus !== '1' && pending) {
                 toast.info('Thanh toán chưa hoàn tất. Giao dịch đã bị hủy.', {
@@ -112,7 +116,11 @@ const getListSubscriptionOfCompany = async () => {
                 setShowNotification(false);
                 sessionStorage.removeItem('pendingPayment');
 
-                await handleDeleteSubscription(pending.id, true);
+                await handleDeleteSubscription(pending.id, {
+                    skipConfirm: true,
+                    silent: true,
+                    refreshAfterDelete: false,
+                });
                 return;
             }
 
@@ -120,20 +128,8 @@ const getListSubscriptionOfCompany = async () => {
                 sessionStorage.removeItem('pendingPayment');
             }
 
-            if (pendingPaymentId && !returnFromPayment && pending && pending.id === pendingPaymentId) {
-                toast.info('Thanh toán chưa hoàn tất. Giao dịch đã bị hủy.', {
-                    description: 'Bạn có thể tạo đơn mới nếu muốn thanh toán lại.',
-                    duration: 5000
-                });
-
-                setPendingTransaction(null);
-                setCountdown(0);
-                setShowNotification(false);
-                sessionStorage.removeItem('pendingPayment');
-
-                await handleDeleteSubscription(pending.id, true);
-                return;
-            }
+            // Không tự động hủy giao dịch chỉ vì thiếu tham số return URL.
+            // Nhiều cổng thanh toán dùng key khác, và giao dịch pending vẫn cần hiển thị để người dùng thao tác.
 
             if (pending && (!pendingTransaction || pendingTransaction.id !== pending.id)) {
                 setPendingTransaction(pending);
@@ -160,18 +156,24 @@ const getListSubscriptionOfCompany = async () => {
             setLoading(false);
         }
     };
-const handleDeleteSubscription = async (id, isAutoDelete = false) => {
-    console.log(' Attempting to delete subscription:', id);
-    console.log('isAutoDelete:', isAutoDelete);
+const handleDeleteSubscription = async (id, options = {}) => {
+    const {
+        skipConfirm = false,
+        silent = false,
+        refreshAfterDelete = true,
+    } = options;
 
-    if (!isAutoDelete && !window.confirm('Bạn có chắc muốn xóa gói đăng ký này?')) return;
+    console.log(' Attempting to delete subscription:', id);
+    console.log('delete options:', options);
+
+    if (!skipConfirm && !window.confirm('Bạn có chắc muốn xóa gói đăng ký này?')) return;
 
     try {
         console.log(' Calling API to delete subscription:', id);
         const response = await subscriptionService.deleteSubscriptionOfCompany(id, token);
         console.log(' Delete response:', response);
 
-        if (!isAutoDelete) {
+        if (!silent) {
             toast.success('Xóa gói đăng ký thành công');
         }
 
@@ -179,17 +181,18 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
             setPendingTransaction(null);
             setCountdown(0);
             setShowNotification(false);
+            sessionStorage.removeItem('pendingPayment');
         }
 
-        if (!isAutoDelete) {
-            getListSubscriptionOfCompany();
+        if (refreshAfterDelete) {
+            await getListSubscriptionOfCompany();
         }
     } catch (error) {
         console.error(' Lỗi khi xóa:', error);
         console.error('Error response:', error.response);
         console.error('Error data:', error.response?.data);
 
-        if (!isAutoDelete) {
+        if (!silent) {
             const errorMessage = error.response?.data?.message || 'Không thể xóa gói đăng ký';
             toast.error("Lỗi xóa", { description: errorMessage });
         }
@@ -228,7 +231,11 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
             }, 1000);
             return () => clearTimeout(timer);
         } else if (countdown === 0 && pendingTransaction) {
-            handleDeleteSubscription(pendingTransaction.id, true);
+            handleDeleteSubscription(pendingTransaction.id, {
+                skipConfirm: true,
+                silent: true,
+                refreshAfterDelete: true,
+            });
             setPendingTransaction(null);
         }
     }, [countdown, pendingTransaction]);
@@ -246,10 +253,72 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
         return `${minutes}:${secs.toString().padStart(2, '0')}`;
     };
 
+    const getTransactionStatusMeta = (sub) => {
+        if (sub?.deleted) {
+            return {
+                label: 'Đã hủy',
+                bg: 'rgba(239, 68, 68, 0.12)',
+                color: '#b91c1c',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+            };
+        }
+
+        switch (sub?.status) {
+            case 'OPEN':
+                return {
+                    label: 'Đang hoạt động',
+                    bg: 'rgba(16, 185, 129, 0.12)',
+                    color: '#059669',
+                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                };
+            case 'PENDING_PAYMENT':
+            case 'PENDING':
+            case 'WAITING_PAYMENT':
+                return {
+                    label: 'Chờ thanh toán',
+                    bg: 'rgba(245, 158, 11, 0.14)',
+                    color: '#b45309',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                };
+            case 'CLOSE':
+                return {
+                    label: 'Đã kết thúc',
+                    bg: 'rgba(52, 199, 89, 0.12)',
+                    color: '#16a34a',
+                    border: '1px solid rgba(52, 199, 89, 0.2)',
+                };
+            default:
+                return {
+                    label: sub?.status || 'Không xác định',
+                    bg: 'rgba(100, 116, 139, 0.12)',
+                    color: '#475569',
+                    border: '1px solid rgba(100, 116, 139, 0.2)',
+                };
+        }
+    };
+
+    const historyFilterOptions = [
+        { key: 'ALL', label: 'Tất cả' },
+        { key: 'PENDING', label: 'Chờ thanh toán' },
+        { key: 'CLOSE', label: 'Đã kết thúc' },
+        { key: 'CANCELLED', label: 'Đã hủy' },
+    ];
+
     if (loading) return <div className="loading">Đang tải...</div>;
 
     const currentSubscription = subscriptions.find(sub => sub.status === 'OPEN');
-    const historySubscriptions = subscriptions.filter(sub => sub.status === 'CLOSE');
+    const transactionRows = subscriptions
+        .filter((sub) => sub.status !== 'OPEN')
+        .sort(
+        (a, b) => new Date(b.createdAt || b.startDate || 0) - new Date(a.createdAt || a.startDate || 0)
+    );
+    const filteredTransactionRows = transactionRows.filter((sub) => {
+        if (historyFilter === 'ALL') return true;
+        if (historyFilter === 'CANCELLED') return !!sub.deleted;
+        if (historyFilter === 'PENDING') return !sub.deleted && pendingStatuses.includes(sub.status);
+        if (historyFilter === 'CLOSE') return !sub.deleted && sub.status === 'CLOSE';
+        return true;
+    });
     const premiumPkg = systemPackages.length > 0 ? systemPackages[0] : null;
     return (
         <div className="sub-manager-container">
@@ -318,11 +387,15 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setShowNotification(false);
-                                        handleDeleteSubscription(pendingTransaction.id);
+                                        handleDeleteSubscription(pendingTransaction.id, {
+                                            skipConfirm: true,
+                                            silent: false,
+                                            refreshAfterDelete: true,
+                                        });
                                     }}
                                 >
                                     <Trash2 size={16} />
-                                    Xóa giao dịch
+                                    Hủy giao dịch
                                 </button>
                             </div>
                         </div>
@@ -396,7 +469,6 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                 <div className="sub-card theme-dark">
                 <div className="sub-card-header">
                     <div className="sub-subtitle">
-                        <span className="subtitle-text">NÂNG CẤP LÊN</span>
                         <span className="sub-badge badge-yellow">Khuyên dùng</span>
                     </div>
                     <div className="sub-title-row">
@@ -449,6 +521,18 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
             <div className="transaction-history-box">
                 <div className="history-header">
                     <h3 className="history-title">Lịch sử giao dịch</h3>
+                    <div className="history-filters">
+                        {historyFilterOptions.map((option) => (
+                            <button
+                                key={option.key}
+                                type="button"
+                                className={`history-filter-btn ${historyFilter === option.key ? 'active' : ''}`}
+                                onClick={() => setHistoryFilter(option.key)}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
                 <div className="table-responsive">
                     <table className="history-table">
@@ -462,8 +546,10 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {historySubscriptions.length > 0 ? (
-                                historySubscriptions.map((sub) => (
+                            {filteredTransactionRows.length > 0 ? (
+                                filteredTransactionRows.map((sub) => {
+                                    const statusMeta = getTransactionStatusMeta(sub);
+                                    return (
                                     <tr key={sub.id}>
                                         <td>{sub.id}</td>
                                         <td>
@@ -471,11 +557,22 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                                 {sub.name} ({sub.postingDuration || 'N/A'} ngày)
                                             </span>
                                         </td>
-                                        <td>{new Date(sub.startDate || sub.endDate).toLocaleDateString('vi-VN')}</td>
+                                        <td>{new Date(sub.createdAt || sub.startDate || sub.endDate).toLocaleDateString('vi-VN')}</td>
                                         <td>
-                                            <span className="badge-history status-close">
+                                            <span
+                                                className="badge-history"
+                                                style={{
+                                                    background: statusMeta.bg,
+                                                    color: statusMeta.color,
+                                                    border: statusMeta.border,
+                                                    padding: '6px 14px',
+                                                    borderRadius: '999px',
+                                                    fontSize: '11px',
+                                                    fontWeight: 800,
+                                                }}
+                                            >
                                                 <Check size={14} />
-                                                Đã hoàn thành
+                                                {statusMeta.label}
                                             </span>
                                         </td>
                                         <td>
@@ -486,11 +583,11 @@ const handleDeleteSubscription = async (id, isAutoDelete = false) => {
                                             )}
                                         </td>
                                     </tr>
-                                ))
+                                )})
                             ) : (
                                 <tr>
                                     <td colSpan="5" style={{textAlign: 'center', color: '#94a3b8'}}>
-                                        Chưa có lịch sử giao dịch
+                                        Không có giao dịch 
                                     </td>
                                 </tr>
                             )}
