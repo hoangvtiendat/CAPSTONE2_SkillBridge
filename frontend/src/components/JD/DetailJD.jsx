@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { toast, Toaster } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons";
-import { Plus, Search, Trash2, X } from 'lucide-react';
+import { Plus, Search, Trash2, X, Users } from 'lucide-react';
 
 import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons"
 import jobService from '../../services/api/jobService';
@@ -10,7 +9,6 @@ import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 import applicationService from '../../services/api/applicationService';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Search, Trash2, X, Users } from 'lucide-react';
 import './DetailJD.css';
 
 

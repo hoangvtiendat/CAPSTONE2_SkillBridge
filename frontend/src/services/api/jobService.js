@@ -268,7 +268,7 @@ const jobService = {
         console.error('Lỗi khi đăng lại bài:', error);
         throw error;
     }
-}
+},
 
     getAppliedJobs: async () => {
         try {

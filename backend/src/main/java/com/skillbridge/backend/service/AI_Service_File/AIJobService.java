@@ -230,6 +230,7 @@ public class AIJobService {
                     in4JD.getDescription()
             );
             System.out.println("dataForAI: " + dataForAI);
+            System.out.println("dataTyoe " + dataForAI);
             String resultOdAI = aiService.Ai_OF_SKILLBRIDGE(dataForAI, 1);
             System.out.println("resultOdAI: " + resultOdAI);
             /// 　String > json
@@ -238,7 +239,7 @@ public class AIJobService {
             /// Bóc tách dữ liệu nèdd
             System.out.println("NejsonNode: " + jsonNode.toString());
             System.out.println("dataForAI: " + dataForAI);
-            Boolean checkResultAI = jsonNode.get("isApproved").asBoolean();
+            boolean checkResultAI = jsonNode.path("isApproved").asBoolean(false);
             String subject = "Thông báo duyệt bài đăng";
             String messageBody= "";
 

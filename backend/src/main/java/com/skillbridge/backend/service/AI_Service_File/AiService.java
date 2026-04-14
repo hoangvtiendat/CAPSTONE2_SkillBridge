@@ -108,23 +108,44 @@ public class AiService {
                         ""\";
        """;
     private static final String PROMPT_CHECK_APPROVAL = """
-            Bạn là một trợ lý AI kiểm duyệt nội dung tuyển dụng (Job Moderation AI) cho nền tảng SkillBridge. Nhiệm vụ của bạn là phân tích dữ liệu JSON của một Tin tuyển dụng (Job Description - JD) và quyết định xem bài đăng này có hợp lệ để hiển thị công khai hay không.
-                       \s
-                        Hãy đánh giá JD dựa trên các tiêu chí cởi mở và linh hoạt sau:
-                       \s
-                        - Ngăn chặn Spam cơ bản: Chỉ từ chối khi nội dung hoàn toàn là các chuỗi ký tự gõ bừa vô nghĩa (ví dụ: "asdfgh", "qwerty") hoặc tin thử nghiệm quá ngắn (ví dụ: "test 123", "abc"). Nếu văn phong ngắn gọn, viết tắt, hoặc trình bày hơi lủng củng nhưng vẫn thể hiện rõ mục đích tuyển dụng, hãy CHẤP NHẬN.
-                        - An toàn cộng đồng: Từ chối các bài đăng vi phạm pháp luật rõ ràng (cờ bạc, lừa đảo, tình dục), hoặc chứa ngôn từ chửi thề, xúc phạm nặng nề. Đối với các từ ngữ đời thường, hãy bỏ qua.
-                        - Chấp nhận sự thiếu sót: Bài đăng không cần phải hoàn hảo 100%. Nếu thiếu một vài trường thông tin chi tiết, hoặc kỹ năng (skills) chưa khớp hoàn toàn với vị trí công việc, vẫn CHẤP NHẬN. Chỉ cần đảm bảo có thông tin vị trí công việc và mức lương không mang giá trị âm là được.
-                        - Bắt buộc các trường dữ liệu như tên địa chỉ thì phải dùng tiếng Việt các địa danh nước ngoài thì tiếng Anh đều được.
-                        ĐỊNH DẠNG ĐẦU RA:
-                        Bạn phải trả về kết quả dưới định dạng JSON với cấu trúc sau:
-                        {
-                          "isApproved": true/false,
-                          "reason": "Giải thích ngắn gọn lý do. Nếu duyệt (true), chỉ cần ghi 'Nội dung hợp lệ'.",
-                          "flaggedKeywords": ["danh sách các từ khóa cấm phát hiện được, nếu không có hãy để mảng rỗng"]
-                        }  \s
-                        ""\";
-            """;
+    [SYSTEM ROLE]
+            Bạn là AI kiểm duyệt nội dung tuyển dụng (Job Moderation AI) cho nền tảng SkillBridge.
+            
+            Nhiệm vụ của bạn là phân tích dữ liệu JSON của một tin tuyển dụng (Job Description - JD) và quyết định xem bài đăng có được phép hiển thị công khai hay không.
+            
+            ## Tiêu chí đánh giá:
+            
+            1. Spam cơ bản:
+            - TỪ CHỐI nếu nội dung là chuỗi vô nghĩa (ví dụ: "asdfgh", "qwerty") hoặc test quá sơ sài ("test", "abc", "123").
+            - CHẤP NHẬN nếu nội dung vẫn thể hiện được mục đích tuyển dụng, dù ngắn hoặc trình bày chưa tốt.
+            
+            2. An toàn nội dung:
+            - TỪ CHỐI nếu chứa nội dung vi phạm pháp luật (lừa đảo, cờ bạc, mại dâm, đa cấp bất hợp pháp, v.v.).
+            - TỪ CHỐI nếu có ngôn từ xúc phạm nghiêm trọng.
+            - Bỏ qua các từ ngữ đời thường, không cần quá khắt khe.
+            
+            3. Tính hợp lệ thông tin:
+            - Phải có thông tin vị trí công việc (job title).
+            - Mức lương không được là số âm.
+            - Không yêu cầu đầy đủ tất cả field, thiếu chi tiết vẫn có thể CHẤP NHẬN.
+            
+            4. Ngôn ngữ:
+            - Địa chỉ tại Việt Nam phải viết bằng tiếng Việt.
+            - Địa danh nước ngoài có thể dùng tiếng Anh.
+            
+            ## Kết luận:
+            
+            Trả về kết quả dưới dạng JSON với cấu trúc:
+            
+            {
+              "isApproved": true hoặc false,
+              "reason": "Nếu duyệt: 'Nội dung hợp lệ'. Nếu từ chối: ghi rõ lý do ngắn gọn.",
+              "flaggedKeywords": ["các từ khóa vi phạm phát hiện được, nếu không có thì để []"]
+            }
+            
+            Chỉ trả về JSON, không giải thích thêm.
+    [INPUT DATA]
+    """;
     private static final String PROMPT_CHECK_NEWJOV_VS_OLDJOB = """
             Bạn là hệ thống AI Chuyên gia Kiểm duyệt Nội dung Tuyển dụng (Job Description - JD) cấp cao.
             
@@ -323,7 +344,7 @@ public class AiService {
         try{
             String finalPrompt = "";
             OllamaOptions options = OllamaOptions.builder()
-                    .temperature(0.2)
+                    .temperature(0.0)
                     .top_k(10)
                     .top_p(0.1)
                     .num_predict(2048)
@@ -331,8 +352,13 @@ public class AiService {
                     .build();
             ///  chức năng AI duyệt bài đăng
             if(type_Function == 1){
+                // Trong aiService.Ai_OF_SKILLBRIDGE
+
                 finalPrompt = PROMPT_CHECK_APPROVAL +
-                        "\n\n--- JD JSON ---\n" + dataJD_of_Company;
+                        "\n\n[DỮ LIỆU CẦN KIỂM TRA]:\n\"\"\"\n" +
+                        dataJD_of_Company +
+                        "\n\"\"\"\n\n" +
+                        "CHỈ TRẢ VỀ JSON, KHÔNG ĐƯỢC NHẮC LẠI NỘI DUNG TRÊN.";
             }
             ///   Kiểm tra nâng cao của JD so sánh cũ + mới  !!!!!!!!!!!!!!!!!!!!!!
             else if(type_Function == 2){
