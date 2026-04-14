@@ -214,6 +214,20 @@ public interface JobRepository extends JpaRepository<Job, String> {
             @Param("excludeJobId") String excludeJobId,
             @Param("status") String status
     );
+    ///  So sánh Vector chức năng đăng lại bài
+    @Query(value = """
+    SELECT * FROM jobs j 
+    WHERE j.company_id = :companyId 
+      AND j.status = :status 
+      AND j.vector_embedding = CAST(:vectorString AS JSON) -- ĐỔI CHỮ vector THÀNH JSON Ở ĐÂY
+      AND j.is_deleted = false
+    LIMIT 1
+    """, nativeQuery = true)
+    Optional<Job> findJobByExactVector(
+            @Param("vectorString") String vectorString, // Chú ý: Nên đổi thành String
+            @Param("companyId") String companyId,
+            @Param("status") String status
+    );
 
     ///  Lấy chi tiết 1 JD
     @Override
@@ -226,6 +240,8 @@ public interface JobRepository extends JpaRepository<Job, String> {
             @Param("companyId") String companyId
     );
     /// lệnh truy vấn theo nhu cầy của người dùng (lấy trheo đúng chuyên ngành ) ---  type: 0
+
+
 
     @Query(value = """
 SELECT j.* FROM jobs j

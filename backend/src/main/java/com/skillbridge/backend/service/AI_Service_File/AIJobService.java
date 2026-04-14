@@ -24,6 +24,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.utils.SecurityUtils;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,8 @@ public class AIJobService {
     CandidateService candidateService;
     @Autowired
     SecurityUtils securityUtils;
+    LocalDate date = LocalDate.now();
+
     /// Lấy nội dung vector để so sánh
     public String getJobComparisonResponse(String jobId) {
         Job job = jobRepository.findById(jobId)
@@ -208,12 +211,9 @@ public class AIJobService {
             Job job = jobRepository.findById(dataOfJD)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
             String companyId = job.getCompany().getId();
-            System.out.println("id: " + dataOfJD);
             Optional<User> userOptional = jobRepository.findUserByJobAndCompany(dataOfJD, companyId);
-            System.out.println("getIdOfReceiver: " + userOptional);
-            System.out.println("dataOfJD: " + dataOfJD);
+            LocalDate endDate = LocalDate.now().plusDays(job.getPostingDay());
             User receiver = userOptional.get();
-            System.out.println("receiver (Email): " + receiver.getEmail());
 
             JobDetailResponse in4JD = getIn4OfJD(dataOfJD);
             String titleText = in4JD.getTitle() != null ? in4JD.getPosition() : "N/A";
@@ -236,9 +236,12 @@ public class AIJobService {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(resultOdAI);
             /// Bóc tách dữ liệu nèdd
+            System.out.println("NejsonNode: " + jsonNode.toString());
+            System.out.println("dataForAI: " + dataForAI);
             Boolean checkResultAI = jsonNode.get("isApproved").asBoolean();
             String subject = "Thông báo duyệt bài đăng";
             String messageBody= "";
+
             if (checkResultAI == false) {
                 String reason = jsonNode.get("reason").asText();
                 List<String> flaggedKeywordsList = new ArrayList<>();
@@ -252,26 +255,18 @@ public class AIJobService {
                         ? "Không phát hiện từ khóa cụ thể"
                         : String.join(", ", flaggedKeywordsList);
                 messageBody = String.format(
-                        "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
-                                "    <h2 style=\"color: #ef4444; text-align: center; margin-top: 0;\">Bài đăng bị từ chối</h2>" +
-                                "    <p style=\"font-size: 15px; color: #555;\">Chào <b>%s</b>,</p>" +
-                                "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Bài đăng <b>%s</b> của bạn không vượt qua được quy trình kiểm duyệt tự động.</p>" +
-                                "    " +
-                                "    <div style=\"background: #fff5f5; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px;\">" +
-                                "        <p style=\"margin: 0; font-size: 14px; color: #c53030;\">" +
-                                "            <b>Lý do:</b> %s<br/>" +
-                                "            <b>Từ khóa vi phạm:</b> <span style=\"text-decoration: underline;\">%s</span>" +
-                                "        </p>" +
-                                "    </div>" +
-                                "    " +
-                                "    <p style=\"font-size: 14px; color: #666;\">Vui lòng chỉnh sửa lại nội dung để phù hợp với tiêu chuẩn cộng đồng trước khi đăng tải lại.</p>" +
-                                "    " +
-                                "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
-                                "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br/>SkillBridge AI Moderator</p>" +
-                                "    </div>" +
-                                "</div>",
-                        receiver.getName(), job.getPosition(), reason, keywordsString
-
+                        "BÀI ĐĂNG BỊ TỪ CHỐI\n\n" +
+                                "Chào %s,\n\n" +
+                                "Bài đăng \"%s\" của bạn không vượt qua được quy trình kiểm duyệt tự động.\n\n" +
+                                "Lý do: %s\n" +
+                                "Từ khóa vi phạm: %s\n\n" +
+                                "Vui lòng chỉnh sửa lại nội dung để phù hợp với tiêu chuẩn cộng đồng trước khi đăng tải lại.\n\n" +
+                                "Trân trọng,\n" +
+                                "SkillBridge AI Moderator",
+                        receiver.getName(),
+                        job.getPosition(),
+                        reason,
+                        keywordsString
                 );
                 job.setModerationStatus(ModerationStatus.RED);
                 job.setStatus(JobStatus.LOCK);
@@ -287,45 +282,38 @@ public class AIJobService {
 
                 );
             }
+
             else{
                 float[] vectorOFFJ = job.getVectorEmbedding();
                 int result = checkSpamJd_of_company(job.getCompany().getId(),dataOfJD ,vectorOFFJ);
                 System.out.println("ketquaspamtrave" + result);
                 if (result == 1) {
                     messageBody = String.format(
-                            "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
-                                    "    <h2 style=\"color: #10b981; text-align: center; margin-top: 0;\">Bài đăng đã hoạt động</h2>" +
-                                    "    <p style=\"font-size: 15px; color: #555;\">Chào <b>%s</b>,</p>" +
-                                    "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Chúc mừng! Tin tuyển dụng <b>%s</b> của bạn đã được phê duyệt và hiển thị công khai trên hệ thống.</p>" +
-                                    "    " +
-                                    "    <div style=\"background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px;\">" +
-                                    "        <p style=\"margin: 0; font-size: 14px; color: #065f46;\">" +
-                                    "            <b>Trạng thái:</b> Đã phê duyệt (Active)<br/>" +
-                                    "            Bây giờ ứng viên có thể tìm thấy và ứng tuyển vào vị trí này." +
-                                    "        </p>" +
-                                    "    </div>" +
-                                    "    " +
-                                    "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
-                                    "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br/>SkillBridge AI Moderator</p>" +
-                                    "    </div>" +
-                                    "</div>",
-                            receiver.getName(), titleText
+                            "BÀI ĐĂNG ĐÀ HOẠT ĐỘNG\n\n" +
+                                    "Chào %s,\n\n" +
+                                    "Chúc mừng! Tin tuyển dụng %s của bạn đã được phê duyệt và hiển thị công khai trên hệ thống.\n\n" +
+                                    "Trạng thái: Đã phê duyệt (Active)\n" +
+                                    "Bây giờ ứng viên có thể tìm thấy và ứng tuyển vào vị trí này.\n\n" +
+                                    "Trân trọng,\n" +
+                                    "SkillBridge AI Moderator",
+                            receiver.getName(),
+                            titleText
                     );
                     job.setModerationStatus(ModerationStatus.GREEN);
+                    job.setStartDate(date.atStartOfDay());
+                    job.setEndDate(endDate.atStartOfDay());
                     job.setStatus(JobStatus.OPEN);
                 }
                 else if(result == 2){
                     messageBody = String.format(
-                            "<div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ffeeba; border-radius: 8px; background-color: #fff3cd;'>" +
-                                    "<h2 style='color: #856404;'>Thông báo trạng thái bài đăng</h2>" +
-                                    "<p>Chào <b>%s</b>,</p>" +
-                                    "<p>Hệ thống kiểm duyệt tự động nhận thấy bài đăng: <b>%s</b> của bạn có nội dung tương đồng với một số dữ liệu hiện có.</p>" +
-                                    "<p style='background-color: #ffffff; padding: 10px; border-radius: 5px; border-left: 5px solid #ffc107;'>" +
-                                    "   <b>Trạng thái:</b> <span style='color: #856404; font-weight: bold;'>Đang chờ quản trị viên phê duyệt (Pending Review)</span>" +
-                                    "</p>" +
-                                    "<p>Để đảm bảo chất lượng nội dung tốt nhất cho cộng đồng SkillBridge, bài đăng của bạn đã được chuyển đến <b>Quản trị viên hệ thống</b> để xem xét thủ công.</p>" +
-                                    "<p><i>Vui lòng kiên nhẫn chờ trong giây lát. Hệ thống sẽ gửi thông báo ngay khi quá trình duyệt hoàn tất.</i></p>" +
-                                    "<br><p>Trân trọng,<br><b>Đội ngũ SkillBridge AI Moderator</b></p></div>",
+                            "THÔNG BÁO TRẠNG THÁI BÀI ĐĂNG\n\n" +
+                                    "Chào %s,\n\n" +
+                                    "Hệ thống kiểm duyệt tự động nhận thấy bài đăng: \"%s\" của bạn có nội dung tương đồng với một số dữ liệu hiện có.\n\n" +
+                                    "Trạng thái: Đang chờ quản trị viên phê duyệt (Pending Review)\n\n" +
+                                    "Để đảm bảo chất lượng nội dung tốt nhất cho cộng đồng SkillBridge, bài đăng của bạn đã được chuyển đến Quản trị viên hệ thống để xem xét thủ công.\n\n" +
+                                    "Vui lòng kiên nhẫn chờ trong giây lát. Hệ thống sẽ gửi thông báo ngay khi quá trình duyệt hoàn tất.\n\n" +
+                                    "Trân trọng,\n" +
+                                    "Đội ngũ SkillBridge AI Moderator",
                             receiver.getName(),
                             titleText
                     );
@@ -334,24 +322,16 @@ public class AIJobService {
                 }
                 else if (result == 3) {
                     messageBody = String.format(
-                            "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 12px; background-color: #ffffff; border: 1px solid #e1e4e8; color: #333;\">" +
-                                    "    <h2 style=\"color: #f59e0b; text-align: center; margin-top: 0;\">Đang chờ xem xét</h2>" +
-                                    "    <p style=\"font-size: 15px; color: #555;\">Chào <b>%s</b>,</p>" +
-                                    "    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">Tin tuyển dụng <b>%s</b> cần được xem xét thêm bởi đội ngũ quản trị viên.</p>" +
-                                    "    " +
-                                    "    <div style=\"background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;\">" +
-                                    "        <p style=\"margin: 0; font-size: 14px; color: #92400e;\">" +
-                                    "            <b>Trạng thái:</b> Chờ phê duyệt thủ công<br/>" +
-                                    "            Hệ thống nhận thấy nội dung này cần được kiểm chứng để đảm bảo chất lượng tốt nhất." +
-                                    "        </p>" +
-                                    "    </div>" +
-                                    "    " +
-                                    "    <p style=\"font-size: 13px; color: #666; font-style: italic;\">Vui lòng kiên nhẫn, chúng tôi sẽ cập nhật trạng thái ngay khi có kết quả.</p>" +
-                                    "    <div style=\"margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 13px; color: #999;\">" +
-                                    "        <p style=\"margin: 20px 0 0 0; font-weight: bold; color: #333;\">Trân trọng,<br/>Đội ngũ SkillBridge</p>" +
-                                    "    </div>" +
-                                    "</div>",
-                            receiver.getName(), titleText
+                            "ĐANG CHỜ XEM XÉT\n\n" +
+                                    "Chào %s,\n\n" +
+                                    "Tin tuyển dụng \"%s\" của bạn cần được xem xét thêm bởi đội ngũ quản trị viên.\n\n" +
+                                    "Trạng thái: Chờ phê duyệt thủ công\n" +
+                                    "Hệ thống nhận thấy nội dung này cần được kiểm chứng để đảm bảo chất lượng tốt nhất.\n\n" +
+                                    "Vui lòng kiên nhẫn, chúng tôi sẽ cập nhật trạng thái ngay khi có kết quả.\n\n" +
+                                    "Trân trọng,\n" +
+                                    "Đội ngũ SkillBridge",
+                            receiver.getName(),
+                            titleText
                     );
                     job.setModerationStatus(ModerationStatus.RED);
                     job.setStatus(JobStatus.LOCK);

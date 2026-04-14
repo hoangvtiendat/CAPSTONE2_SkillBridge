@@ -86,7 +86,7 @@ public enum ErrorCode {
     SKILL_EXITS_NAME(5012, "Tên kỹ năng này đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
     CATEGORY_PROFESSION(5013, "Danh mục ngành nghề chuyên môn không hợp lệ hoặc đã tồn tại", HttpStatus.BAD_REQUEST),
     NOT_FOUND_CATEGORY_OF_CANDIDATE(5014, "Hiện tại cái trong CV của bạn không có category(lĩnh vực ngành nghề) vui lòng update để sử dụng chức năng này", HttpStatus.BAD_REQUEST),
-
+    SPAM_JD(5015, "Bạn đã đăng lại bài này rồi và nó đang trong trạng thái mở vui lòng không spam" , HttpStatus.BAD_REQUEST),
     // 6xxx: SUBSCRIPTION & PAYMENT (TIER LOGIC)
     SUBSCRIPTION_NOT_FOUND(6000, "Không tìm thấy gói đăng ký của công ty", HttpStatus.NOT_FOUND),
     SUBSCRIPTION_EXPIRED_OR_OUT(6001, "Gói dịch vụ đã hết hạn hoặc hết lượt sử dụng", HttpStatus.PAYMENT_REQUIRED),

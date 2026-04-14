@@ -16,6 +16,8 @@ import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.service.AI_Service_File.AIJobService;
 import com.skillbridge.backend.utils.SecurityUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.AccessLevel;
@@ -38,6 +40,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -69,6 +72,8 @@ public class JobService {
     CVJobEvaluationRepository cvJobEvaluationRepository;
     AIJobService aiJobService;
     MailServiceImpl mailService;
+    LocalDate date = LocalDate.now();
+
     @NonFinal
     @Value("${mail.username}")
     String senderEmail;
@@ -448,6 +453,9 @@ public class JobService {
             if ("OPEN".equals(status)) {
                 job.setModerationStatus(ModerationStatus.GREEN);
                 job.setStatus(JobStatus.OPEN);
+                job.setStartDate(date.atStartOfDay());
+                LocalDate endDate = LocalDate.now().plusDays(job.getPostingDay());
+                job.setEndDate(endDate.atStartOfDay());
 
                 actionDescription = "đã được PHÊ DUYỆT và hiển thị công khai";
                 subject = "Tin tuyển dụng của bạn đã được phê duyệt";
@@ -732,7 +740,6 @@ public class JobService {
 
         if(type == 1){
             List<Application> getListCandidateINJD = applicationRepository.findByJob_Id(id);
-            System.out.println("getList: " + getListCandidateINJD);
             String nameJD = job.getPosition();
 
             String companyName = job.getCompany().getName();
@@ -761,6 +768,7 @@ public class JobService {
         }
         ///  thay đổi trạng thái thành đóng
         else if(type == 2){
+            job.setStatus(JobStatus.CLOSED);
 
         }
         job.setDeleted(true);
@@ -863,88 +871,101 @@ public class JobService {
 
         return job;
     }
-    public Job deleteJD(String id, int type) {
-        CustomUserDetails currentUser = securityUtils.getCurrentUser();
-        String userId = currentUser.getUserId();
-        var recruiter = companyMemberRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
-        Job job = jobRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
-        boolean isAdmin = recruiter.getRole() == CompanyRole.ADMIN;
-        boolean isJobOwner = job.getCompanyMember().getId().equals(recruiter.getId());
+    @PersistenceContext
+    private EntityManager entityManager;
 
-        if (!isAdmin && !isJobOwner) {
-            throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
-        }
-        ///  thay đổi trạng thái thành khóa
-
-        if(type == 1){
-            List<Application> getListCandidateINJD = applicationRepository.findByJob_Id(id);
-            System.out.println("getList: " + getListCandidateINJD);
-            String nameJD = job.getPosition();
-
-            String companyName = job.getCompany().getName();
-            String subject = "[SkillBridge] Thông báo quan trọng về vị trí: " + nameJD;
-            String content = String.format(
-                    "<div style='font-family: Arial; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>" +
-                            "   <h2 style='color: #2c3e50;'>Thông báo từ SkillBridge</h2>" +
-                            "   <p>Chào bạn,</p>" +
-                            "   <p>Công ty <b>%s</b> xin thông báo rằng tin tuyển dụng cho vị trí <b>%s</b> hiện đã bị chủ doanh nghiệp xóa bài đi.</p>" +
-                            "   <div style='background: #f9f9f9; padding: 15px; border-left: 4px solid #3498db;'>" +
-                            "       <b>Trạng thái hồ sơ:</b> Hệ thống đang trong quá trình tổng hợp và phản hồi kết quả cuối cùng." +
-                            "   </div>" +
-                            "   <p>Cảm ơn bạn đã tin tưởng và ứng tuyển qua hệ thống SkillBridge. Bạn có thể tiếp tục tìm kiếm các cơ hội khác phù hợp hơn trên nền tảng của chúng tôi.</p>" +
-                            "   <br><p>Trân trọng,<br><b>Đội ngũ hỗ trợ SkillBridge</b></p>" +
-                            "</div>",
-                    companyName, nameJD
-            );
-
-            getListCandidateINJD.forEach(application -> {
-                Candidate candidate = application.getCandidate();
-                if (candidate != null) {
-
-                    mailService.sendToEmail(senderEmail,application.getEmail(), subject, content);
-                }
-            });
-            job.setStatus(JobStatus.LOCK);
-        }
-        ///  thay đổi trạng thái thành đóng
-        else if(type == 2){
-
-        }
-        job.setDeleted(true);
-        jobRepository.save(job);
-
-        return job;
-    }
-
-    public Job repost(String id) {
+    @Transactional(rollbackFor = Exception.class)
+    public Job repostJD(String id) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();
 
         var recruiter = companyMemberRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
-        Job job = jobRepository.findById(id)
+        Job oldJob = jobRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
         boolean isAdmin = recruiter.getRole() == CompanyRole.ADMIN;
-        boolean isJobOwner = job.getCompanyMember().getId().equals(recruiter.getId());
+        boolean isJobOwner = oldJob.getCompanyMember().getId().equals(recruiter.getId());
 
         if (!isAdmin && !isJobOwner) {
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
 
-        Job oldPost = jobRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-        if (JobStatus.CLOSED.equals(oldPost.getStatus())) {
-            Job newJob = jobRepository.save(job);
-            return newJob;
+        if (!JobStatus.CLOSED.equals(oldJob.getStatus())) {
+            throw new AppException(ErrorCode.JOB_STATUS_EXITS);
         }
-        throw new AppException(ErrorCode.JOB_STATUS_EXITS);
+
+        Company company = oldJob.getCompany();
+        if(!CompanyStatus.ACTIVE.equals(company.getStatus())) {
+            throw new AppException(ErrorCode.EXIT_STATUS_COMPANY);
+        }
+
+        SubscriptionOfCompany subscription = subscriptionOfCompanyRepository
+                .findByCompanyIdAndStatus(company.getId(), SubscriptionOfCompanyStatus.OPEN)
+                .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_OF_COMPANY));
+
+        if(subscription.getCurrentJobCount() >= subscription.getJobLimit()) {
+            throw new AppException(ErrorCode.EXIT_SUBSCRIPTION);
+        }
+
+
+
+        float[] vectorToCheck = oldJob.getVectorEmbedding();
+        String vectorJsonString = Arrays.toString(vectorToCheck);
+        if (vectorToCheck != null) {
+            if (!CheckSpam(vectorJsonString, company.getId(), JobStatus.OPEN.name())) {
+                throw new AppException(ErrorCode.SPAM_JD);
+            }
+        }
+        int postingDay = subscription.getPostingDuration();
+
+        Job newJob = Job.builder()
+                .title(oldJob.getTitle() != null ? new HashMap<>(oldJob.getTitle()) : null)
+                .position(oldJob.getPosition())
+                .description(oldJob.getDescription())
+                .category(oldJob.getCategory())
+                .company(oldJob.getCompany())
+                .location(oldJob.getLocation())
+                .salaryMin(oldJob.getSalaryMin())
+                .salaryMax(oldJob.getSalaryMax())
+                .companyMember(recruiter)
+                .status(JobStatus.OPEN)
+                .viewCount(0)
+                .moderationScore(0f)
+                .moderationStatus(ModerationStatus.GREEN)
+                .postingDay(subscription.getPostingDuration())
+                .vectorEmbedding(oldJob.getVectorEmbedding() != null ? oldJob.getVectorEmbedding().clone() : null)
+                .startDate(date.atStartOfDay())
+                .endDate(date.atStartOfDay().plusDays(postingDay))
+                .build();
+
+        Job savedJob = jobRepository.saveAndFlush(newJob);
+
+        if (oldJob.getJobSkills() != null && !oldJob.getJobSkills().isEmpty()) {
+            List<JobSkill> newJobSkills = oldJob.getJobSkills().stream()
+                    .map(oldSkill -> JobSkill.builder()
+                            .job(savedJob)
+                            .skill(oldSkill.getSkill())
+                            .isRequired(oldSkill.getIsRequired())
+                            .build())
+                    .collect(Collectors.toList());
+
+            jobSkillRepository.saveAll(newJobSkills);
+        }
+
+        subscription.setCurrentJobCount(subscription.getCurrentJobCount() + 1);
+        subscriptionOfCompanyRepository.save(subscription);
+
+        return savedJob;
     }
+
+    public Boolean CheckSpam(String vector, String companyId, String status) {
+        return jobRepository.findJobByExactVector(vector, companyId, status).isEmpty();
+    }
+
 
     @Transactional(rollbackFor = Exception.class)
     public JobApplicationRequest applyJob(JobApplicationRequest request, String jobId, MultipartFile cv) throws IOException {
@@ -1045,5 +1066,7 @@ public class JobService {
             throw new RuntimeException(ErrorCode.JOB_NOT_FOUND.getMessage());
         }
     }
+    ///  Đăng lại bài đăng
+
 
 }
