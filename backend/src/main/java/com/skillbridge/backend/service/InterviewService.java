@@ -79,7 +79,7 @@ public class InterviewService {
             notificationService.createNotification(
                 app.getCandidate().getUser(),
                 null,
-                "Công ti "+ job.getCompany().getName() +" mà bạn ứng tuyển đã cập nhật lịch",
+                "Công t "+ job.getCompany().getName() +" mà bạn ứng tuyển đã cập nhật lịch",
                 notificationMessage,
                 "INTERVIEW_UPDATE",
                 "/candidate/jobs/" + job.getId(),
@@ -246,7 +246,7 @@ public class InterviewService {
                 app.getCandidate().getUser(),
                 null,
                 "Đặt lịch thành công",
-                "Bạn đã đặt lịch lúc " + slot.getStartTime() +" với vị trí "+ slot.getJob().getPosition()+" của công ti "+slot.getJob().getCompany().getName(),
+                "Bạn đã đặt lịch lúc " + slot.getStartTime() +" với vị trí "+ slot.getJob().getPosition()+" của công ty "+slot.getJob().getCompany().getName(),
                 "INTERVIEW_BOOKED",
                 "/candidate/my-interviews",
                 true
