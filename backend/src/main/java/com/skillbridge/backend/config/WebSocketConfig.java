@@ -57,7 +57,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         String token = authHeader.substring(7);
                         if (jwtService.validateToken(token)) { // Nên check hợp lệ trước
                             String userId = jwtService.getUserId(token);
-
+                            System.out.println("User connected: " + userId);
                             UsernamePasswordAuthenticationToken auth =
                                     new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
 

@@ -25,6 +25,7 @@ import java.util.List;
 public class ApplicationController {
     ApplicationService applicationService;
     JobService jobService;
+
     /**
      * Lấy thông tin chi tiết một đơn ứng tuyển
      */
@@ -96,17 +97,41 @@ public class ApplicationController {
             throw ex;
         }
     }
+
     @GetMapping("/JD/Check-apply/{id}")
     public Boolean checkApply(@PathVariable String id) {
         Boolean result;
         try {
             result = jobService.checkUngVien(id);
             return result;
-        }
-        catch (AppException ex) {
+        } catch (AppException ex) {
             System.out.println("[CHECK-APPLY] AppException occurred");
         }
         return null;
     }
+
+    @PostMapping("/{id}/withdraw")
+    public ResponseEntity<ApiResponse<String>> withDrawApplication(
+            @PathVariable String id,
+            @Valid @RequestHeader(value = "Authorization") String token
+    ) {
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            String jwt = token.substring(7);
+            String rs = applicationService.withDrawApplication(id);
+            ApiResponse<String> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Rút đơn ứng tuyển thành công", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            System.out.println("[WITH DRAW APPLICATION] AppException occurred");
+            System.out.println("[WITH DRAW APPLICATION] ErrorCode: " + ex.getErrorCode());
+            throw ex;
+        }
+    }
+
+
 
 }

@@ -1,6 +1,7 @@
 package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.request.CreateJobRequest;
+import com.skillbridge.backend.dto.request.InviteRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.response.AdminJobFeedResponse;
 import com.skillbridge.backend.dto.response.ApiResponse;
@@ -96,9 +97,9 @@ public class JobController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String modStatus
-    ){
-        AdminJobFeedResponse result = jobService.adminGetJobPending(page,limit,modStatus);
-        ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(),"Pending Job Feed",result);
+    ) {
+        AdminJobFeedResponse result = jobService.adminGetJobPending(page, limit, modStatus);
+        ApiResponse<AdminJobFeedResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Pending Job Feed", result);
 
         return ResponseEntity.ok(response);
     }
@@ -116,7 +117,8 @@ public class JobController {
     @DeleteMapping("/feedAdmin/{jobId}")
     public ResponseEntity<ApiResponse<Void>> deleteJob(
             @PathVariable String jobId
-    ) {;
+    ) {
+        ;
         jobService.deleteJob(jobId);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
@@ -161,7 +163,7 @@ public class JobController {
             @RequestParam String status,
             @PathVariable String jobId
     ) {
-        jobService.responseJobPending(jobId,status);
+        jobService.responseJobPending(jobId, status);
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Đã chấp nhận bài đăng thành công",
@@ -199,7 +201,8 @@ public class JobController {
                 new ApiResponse<>(200, "Update bài đăng thành công ", updatedJob)
         );
     }
-///  update trạng thái bài đăng ----- 1: lock 2 closed
+
+    ///  update trạng thái bài đăng ----- 1: lock 2 closed
     @DeleteMapping("/my-company/update-Status-JD/{id}/{type}")
     public ResponseEntity<ApiResponse<Job>> deleteJD(@PathVariable String id, @PathVariable Integer type) {
         Job updatedJob = jobService.updateStatus(id, type);
@@ -207,7 +210,8 @@ public class JobController {
                 new ApiResponse<>(200, "Xóa bài đăng thành công", updatedJob)
         );
     }
-///  chưa làm nha
+
+    ///  chưa làm nha
     @PostMapping("/repost/{id}")
     public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
         Job rePost = jobService.repost(id);
@@ -227,6 +231,24 @@ public class JobController {
 
             ApiResponse<JobApplicationRequest> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Nộp hồ sơ ứng tuyển thành công", rs
+            );
+            return ResponseEntity.ok(response);
+        } catch (AppException ex) {
+            ex.printStackTrace();
+            throw ex;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    @PostMapping("/{jobid}/invite")
+    public ResponseEntity<ApiResponse<String>> inviteJob(@PathVariable String jobid, @RequestBody InviteRequest request) {
+        try {
+            String rs = jobService.inviteJob(jobid, request.getCandidateId());
+
+            ApiResponse<String> response = new ApiResponse<>(
+                    HttpStatus.OK.value(), "Mời ứng tuyển thành công", rs
             );
             return ResponseEntity.ok(response);
         } catch (AppException ex) {

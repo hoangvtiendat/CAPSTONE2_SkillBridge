@@ -49,6 +49,7 @@ public enum ErrorCode {
     APPLICATION_ALREADY_EXISTS(3010, "Bạn đã nộp đơn cho công việc này rồi", HttpStatus.BAD_REQUEST),
     OCR_FAILED(3011, "Lỗi ocr không thể đọc được dữ liệu", HttpStatus.BAD_REQUEST),
     NOT_FOUND_DATA_CV(3012, "Lỗi không thể Lấy được dữ liệu CV của bạn vui lòng kiểm tra lại CV của bạn", HttpStatus.BAD_REQUEST),
+    NOT_MY_APPLICATION(3013, "Đơn ứng tuyển này không phải của bạn", HttpStatus.BAD_REQUEST),
     // 4xxx: COMPANY & MEMBERSHIP
     COMPANY_NOT_FOUND(4000, "Mã số thuế chưa tồn tại. Vui lòng đăng ký mới!", HttpStatus.NOT_FOUND),
     COMPANY_EXIST(4001, "Công ty này đã được đăng ký trên hệ thống", HttpStatus.BAD_REQUEST),

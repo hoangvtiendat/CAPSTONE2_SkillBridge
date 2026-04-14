@@ -72,6 +72,7 @@ public class JobService {
     @NonFinal
     @Value("${mail.username}")
     String senderEmail;
+
     public Map<String, Object> getJobFeed(int page, int limit, String categoryId, String location, Double salary) {
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -142,6 +143,7 @@ public class JobService {
                 "currentPage", jobPage.getNumber()
         );
     }
+
     public AdminJobFeedResponse adminGetJob(int page, int limit, String status, String modStatus) {
         try {
             JobStatus newStatus = null;
@@ -175,8 +177,8 @@ public class JobService {
         }
     }
 
-    public AdminJobFeedResponse adminGetJobPending(int page, int limit, String modStatus){
-        try{
+    public AdminJobFeedResponse adminGetJobPending(int page, int limit, String modStatus) {
+        try {
             ModerationStatus newModStatus = null;
             if (modStatus != null && !modStatus.isEmpty()) {
                 try {
@@ -186,14 +188,14 @@ public class JobService {
                 }
             }
             Pageable pageable = PageRequest.of(page, limit);
-            Page<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobPending(newModStatus,pageable);
-            if(jobs.isEmpty()){
+            Page<AdminJobFeedItemResponse> jobs = jobRepository.adminGetJobPending(newModStatus, pageable);
+            if (jobs.isEmpty()) {
                 return new AdminJobFeedResponse(List.of(), 0, 0, page);
             }
             List<AdminJobFeedItemResponse> resultList = jobs.getContent();
             enrichSkills((List<JobFeedItemResponse>) (List<?>) resultList);
             return new AdminJobFeedResponse(resultList, jobs.getTotalPages(), jobs.getTotalElements(), jobs.getNumber());
-        }catch(Exception e){
+        } catch (Exception e) {
             System.err.println("Lỗi khi admin lấy danh sách job đang chờ: " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
@@ -222,14 +224,6 @@ public class JobService {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
-
-
 
 
     /**
@@ -284,7 +278,7 @@ public class JobService {
                     job.getCreatedAt()
             );
 
-            System.out.println("name: " +  job.getCompany().getName() );
+            System.out.println("name: " + job.getCompany().getName());
             return detail;
         } catch (Exception e) {
             System.err.println("LỖI HỆ THỐNG : " + e.getMessage());
@@ -353,7 +347,7 @@ public class JobService {
 
             sendNotificationToRecruiterAndAdmin(job, subject, content, "JOB_MODERATION", "/jobs/" + jobId);
 
-            messagingTemplate.convertAndSend("/topic/jobs/moderation", (Object)Map.of(
+            messagingTemplate.convertAndSend("/topic/jobs/moderation", (Object) Map.of(
                     "jobId", jobId,
                     "status", newModStatus.name()
             ));
@@ -483,15 +477,6 @@ public class JobService {
     }
 
 
-
-
-
-
-
-
-
-
-
     public Job createJD(CreateJobRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();
@@ -502,17 +487,16 @@ public class JobService {
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         Company getComPany = companyRepository.getReferenceById(recruiter.getCompany().getId());
-        if(!CompanyStatus.ACTIVE.equals(getComPany.getStatus())) {
+        if (!CompanyStatus.ACTIVE.equals(getComPany.getStatus())) {
             throw new AppException(ErrorCode.EXIT_STATUS_COMPANY);
         }
 
-        SubscriptionOfCompany getSubscriptionOfCompany = subscriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(),SubscriptionOfCompanyStatus.OPEN)
+        SubscriptionOfCompany getSubscriptionOfCompany = subscriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(), SubscriptionOfCompanyStatus.OPEN)
                 .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_OF_COMPANY));
 
-    if(getSubscriptionOfCompany.getCurrentJobCount() > getSubscriptionOfCompany.getJobLimit())
-    {
-        throw new AppException(ErrorCode.EXIT_SUBSCRIPTION);
-    }
+        if (getSubscriptionOfCompany.getCurrentJobCount() > getSubscriptionOfCompany.getJobLimit()) {
+            throw new AppException(ErrorCode.EXIT_SUBSCRIPTION);
+        }
 
         List<JobSkill> jobSkills = new ArrayList<>();
         StringBuilder textBuilder = new StringBuilder();
@@ -575,7 +559,7 @@ public class JobService {
             textBuilder.append(skillBuilder.substring(0, skillBuilder.length() - 2));
         }
         String textFinal = textBuilder.toString();
-        getSubscriptionOfCompany.setCurrentJobCount(getSubscriptionOfCompany.getCurrentJobCount()+1);
+        getSubscriptionOfCompany.setCurrentJobCount(getSubscriptionOfCompany.getCurrentJobCount() + 1);
         subscriptionOfCompanyRepository.save(getSubscriptionOfCompany);
         //  Text > Vector
         try {
@@ -587,7 +571,7 @@ public class JobService {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
         jobSkillRepository.saveAll(jobSkills);
-        Job finalSavedJob =  jobRepository.save(job);
+        Job finalSavedJob = jobRepository.save(job);
         String IdJob = finalSavedJob.getId();
 
 
@@ -730,7 +714,7 @@ public class JobService {
         }
         ///  thay đổi trạng thái thành khóa
 
-        if(type == 1){
+        if (type == 1) {
             List<Application> getListCandidateINJD = applicationRepository.findByJob_Id(id);
             System.out.println("getList: " + getListCandidateINJD);
             String nameJD = job.getPosition();
@@ -754,13 +738,13 @@ public class JobService {
             getListCandidateINJD.forEach(application -> {
                 Candidate candidate = application.getCandidate();
                 if (candidate != null) {
-                    mailService.sendToEmail(senderEmail,application.getEmail(), subject, content);
+                    mailService.sendToEmail(senderEmail, application.getEmail(), subject, content);
                 }
             });
             job.setStatus(JobStatus.LOCK);
         }
         ///  thay đổi trạng thái thành đóng
-        else if(type == 2){
+        else if (type == 2) {
 
         }
         job.setDeleted(true);
@@ -877,7 +861,7 @@ public class JobService {
         }
         ///  thay đổi trạng thái thành khóa
 
-        if(type == 1){
+        if (type == 1) {
             List<Application> getListCandidateINJD = applicationRepository.findByJob_Id(id);
             System.out.println("getList: " + getListCandidateINJD);
             String nameJD = job.getPosition();
@@ -902,13 +886,13 @@ public class JobService {
                 Candidate candidate = application.getCandidate();
                 if (candidate != null) {
 
-                    mailService.sendToEmail(senderEmail,application.getEmail(), subject, content);
+                    mailService.sendToEmail(senderEmail, application.getEmail(), subject, content);
                 }
             });
             job.setStatus(JobStatus.LOCK);
         }
         ///  thay đổi trạng thái thành đóng
-        else if(type == 2){
+        else if (type == 2) {
 
         }
         job.setDeleted(true);
@@ -953,10 +937,10 @@ public class JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
-        if(!job.getStatus().equals(JobStatus.OPEN)) {
+        if (!job.getStatus().equals(JobStatus.OPEN)) {
             throw new AppException(ErrorCode.JOB_NO_GREEN);
         }
-        if(!job.getModerationStatus().equals(ModerationStatus.GREEN)) {
+        if (!job.getModerationStatus().equals(ModerationStatus.GREEN)) {
             throw new AppException(ErrorCode.JOB_NO_GREEN);
         }
 
@@ -993,11 +977,10 @@ public class JobService {
         Application savedApp = applicationRepository.saveAndFlush(application);
 
         Map<String, Object> jobTitleMap = job.getTitle();
-        String cleanJobTitle = jobTitleMap.getOrDefault("vi", jobTitleMap.getOrDefault("en", "N/A")).toString();
 
-        String title = "Ứng tuyển mới: " + cleanJobTitle;
+        String title = "Ứng tuyển mới: " + job.getPosition();
         String content = String.format("Ứng viên %s vừa nộp hồ sơ vào vị trí %s. Kiểm tra ngay để không bỏ lỡ tài năng!",
-                request.getName(), cleanJobTitle);
+                request.getName(), job.getPosition());
         String link = "/recruiter/applications/" + savedApp.getId();
 
         Set<User> distinctRecruiters = companyMemberRepository.findByCompany_Id(job.getCompany().getId())
@@ -1029,18 +1012,61 @@ public class JobService {
         }
         return request;
     }
+
     ///  check điều kiện bài đăng có ái apply vào chưa
-    public Boolean checkUngVien(String idJD){
-        try{
+    public Boolean checkUngVien(String idJD) {
+        try {
             Boolean result = false;
             List<Application> getApplyOfJD = applicationRepository.findByJob_Id(idJD);
-            if(getApplyOfJD.size() > 0){
+            if (getApplyOfJD.size() > 0) {
                 result = true;
             }
             return result;
         } catch (Exception e) {
             throw new RuntimeException(ErrorCode.JOB_NOT_FOUND.getMessage());
         }
+    }
+
+    public String inviteJob(String id, String candidateId) {
+        Job job = jobRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+        Candidate candidate = candidateRepository.findById(candidateId).orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
+        System.out.println("candiateId: " + candidateId + "\nCandidate: " + candidate);
+        User user = candidate.getUser();
+        if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
+            throw new AppException(ErrorCode.ALREADY_APPLIED);
+        }
+
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        Company company = companyRepository.findById(job.getCompany().getId()).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+
+        companyMemberRepository.findByCompany_IdAndUser_Id(company.getId(), currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+        Map<String, Object> jobTitleMap = job.getTitle();
+
+
+        // --- TẠO NỘI DUNG THÔNG BÁO ---
+        String title = "Lời mời ứng tuyển từ " + company.getName();
+
+        String messageBody = String.format(
+                "Chào %s,\n\nCông ty %s đã gửi lời mời bạn ứng tuyển vào vị trí %s.\n" +
+                        "Hãy truy cập hệ thống để xem chi tiết và ứng tuyển ngay!",
+                candidate.getName(),
+                company.getName(),
+                job.getPosition()
+        );
+
+        // --- GỬI THÔNG BÁO ---
+        notificationService.createNotification(
+                user,
+                user.getEmail(),
+                title,
+                messageBody,
+                "JOB_INVITATION",
+                "/jobs/" + id,
+                true
+        );
+
+        return "Gửi lời mời ứng tuyển thành công!";
+
     }
 
 }

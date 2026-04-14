@@ -84,10 +84,9 @@ public class ApplicationService {
 
         // 2. Lấy tiêu đề Job sạch (Xử lý đa ngôn ngữ)
         Map<String, Object> jobTitleMap = job.getTitle();
-        String cleanJobTitle = jobTitleMap.getOrDefault("vi", jobTitleMap.getOrDefault("en", "N/A")).toString();
 
         // 3. Tạo tiêu đề và nội dung thân thiện
-        String title = "Cập nhật từ SkillBridge: " + cleanJobTitle;
+        String title = "Cập nhật từ SkillBridge: " +  job.getPosition();
 
         // Chuyển Enum status sang tiếng Việt cho thân thiện (Tùy chọn)
         String statusVi = translateStatus(newStatus);
@@ -95,7 +94,7 @@ public class ApplicationService {
         String messageBody = String.format(
                 "Chào %s,\n\nCông ty %s đã cập nhật trạng thái hồ sơ của bạn cho vị trí %s thành: %s.\n" +
                         "Vui lòng truy cập hệ thống để xem chi tiết.",
-                application.getFullName(), companyName, cleanJobTitle, statusVi
+                application.getFullName(), companyName, job.getPosition(), statusVi
         );
 
         // --- THỰC HIỆN LUỒNG THÔNG BÁO ---
@@ -120,5 +119,21 @@ public class ApplicationService {
             case REJECTED -> "Từ chối hồ sơ";
             default -> status.toString();
         };
+    }
+
+    public String withDrawApplication(String id) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+        System.out.println("candidate id: " + application.getCandidate().getId());
+        System.out.println("user id: " + currentUser.getUserId());
+        if(!application.getCandidate().getId().equals(currentUser.getUserId())) {
+            throw new AppException(ErrorCode.NOT_MY_APPLICATION);
+        }
+
+
+
+        applicationRepository.deleteById(id);
+        return "Rút hồ sơ ứng tuyển thành công";
     }
 }

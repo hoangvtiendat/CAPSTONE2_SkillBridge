@@ -31,6 +31,7 @@ const NotificationCard = ({ title, content, link, navigate, t, type = 'info' }) 
             bg: 'bg-blue'
         }
     };
+    console.log("link: ", link);
 
     // 2. Tự động nhận diện nếu là thông báo "Từ chối" từ Server (giữ logic cũ của ông)
     const isRejected = content?.toLowerCase().includes('từ chối') || content?.toLowerCase().includes('không phù hợp');

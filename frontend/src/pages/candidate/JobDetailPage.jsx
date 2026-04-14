@@ -532,7 +532,7 @@ const JobDetailPage = () => {
             </div>)}
 
             {/* --- MODAL XÁC NHẬN THÔNG TIN --- */}
-            {showConfirmModal && (<div className="apply-modal-overlay confirm-parsed-overlay" style={{zIndex: 1000}}>
+            {showConfirmModal && (<div className="apply-modal-overlay confirm-parsed-overlay">
                 <div className="ai-modal-content wide-modal animate-in liquid-glass scrollable-modal">
                     <div className="ai-modal-header">
                         <div className="header-title">
