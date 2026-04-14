@@ -53,7 +53,9 @@ const SubscriptionManager = () => {
         const { name, value, type, checked } = e.target;
         setEditForm((prev) => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value)
+            [name]: type === 'checkbox'
+                ? checked
+                : (type === 'number' ? (value === '' ? '' : Number(value)) : value)
         }));
     };
 
@@ -91,6 +93,12 @@ const SubscriptionManager = () => {
         return 'plan-card-FREE';
     };
 
+    const formatPlanPrice = (price) => {
+        const amount = Number(price) || 0;
+        if (amount === 0) return 'Miễn phí';
+        return `${new Intl.NumberFormat('vi-VN').format(amount)}đ`;
+    };
+
     return (
         <div className="subscription-admin-manager animate-in">
             <div className="sub-manager-header">
@@ -118,7 +126,7 @@ const SubscriptionManager = () => {
                                 </div>
                                 <div className="plan-price-box">
                                     <span className="price-value">
-                                        {sub.price === 0 ? 'Miễn phí' : `${(sub.price / 1000000).toLocaleString()}tr`}
+                                        {formatPlanPrice(sub.price)}
                                     </span>
                                     {sub.price > 0 && <span className="price-unit">/ tháng</span>}
                                 </div>
@@ -173,22 +181,17 @@ const SubscriptionManager = () => {
                             {/* Input Giá tiền */}
                             <div className="form-group">
                                 <label>Giá gói cước (VND)</label>
-                                {editForm.name?.toUpperCase().includes('FREE') ? (
-                                    <input type="text" value="Miễn phí" disabled className="form-control readonly" />
-                                ) : (
-                                    <input
-                                        type="text"
-                                        name="price"
-                                        value={editForm.price ? Number(editForm.price).toLocaleString('vi-VN') : ''}
-                                        onChange={(e) => {
-                                            const val = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
-                                            handleInputChange({ target: { name: 'price', value: val, type: 'number' } });
-                                        }}
-                                        required
-                                        className="form-control"
-                                        placeholder="Nhập giá tiền..."
-                                    />
-                                )}
+                                <input
+                                    type="number"
+                                    name="price"
+                                    min="0"
+                                    step="1000"
+                                    value={editForm.price ?? ''}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="form-control"
+                                    placeholder="Nhập giá tiền..."
+                                />
                             </div>
 
                             <div className="form-row">
