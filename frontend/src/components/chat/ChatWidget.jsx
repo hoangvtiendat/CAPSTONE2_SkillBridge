@@ -13,10 +13,10 @@ const ChatWidget = () => {
     const messagesEndRef = useRef(null);
 
     const quickSuggestions = [
-        "Cách đăng bài",
+        "Cách đăng tin tuyển dụng",
         "Quên mật khẩu",
         "Cập nhật thông tin",
-        "Ứng dụng có chức năng gì"
+        "Chức năng nổi bật?"
     ];
 
     const scrollToBottom = () => {

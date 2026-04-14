@@ -19,6 +19,7 @@ import RecruiterLayout from './components/recruiter/RecruiterLayout';
 import RecruiterRoute from './components/recruiter/RecruiterRoute';
 import { OTPVerification } from './components/auth/OTPVerification';
 import { SetPass } from './components/auth/SetPass';
+import CandidateList from './components/recruiter/CandidateList';
 
 // Pages: Auth & General
 import HomePage from './pages/home/HomePage';
@@ -156,7 +157,19 @@ function App() {
                 <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={<HomePage />} />
-                    <Route path="/about" element={<AboutUsPage />} />
+                    <Route
+                        path="/about"
+                        element={
+                            <div className="home-page">
+                                <div className="home-container">
+                                    <Sidebar />
+                                    <main className="home-main">
+                                        <AboutUsPage />
+                                    </main>
+                                </div>
+                            </div>
+                        }
+                    />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path='/forgot-password' element={<ForgotPasswordPage />} />
                     <Route path="/otp-verification" element={<OTPVerification />} />
@@ -230,8 +243,9 @@ function App() {
                             <Route path="jobs/:jobId/applications" element={<RecruiterApplications />} />
                             <Route path="applications/:id" element={<ApplicationDetailPage />} />
                             <Route path="settings" element={<CompanySettings />} />
-                            <Route path="candidates" element={<div className="p-8 text-center text-slate-500">Quản lý ứng viên - Sắp ra mắt</div>} />
-                            <Route path="jobs/:jobId/potential" element={<PotentialCandidates/>} />
+                            <Route path="candidates" element={<CandidateList />} />
+                            <Route path="jobs/:jobId/potential" element={<PotentialCandidates />} />
+                            <Route path="profile" element={<ProfilePage />} />
                             <Route path="jobs/:jobId/batch-slots" element={<BatchSlotCreate />} />
                         </Route>
 
@@ -253,6 +267,7 @@ function App() {
                         <Route path="jobs/:jobId" element={<AdminJobDetailPage />} />
                         <Route path="approve-jobs" element={<AdminPendingJobs />} />
                         <Route path="tax-lookup" element={<TaxLookup />} />
+                        <Route path="profile" element={<ProfilePage />} />
                         <Route path="management/users" element={<UserManagementPage />} />
                         <Route path="management/companies" element={<CompanyManagementPage />} />
                         <Route path="approve-companies" element={<AdminCompanyPending />} />

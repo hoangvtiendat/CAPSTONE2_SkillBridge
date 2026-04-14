@@ -2,8 +2,8 @@ package com.skillbridge.backend.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skillbridge.backend.entity.ChatDocument;
-import com.skillbridge.backend.repository.ChatDocumentRepository;
+import com.skillbridge.backend.entity.KnowledgeBase;
+import com.skillbridge.backend.repository.KnowledgeBaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class KnowledgeBaseService {
 
-    private final ChatDocumentRepository repository;
+    private final KnowledgeBaseRepository repository;
     private final EmbeddingService embeddingService;
     private final ObjectMapper objectMapper;
 
@@ -41,13 +41,13 @@ public class KnowledgeBaseService {
                 String metadataJson = objectMapper.writeValueAsString(Map.of("title", title));
 
                 // Lưu vào DB
-                ChatDocument chatDocument = ChatDocument.builder()
+                KnowledgeBase knowledgeBase = KnowledgeBase.builder()
                         .content(content)
                         .embedding(embeddingJson)
                         .metadata(metadataJson)
                         .build();
 
-                repository.save(chatDocument);
+                repository.save(knowledgeBase);
                 log.debug("Saved document: {}", title);
             } catch (JsonProcessingException e) {
                 log.error("Failed to parse embedding or metadata to JSON for doc {}", title, e);

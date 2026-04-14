@@ -27,6 +27,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
 
     /** Lấy toàn bộ danh sách thực thể Job thuộc về một công ty */
+    @Query("SELECT j FROM Job j WHERE j.company.id = :companyId")
     List<Job> findJobsByCompanyId(@Param("companyId") String companyId);
 
     /** Đếm tổng số lượng công việc dựa trên trạng thái (Ví dụ: Đếm có bao nhiêu bài đang OPEN) */

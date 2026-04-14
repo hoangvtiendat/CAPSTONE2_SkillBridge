@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '../common/Sidebar';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { toast } from 'sonner';
 import './Admin.css';
 
@@ -14,6 +14,17 @@ const AdminLayout = () => {
         await logout();
         toast.success("Đăng xuất thành công");
         navigate('/login');
+    };
+
+    const API_BASE_URL = "http://localhost:8081/identity";
+    const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
+
+    const getImageUrl = (path) => {
+        if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
+        if (path.startsWith('http')) return path;
+        const baseUrl = API_BASE_URL;
+        const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+        return `${baseUrl}/${cleanPath}?t=${new Date().getTime()}`;
     };
 
     return (
@@ -40,11 +51,19 @@ const AdminLayout = () => {
                             <div className="admin-avatar-container" style={{ position: 'relative', cursor: 'pointer' }}>
                                 <div
                                     className="admin-avatar"
-                                    style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '11px', fontWeight: '800' }}
+                                    style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
-                                    {user?.firstName?.substring(0, 2).toUpperCase() || 'AD'}
+                                    <img
+                                        src={getImageUrl(user?.avatar)}
+                                        alt={user?.firstName || "Admin"}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
                                 </div>
                                 <div className="admin-dropdown-menu">
+                                    <button onClick={() => navigate('/admin/profile')} className="logout-btn" style={{ borderBottom: '1px solid #eee', borderRadius: '8px 8px 0 0', color: '#000' }}>
+                                        <User size={16} />
+                                        <span>Hồ sơ cá nhân</span>
+                                    </button>
                                     <button onClick={handleLogout} className="logout-btn">
                                         <LogOut size={16} />
                                         <span>Đăng xuất</span>

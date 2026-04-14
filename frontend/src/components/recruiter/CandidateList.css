@@ -1,0 +1,317 @@
+/* CandidateList.css - Liquid Glass Recruiter Style */
+
+.candidate-manager {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* --- Header Area --- */
+.manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 35px;
+    gap: 20px;
+}
+
+.manager-title {
+    font-size: 32px;
+    font-weight: 850;
+    color: #1d1d1f;
+    letter-spacing: -0.04em;
+    margin: 0;
+}
+
+.manager-subtitle {
+    color: #86868b;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.manager-controls {
+    display: flex;
+    gap: 15px;
+}
+
+/* Search Box CSS */
+.search-box-glass {
+    position: relative;
+    width: 320px;
+}
+
+.search-box-glass input {
+    width: 100%;
+    height: 46px;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 100px;
+    padding: 0 20px 0 45px;
+    font-weight: 600;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-box-glass input:focus {
+    background: white;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1), 0 10px 20px rgba(0, 0, 0, 0.05);
+    border-color: #007aff;
+}
+
+.search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #86868b;
+}
+
+/* Filter Group */
+.filter-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.status-selector {
+    height: 46px;
+    padding: 0 40px 0 20px;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 100px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #1d1d1f;
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+    transition: 0.3s;
+}
+
+.status-selector:hover {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.filter-icon {
+    position: absolute;
+    right: 18px;
+    pointer-events: none;
+    color: #86868b;
+}
+
+/* --- Table Styles --- */
+.candidate-table-container {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 30px;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6), 0 20px 40px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.candidate-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.candidate-table th {
+    text-align: left;
+    padding: 20px 25px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #86868b;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.candidate-table td {
+    padding: 20px 25px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    vertical-align: middle;
+}
+
+.candidate-table tr:last-child td {
+    border-bottom: none;
+}
+
+.candidate-table tr:hover td {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Candidate Info Column */
+.candidate-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.candidate-avatar {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #007aff, #5856d6);
+    color: white;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    box-shadow: 0 4px 10px rgba(0, 122, 255, 0.2);
+}
+
+.candidate-name {
+    font-size: 16px;
+    font-weight: 750;
+    color: #1d1d1f;
+}
+
+.candidate-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.candidate-contact span {
+    font-size: 13px;
+    color: #86868b;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Job Info */
+.job-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #424245;
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.badge-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+
+.badge-interview {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+.badge-hired {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.badge-rejected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.badge-talent {
+    background: rgba(139, 92, 246, 0.1);
+    color: #7c3aed;
+}
+
+/* Actions */
+.candidate-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-action-add {
+    background: rgba(0, 122, 255, 0.1);
+    color: #007aff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-action-add:hover {
+    background: #007aff;
+    color: white;
+}
+
+.btn-action-delete {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 59, 48, 0.05);
+    color: #ff3b30;
+    border: none;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-action-delete:hover {
+    background: #ff3b30;
+    color: white;
+}
+
+/* Loading State */
+.candidate-list-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+}
+
+.loader-ring {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e5e7;
+    border-top-color: #007aff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.empty-state {
+    padding: 80px 0 !important;
+    text-align: center;
+}
+
+.empty-icon {
+    margin-bottom: 15px;
+    color: #e5e5e7;
+}
+
+.empty-state p {
+    color: #86868b;
+    font-weight: 600;
+}

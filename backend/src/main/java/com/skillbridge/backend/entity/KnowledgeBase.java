@@ -3,26 +3,25 @@ package com.skillbridge.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "knowledge_base")
-public class KnowledgeBase extends BaseEntity {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class KnowledgeBase {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(length = 36)
-    @Setter(AccessLevel.NONE)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(columnDefinition = "TEXT", nullable = false)
-    private String question;
+    private String content;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String answer;
+    @Column(columnDefinition = "TEXT")
+    private String embedding; // Lưu mảng float dưới dạng chuỗi JSON "[0.12, -0.45, ...]"
 
-    @Column(name = "vector_embedding", columnDefinition = "JSON")
-    private String vectorEmbedding;
+    @Column(columnDefinition = "JSON")
+    private String metadata; // Thông tin thêm, VD: {"title": "Hướng dẫn đăng bài", "url": "/guide"}
 }

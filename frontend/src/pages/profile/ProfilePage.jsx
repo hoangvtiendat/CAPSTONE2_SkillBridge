@@ -19,26 +19,26 @@ const ProfilePage = () => {
     const [isOpenToWork, setIsOpenToWork] = useState(false)
     const [isToggling2FA, setIsToggling2FA] = useState(false);
     const [is2faEnabledLocal, setIs2faEnabledLocal] = useState(
-            user?.is2faEnabled === "true" || user?.is2faEnabled === "1"
-        );
+        user?.is2faEnabled === "true" || user?.is2faEnabled === "1"
+    );
     const [isChangePassOpen, setIsChangePassOpen] = useState(false);
     const fetchCandidateStatus = async () => {
-        if (!user?.id) return;
+        if (!user?.id || user.role !== 'CANDIDATE') return;
         try {
             const response = await candidateService.getCv(user.id);
             const status = response?.result ? !!response.result.isOpenToWork : !!response.isOpenToWork;
             setIsOpenToWork(status);
         } catch (error) {
             console.error("Lỗi lấy trạng thái Candidate:", error);
-            setIsOpenToWork(false); // Lỗi thì mặc định tắt
+            setIsOpenToWork(false);
         }
     };
 
     useEffect(() => {
-        if (user?.id) {
+        if (user?.id && user.role === 'CANDIDATE') {
             fetchCandidateStatus();
         }
-    }, [user?.id]);
+    }, [user?.id, user?.role]);
     useEffect(() => {
         const isEnabled = user?.is2faEnabled === "true" || user?.is2faEnabled === "1";
     }, [user?.is2faEnabled]);
@@ -180,7 +180,7 @@ const ProfilePage = () => {
                 )}
 
                 {/* Fixed Back Button for CV Mode */}
-                {viewMode === 'cv' && (
+                {viewMode === 'cv' && user?.role === 'CANDIDATE' && (
                     <button
                         className="back-to-profile-btn"
                         onClick={() => setViewMode('profile')}
@@ -191,7 +191,7 @@ const ProfilePage = () => {
                 )}
 
                 {/* MOVED OUTSIDE of .profile-view to ensure position:fixed works relative to viewport, not transformed container */}
-                {viewMode === 'profile' && (
+                {viewMode === 'profile' && user?.role === 'CANDIDATE' && (
                     <div className="profile-footer-nav">
                         <button
                             className="profile-cv-btn"

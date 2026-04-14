@@ -141,9 +141,18 @@ const UserManagementPage = () => {
     const getRoleStyle = (role) => {
         switch (role) {
             case 'ADMIN': return { backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2' };
-            case 'EMPLOYER': return { backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe' };
+            case 'RECRUITER': return { backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe' };
             default: return { backgroundColor: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' };
         }
+    };
+
+    const getAvatarSrc = (avatar) => {
+        if (!avatar) return null;
+        if (avatar.startsWith('http')) return avatar;
+
+        const baseUrl = "http://localhost:8081/identity";
+        const cleanPath = avatar.startsWith('/') ? avatar : `/${avatar}`;
+        return `${baseUrl}${cleanPath}`;
     };
 
     return (
@@ -177,7 +186,7 @@ const UserManagementPage = () => {
                             >
                                 <option value="">Vai trò</option>
                                 <option value="CANDIDATE">Ứng viên</option>
-                                <option value="EMPLOYER">Nhà tuyển dụng</option>
+                                <option value="RECRUITER">Nhà tuyển dụng</option>
                             </select>
                         </div>
                         <div className="filter-item">
@@ -218,7 +227,7 @@ const UserManagementPage = () => {
                                         <div className="user-info-cell">
                                             <div className="user-avatar-wrapper">
                                                 {user.avatar ? (
-                                                    <img src={user.avatar} className="user-avatar" alt="" />
+                                                    <img src={getAvatarSrc(user.avatar)} className="user-avatar" alt="" />
                                                 ) : (
                                                     <div className="user-avatar-placeholder">
                                                         {user.name.charAt(0).toUpperCase()}
