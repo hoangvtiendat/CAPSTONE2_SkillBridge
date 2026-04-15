@@ -217,23 +217,23 @@ function App() {
                             )
                         }
                     />
-<Route
-    path="/interviews/book/:jobId"
-    element={
-        user ? (
-            <div className="home-page">
-                <div className="home-container">
-                    <Sidebar />
-                    <main className="home-main">
-                        <InterviewBookingPage />
-                    </main>
-                </div>
-            </div>
-        ) : (
-            <Navigate to="/login" replace />
-        )
-    }
-/>
+                    <Route
+                        path="/interviews/book/:jobId"
+                        element={
+                            user ? (
+                                <div className="home-page">
+                                    <div className="home-container">
+                                        <Sidebar />
+                                        <main className="home-main">
+                                            <InterviewBookingPage />
+                                        </main>
+                                    </div>
+                                </div>
+                            ) : (
+                                <Navigate to="/login" replace />
+                            )
+                        }
+                    />
                     {/* Recruiter Routes (Wrapped in Layout & Guard) */}
                     <Route element={<RecruiterRoute><RecruiterLayout /></RecruiterRoute>}>
                         <Route path="/recruiter">

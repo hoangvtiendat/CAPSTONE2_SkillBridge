@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/me/2fa",
                                 "/auth/change-password"
-                                ).authenticated()
+                        ).authenticated()
 
                         .requestMatchers(
                                 "/skill/set/**",
@@ -60,7 +60,8 @@ public class SecurityConfig {
                                 "/jobs/feedAdminPending/**",
                                 "/companies/feedPending/**",
                                 "/logs/**",
-                                "/companies/taxLook"
+                                "/companies/taxLook",
+                                "/subscription/list"
                         ).hasRole("ADMIN")
 
                         .requestMatchers(
@@ -70,7 +71,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/company-member/**",
                                 "/subscription/**",
-                                "/CategoryProfession/**",
+//                                "/CategoryProfession/**",
                                 "/applications/job/**",
                                 "/candidates/potential/**",
                                 "/candidates/evaluate-by-recruiter/**",
@@ -103,17 +104,16 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/jobs/**",
-                                "/companies/**",
                                 "/ws-log/**",
                                 "/payments/webhook",
-                                "/CategoryProfession/**",
+                                "/CategoryProfession/listCategory",
                                 "/logos/**",
                                 "/avatars/**",
                                 "/licenses/**",
                                 "/api/chat",
                                 "/api/chat/**",
-                                "/companies/*",
-                                "/CVs/**").permitAll()
+                                "/CVs/**"
+                        ).permitAll()
 
                         .anyRequest().authenticated()
                 )
