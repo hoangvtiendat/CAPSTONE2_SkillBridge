@@ -222,7 +222,7 @@
 
 .pending-table-core thead th {
     padding: 0 14px 16px;
-    text-align: left;
+    text-align: center;
     font-size: 12px;
     font-weight: 800;
     text-transform: uppercase;
@@ -376,6 +376,67 @@
     justify-content: center;
     gap: 10px;
     flex-wrap: wrap;
+}
+
+/* Nút Tra cứu - Glassmorphism Indigo */
+.btn-action-lookup {
+    position: relative;
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.08) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    padding: 8px 14px;
+    color: #4f46e5;
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
+    overflow: hidden;
+}
+
+.btn-action-lookup::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.btn-action-lookup:hover {
+    transform: translateY(-2px);
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(99, 102, 241, 0.5);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
+    color: #3730a3;
+}
+
+/* Tinh chỉnh lại text TaxId cho sạch */
+.tax-code-text {
+    font-family: 'JetBrains Mono', monospace; /* Nếu có font này thì đẹp, không thì thôi */
+    color: #1e293b;
+    background: rgba(241, 245, 249, 0.5);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+/* Nút từ chối gọn hơn dạng icon */
+.btn-action-reject {
+    padding: 0 12px;
+    min-width: 38px;
+}
+
+/* Animation cho toàn bộ trang */
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .btn-action-approve,

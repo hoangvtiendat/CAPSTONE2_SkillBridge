@@ -200,7 +200,7 @@ const JdList = () => {
                             onClick={() => setStatusFilter(s)}
                         >
                             {STATUS_LABELS[s]}
-                            <span className="status-count">{statusCounts[s] || 0}</span>
+                            <span className="status-count"> {statusCounts[s] || 0}</span>
                         </button>
                     ))}
                 </div>
@@ -225,7 +225,7 @@ const JdList = () => {
                                                 alt="logo"
                                                 onError={(e) => e.target.src = 'https://via.placeholder.com/100'}
                                             />
-                                        </div>
+                                            </div>
                                         <div className="title-box">
                                             <h2 className="position-title">{jd.position}</h2>
                                             <span className={`status-badge ${jd.status}`}>{STATUS_LABELS[jd.status] || jd.status}</span>

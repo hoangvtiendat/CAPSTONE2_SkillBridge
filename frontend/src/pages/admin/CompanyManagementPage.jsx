@@ -128,7 +128,13 @@ const CompanyManagementPage = () => {
             }
         }
     };
-
+    const handleTaxLookup = () => {
+        if (!filters.taxId) {
+            toast.warning("Vui lòng nhập mã số thuế để tra cứu");
+            return;
+        }
+        window.location.href = `/admin/tax-lookup?taxCode=${filters.taxId}`;
+    };
     const handleViewDetail = async (id) => {
         setDetailLoading(true);
         setIsDetailOpen(true);
@@ -147,7 +153,6 @@ const CompanyManagementPage = () => {
 
     const getImageUrl = (path) => {
         if (!path) return null;
-        // Nếu path đã có http/https thì trả về luôn
         if (path.startsWith('http')) return path;
 
         const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
@@ -194,10 +199,34 @@ const CompanyManagementPage = () => {
                                 type="text"
                                 placeholder="Mã số thuế..."
                                 className="modern-select"
-                                style={{ width: '150px', paddingLeft: '38px' }}
+                                style={{
+                                    width: '150px',
+                                    paddingLeft: '38px',
+                                    borderTopRightRadius: 0, // Bo góc phẳng để nối với nút
+                                    borderBottomRightRadius: 0
+                                }}
                                 value={filters.taxId}
                                 onChange={(e) => setFilters(prev => ({ ...prev, taxId: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && handleTaxLookup()} // Nhấn Enter để tra cứu
                             />
+                            <button
+                                onClick={handleTaxLookup}
+                                className="action-btn"
+                                title="Tra cứu pháp lý"
+                                style={{
+                                    height: '42px',
+                                    borderRadius: '0 12px 12px 0',
+                                    borderLeft: 'none',
+                                    background: '#f8fafc',
+                                    padding: '0 12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#6366f1'
+                                }}
+                            >
+                                <Search size={16} />
+                            </button>
                         </div>
                         <div className="filter-item">
                             <Filter size={14} className="filter-icon" />
@@ -268,6 +297,14 @@ const CompanyManagementPage = () => {
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
                                             <div className="actions-wrapper">
+                                                <button
+                                                    onClick={() => window.location.href = `/admin/tax-lookup?taxCode=${company.taxId}`}
+                                                    className="action-btn"
+                                                    style={{ color: '#6366f1' }}
+                                                    title="Tra cứu pháp lý"
+                                                >
+                                                    <Shield size={18} />
+                                                </button>
                                                 <button
                                                     onClick={() => handleViewDetail(company.id)}
                                                     className="action-btn info-btn"
