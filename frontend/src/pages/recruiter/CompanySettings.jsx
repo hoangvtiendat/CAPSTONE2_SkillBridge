@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import companyService from '../../services/api/companyService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
-import { Building2, ShieldAlert, Info, LogOut, RotateCcw } from 'lucide-react';
+import { Building2, ShieldAlert, Info, LogOut, RotateCcw, Fingerprint, ArrowRight } from 'lucide-react';
 import './CompanySettings.css';
 
 const CompanySettings = () => {
@@ -19,33 +19,32 @@ const CompanySettings = () => {
         }
     }, [user]);
 
-    // Cấu hình chung cho SweetAlert2 phong cách Liquid Glass
     const swalConfig = {
         buttonsStyling: false,
         customClass: {
-            popup: 'liquid-swal-popup',
-            title: 'liquid-swal-title',
-            htmlContainer: 'liquid-swal-text',
-            confirmButton: 'liquid-swal-confirm-btn',
-            cancelButton: 'liquid-swal-cancel-btn',
-            input: 'liquid-swal-input'
+            popup: 'premium-swal-popup',
+            title: 'premium-swal-title',
+            htmlContainer: 'premium-swal-text',
+            confirmButton: 'premium-swal-confirm-btn',
+            cancelButton: 'premium-swal-cancel-btn',
+            input: 'premium-swal-input'
         }
     };
 
     const handleReactivate = async () => {
         const result = await Swal.fire({
             ...swalConfig,
-            title: 'Kích hoạt lại công ty?',
-            text: 'Thành viên có thể đăng nhập lại và các tin tuyển dụng sẽ hiển thị trở lại.',
+            title: 'Kích hoạt tài khoản?',
+            text: 'Mọi hoạt động tuyển dụng sẽ được khôi phục ngay lập tức.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Kích hoạt ngay',
-            cancelButtonText: 'Hủy bỏ',
+            cancelButtonText: 'Quay lại',
         });
 
         if (result.isConfirmed) {
             toast.promise(companyService.reactivate(user.companyId), {
-                loading: 'Đang xử lý kích hoạt...',
+                loading: 'Đang xử lý...',
                 success: () => {
                     fetchProfile();
                     return "Công ty đã hoạt động trở lại!";
@@ -58,115 +57,103 @@ const CompanySettings = () => {
     const handleDeactivate = async () => {
         const result = await Swal.fire({
             ...swalConfig,
-            title: 'Vô hiệu hóa công ty?',
-            text: 'Nhập "DEACTIVATE" để xác nhận việc ẩn toàn bộ tin đăng và đăng xuất thành viên.',
+            title: 'Xác nhận vô hiệu hóa?',
+            text: 'Hành động này sẽ tạm dừng mọi quyền truy cập của thành viên.',
             input: 'text',
-            inputPlaceholder: 'Nhập DEACTIVATE',
+            inputPlaceholder: 'Nhập DEACTIVATE để xác nhận',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Xác nhận vô hiệu hóa',
+            confirmButtonText: 'Vô hiệu hóa',
             cancelButtonText: 'Hủy',
             customClass: {
                 ...swalConfig.customClass,
-                confirmButton: 'liquid-swal-danger-btn' // Dùng nút đỏ cho hành động nguy hiểm
+                confirmButton: 'premium-swal-danger-btn'
             },
             inputValidator: (value) => {
-                if (value !== 'DEACTIVATE') {
-                    return 'Bạn phải nhập chính xác mã xác nhận!';
-                }
+                if (value !== 'DEACTIVATE') return 'Mã xác nhận không khớp!';
             }
         });
 
         if (result.isConfirmed) {
             toast.promise(companyService.deactivate(user.companyId, { confirmationCode: 'DEACTIVATE' }), {
-                loading: 'Đang xử lý vô hiệu hóa...',
+                loading: 'Đang xử lý...',
                 success: () => {
                     setTimeout(async () => {
                         await logout();
                         window.location.href = '/login';
                     }, 2000);
-                    return "Đã vô hiệu hóa. Đang đăng xuất...";
+                    return "Đã vô hiệu hóa thành công.";
                 },
-                error: (err) => err.response?.data?.message || "Lỗi khi vô hiệu hóa."
+                error: (err) => err.response?.data?.message || "Lỗi hệ thống."
             });
         }
     };
 
-    if (loading) {
-        return (
-            <div className="loading-state">
-                <div className="spinner"></div>
-                <p>Đang tải cấu hình...</p>
-            </div>
-        );
-    }
+    if (loading) return <div className="loading-state"><div className="spinner"></div></div>;
 
     return (
-        <div className="company-settings-container animate-in">
-            <header className="settings-header">
-                <div className="header-icon-box">
-                    <Building2 size={24} />
+        <div className="settings-wrapper animate-in">
+            <header className="main-header">
+                <div className="icon-wrapper">
+                    <Building2 size={26} strokeWidth={2} />
                 </div>
-                <div className="header-text">
-                    <h1>Cài đặt thực thể</h1>
-                    <p>Quản lý trạng thái hoạt động và thông tin định danh doanh nghiệp</p>
+                <div className="title-section">
+                    <h1>Cấu hình doanh nghiệp</h1>
+                    <p>Quản lý thực thể và quyền kiểm soát hệ thống</p>
                 </div>
             </header>
 
-            <div className="settings-grid">
-                {/* General Info Section */}
-                <section className="settings-card">
-                    <div className="card-header">
-                        <Info size={18} />
-                        <h3>Thông tin định danh</h3>
+            <div className="settings-layout">
+                <section className="glass-card main-info">
+                    <div className="card-top">
+                        <div className="card-label">
+                            <Fingerprint size={18} />
+                            <span>Thông tin định danh</span>
+                        </div>
                     </div>
-                    <div className="card-body">
-                        <div className="info-field">
+
+                    <div className="input-grid">
+                        <div className="input-group">
                             <label>Tên pháp nhân</label>
-                            <input type="text" value={user?.companyName || ''} readOnly className="readonly-input" />
+                            <input type="text" value={user?.companyName || ''} readOnly />
                         </div>
-                        <div className="info-field">
-                            <label>Mã số thuế (MST)</label>
-                            <input type="text" value={user?.companyTaxId || 'Chưa cập nhật'} readOnly className="readonly-input" />
+                        <div className="input-group">
+                            <label>Mã số thuế</label>
+                            <input type="text" value={user?.companyTaxId || '---'} readOnly />
                         </div>
-                        <div className="field-hint-box">
-                            <ShieldAlert size={14} />
-                            <span>Thông tin này được đồng bộ từ dữ liệu quốc gia và không thể tự thay đổi.</span>
-                        </div>
+                    </div>
+
+                    <div className="alert-box">
+                        <Info size={16} />
+                        <p>Dữ liệu được xác thực bởi hệ thống quốc gia. Vui lòng liên hệ CSKH nếu có sai sót.</p>
                     </div>
                 </section>
 
-                {/* Status Control Section */}
                 {isAdmin && (
-                    <section className={`settings-card ${isDeactivated ? 'status-reactivate' : 'status-danger'}`}>
-                        <div className="card-header">
-                            <ShieldAlert size={18} />
-                            <h3>{isDeactivated ? 'Khôi phục hoạt động' : 'Quản lý trạng thái'}</h3>
-                        </div>
-                        <div className="card-body">
-                            <div className="status-action-box">
-                                <div className="action-text">
-                                    <h4>{isDeactivated ? 'Kích hoạt lại tài khoản' : 'Tạm dừng hoạt động'}</h4>
-                                    <p>
-                                        {isDeactivated
-                                            ? 'Khôi phục quyền truy cập cho nhân viên và hiển thị lại các tin tuyển dụng.'
-                                            : 'Vô hiệu hóa quyền truy cập, ẩn tin tuyển dụng và đăng xuất toàn bộ nhân viên.'}
-                                    </p>
-                                </div>
-                                <div className="action-button-wrapper">
-                                    {isDeactivated ? (
-                                        <button onClick={handleReactivate} className="btn-success-pill">
-                                            <RotateCcw size={18} />
-                                            Kích hoạt lại
-                                        </button>
-                                    ) : (
-                                        <button onClick={handleDeactivate} className="btn-danger-pill">
-                                            <LogOut size={18} />
-                                            Vô hiệu hóa
-                                        </button>
-                                    )}
-                                </div>
+                    <section className={`glass-card status-zone ${isDeactivated ? 'is-safe' : 'is-danger'}`}>
+                        <div className="card-top">
+                            <div className="card-label">
+                                <ShieldAlert size={18} />
+                                <span>Kiểm soát trạng thái</span>
                             </div>
+                        </div>
+
+                        <div className="action-row">
+                            <div className="action-info">
+                                <h3>{isDeactivated ? 'Kích hoạt hoạt động' : 'Tạm dừng hoạt động'}</h3>
+                                <p>
+                                    {isDeactivated
+                                        ? 'Khôi phục toàn bộ quyền hạn và hiển thị bài đăng.'
+                                        : 'Vô hiệu hóa quyền truy cập và ẩn tất cả tin tuyển dụng.'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={isDeactivated ? handleReactivate : handleDeactivate}
+                                className={isDeactivated ? 'btn-safe' : 'btn-danger'}
+                            >
+                                {isDeactivated ? <RotateCcw size={18} /> : <LogOut size={18} />}
+                                <span>{isDeactivated ? 'Kích hoạt' : 'Vô hiệu hóa'}</span>
+                            </button>
                         </div>
                     </section>
                 )}

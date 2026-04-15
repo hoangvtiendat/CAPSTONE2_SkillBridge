@@ -30,7 +30,7 @@ const CandidateList = () => {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
-    const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
+    const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.jpg`;
 
     const getImageUrl = (path) => {
         if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
@@ -195,7 +195,7 @@ const CandidateList = () => {
                                 <td>
                                     <div className="job-info">
                                         <Briefcase size={14} className="text-slate-400" />
-                                        <span>{app.job?.title?.vi || app.job?.title?.en || app.job?.position}</span>
+                                        <span>{app.job?.position}</span>
                                     </div>
                                 </td>
                                 <td>{getStatusBadge(app.status)}</td>

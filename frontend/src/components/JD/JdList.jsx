@@ -221,7 +221,7 @@ const JdList = () => {
                             onClick={() => setStatusFilter(s)}
                         >
                             {STATUS_LABELS[s]}
-                            <span className="status-count">{statusCounts[s] || 0}</span>
+                            <span className="status-count">{" "+ statusCounts[s] || 0}</span>
                         </button>
                     ))}
                 </div>
