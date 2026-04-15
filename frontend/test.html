@@ -49,8 +49,8 @@
         }
 
         // 1. Cấu hình đúng Endpoint từ WebSocketConfig của ông
-        // URL = http://localhost:8081 + context-path(/identity) + endpoint(/ws-log)
-        const socket = new SockJS('http://localhost:8081/identity/ws-log');
+        // URL = http://localhost:8081 + context-path(/api/v1) + endpoint(/ws-log)
+        const socket = new SockJS('http://localhost:8081/api/v1/ws-log');
         stompClient = Stomp.over(socket);
 
         // Chuẩn bị header chứa JWT Token để Spring Security xác thực

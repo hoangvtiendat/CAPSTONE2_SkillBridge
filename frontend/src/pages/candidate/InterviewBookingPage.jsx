@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, MapPin, Calendar, Info, CheckCircle, ArrowLeft, Loader2, ExternalLink, FileText, Briefcase, X, UserMinus } from 'lucide-react';
-import { toast } from 'sonner';
+import { Clock, MapPin, Calendar, Info, CheckCircle, ChevronLeft, Loader2, ExternalLink, FileText, Briefcase, X, UserMinus } from 'lucide-react';
 import interviewService from '../../services/api/interviewService';
 import './InterviewBookingPage.css';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+import useStompSubscription from '../../hooks/useStompSubscription';
+import toastOnce from '../../utils/toastOnce';
+import '../../components/admin/Admin.css';
 
 const InterviewBookingPage = () => {
     const { jobId } = useParams();
@@ -16,7 +16,6 @@ const InterviewBookingPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [expandedSlot, setExpandedSlot] = useState(null);
     const [currentTime, setCurrentTime] = useState(new Date());
-    const stompClientRef = useRef(null);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -49,53 +48,31 @@ const InterviewBookingPage = () => {
 
     useEffect(() => {
         loadData();
-        const token = localStorage.getItem('accessToken');
-        const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8081/identity/ws-log'),
-            connectHeaders: { Authorization: `Bearer ${token}` },
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
-        });
+    }, [loadData]);
 
-        client.onConnect = () => {
-            console.log('Connected to Booking WebSocket');
-            client.subscribe(`/topic/job-slots/${jobId}`, (message) => {
-                if (message.body === "UPDATE") {
-                    console.log("Realtime: Phát hiện thay đổi slot, đang cập nhật...");
-                    loadData(true);
-                }
-            });
-        };
-
-        client.onStompError = (frame) => {
-            console.error('Broker reported error: ' + frame.headers['message']);
-        };
-
-        client.activate();
-        stompClientRef.current = client;
-
-        return () => {
-            if (stompClientRef.current) {
-                stompClientRef.current.deactivate();
-                console.log("Disconnected WebSocket");
+    useStompSubscription({
+        destination: `/topic/job-slots/${jobId}`,
+        enabled: Boolean(jobId),
+        onMessage: (message) => {
+            if (message.body === 'UPDATE') {
+                loadData(true);
             }
-        };
-    }, [jobId, loadData]);
+        }
+    });
 
     const handleBookSlot = async (slotId) => {
         if (myInterview) {
-            toast.warning("Bạn đã đặt lịch cho công việc này rồi!");
+            toastOnce('warning', "Bạn đã đặt lịch cho công việc này rồi!");
             return;
         }
         setSubmitting(true);
         try {
             await interviewService.bookInterview(slotId);
-            toast.success("Đặt lịch thành công!");
+            toastOnce('success', "Đặt lịch thành công!");
             await loadData(false);
         } catch (err) {
             const errorMsg = err.response?.data?.message || "Lỗi khi đặt lịch.";
-            toast.error(errorMsg);
+            toastOnce('error', errorMsg);
         } finally {
             setSubmitting(false);
         }
@@ -115,8 +92,9 @@ const InterviewBookingPage = () => {
     return (
         <div className="booking-container">
             <div className="booking-header">
-                <button className="back-btn" onClick={() => navigate(-1)} title="Quay lại">
-                    <ArrowLeft size={20} />
+                <button className="app-back-btn" onClick={() => navigate(-1)} title="Quay lại">
+                    <ChevronLeft size={20} />
+                    Quay lại
                 </button>
                 <div className="header-text">
                     <h1>{myInterview ? "Lịch phỏng vấn của bạn" : "Chọn lịch phỏng vấn"}</h1>

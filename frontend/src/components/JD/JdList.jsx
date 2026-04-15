@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import jobService from '../../services/api/jobService';
 import companyMemberService from '../../services/api/companyMemberService';
 import './JdList.css';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config/appConfig';
+import confirmAction from '../../utils/confirmAction';
+import AppPagination from '../common/AppPagination';
 import {
     Zap, Users, Search, Info, Lock, Target, Plus,
     CalendarPlus, MoreVertical, XCircle, RefreshCcw
 } from 'lucide-react';
 
-const API_BASE_URL = "http://localhost:8081/identity";
 
 const STATUS_LABELS = {
     ALL: 'Tất cả',
@@ -21,7 +23,7 @@ const STATUS_LABELS = {
 };
 
 const JdList = () => {
-    const { user, token } = useAuth();
+    const { token } = useAuth();
     const ITEMS_PER_PAGE = 6;
 
     const [jdList, setJdList] = useState([]);
@@ -87,7 +89,14 @@ const JdList = () => {
 
     const handleLockJd = async (e, jdId) => {
         e.stopPropagation();
-        if (!window.confirm('Bạn có chắc muốn khoá JD này?')) return;
+        const confirmed = await confirmAction({
+            title: 'Khóa bài đăng?',
+            text: 'Bài đăng sẽ chuyển sang trạng thái khóa.',
+            confirmText: 'Khóa bài',
+            icon: 'warning',
+            confirmButtonColor: '#ef4444'
+        });
+        if (!confirmed) return;
         try {
             await jobService.deleteJd(jdId);
             setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'LOCK' } : jd));
@@ -100,7 +109,14 @@ const JdList = () => {
 
     const handleCloseJd = async (e, jdId) => {
         e.stopPropagation();
-        if (!window.confirm('Bạn có chắc muốn đóng bài đăng này?')) return;
+        const confirmed = await confirmAction({
+            title: 'Đóng bài đăng?',
+            text: 'Bài đăng sẽ ngừng nhận hồ sơ ứng tuyển mới.',
+            confirmText: 'Đóng bài',
+            icon: 'warning',
+            confirmButtonColor: '#f59e0b'
+        });
+        if (!confirmed) return;
         try {
             await jobService.closedJd(jdId);
             setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'CLOSED' } : jd));
@@ -113,7 +129,14 @@ const JdList = () => {
 
     const handleReopenJd = async (e, jdId) => {
         e.stopPropagation();
-        if (!window.confirm('Bạn có chắc muốn đăng lại bài đăng này?')) return;
+        const confirmed = await confirmAction({
+            title: 'Đăng lại bài đăng?',
+            text: 'Bài đăng sẽ được mở lại để nhận hồ sơ mới.',
+            confirmText: 'Đăng lại',
+            icon: 'question',
+            confirmButtonColor: '#16a34a'
+        });
+        if (!confirmed) return;
         try {
             await jobService.repostJob(jdId);
             setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'OPEN' } : jd));
@@ -159,8 +182,6 @@ const JdList = () => {
 
     return (
         <main className="jd-list-container">
-            <Toaster richColors position="top-right" />
-
             <div className="jd-page-header">
                 <div>
                     <h1 className="jd-list-title">Quản lý tuyển dụng</h1>
@@ -327,35 +348,12 @@ const JdList = () => {
                         ))}
                     </div>
 
-                    {totalPages > 1 && (
-                        <div className="jd-pagination">
-                            <button
-                                className="pagination-btn"
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={currentPage === 1}
-                            >
-                                Trước
-                            </button>
-
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                <button
-                                    key={page}
-                                    className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
-                                    onClick={() => handlePageChange(page)}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-
-                            <button
-                                className="pagination-btn"
-                                onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage === totalPages}
-                            >
-                                Sau
-                            </button>
-                        </div>
-                    )}
+                    <AppPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                        zeroBased={false}
+                    />
                 </>
             )}
         </main>

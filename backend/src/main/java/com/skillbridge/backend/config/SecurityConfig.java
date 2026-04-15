@@ -56,10 +56,10 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/skill/set/**",
-                                "/identity/jobs/feedAdmin/**",
+                                "/jobs/feedAdmin/**",
                                 "/jobs/feedAdminPending/**",
                                 "/companies/feedPending/**",
-                                "/Logs/**",
+                                "/logs/**",
                                 "/companies/taxLook"
                         ).hasRole("ADMIN")
 
@@ -69,19 +69,19 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/company-member/**",
-                                "/identity/subscription/**",
-                                "/identity/CategoryProfession/**",
-                                "/applications/jobs/**",
-                                "/candidates/potential/{jobId}",
-                                "/candidates/evaluate-by-recruiter/{candidateId}/{jobId}",
+                                "/subscription/**",
+                                "/CategoryProfession/**",
+                                "/applications/job/**",
+                                "/candidates/potential/**",
+                                "/candidates/evaluate-by-recruiter/**",
                                 "/interviews/batch-slots",
-                                "/interviews/slots/{slotId}",
-                                "/interviews/slots/{slotId}/candidates"
+                                "/interviews/slots/*",
+                                "/interviews/slots/*/candidates"
                         ).hasRole("RECRUITER")
 
                         .requestMatchers(
                                 "/candidates/**",
-                                "/jobs/apply/**",
+                                "/jobs/*/apply",
                                 "/evaluate-self/{id}",
                                 "/jobs/applied",
                                 "/interviews/my-interviews"
@@ -102,8 +102,6 @@ public class SecurityConfig {
                                 "/login/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/identity/swagger-ui/**",
-                                "/identity/v3/api-docs/**",
                                 "/jobs/**",
                                 "/companies/**",
                                 "/ws-log/**",

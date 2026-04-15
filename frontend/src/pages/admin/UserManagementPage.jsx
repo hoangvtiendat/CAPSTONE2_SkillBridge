@@ -4,21 +4,22 @@ import {
     Filter,
     Ban,
     CheckCircle,
-    MoreVertical,
-    User as UserIcon,
-    Mail,
     Calendar,
-    ChevronLeft,
-    ChevronRight,
     Loader2,
     Shield,
-    Users
 } from 'lucide-react';
 import adminService from '../../services/api/adminService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
 import '../../components/admin/UserManagementPage.css'
+import AppPagination from '../../components/common/AppPagination';
+import ManagementFilterBar from '../../components/common/ManagementFilterBar';
+import TableActionBar from '../../components/common/TableActionBar';
+import StatusBadge from '../../components/common/StatusBadge';
+import AppImage from '../../components/common/AppImage';
+import FilterResetButton from '../../components/common/FilterResetButton';
+import { DEFAULT_AVATAR_IMAGE } from '../../utils/imageUtils';
 
 const UserManagementPage = () => {
     const [users, setUsers] = useState([]);
@@ -146,36 +147,27 @@ const UserManagementPage = () => {
         }
     };
 
-    const getAvatarSrc = (avatar) => {
-        if (!avatar) return null;
-        if (avatar.startsWith('http')) return avatar;
-
-        const baseUrl = "http://localhost:8081/identity";
-        const cleanPath = avatar.startsWith('/') ? avatar : `/${avatar}`;
-        return `${baseUrl}${cleanPath}`;
+    const handleResetFilters = () => {
+        setSearchTerm('');
+        setRoleFilter('');
+        setStatusFilter('');
     };
 
     return (
         <div className="user-management">
             <div className="flex-between" style={{ marginBottom: '32px' }}>
                 <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0 }}>Quản lý người dùng</h1>
-                    <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Kiểm soát truy cập, phân quyền và giám sát hoạt động tài khoản.</p>
+                    <h1 className="management-page-title">Quản lý người dùng</h1>
+                    <p className="management-page-subtitle">Kiểm soát truy cập, phân quyền và giám sát hoạt động tài khoản.</p>
                 </div>
             </div>
 
             <div className="modern-card">
-                <div className="filters-bar">
-                    <div className="search-wrapper">
-                        <Search size={18} className="search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Tìm tên, email..."
-                            className="modern-input"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
+                <ManagementFilterBar
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    searchPlaceholder="Tìm tên, email..."
+                >
                     <div className="filters-group">
                         <div className="filter-item">
                             <Filter size={14} className="filter-icon" />
@@ -201,8 +193,9 @@ const UserManagementPage = () => {
                                 <option value="BANNED">Đã khóa</option>
                             </select>
                         </div>
+                        <FilterResetButton onClick={handleResetFilters} disabled={loading} />
                     </div>
-                </div>
+                </ManagementFilterBar>
 
                 <div className="table-container">
                     {loading && (
@@ -226,13 +219,12 @@ const UserManagementPage = () => {
                                     <td>
                                         <div className="user-info-cell">
                                             <div className="user-avatar-wrapper">
-                                                {user.avatar ? (
-                                                    <img src={getAvatarSrc(user.avatar)} className="user-avatar" alt="" />
-                                                ) : (
-                                                    <div className="user-avatar-placeholder">
-                                                        {user.name.charAt(0).toUpperCase()}
-                                                    </div>
-                                                )}
+                                                <AppImage
+                                                    src={user.avatar}
+                                                    fallbackSrc={DEFAULT_AVATAR_IMAGE}
+                                                    className="user-avatar"
+                                                    alt={user.name || 'User'}
+                                                />
                                             </div>
                                             <div className="user-details">
                                                 <p className="user-name">{user.name}</p>
@@ -252,31 +244,28 @@ const UserManagementPage = () => {
                                         </div>
                                     </td>
                                     <td>
-                                        <div className={`status-indicator ${user.status.toLowerCase()}`}>
-                                            <div className="status-dot"></div>
-                                            <span>{user.status === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}</span>
-                                        </div>
+                                        <StatusBadge status={user.status} />
                                     </td>
                                     <td style={{ textAlign: 'right' }}>
-                                        <div className="actions-wrapper">
-                                            {user.status === 'ACTIVE' ? (
-                                                <button
-                                                    onClick={() => handleBanUser(user)}
-                                                    className="action-btn ban-btn"
-                                                    title="Khóa tài khoản"
-                                                >
-                                                    <Ban size={18} />
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleUnbanUser(user)}
-                                                    className="action-btn unban-btn"
-                                                    title="Mở khóa tài khoản"
-                                                >
-                                                    <CheckCircle size={18} />
-                                                </button>
-                                            )}
-                                        </div>
+                                        <TableActionBar
+                                            actions={[
+                                                user.status === 'ACTIVE'
+                                                    ? {
+                                                        key: 'ban',
+                                                        title: 'Khóa tài khoản',
+                                                        icon: Ban,
+                                                        tone: 'ban-btn',
+                                                        onClick: () => handleBanUser(user)
+                                                    }
+                                                    : {
+                                                        key: 'unban',
+                                                        title: 'Mở khóa tài khoản',
+                                                        icon: CheckCircle,
+                                                        tone: 'unban-btn',
+                                                        onClick: () => handleUnbanUser(user)
+                                                    }
+                                            ]}
+                                        />
                                     </td>
                                 </tr>
                             )) : !loading && (
@@ -293,57 +282,13 @@ const UserManagementPage = () => {
                     </table>
                 </div>
 
-                {pagination.totalPages > 1 && (
-                    <div className="modern-pagination">
-                        <div className="pagination-info">
-                            Tổng <b>{pagination.totalElements}</b> người dùng
-                        </div>
-                        <div className="pagination-controls">
-                            <button
-                                disabled={pagination.page === 0}
-                                onClick={() => fetchUsers(pagination.page - 1)}
-                                className="pagination-btn"
-                                title="Trang trước"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-
-                            {[...Array(pagination.totalPages)].map((_, index) => {
-                                // Show first, last, and pages around current
-                                if (
-                                    index === 0 ||
-                                    index === pagination.totalPages - 1 ||
-                                    (index >= pagination.page - 1 && index <= pagination.page + 1)
-                                ) {
-                                    return (
-                                        <button
-                                            key={index}
-                                            onClick={() => fetchUsers(index)}
-                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
-                                        >
-                                            {index + 1}
-                                        </button>
-                                    );
-                                } else if (
-                                    index === pagination.page - 2 ||
-                                    index === pagination.page + 2
-                                ) {
-                                    return <span key={index} className="pagination-ellipsis">...</span>;
-                                }
-                                return null;
-                            })}
-
-                            <button
-                                disabled={pagination.page >= pagination.totalPages - 1}
-                                onClick={() => fetchUsers(pagination.page + 1)}
-                                className="pagination-btn"
-                                title="Trang sau"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <AppPagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={fetchUsers}
+                    zeroBased
+                    summary={<>Tổng <b>{pagination.totalElements}</b> người dùng</>}
+                />
             </div>
         </div>
     );

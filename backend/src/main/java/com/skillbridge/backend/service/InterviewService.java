@@ -112,12 +112,12 @@ public class InterviewService {
 
     @Transactional
     public InterviewSlotResponse updateSlot(String slotId, SlotRequest request) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         InterviewSlot slot = slotRepository.findById(slotId)
                 .orElseThrow(() -> new AppException(ErrorCode.SLOT_NOT_FOUND));
 
-        // Logic chặn sửa nếu sát 12h
         if (slot.getStartTime().isBefore(LocalDateTime.now().plusHours(12))) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.SLOT_OPERATION_LOCKED);
         }
 
         LocalDateTime oldTime = slot.getStartTime();
@@ -129,13 +129,14 @@ public class InterviewService {
 
         if (request.getCapacity() != null) {
             if (request.getCapacity() < slot.getCurrentOccupancy()) {
-                throw new AppException(ErrorCode.INVALID_KEY);
+                throw new AppException(ErrorCode.INVALID_INPUT);
             }
             slot.setCapacity(request.getCapacity());
             slot.setStatus(slot.getCurrentOccupancy() >= slot.getCapacity() ? SlotStatus.FULL : SlotStatus.AVAILABLE);
         }
 
         InterviewSlot updated = slotRepository.save(slot);
+        logService.info(currentUser, "Đã cập nhật khung giờ " + oldTime + " -> " + updated.getStartTime());
 
         if (slot.getCurrentOccupancy() > 0) {
             List<Interview> bookedInterviews = interviewRepository.findAllBySlotId(slotId);
@@ -185,17 +186,19 @@ public class InterviewService {
 
     @Transactional
     public void deleteSlot(String slotId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
         InterviewSlot slot = slotRepository.findById(slotId)
                 .orElseThrow(() -> new AppException(ErrorCode.SLOT_NOT_FOUND));
         if (slot.getCurrentOccupancy() > 0) {
-            throw new AppException(ErrorCode.INVALID_KEY);
+            throw new AppException(ErrorCode.CANNOT_DELETE_BOOKED_SLOT);
         }
 
         if (slot.getStartTime().isBefore(LocalDateTime.now().plusHours(12))) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.SLOT_OPERATION_LOCKED);
         }
 
         slotRepository.delete(slot);
+        logService.warn(currentUser, "Đã xóa khung giờ phỏng vấn lúc " + slot.getStartTime());
         messagingTemplate.convertAndSend("/topic/job-slots/" + slot.getJob().getId(), "UPDATE");
     }
 
@@ -239,6 +242,7 @@ public class InterviewService {
                 .build();
 
         Interview savedInterview = interviewRepository.save(interview);
+        logService.info(currentUser, "Ứng viên đã đặt lịch phỏng vấn cho job " + slot.getJob().getPosition() + " vào " + slot.getStartTime());
 
         messagingTemplate.convertAndSend("/topic/job-slots/" + slot.getJob().getId(), "UPDATE");
 

@@ -4,6 +4,8 @@ import {toast} from 'sonner';
 import {useCompany} from '../../hooks/useCompany';
 import companyService from '../../services/api/companyService';
 import './BusinessIdentity.css';
+import AppImage from '../../components/common/AppImage';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
 
 
 const BusinessRegisterForm = ({taxCode, onBack}) => {
@@ -175,14 +177,6 @@ const BusinessIdentity = () => {
         }
     };
 
-    const API_BASE_URL = "http://localhost:8081/identity";
-
-    const getImageUrl = (path) => {
-        if (!path) return "https://img.icons8.com/color/96/company.png";
-        if (path.startsWith('http')) return path;
-        return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
-    };
-
     const handleJoinRequest = async () => {
         if (companyInfo?.status === 'BAN') {
             return toast.error("Công ty này đang bị khóa, không thể gửi yêu cầu!");
@@ -236,14 +230,11 @@ const BusinessIdentity = () => {
             {step === 3 && companyInfo && (
                 <div className="identity-card join-section animate-in">
                     <div className="company-info-display">
-                        <img
-                            src={getImageUrl(companyInfo.imageUrl)}
-                            alt="logo"
+                        <AppImage
+                            src={companyInfo.imageUrl}
+                            fallbackSrc={DEFAULT_COMPANY_IMAGE}
+                            alt={companyInfo.name || 'Company'}
                             className="company-logo-preview"
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = "https://img.icons8.com/color/96/company.png";
-                            }}
                         />
                         <h2 className="company-name-highlight">{companyInfo.name}</h2>
 

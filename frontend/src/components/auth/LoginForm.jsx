@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "./LoginForm.css";
+import { API_BASE_URL } from "../../config/appConfig";
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export function LoginForm() {
 
   // 2. Google OAuth Redirect
   const handleGoogleAuth = () => {
-    window.location.href = "http://localhost:8081/identity/oauth2/authorization/google";
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
   };
 
   // 3. Xử lý Đăng ký (Chỉ gửi Email)
@@ -40,7 +41,7 @@ export function LoginForm() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:8081/identity/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }) // Không gửi password theo yêu cầu của bạn
@@ -70,7 +71,7 @@ export function LoginForm() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:8081/identity/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })

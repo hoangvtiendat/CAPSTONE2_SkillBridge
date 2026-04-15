@@ -40,7 +40,7 @@ public class UserController {
         return userService.getUsers();
     }
 
-    @GetMapping("/{userid}  ")
+    @GetMapping("/{userid}")
     User getUser(@PathVariable String userid) {
         return userService.getUser(userid);
     }

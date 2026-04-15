@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import jobService from '../../services/api/jobService';
 import '../../components/admin/Admin.css';
 import './AdminJob.css';
@@ -7,19 +7,17 @@ import { toast } from "sonner";
 import Swal from 'sweetalert2';
 import {
     MapPin,
-    RotateCcw,
-    Search,
     Briefcase,
     Filter,
     CheckCircle2,
     AlertCircle,
-    Clock,
     Trash2,
     Eye,
-    Loader2,
-    ChevronLeft,
-    ChevronRight
+    Loader2
 } from 'lucide-react';
+import AppPagination from '../../components/common/AppPagination';
+import TableActionBar from '../../components/common/TableActionBar';
+import FilterResetButton from '../../components/common/FilterResetButton';
 
 const AdminJobPage = () => {
     const [jobs, setJobs] = useState([]);
@@ -121,8 +119,8 @@ const AdminJobPage = () => {
 
             <div className="flex-between" style={{ marginBottom: '32px' }}>
                 <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0 }}>Quản lý tin đăng tuyển dụng</h1>
-                    <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Duyệt và kiểm soát các bài tuyển dụng từ doanh nghiệp.</p>
+                    <h1 className="management-page-title">Quản lý tin đăng tuyển dụng</h1>
+                    <p className="management-page-subtitle">Duyệt và kiểm soát các bài tuyển dụng từ doanh nghiệp.</p>
                 </div>
             </div>
 
@@ -157,14 +155,7 @@ const AdminJobPage = () => {
                             </select>
                         </div>
 
-                        <button
-                            className="action-btn info-btn"
-                            onClick={handleResetFilters}
-                            title="Xóa bộ lọc"
-                            style={{ width: '40px', height: '40px' }}
-                        >
-                            <RotateCcw size={18} />
-                        </button>
+                        <FilterResetButton onClick={handleResetFilters} disabled={loading} />
                     </div>
                 </div>
 
@@ -272,22 +263,24 @@ const AdminJobPage = () => {
                                         </td>
 
                                         <td style={{ textAlign: 'right' }}>
-                                            <div className="actions-wrapper">
-                                                <button
-                                                    onClick={() => navigate(`/admin/jobs/${job.id}`)}
-                                                    className="action-btn info-btn"
-                                                    title="Xem chi tiết"
-                                                >
-                                                    <Eye size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(job.id, job.companyName)}
-                                                    className="action-btn ban-btn"
-                                                    title="Xoá bài đăng"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
+                                            <TableActionBar
+                                                actions={[
+                                                    {
+                                                        key: 'view',
+                                                        title: 'Xem chi tiết',
+                                                        icon: Eye,
+                                                        tone: 'info-btn',
+                                                        onClick: () => navigate(`/admin/jobs/${job.id}`)
+                                                    },
+                                                    {
+                                                        key: 'delete',
+                                                        title: 'Xoá bài đăng',
+                                                        icon: Trash2,
+                                                        tone: 'ban-btn',
+                                                        onClick: () => handleDelete(job.id, job.companyName)
+                                                    }
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 ))
@@ -304,45 +297,12 @@ const AdminJobPage = () => {
                         </tbody>
                     </table>
 
-                    {/* Page based pagination control */}
-                    {pagination.totalPages > 1 && (
-                        <div className="modern-pagination">
-                            <div className="pagination-info">
-                                Đang xem trang <b>{pagination.page + 1} / {pagination.totalPages}</b>
-                            </div>
-                            <div className="pagination-controls">
-                                <button
-                                    disabled={pagination.page === 0}
-                                    onClick={() => loadJobs(pagination.page - 1)}
-                                    className="pagination-btn"
-                                    title="Trang trước"
-                                >
-                                    <ChevronLeft size={18} />
-                                </button>
-
-                                {[...Array(pagination.totalPages)].map((_, index) => {
-                                    return (
-                                        <button
-                                            key={index}
-                                            onClick={() => loadJobs(index)}
-                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
-                                        >
-                                            {index + 1}
-                                        </button>
-                                    );
-                                })}
-
-                                <button
-                                    disabled={pagination.page >= pagination.totalPages - 1}
-                                    onClick={() => loadJobs(pagination.page + 1)}
-                                    className="pagination-btn"
-                                    title="Trang sau"
-                                >
-                                    <ChevronRight size={18} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <AppPagination
+                        currentPage={pagination.page}
+                        totalPages={pagination.totalPages}
+                        onPageChange={loadJobs}
+                        zeroBased
+                    />
                 </div>
             </div>
 

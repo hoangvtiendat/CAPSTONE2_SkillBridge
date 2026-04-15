@@ -160,13 +160,14 @@ public class AdminController {
      */
     @GetMapping("/categories")
     public ResponseEntity<ApiResponse<Page<CategoryResponse>>> getCategories(
+            @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction
     ) {
         Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
-        Page<CategoryResponse> categories = adminService.getCategories(pageable);
+        Page<CategoryResponse> categories = adminService.getCategories(name, pageable);
         ApiResponse<Page<CategoryResponse>> response = new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Lấy danh sách ngành nghề thành công",

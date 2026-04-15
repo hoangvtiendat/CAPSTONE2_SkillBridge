@@ -1,13 +1,11 @@
 import React from "react";
 import { ForgotPasswordForm } from "../../components/auth/ForgotPasswordForm";
-import Header from '../../components/home/Header';
 
 
 import './authForm.css';
 const ForgotPasswordPage = () => {
     return(
     <div className="home-page">
-        <Header />
         <div className="home-container">
         <main className="card-main">
             <ForgotPasswordForm />

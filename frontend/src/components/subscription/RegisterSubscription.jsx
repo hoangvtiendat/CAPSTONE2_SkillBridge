@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import subscriptionService from '../../services/api/subscriptionService';
-import { toast, Toaster } from 'sonner';
-import { Check, ArrowLeft, ShoppingCart, Package } from 'lucide-react';
+import { toast } from 'sonner';
+import { Check, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './RegisterSubscription.css';
 
@@ -117,8 +117,6 @@ const RegisterSubscription = () => {
 
     return (
         <div className="rs-page-wrapper">
-            <Toaster position="top-right" richColors />
-
             <div className="rs-header-nav">
                 <button className="rs-back-btn" onClick={() => navigate(-1)}>
                     <ArrowLeft size={18} /> Quay lại

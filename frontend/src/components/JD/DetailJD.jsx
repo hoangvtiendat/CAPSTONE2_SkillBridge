@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Plus, Search, Trash2, X, Users } from 'lucide-react';
 
@@ -10,6 +10,7 @@ import categoryJDService from '../../services/api/categoryJD';
 import applicationService from '../../services/api/applicationService';
 import { useParams, useNavigate } from 'react-router-dom';
 import './DetailJD.css';
+import { API_BASE_URL } from '../../config/appConfig';
 
 
 const toastStyles = {
@@ -18,7 +19,6 @@ const toastStyles = {
     error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
 };
 
-const API_BASE_URL = "http://localhost:8081/identity";
 const normalizeSkillName = (value) => String(value || '').trim().toLowerCase();
 
 const dedupeSkills = (skills = []) => {
@@ -310,8 +310,6 @@ const DetailJD = () => {
 
     return (
         <div className="jd-board-container detail-view-container">
-            <Toaster position="top-right" />
-
             <header className="detail-header-card form-card">
                 <div className="header-company-info">
                     <img

@@ -86,8 +86,9 @@ public class CompanyService {
             List<CompanyFeedItemResponse> result = companies.getContent();
 
             return new CompanyFeedResponse(result, companies.getTotalPages(), companies.getTotalElements(), companies.getNumber());
+        }catch(AppException e){
+            throw e;
         }catch(Exception e){
-            System.out.println("Loi" + e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
@@ -181,8 +182,9 @@ public class CompanyService {
             messagingTemplate.convertAndSend("/topic/companies", id);
 
             return "Duyệt yêu cầu tạo công ty thành công";
+        }catch(AppException e){
+            throw e;
         }catch(Exception e){
-            System.out.println("Loi" + e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
@@ -465,7 +467,9 @@ public class CompanyService {
 
         companyJoinRequestRepository.save(joinRequest);
         User user = userRepository.findById(joinRequest.getUser().getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        user.setRole("RECRUITER");
+        if (newStatus == JoinRequestStatus.APPROVED) {
+            user.setRole("RECRUITER");
+        }
 
 
         String subject = "[SkillBridge] Kết quả yêu cầu tham gia công ty";

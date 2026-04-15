@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import companyService from '../../services/api/companyService';
 import './CompanyGrid.css';
-
-const API_BASE_URL = "http://localhost:8081/identity";
+import AppImage from '../common/AppImage';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
+import AppPagination from '../common/AppPagination';
+import FilterResetButton from '../common/FilterResetButton';
+import '../../components/admin/Admin.css';
 const CompanyGrid = () => {
     const navigate = useNavigate();
     const [companies, setCompanies] = useState([]);
@@ -15,18 +17,6 @@ const CompanyGrid = () => {
         totalElements: 0,
         totalPages: 0
     });
-    const getImageUrl = (path) => {
-        if (!path) return null;
-        if (path.startsWith('http')) return path;
-
-        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-        const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
-        console.log("aaa: ", `${baseUrl}${cleanPath}`)
-        return `${baseUrl}${cleanPath}`;
-    };
-
-
     const [searchTerm, setSearchTerm] = useState('');
 
     const fetchCompanies = useCallback(async (page = 0) => {
@@ -56,12 +46,6 @@ const CompanyGrid = () => {
     useEffect(() => {
         fetchCompanies(0);
     }, [fetchCompanies]);
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        fetchCompanies(0);
-    };
-
     const handlePageChange = (page) => {
         fetchCompanies(page);
         const element = document.getElementById('company-grid');
@@ -72,6 +56,11 @@ const CompanyGrid = () => {
 
     const handleCompanyClick = (companyId) => {
         navigate(`/companies/${companyId}`);
+    };
+
+    const handleResetFilters = () => {
+        setSearchTerm('');
+        fetchCompanies(0);
     };
 
     return (
@@ -93,6 +82,7 @@ const CompanyGrid = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
+                    <FilterResetButton onClick={handleResetFilters} disabled={loading} />
                 </div>
             </div>
 
@@ -108,8 +98,11 @@ const CompanyGrid = () => {
                         >
                             <div className="company-grid-logo-wrapper">
                                 <div className="company-grid-logo">
-                                    {company.imageUrl ? (<img src={getImageUrl(company.imageUrl)} alt="logo" />
-                                    ) : 'C'}
+                                    <AppImage
+                                        src={company.imageUrl}
+                                        fallbackSrc={DEFAULT_COMPANY_IMAGE}
+                                        alt={company.name || 'Company'}
+                                    />
                                 </div>
                             </div>
                             <h3 className="company-name">{company.name}</h3>
@@ -123,51 +116,13 @@ const CompanyGrid = () => {
                 </div>
             )}
 
-            {pagination.totalPages > 1 && (
-                <div className="pagination">
-                    <button
-                        className="page-btn"
-                        disabled={pagination.page === 0}
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        title="Trang trước"
-                    >
-                        <ChevronLeft size={18} />
-                    </button>
-
-                    {[...Array(pagination.totalPages)].map((_, index) => {
-                        if (
-                            index === 0 ||
-                            index === pagination.totalPages - 1 ||
-                            (index >= pagination.page - 1 && index <= pagination.page + 1)
-                        ) {
-                            return (
-                                <button
-                                    key={index}
-                                    onClick={() => handlePageChange(index)}
-                                    className={`page-btn ${pagination.page === index ? 'active' : ''}`}
-                                >
-                                    {index + 1}
-                                </button>
-                            );
-                        } else if (
-                            index === pagination.page - 2 ||
-                            index === pagination.page + 2
-                        ) {
-                            return <span key={index} className="pagination-ellipsis">...</span>;
-                        }
-                        return null;
-                    })}
-
-                    <button
-                        className="page-btn"
-                        disabled={pagination.page >= pagination.totalPages - 1}
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        title="Trang sau"
-                    >
-                        <ChevronRight size={18} />
-                    </button>
-                </div>
-            )}
+            <AppPagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+                zeroBased
+                summary={<>Tổng <b>{pagination.totalElements}</b> công ty</>}
+            />
         </section>
     );
 };

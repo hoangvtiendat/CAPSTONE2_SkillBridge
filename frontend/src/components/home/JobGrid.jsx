@@ -1,10 +1,13 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Search, Sparkles, X } from 'lucide-react';
+import { Search, Sparkles, X } from 'lucide-react';
 import JobCard from './JobCard';
 import { useAuth } from '../../context/AuthContext';
 import jobService from '../../services/api/jobService';
 import aiService from '../../services/api/aiService';
 import './JobGrid.css';
+import AppPagination from '../common/AppPagination';
+import FilterResetButton from '../common/FilterResetButton';
+import '../../components/admin/Admin.css';
 
 const JobGrid = () => {
   const { token } = useAuth();
@@ -183,6 +186,8 @@ const JobGrid = () => {
               >
                 {isAiSearchMode ? 'Đang AI Search' : 'Bật AI Search'}
               </button>
+
+              <FilterResetButton onClick={handleClearSearch} disabled={loading} />
             </div>
           </form>
         </div>
@@ -211,48 +216,14 @@ const JobGrid = () => {
         </div>
 
         {/* ================= PAGINATION ================= */}
-        {!isAiSearchMode && pagination.totalPages > 1 && (
-            <div className="job-pagination">
-              <button
-                  disabled={pagination.page === 0}
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  className="job-page-btn"
-              >
-                <ChevronLeft size={20} />
-              </button>
-
-              {[...Array(pagination.totalPages)].map((_, index) => {
-                if (
-                    index === 0 ||
-                    index === pagination.totalPages - 1 ||
-                    (index >= pagination.page - 1 && index <= pagination.page + 1)
-                ) {
-                  return (
-                      <button
-                          key={index}
-                          onClick={() => handlePageChange(index)}
-                          className={`job-page-btn ${pagination.page === index ? 'active' : ''}`}
-                      >
-                        {index + 1}
-                      </button>
-                  );
-                }
-
-                if (index === pagination.page - 2 || index === pagination.page + 2) {
-                  return <span key={index}>...</span>;
-                }
-
-                return null;
-              })}
-
-              <button
-                  disabled={pagination.page >= pagination.totalPages - 1}
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  className="job-page-btn"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
+        {!isAiSearchMode && (
+            <AppPagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+                zeroBased
+                summary={<>Tổng <b>{pagination.totalElements}</b> việc làm</>}
+            />
         )}
       </section>
   );

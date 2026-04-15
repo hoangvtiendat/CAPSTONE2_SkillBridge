@@ -12,6 +12,7 @@ import {
     MapPin
 } from "lucide-react";
 import "./OTPVerification.css";
+import { API_BASE_URL } from "../../config/appConfig";
 
 export function OTPVerification() {
     const { login } = useAuth();
@@ -51,19 +52,29 @@ export function OTPVerification() {
 
     const handleVerify = async (e) => {
         if (e) e.preventDefault();
+
+        if (isForgotPasswordFlow && (!password || password !== confirmPassword)) {
+            toast.warning("Mật khẩu xác nhận không khớp");
+            return;
+        }
+        if (!otp.trim() || otp.trim().length < 6) {
+            toast.warning("Vui lòng nhập mã OTP hợp lệ");
+            return;
+        }
+
         setIsLoading(true);
 
         let targetEndpoint = "";
         let requestBody = {};
 
         if (isRegisterFlow) {
-            targetEndpoint = "http://localhost:8081/identity/auth/register/verify-otp";
+            targetEndpoint = `${API_BASE_URL}/auth/register/verify-otp`;
             requestBody = { email: initialEmail, otp: otp.trim(), password, name, phoneNumber, address };
         } else if (isLoginFlow) {
-            targetEndpoint = "http://localhost:8081/identity/auth/login/verify-otp";
+            targetEndpoint = `${API_BASE_URL}/auth/login/verify-otp`;
             requestBody = { email: initialEmail, otp: otp.trim() };
         } else if (isForgotPasswordFlow) {
-            targetEndpoint = "http://localhost:8081/identity/auth/reset-password";
+            targetEndpoint = `${API_BASE_URL}/auth/reset-password`;
             requestBody = { email: initialEmail, otp: otp.trim(), password };
         }
 
@@ -98,7 +109,7 @@ export function OTPVerification() {
 
     const nextStep = () => {
         if (currentStep === 1 && (!name || !phoneNumber || !address)) {
-            return toast.warning("Vui lòng điền đủ thông tin cá intelligence");
+            return toast.warning("Vui lòng điền đủ thông tin cá nhân");
         }
         if (currentStep === 2 && (!password || password !== confirmPassword)) {
             return toast.warning("Mật khẩu không khớp");

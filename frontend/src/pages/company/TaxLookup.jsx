@@ -3,6 +3,9 @@ import companyService from '../../services/api/companyService';
 import './TaxLookup.css';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Search, Database, History, Info,Building } from 'lucide-react';
+import AppImage from '../../components/common/AppImage';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
+import '../../components/admin/Admin.css';
 
 const TaxLookup = () => {
     const [taxCode, setTaxCode] = useState('');
@@ -60,7 +63,7 @@ const TaxLookup = () => {
 
     return (
         <div className="tax-page-wrapper">
-            <button className="btn-back-nav" onClick={() => navigate(-1)}>
+            <button className="app-back-btn" onClick={() => navigate(-1)}>
                 <ChevronLeft size={20} /> Quay lại
             </button>
             <div className="tax-main-container">
@@ -137,7 +140,7 @@ const TaxLookup = () => {
                                     {company.taxCode ? (
                                         <h2 className="mst-text">{company.taxCode}</h2>
                                     ) : company.taxCodeImg ? (
-                                        <img src={company.taxCodeImg} alt="MST" className="mst-img" />
+                                        <AppImage src={company.taxCodeImg} fallbackSrc={DEFAULT_COMPANY_IMAGE} alt="MST" className="mst-img" />
                                     ) : (
                                         <h2 className="mst-text">{taxCode}</h2>
                                     )}
@@ -168,7 +171,7 @@ const TaxLookup = () => {
                                             <label>Điện thoại trụ sở</label>
                                             <div className="phone-container">
                                                 {company.phoneImg ? (
-                                                    <img src={company.phoneImg} alt="Phone" className="phone-img-v" />
+                                                    <AppImage src={company.phoneImg} fallbackSrc={DEFAULT_COMPANY_IMAGE} alt="Phone" className="phone-img-v" />
                                                 ) : <p>Chưa công khai</p>}
                                             </div>
                                         </div>

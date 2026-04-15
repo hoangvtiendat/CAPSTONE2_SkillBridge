@@ -3,9 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Header.css';
 
 import { useAuth } from '../../context/AuthContext';
-
-const API_BASE_URL = "http://localhost:8081/identity";
-const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
+import AppImage from '../common/AppImage';
+import { DEFAULT_AVATAR_IMAGE } from '../../utils/imageUtils';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,17 +13,6 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
-
-  const getImageUrl = (path) => {
-    if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
-    if (path.startsWith('http')) return path;
-
-    const baseUrl = API_BASE_URL;
-    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-
-    // Thêm timestamp để khi cập nhật ở Profile, Header cũng đổi ảnh ngay
-    return `${baseUrl}/${cleanPath}?t=${new Date().getTime()}`;
-  };
 
   const handleNavClick = (e, targetId) => {
     e.preventDefault();
@@ -82,8 +70,9 @@ const Header = () => {
                 className="user-profile-link"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               >
-                <img
-                  src={getImageUrl(user.avatar)}
+                <AppImage
+                  src={user?.avatar}
+                  fallbackSrc={DEFAULT_AVATAR_IMAGE}
                   alt={user.name || "User Avatar"}
                   className="user-avatar"
                 />

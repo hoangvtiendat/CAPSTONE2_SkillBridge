@@ -9,14 +9,16 @@ import {
     X,
     CheckCircle2,
     Calendar,
-    Loader2,
-    ChevronLeft,
-    ChevronRight
+    Loader2
 } from 'lucide-react';
 import adminService from '../../services/api/adminService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
+import ManagementFilterBar from '../../components/common/ManagementFilterBar';
+import FilterResetButton from '../../components/common/FilterResetButton';
+import AppPagination from '../../components/common/AppPagination';
+import TableActionBar from '../../components/common/TableActionBar';
 
 const IndustryManagementPage = () => {
     const navigate = useNavigate();
@@ -31,11 +33,12 @@ const IndustryManagementPage = () => {
         totalElements: 0,
         totalPages: 0
     });
+    const [searchName, setSearchName] = useState('');
 
     const fetchCategories = useCallback(async (page = 0) => {
         setLoading(true);
         try {
-            const data = await adminService.getCategories({ page, size: pagination.size });
+            const data = await adminService.getCategories({ page, size: pagination.size, name: searchName });
             if (data && data.result) {
                 setCategories(data.result.content);
                 setPagination(prev => ({
@@ -50,11 +53,15 @@ const IndustryManagementPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [pagination.size]);
+    }, [pagination.size, searchName]);
 
     useEffect(() => {
-        fetchCategories();
+        fetchCategories(0);
     }, [fetchCategories]);
+
+    const handleResetFilters = () => {
+        setSearchName('');
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -117,8 +124,8 @@ const IndustryManagementPage = () => {
         <div className="industry-management animate-fade-in">
             <div className="flex-between" style={{ marginBottom: '32px' }}>
                 <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0 }}>Quản lý ngành nghề</h1>
-                    <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Danh mục các lĩnh vực kinh doanh và tuyển dụng trên hệ thống.</p>
+                    <h1 className="management-page-title">Quản lý ngành nghề</h1>
+                    <p className="management-page-subtitle">Danh mục các lĩnh vực kinh doanh và tuyển dụng trên hệ thống.</p>
                 </div>
             </div>
 
@@ -146,6 +153,13 @@ const IndustryManagementPage = () => {
             </div>
 
             <div className="modern-card">
+                <ManagementFilterBar
+                    searchValue={searchName}
+                    onSearchChange={setSearchName}
+                    searchPlaceholder="Tìm ngành nghề..."
+                >
+                    <FilterResetButton onClick={handleResetFilters} disabled={loading} />
+                </ManagementFilterBar>
                 <div className="table-container">
                     {loading && (
                         <div className="table-loader-overlay">
@@ -186,22 +200,24 @@ const IndustryManagementPage = () => {
                                             </div>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
-                                            <div className="actions-wrapper">
-                                                <button
-                                                    onClick={() => openEditModal(cat)}
-                                                    className="action-btn info-btn"
-                                                    title="Chỉnh sửa"
-                                                >
-                                                    <Edit size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(cat.id, cat.name)}
-                                                    className="action-btn ban-btn"
-                                                    title="Xóa ngành nghề"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
+                                            <TableActionBar
+                                                actions={[
+                                                    {
+                                                        key: 'edit',
+                                                        title: 'Chỉnh sửa',
+                                                        icon: Edit,
+                                                        tone: 'info-btn',
+                                                        onClick: () => openEditModal(cat)
+                                                    },
+                                                    {
+                                                        key: 'delete',
+                                                        title: 'Xóa ngành nghề',
+                                                        icon: Trash2,
+                                                        tone: 'ban-btn',
+                                                        onClick: () => handleDelete(cat.id, cat.name)
+                                                    }
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 ))
@@ -219,56 +235,13 @@ const IndustryManagementPage = () => {
                     </table>
                 </div>
 
-                {pagination.totalPages > 1 && (
-                    <div className="modern-pagination">
-                        <div className="pagination-info">
-                            Tổng <b>{pagination.totalElements}</b> ngành nghề
-                        </div>
-                        <div className="pagination-controls">
-                            <button
-                                disabled={pagination.page === 0}
-                                onClick={() => fetchCategories(pagination.page - 1)}
-                                className="pagination-btn"
-                                title="Trang trước"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-
-                            {[...Array(pagination.totalPages)].map((_, index) => {
-                                if (
-                                    index === 0 ||
-                                    index === pagination.totalPages - 1 ||
-                                    (index >= pagination.page - 1 && index <= pagination.page + 1)
-                                ) {
-                                    return (
-                                        <button
-                                            key={index}
-                                            onClick={() => fetchCategories(index)}
-                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
-                                        >
-                                            {index + 1}
-                                        </button>
-                                    );
-                                } else if (
-                                    index === pagination.page - 2 ||
-                                    index === pagination.page + 2
-                                ) {
-                                    return <span key={index} className="pagination-ellipsis">...</span>;
-                                }
-                                return null;
-                            })}
-
-                            <button
-                                disabled={pagination.page >= pagination.totalPages - 1}
-                                onClick={() => fetchCategories(pagination.page + 1)}
-                                className="pagination-btn"
-                                title="Trang sau"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <AppPagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={fetchCategories}
+                    zeroBased
+                    summary={<>Tổng <b>{pagination.totalElements}</b> ngành nghề</>}
+                />
             </div>
 
             {/* Modal - Add/Edit */}

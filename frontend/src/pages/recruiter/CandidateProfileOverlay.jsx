@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './CandidateProfileOverlay.css';
 import candidateService from '../../services/api/candidateService';
 import { toast } from 'sonner';
+import AppImage from '../../components/common/AppImage';
+import { DEFAULT_AVATAR_IMAGE } from '../../utils/imageUtils';
 
 const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) => {
     const [evaluation, setEvaluation] = useState(null);
@@ -125,7 +127,7 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                             {/* Thêm class màu vào viền avatar */}
                             <div className={`main-avatar-ring ${scoreClass}`}>
                                 {candidateData.avatar ?
-                                    <img src={candidateData.avatar} alt="Avatar" /> :
+                                    <AppImage src={candidateData.avatar} fallbackSrc={DEFAULT_AVATAR_IMAGE} alt="Avatar" /> :
                                     <div className="avatar-alt">
                                         <span className="material-symbols-outlined" style={{fontSize: '48px', color: '#cbd5e1'}}>person</span>
                                     </div>

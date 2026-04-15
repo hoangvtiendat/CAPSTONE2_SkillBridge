@@ -11,10 +11,11 @@ import {
     Upload, Database, Edit3, Plus, Trash2, Save
 } from 'lucide-react';
 import './JobDetail.css';
-import {toast, Toaster} from 'sonner';
+import {toast} from 'sonner';
 import {useAuth} from '../../context/AuthContext';
-
-const API_BASE_URL = "http://localhost:8081/identity";
+import { API_BASE_URL } from '../../config/appConfig';
+import AppImage from '../../components/common/AppImage';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
 
 const formatSalary = (amount) => {
     if (!amount && amount !== 0) return "Thỏa thuận";
@@ -132,7 +133,7 @@ const JobDetailPage = () => {
                 });
 
                 if (res.cvUrl) {
-                    const fullCvUrl = `http://localhost:8081/identity${res.cvUrl}`;
+                    const fullCvUrl = `${API_BASE_URL}${res.cvUrl}`;
                     try {
                         const fileResponse = await axios.get(fullCvUrl, {
                             headers: {'Authorization': `Bearer ${token}`}, responseType: 'blob'
@@ -404,7 +405,6 @@ const JobDetailPage = () => {
 
     return (
         <div className="candidate-job-detail-wrapper">
-            <Toaster position="top-right" richColors/>
             <div className="container">
                 <button className="btn-back-nav" onClick={() => navigate(-1)}><ChevronLeft size={20}/> Quay lại</button>
 
@@ -412,7 +412,12 @@ const JobDetailPage = () => {
                 <div className="detail-card header-combined animate-in">
                     <div className="header-main-content">
                         <div className="company-info-section">
-                            <img src={job?.companyImageUrl ? `http://localhost:8081/identity${job.companyImageUrl}` : ''} alt="logo" className="company-logo-large" />
+                            <AppImage
+                                src={job?.companyImageUrl}
+                                fallbackSrc={DEFAULT_COMPANY_IMAGE}
+                                alt={job?.companyName || 'Company'}
+                                className="company-logo-large"
+                            />
                             <div className="job-title-info">
                                 <h1>{job?.position}</h1>
                                 <p className="company-name-text" onClick={() => navigate(`/companies/${job.companyId}`)}><Building2 size={18}/> {job?.companyName}</p>

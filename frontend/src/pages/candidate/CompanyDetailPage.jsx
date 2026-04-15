@@ -16,8 +16,8 @@ import jobService from '../../services/api/jobService';
 import categoryJDService from '../../services/api/categoryJD';
 import JobCard from '../../components/home/JobCard';
 import './CompanyDetailPage.css';
-
-const API_BASE_URL = "http://localhost:8081/identity";
+import AppImage from '../../components/common/AppImage';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
 
 const CompanyDetailPage = () => {
     const { id } = useParams();
@@ -30,16 +30,6 @@ const CompanyDetailPage = () => {
     const [loadingCompany, setLoadingCompany] = useState(true);
     const [loadingJobs, setLoadingJobs] = useState(true);
 
-    const getImageUrl = (path) => {
-        if (!path) return null;
-        if (path.startsWith('http')) return path;
-
-        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-        const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
-        console.log("aaa: ", `${baseUrl}${cleanPath}`)
-        return `${baseUrl}${cleanPath}`;
-    };
     const [pagination, setPagination] = useState({
         page: 0,
         size: 6,
@@ -153,11 +143,11 @@ const CompanyDetailPage = () => {
 
                     <div className="company-banner-content">
                         <div className="company-banner-logo">
-                            {company.imageUrl ? (
-                               <img src={getImageUrl(company.imageUrl)} alt="logo"/>
-                            ) : (
-                                <span>{company.name ? company.name.charAt(0).toUpperCase() : 'C'}</span>
-                            )}
+                            <AppImage
+                                src={company.imageUrl}
+                                fallbackSrc={DEFAULT_COMPANY_IMAGE}
+                                alt={company.name || 'Company'}
+                            />
                         </div>
 
 

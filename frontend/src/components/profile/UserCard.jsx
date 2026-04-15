@@ -4,8 +4,7 @@ import Swal from 'sweetalert2';
 import './UserCard.css';
 import { toast } from 'sonner';
 import authService from '../../services/api/authService';
-
-const API_BASE_URL = "http://localhost:8081/identity";
+import { API_BASE_URL } from '../../config/appConfig';
 
 const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.jpg`;
 export const UserCard = ({ user, isOpenToWork, onToggleOpenToWork, onAvatarUpdate }) => {

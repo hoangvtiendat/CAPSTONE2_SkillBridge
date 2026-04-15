@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import systemLogService from '../../services/api/systemLogService';
 import './SystemLogs.css';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+import '../../components/admin/Admin.css';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Search, Database, History, Info,Building } from 'lucide-react';
+import useStompSubscription from '../../hooks/useStompSubscription';
+import safeJsonParse from '../../utils/safeJsonParse';
+import FilterResetButton from '../../components/common/FilterResetButton';
 
 const SystemLogs = () => {
     const [logs, setLogs] = useState([]);
@@ -20,8 +22,21 @@ const SystemLogs = () => {
         setFilterDate('');
     };
 
-    const fetchLogs = async (cursor = null, isAppend = false) => {
-        if (loading) return;
+    const levelRef = useRef(level);
+    const filterDateRef = useRef(filterDate);
+    const loadingRef = useRef(false);
+
+    useEffect(() => {
+        levelRef.current = level;
+        filterDateRef.current = filterDate;
+    }, [level, filterDate]);
+
+    useEffect(() => {
+        loadingRef.current = loading;
+    }, [loading]);
+
+    const fetchLogs = useCallback(async (cursor = null, isAppend = false) => {
+        if (loadingRef.current) return;
         setLoading(true);
         try {
             const limit = 40;
@@ -41,7 +56,7 @@ const SystemLogs = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [level, filterDate]);
 
     const handleScroll = (e) => {
         const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -57,29 +72,22 @@ const SystemLogs = () => {
         setLogs([]);
         setHasMore(true);
         fetchLogs(null, false);
+    }, [level, filterDate, fetchLogs]);
 
-        const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8081/identity/ws-log'),
-            connectHeaders: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            },
-            reconnectDelay: 5000,
-            onConnect: () => {
-                client.subscribe('/topic/logs', (message) => {
-                    const newLog = JSON.parse(message.body);
-                    const isLevelMatch = !level || newLog.logLevel === level;
-                    const isDateMatch = !filterDate || new Date(newLog.createdAt).toISOString().split('T')[0] === filterDate;
-
-                    if (isLevelMatch && isDateMatch) {
-                        setLogs(prev => [newLog, ...prev]);
-                    }
-                });
+    useStompSubscription({
+        destination: '/topic/logs',
+        onMessage: (message) => {
+            const newLog = safeJsonParse(message.body, null);
+            if (!newLog?.createdAt || !newLog?.logLevel) return;
+            const currentLevel = levelRef.current;
+            const currentDate = filterDateRef.current;
+            const isLevelMatch = !currentLevel || newLog.logLevel === currentLevel;
+            const isDateMatch = !currentDate || new Date(newLog.createdAt).toISOString().split('T')[0] === currentDate;
+            if (isLevelMatch && isDateMatch) {
+                setLogs(prev => [newLog, ...prev]);
             }
-        });
-
-        client.activate();
-        return () => client.deactivate();
-    }, [level, filterDate]);
+        }
+    });
 
     const getLevelColor = (level) => {
         switch (level) {
@@ -141,9 +149,7 @@ const SystemLogs = () => {
                     <div className="control-card">
                         <div className="card-header-flex">
                             <h4 className="card-title">Bộ lọc Log</h4>
-                            <button className="btn-reset-filter" onClick={handleResetFilters}>
-                                <span className="icon-refresh">↻</span> Đặt lại
-                            </button>
+                            <FilterResetButton onClick={handleResetFilters} disabled={loading} />
                         </div>
                         <div className="filter-group">
                             <label>Mức độ</label>

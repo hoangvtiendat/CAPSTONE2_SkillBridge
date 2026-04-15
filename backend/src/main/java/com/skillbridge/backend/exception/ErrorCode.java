@@ -135,7 +135,8 @@ public enum ErrorCode {
     INTERVIEW_NOT_FOUND(9004, "Không tìm thấy thông tin buổi phỏng vấn", HttpStatus.NOT_FOUND),
     CANNOT_DELETE_BOOKED_SLOT(9005, "Không thể xoá khung giờ đã có ứng viên đặt lịch.", HttpStatus.BAD_REQUEST),
     SLOT_EXPIRED(9006, "Khung giờ này đã trôi qua, không thể đặt lịch", HttpStatus.BAD_REQUEST),
-    SLOT_IS_LOCKED(9007,"Khung giờ này đã bị khoá", HttpStatus.BAD_REQUEST);
+    SLOT_IS_LOCKED(9007,"Khung giờ này đã bị khoá", HttpStatus.BAD_REQUEST),
+    SLOT_OPERATION_LOCKED(9008, "Chỉ được chỉnh sửa hoặc xóa lịch trước giờ bắt đầu tối thiểu 12 tiếng", HttpStatus.BAD_REQUEST);
 
     private final int code;
     private final String message;

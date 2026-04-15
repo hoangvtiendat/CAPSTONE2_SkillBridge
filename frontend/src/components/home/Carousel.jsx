@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Carousel.css';
+import AppImage from '../common/AppImage';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
 
 const Carousel = ({ items = [], autoSlideInterval = 3000 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -80,7 +82,7 @@ const Carousel = ({ items = [], autoSlideInterval = 3000 }) => {
                   </div>
 
                   <div className="slide-image">
-                    <img src={item.image} alt={item.title} />
+                    <AppImage src={item.image} fallbackSrc={DEFAULT_COMPANY_IMAGE} alt={item.title} />
                   </div>
                 </div>
               </div>

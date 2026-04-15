@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Sparkles, X, Send } from 'lucide-react';
-import api from '../../config/axiosConfig';
+import DOMPurify from 'dompurify';
 import './ChatWidget.css';
+import { API_BASE_URL } from '../../config/appConfig';
 
 const ChatWidget = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -40,7 +41,7 @@ const ChatWidget = () => {
 
         try {
             const token = localStorage.getItem('accessToken');
-            const response = await fetch('http://localhost:8081/identity/api/chat', {
+            const response = await fetch(`${API_BASE_URL}/api/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -109,7 +110,7 @@ const ChatWidget = () => {
                                 </div>
                             )}
                             <div className={`chat-bubble ${msg.sender}`}>
-                                <div dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br/>') }} />
+                                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((msg.text || '').replace(/\n/g, '<br/>')) }} />
                             </div>
                         </div>
                     ))}

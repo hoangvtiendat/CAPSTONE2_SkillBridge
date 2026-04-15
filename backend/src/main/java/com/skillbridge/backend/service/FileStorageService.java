@@ -52,7 +52,7 @@ public class FileStorageService {
             log.info("Thư mục lưu trữ file đã sẵn sàng: {}", this.rootLocation);
         } catch (IOException e) {
             log.error("Không thể khởi tạo thư mục lưu trữ: {}", e.getMessage());
-            throw new RuntimeException("Could not initialize storage", e);
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

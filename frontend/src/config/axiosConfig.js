@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from './appConfig';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8081/identity',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -41,7 +42,7 @@ api.interceptors.response.use(
             }
         }
         if (error.response && error.response.status === 403) {
-            console.log('Bạn không có quyền truy cập vào tài nguyên này.');
+            console.warn('Bạn không có quyền truy cập vào tài nguyên này.');
 
             const errorData = error.response.data;
             if (errorData && errorData.code === 6011) {
@@ -58,7 +59,7 @@ api.interceptors.response.use(
         if (error.response && error.response.data) {
             const errorData = error.response.data;
             error.backendError = errorData;
-            console.log('Backend error response:', errorData);
+            console.warn('Backend error response:', errorData);
         }
 
         return Promise.reject(error);

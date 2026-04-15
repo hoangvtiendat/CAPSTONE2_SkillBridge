@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { Toaster, toast } from 'sonner';
+import useStompSubscription from './hooks/useStompSubscription';
 
 import './App.css';
 
@@ -47,11 +46,12 @@ import CompanySettings from './pages/recruiter/CompanySettings';
 import AdminMemberManager from './pages/recruiter/AdminMemberManager';
 import ListJdOfCompany from './pages/JD/list_jd_of_company';
 import CreateJd from './pages/JD/PostJDPage';
-import DetailJD_Page from './pages/JD/detailJD';
+import DetailJDPage from './pages/JD/detailJD';
 import SubscriptionOfCompany from "./pages/subscription/SubscriptionOfCompany";
 import RegisterSubscriptionPage from "./pages/subscription/RegisterSubscriptionPage";
 import PotentialCandidates from './pages/recruiter/PotentialCandidates';
 import BatchSlotCreate from './pages/recruiter/BatchSlotCreate';
+import RecruiterAnalyticsPage from './pages/recruiter/RecruiterAnalyticsPage';
 
 // Pages: Admin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -67,11 +67,13 @@ import SkillManagementPage from './pages/admin/SkillManagementPage';
 import SkillPageContainer from './pages/Skill/SkillPage';
 import SubscriptionManager from "./pages/subscription/SubscriptionManager";
 import ChatWidget from './components/chat/ChatWidget';
+import safeJsonParse from './utils/safeJsonParse';
 
 function App() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const recentNotificationKeysRef = useRef(new Map());
 
     // 1. Logic xác định Layout
     const isAdminPath = location.pathname.startsWith('/admin');
@@ -87,41 +89,39 @@ function App() {
     );
 
     // Trang Identity sẽ hiển thị Header Public nên ta set false cho DashboardLayout tại đây
-    const isDashboardLayout = (isAdminPath || isRecruiterPath) && location.pathname !== '/recruiter/identity';
+    const isDashboardLayout = (isAdminPath || isRecruiterPath) && location.pathname !== '/recruiter/business';
 
-    // 2. Quản lý WebSocket cho Thông báo
-    useEffect(() => {
-        let stompClient = null;
-        if (user) {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
+    useStompSubscription({
+        destination: '/user/queue/notifications',
+        enabled: Boolean(user),
+        onMessage: (message) => {
+            const notification = safeJsonParse(message.body, null);
+            if (!notification) return;
+            const dedupeKey = `${notification?.id || ''}-${notification?.title || ''}-${notification?.content || ''}-${notification?.link || ''}`;
+            const now = Date.now();
+            const lastShownAt = recentNotificationKeysRef.current.get(dedupeKey);
+            if (lastShownAt && now - lastShownAt < 3000) return;
 
-            stompClient = new Client({
-                webSocketFactory: () => new SockJS('http://localhost:8081/identity/ws-log'),
-                connectHeaders: { Authorization: `Bearer ${token}` },
-                reconnectDelay: 5000,
-                heartbeatIncoming: 4000,
-                heartbeatOutgoing: 4000,
-            });
+            recentNotificationKeysRef.current.set(dedupeKey, now);
+            if (recentNotificationKeysRef.current.size > 100) {
+                for (const [key, timestamp] of recentNotificationKeysRef.current.entries()) {
+                    if (now - timestamp > 60000) {
+                        recentNotificationKeysRef.current.delete(key);
+                    }
+                }
+            }
 
-            stompClient.onConnect = (frame) => {
-                stompClient.subscribe('/user/queue/notifications', (message) => {
-                    const notification = JSON.parse(message.body);
-                    toast.custom((t) => (
-                        <NotificationCard
-                            t={t}
-                            title={notification.title}
-                            content={notification.content}
-                            link={notification.link}
-                            navigate={navigate}
-                        />
-                    ), { duration: 10000 });
-                });
-            };
-            stompClient.activate();
+            toast.custom((t) => (
+                <NotificationCard
+                    t={t}
+                    title={notification.title}
+                    content={notification.content}
+                    link={notification.link}
+                    navigate={navigate}
+                />
+            ), { duration: 10000 });
         }
-        return () => { if (stompClient) stompClient.deactivate(); };
-    }, [user, navigate]);
+    });
 
     // 3. Điều hướng dựa trên Role
     useEffect(() => {
@@ -132,7 +132,7 @@ function App() {
                 }
             } else if (user.role === 'RECRUITER') {
                 // Cho phép Recruiter ở lại trang identity nếu họ muốn cập nhật lại thông tin
-                if (!isRecruiterPath && location.pathname !== '/recruiter/identity' && (location.pathname === '/' || location.pathname === '/login')) {
+                if (!isRecruiterPath && location.pathname !== '/recruiter/business' && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/recruiter/dashboard', { replace: true });
                 }
             }
@@ -183,7 +183,7 @@ function App() {
 
                     {/* ROUTE ĐỊNH DANH: Cấu trúc Sidebar + Header Public + BusinessIdentity */}
                     <Route
-                        path="/recruiter/identity"
+                        path="/recruiter/business"
                         element={
                             user ? (
                                 <div className="home-page">
@@ -247,10 +247,11 @@ function App() {
                             <Route path="jobs/:jobId/potential" element={<PotentialCandidates />} />
                             <Route path="profile" element={<ProfilePage />} />
                             <Route path="jobs/:jobId/batch-slots" element={<BatchSlotCreate />} />
+                            <Route path="analytics" element={<RecruiterAnalyticsPage />} />
                         </Route>
 
                         <Route path='/create-jd' element={<CreateJd />} />
-                        <Route path='/detail-jd/:id' element={<DetailJD_Page />} />
+                        <Route path='/detail-jd/:id' element={<DetailJDPage />} />
 
                         <Route path='/company/jd-list' element={<ListJdOfCompany />} />
                         <Route path='company/member' element={<AdminMemberManager />} />

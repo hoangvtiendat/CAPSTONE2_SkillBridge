@@ -63,7 +63,6 @@ public class JobService {
     ApplicationRepository applicationRepository;
     ObjectMapper objectMapper;
     FileStorageService fileStorageService;
-    NotificationRepository notificationRepository;
     NotificationService notificationService;
     SimpMessagingTemplate messagingTemplate;
     SubscriptionOfCompanyRepository subscriptionOfCompanyRepository;
@@ -155,7 +154,7 @@ public class JobService {
                 try {
                     newStatus = JobStatus.valueOf(status.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    System.out.println("Lưu ý: JobStatus sai định dạng [" + status + "]");
+                    log.warn("JobStatus sai định dạng [{}]", status);
                 }
             }
             ModerationStatus newModStatus = null;
@@ -163,7 +162,7 @@ public class JobService {
                 try {
                     newModStatus = ModerationStatus.valueOf(modStatus.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    System.out.println("Lưu ý: ModerationStatus sai định dạng [" + modStatus + "]");
+                    log.warn("ModerationStatus sai định dạng [{}]", modStatus);
                 }
             }
             Pageable pageable = PageRequest.of(page, limit);
@@ -176,7 +175,7 @@ public class JobService {
 
             return new AdminJobFeedResponse(resultList, jobs.getTotalPages(), jobs.getTotalElements(), jobs.getNumber());
         } catch (Exception e) {
-            System.err.println("Lỗi khi admin lấy danh sách job: " + e.getMessage());
+            log.error("Lỗi khi admin lấy danh sách job", e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
@@ -188,7 +187,7 @@ public class JobService {
                 try {
                     newModStatus = ModerationStatus.valueOf(modStatus.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    System.out.println("Lưu ý: ModerationStatus sai định dạng [" + modStatus + "]");
+                    log.warn("ModerationStatus sai định dạng [{}]", modStatus);
                 }
             }
             Pageable pageable = PageRequest.of(page, limit);
@@ -200,7 +199,7 @@ public class JobService {
             enrichSkills((List<JobFeedItemResponse>) (List<?>) resultList);
             return new AdminJobFeedResponse(resultList, jobs.getTotalPages(), jobs.getTotalElements(), jobs.getNumber());
         } catch (Exception e) {
-            System.err.println("Lỗi khi admin lấy danh sách job đang chờ: " + e.getMessage());
+            log.error("Lỗi khi admin lấy danh sách job đang chờ", e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
@@ -224,8 +223,7 @@ public class JobService {
                 item.setSkills(skills);
             });
         } catch (Exception e) {
-            System.err.println("Lỗi xảy ra trong quá trình enrichSkills!");
-            e.printStackTrace();
+            log.error("Lỗi xảy ra trong quá trình enrichSkills", e);
         }
     }
 
@@ -282,11 +280,12 @@ public class JobService {
                     job.getCreatedAt()
             );
 
-            System.out.println("name: " + job.getCompany().getName());
+            log.debug("Chi tiết job company name: {}", job.getCompany().getName());
             return detail;
+        } catch (AppException e) {
+            throw e;
         } catch (Exception e) {
-            System.err.println("LỖI HỆ THỐNG : " + e.getMessage());
-            e.printStackTrace();
+            log.error("Lỗi hệ thống khi lấy chi tiết job {}", jobId, e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
@@ -431,7 +430,7 @@ public class JobService {
     @Transactional
     public void responseJobPending(String jobId, String status) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
-        System.out.println(currentUser);
+        log.debug("Người duyệt job pending: {}", currentUser != null ? currentUser.getUsername() : "unknown");
         try {
             Job job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
@@ -454,6 +453,7 @@ public class JobService {
                 subject = "Tin tuyển dụng của bạn đã được phê duyệt";
                 color = "#10b981";
             } else {
+                job.setModerationStatus(ModerationStatus.RED);
                 job.setStatus(JobStatus.LOCK);
 
                 actionDescription = "đã bị TỪ CHỐI bởi quản trị viên";
@@ -501,7 +501,7 @@ public class JobService {
         SubscriptionOfCompany getSubscriptionOfCompany = subscriptionOfCompanyRepository.findByCompanyIdAndStatus(getComPany.getId(), SubscriptionOfCompanyStatus.OPEN)
                 .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_OF_COMPANY));
 
-        if (getSubscriptionOfCompany.getCurrentJobCount() > getSubscriptionOfCompany.getJobLimit()) {
+        if (getSubscriptionOfCompany.getCurrentJobCount() >= getSubscriptionOfCompany.getJobLimit()) {
             throw new AppException(ErrorCode.EXIT_SUBSCRIPTION);
         }
 
@@ -516,6 +516,7 @@ public class JobService {
         job.setCompany(recruiter.getCompany());
         job.setCompanyMember(recruiter);
         job.setStatus(JobStatus.PENDING);
+        job.setModerationStatus(ModerationStatus.YELLOW);
         job.setViewCount(0);
         job.setTitle(request.getTitle());
         job.setLocation(request.getLocation());
@@ -573,8 +574,7 @@ public class JobService {
             float[] vector = embeddingService.createEmbedding(textFinal);
             job.setVectorEmbedding(vector);
         } catch (Exception e) {
-            System.out.println("Lỗi tạo vector");
-            e.printStackTrace();
+            log.error("Lỗi tạo vector embedding cho job {}", job.getId(), e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
         jobSkillRepository.saveAll(jobSkills);
@@ -583,11 +583,11 @@ public class JobService {
 
 
         /// kiểm duyệt nội dung
-        System.out.println("đã chạy chức năng check bài spam");
+        log.debug("Bắt đầu đăng ký tác vụ AI check spam cho job {}", IdJob);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                System.out.println("ddang chayj chuc nang sapm");
+                log.debug("Running async AI check approval for job {}", IdJob);
                 aiJobService.ai_Check_Approval(IdJob);
             }
         });
@@ -617,7 +617,7 @@ public class JobService {
                 freeSub.setEndDate(now.plusMonths(1));
 
                 subscriptionOfCompanyRepository.save(freeSub);
-                System.out.println("Doanh nghiệp " + expiredSub.getCompany().getName() + " đã quay lại dùng gói FREE cũ.");
+                log.info("Doanh nghiệp {} đã quay lại dùng gói FREE cũ", expiredSub.getCompany().getName());
             }
         }
 
@@ -629,7 +629,7 @@ public class JobService {
             freeSub.setStartDate(now);
             freeSub.setEndDate(now.plusMonths(1));
             subscriptionOfCompanyRepository.save(freeSub);
-            System.out.println("Đã tự động gia hạn chu kỳ FREE mới cho doanh nghiệp: " + freeSub.getCompany().getName());
+            log.info("Đã tự động gia hạn chu kỳ FREE mới cho doanh nghiệp {}", freeSub.getCompany().getName());
         }
     }
 
@@ -652,11 +652,14 @@ public class JobService {
     public JobResponse getIn4_of_JD_of_Company(String id) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();
-        companyMemberRepository.findByUser_Id(userId)
+        var companyMember = companyMemberRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+        if (job.getCompany() == null || !job.getCompany().getId().equals(companyMember.getCompany().getId())) {
+            throw new AppException(ErrorCode.NOT_COMPANY_MEMBER);
+        }
 
         return mapToJobResponse(job);
     }
@@ -838,14 +841,14 @@ public class JobService {
             float[] vector = embeddingService.createEmbedding(textBuilder.toString());
             job.setVectorEmbedding(vector);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Lỗi tạo vector embedding khi cập nhật job {}", jobId, e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
 
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                System.out.println("Đang chạy chức năng duyệt AI bất đồng bộ...");
+                log.debug("Đang chạy chức năng duyệt AI bất đồng bộ cho job {}", jobId);
                 aiJobService.ai_Check_Approval(jobId);
             }
         });
@@ -981,7 +984,7 @@ public class JobService {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String json = objectMapper.writeValueAsString(request.getParsedContent());
-        System.out.println("json: " + json);
+        log.debug("Parsed content json length: {}", json != null ? json.length() : 0);
 
         Application application = Application.builder()
                 .job(job)
@@ -999,8 +1002,6 @@ public class JobService {
 
         Application savedApp = applicationRepository.saveAndFlush(application);
 
-        Map<String, Object> jobTitleMap = job.getTitle();
-
         String title = "Ứng tuyển mới: " + job.getPosition();
         String content = String.format("Ứng viên %s vừa nộp hồ sơ vào vị trí %s. Kiểm tra ngay để không bỏ lỡ tài năng!",
                 request.getName(), job.getPosition());
@@ -1012,26 +1013,15 @@ public class JobService {
                 .collect(Collectors.toSet());
 
         for (User recruiter : distinctRecruiters) {
-            Notification notification = Notification.builder()
-                    .user(recruiter)
-                    .title(title)
-                    .content(content)
-                    .isRead(false)
-                    .type("NEW_APPLICATION")
-                    .link(link)
-                    .build();
-            notificationRepository.saveAndFlush(notification);
-
-            try {
-                messagingTemplate.convertAndSendToUser(
-                        recruiter.getId(),
-                        "/queue/notifications",
-                        notification
-                );
-                log.info("Đã bắn tin nhắn ứng tuyển mới cho Recruiter: {}", recruiter.getEmail());
-            } catch (Exception e) {
-                log.error("Lỗi WebSocket cho recruiter {}: {}", recruiter.getId(), e.getMessage());
-            }
+            notificationService.createNotification(
+                    recruiter,
+                    senderEmail,
+                    title,
+                    content,
+                    "NEW_APPLICATION",
+                    link,
+                    false
+            );
         }
         return request;
     }
@@ -1039,21 +1029,18 @@ public class JobService {
     ///  check điều kiện bài đăng có ái apply vào chưa
     public Boolean checkUngVien(String idJD) {
         try {
-            Boolean result = false;
             List<Application> getApplyOfJD = applicationRepository.findByJob_Id(idJD);
-            if (getApplyOfJD.size() > 0) {
-                result = true;
-            }
-            return result;
+            return !getApplyOfJD.isEmpty();
         } catch (Exception e) {
-            throw new RuntimeException(ErrorCode.JOB_NOT_FOUND.getMessage());
+            log.error("Lỗi kiểm tra ứng viên cho job {}", idJD, e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
     public String inviteJob(String id, String candidateId) {
         Job job = jobRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
         Candidate candidate = candidateRepository.findById(candidateId).orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
-        System.out.println("candiateId: " + candidateId + "\nCandidate: " + candidate);
+        log.debug("Invite candidateId={} candidateFound={}", candidateId, candidate != null);
         User user = candidate.getUser();
         if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
             throw new AppException(ErrorCode.ALREADY_APPLIED);

@@ -1,8 +1,9 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
+import { useNavigate } from 'react-router-dom';
 import adminService from '../../services/api/adminService';
 import {
     Users, Building2, Briefcase, DollarSign,
-    TrendingUp, TrendingDown, Calendar, Filter, ChevronDown
+    TrendingUp, TrendingDown, Filter
 } from 'lucide-react';
 import {
     LineChart, Line, BarChart, Bar, XAxis, YAxis,
@@ -20,6 +21,7 @@ const AdminDashboard = () => {
         start: new Date().toISOString().split('T')[0],
         end: new Date().toISOString().split('T')[0]
     });
+    const navigate = useNavigate();
 
     // Helper: Định dạng Date thành YYYY-MM-DD
     const formatDate = (date) => {
@@ -56,7 +58,7 @@ const AdminDashboard = () => {
         return {start: formatDate(startDate), end: formatDate(endDate)};
     };
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
         setLoading(true);
         const {start, end} = calculateDates();
         try {
@@ -67,12 +69,12 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterType, customRange]);
 
     // Gọi lại API khi filterType thay đổi hoặc khi customRange thay đổi
     useEffect(() => {
         fetchStats();
-    }, [filterType]);
+    }, [fetchStats]);
 
     // Riêng cho custom range, có nút "Áp dụng" để tránh gọi API liên tục khi đang gõ
     const handleApplyCustomRange = () => {
@@ -200,7 +202,7 @@ const AdminDashboard = () => {
                                 <td><span className="job-count-badge">{company.totalJobs} tin</span></td>
                                 <td>
                                     <button className="btn-view"
-                                            onClick={() => window.location.href = `/admin/companies/${company.companyId}`}>Chi
+                                            onClick={() => navigate('/admin/management/companies')}>Chi
                                         tiết
                                     </button>
                                 </td>

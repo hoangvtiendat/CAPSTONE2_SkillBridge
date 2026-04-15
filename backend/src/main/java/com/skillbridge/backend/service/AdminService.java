@@ -267,8 +267,11 @@ public class AdminService {
         return mapToCompanyResponse(company);
     }
 
-    public Page<CategoryResponse> getCategories(Pageable pageable) {
-        return categoryRepository.findAll(pageable).map(this::mapToCategoryResponse);
+    public Page<CategoryResponse> getCategories(String name, Pageable pageable) {
+        if (name == null || name.trim().isEmpty()) {
+            return categoryRepository.findAll(pageable).map(this::mapToCategoryResponse);
+        }
+        return categoryRepository.findByNameContainingIgnoreCase(name.trim(), pageable).map(this::mapToCategoryResponse);
     }
 
     @Transactional

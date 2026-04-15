@@ -4,6 +4,8 @@ import candidateService from '../../services/api/candidateService';
 import { toast } from 'sonner';
 import CandidateProfileOverlay from './CandidateProfileOverlay';
 import './PotentialCandidates.css';
+import AppImage from '../../components/common/AppImage';
+import { DEFAULT_AVATAR_IMAGE } from '../../utils/imageUtils';
 
 const PotentialCandidates = () => {
     const { jobId } = useParams();
@@ -69,7 +71,7 @@ const PotentialCandidates = () => {
                                 <div className="card-top-compact">
                                     <div className="avatar-mini">
                                         {can.avatar ?
-                                            <img src={can.avatar} alt="" /> :
+                                            <AppImage src={can.avatar} fallbackSrc={DEFAULT_AVATAR_IMAGE} alt={can.name || 'Candidate'} /> :
                                             <span className="material-symbols-outlined" style={{fontSize: '32px', color: '#cbd5e1'}}>person</span>
                                         }
                                     </div>

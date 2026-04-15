@@ -13,7 +13,7 @@ const CTA = () => {
           <Link to="/login" className="btn-home btn-home-primary btn-home-lg">
             Đăng Ký Là Ứng Viên
           </Link>
-          <Link to="/recruiter/identity" className="btn-home btn-home-secondary btn-home-lg">
+          <Link to="/recruiter/business" className="btn-home btn-home-secondary btn-home-lg">
             Đăng Ký Là Nhà Tuyển Dụng
           </Link>
         </div>

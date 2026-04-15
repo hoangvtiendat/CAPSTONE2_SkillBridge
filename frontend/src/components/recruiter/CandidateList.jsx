@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import DeleteConfirmPage from '../admin/DeleteConfirmPage';
 import './CandidateList.css';
+import { API_BASE_URL } from '../../config/appConfig';
 
 const CandidateList = () => {
     const { user } = useAuth();
@@ -29,7 +30,6 @@ const CandidateList = () => {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
-    const API_BASE_URL = "http://localhost:8081/identity";
     const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
 
     const getImageUrl = (path) => {
@@ -60,9 +60,12 @@ const CandidateList = () => {
 
     const filteredApps = useMemo(() => {
         return applications.filter(app => {
+            const fullName = (app?.fullName || '').toLowerCase();
+            const email = (app?.email || '').toLowerCase();
+            const search = searchTerm.toLowerCase();
             const matchesSearch =
-                app.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                app.email.toLowerCase().includes(searchTerm.toLowerCase());
+                fullName.includes(search) ||
+                email.includes(search);
             const matchesStatus = statusFilter === 'ALL' || app.status === statusFilter;
             return matchesSearch && matchesStatus;
         });

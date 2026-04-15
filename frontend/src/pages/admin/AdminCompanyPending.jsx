@@ -1,18 +1,25 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import companyService from '../../services/api/companyService';
 import './AdminCompanyPending.css';
 import '../../components/admin/Admin.css';
 import { useNavigate } from 'react-router-dom';
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
+import confirmAction from '../../utils/confirmAction';
+import AppPagination from '../../components/common/AppPagination';
+import TableActionBar from '../../components/common/TableActionBar';
+import AppImage from '../../components/common/AppImage';
+import FilterResetButton from '../../components/common/FilterResetButton';
+import ManagementFilterBar from '../../components/common/ManagementFilterBar';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
 import {
-    Building2, RotateCcw, ShieldCheck, CheckCircle,
-    Globe, Hash, Calendar, MapPin, ChevronLeft, ChevronRight
+    ShieldCheck, CheckCircle, Filter,
+    Globe, Hash
 } from 'lucide-react';
 
-const API_BASE_URL = "http://localhost:8081/identity";
 const AdminCompanyPending = () => {
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const [pagination, setPagination] = useState({
         page: 0,
@@ -21,17 +28,6 @@ const AdminCompanyPending = () => {
     });
 
     const navigate = useNavigate();
-
-    const getImageUrl = (path) => {
-        if (!path) return null;
-        if (path.startsWith('http')) return path;
-
-        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-        const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
-        console.log("aaa: ", `${baseUrl}${cleanPath}`)
-        return `${baseUrl}${cleanPath}`;
-    };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
@@ -79,7 +75,14 @@ const AdminCompanyPending = () => {
     const handleBan = async (e, id) => {
         e.stopPropagation();
         const actionText = "từ chối";
-        if (!window.confirm(`Bạn chắc chắn muốn ${actionText} doanh nghiệp này?`)) return;
+        const confirmed = await confirmAction({
+            title: 'Từ chối doanh nghiệp?',
+            text: `Bạn chắc chắn muốn ${actionText} doanh nghiệp này?`,
+            confirmText: 'Từ chối',
+            icon: 'warning',
+            confirmButtonColor: '#ef4444'
+        });
+        if (!confirmed) return;
 
         const toastId = toast.loading("Đang xử lý...");
         try {
@@ -91,10 +94,23 @@ const AdminCompanyPending = () => {
         }
     };
 
+    const filteredCompanies = companies.filter((comp) => {
+        const q = searchTerm.trim().toLowerCase();
+        if (!q) return true;
+        return (
+            (comp?.name || '').toLowerCase().includes(q) ||
+            (comp?.taxId || '').toLowerCase().includes(q) ||
+            (comp?.email || '').toLowerCase().includes(q)
+        );
+    });
+
+    const handleResetFilters = () => {
+        setSearchTerm('');
+        fetchCompanies(0);
+    };
+
     return (
         <div className="admin-pending-container">
-            <Toaster position="top-right" richColors />
-
             <div className="admin-pending-header">
                 <div className="header-left">
                     <div className="header-icon-box blue">
@@ -106,20 +122,23 @@ const AdminCompanyPending = () => {
                     </div>
                 </div>
 
-                <div className="header-right">
-                    <div className="filter-wrapper">
-                        <button
-                            className={`btn-refresh ${loading ? 'spinning' : ''}`}
-                            onClick={() => fetchCompanies(0)}
-                            disabled={loading}
-                        >
-                            <RotateCcw size={18} />
-                        </button>
-                    </div>
-                </div>
+                <div className="header-right"></div>
             </div>
 
             <div className="pending-content-card">
+                <ManagementFilterBar
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    searchPlaceholder="Tìm doanh nghiệp, mã số thuế, email..."
+                >
+                    <div className="filter-item">
+                        <Filter size={14} className="filter-icon" />
+                        <span className="modern-select" style={{ paddingLeft: '38px', minWidth: 170 }}>
+                            Chờ duyệt
+                        </span>
+                    </div>
+                    <FilterResetButton onClick={handleResetFilters} disabled={loading} spinning={loading} />
+                </ManagementFilterBar>
                 <div className="table-scroll-container">
                     <table className="pending-table-core">
                         <thead>
@@ -132,17 +151,13 @@ const AdminCompanyPending = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {companies.map((comp) => (
+                            {filteredCompanies.map((comp) => (
                                 <tr key={comp.id} className="job-row-item"
-                                    onClick={() => navigate(`/admin/companies/${comp.id}`)}>
+                                    onClick={() => navigate('/admin/management/companies')}>
                                     <td>
                                         <div className="company-main-info">
                                             <div className="company-logo-box">
-                                                {comp.imageUrl ? (
-                                                    <img src={getImageUrl(comp.imageUrl)} alt="logo" />
-                                                ) : (
-                                                    <Building2 size={20} />
-                                                )}
+                                                <AppImage src={comp.imageUrl} fallbackSrc={DEFAULT_COMPANY_IMAGE} alt={comp.name || 'Company'} />
                                             </div>
                                             <div className="job-detail-box">
                                                 <span className="job-name">{comp.name}</span>
@@ -169,61 +184,39 @@ const AdminCompanyPending = () => {
                                         {formatDate(comp.createdAt)}
                                     </td>
                                     <td className="center" onClick={(e) => e.stopPropagation()}>
-                                        <div className="action-btns-group">
-                                            <button className="btn-action-approve"
-                                                onClick={(e) => handleApprove(e, comp.id)}>
-                                                <CheckCircle size={14} /> Duyệt
-                                            </button>
-                                            <button className="btn-action-reject"
-                                                onClick={(e) => handleBan(e, comp.id)}>
-                                                Từ chối
-                                            </button>
-                                        </div>
+                                        <TableActionBar
+                                            actions={[
+                                                {
+                                                    key: 'approve',
+                                                    label: 'Duyệt',
+                                                    title: 'Duyệt doanh nghiệp',
+                                                    icon: CheckCircle,
+                                                    variant: 'solid',
+                                                    tone: 'approve',
+                                                    onClick: (e) => handleApprove(e, comp.id)
+                                                },
+                                                {
+                                                    key: 'reject',
+                                                    label: 'Từ chối',
+                                                    title: 'Từ chối doanh nghiệp',
+                                                    variant: 'solid',
+                                                    tone: 'reject',
+                                                    onClick: (e) => handleBan(e, comp.id)
+                                                }
+                                            ]}
+                                        />
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
 
-                    {/* Page based pagination control */}
-                    {pagination.totalPages > 1 && (
-                        <div className="modern-pagination">
-                            <div className="pagination-info">
-                                Đang xem trang <b>{pagination.page + 1} / {pagination.totalPages}</b>
-                            </div>
-                            <div className="pagination-controls">
-                                <button
-                                    disabled={pagination.page === 0}
-                                    onClick={() => fetchCompanies(pagination.page - 1)}
-                                    className="pagination-btn"
-                                    title="Trang trước"
-                                >
-                                    <ChevronLeft size={18} />
-                                </button>
-
-                                {[...Array(pagination.totalPages)].map((_, index) => {
-                                    return (
-                                        <button
-                                            key={index}
-                                            onClick={() => fetchCompanies(index)}
-                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
-                                        >
-                                            {index + 1}
-                                        </button>
-                                    );
-                                })}
-
-                                <button
-                                    disabled={pagination.page >= pagination.totalPages - 1}
-                                    onClick={() => fetchCompanies(pagination.page + 1)}
-                                    className="pagination-btn"
-                                    title="Trang sau"
-                                >
-                                    <ChevronRight size={18} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <AppPagination
+                        currentPage={pagination.page}
+                        totalPages={pagination.totalPages}
+                        onPageChange={fetchCompanies}
+                        zeroBased
+                    />
                 </div>
             </div>
         </div>

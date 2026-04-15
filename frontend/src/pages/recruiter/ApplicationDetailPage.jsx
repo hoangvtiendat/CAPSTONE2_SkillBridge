@@ -4,6 +4,8 @@ import applicationService from '../../services/api/applicationService';
 import { FileText, User, Briefcase, CheckCircle, XCircle, ChevronLeft, Loader2, MapPin, Calendar, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import './ApplicationDetailPage.css';
+import { API_BASE_URL } from '../../config/appConfig';
+import safeJsonParse from '../../utils/safeJsonParse';
 
 const ApplicationDetailPage = () => {
     const { id } = useParams();
@@ -29,7 +31,7 @@ const ApplicationDetailPage = () => {
                     const cleanPath = appData.cvUrl.startsWith('/') ? appData.cvUrl : `/${appData.cvUrl}`;
 
                     // FIX 1: Bọc cleanPath trong encodeURI để xử lý các khoảng trắng trong tên file
-                    const fullUrl = `http://localhost:8081/identity${encodeURI(cleanPath)}`;
+                    const fullUrl = `${API_BASE_URL}${encodeURI(cleanPath)}`;
 
                     const response = await fetch(fullUrl, {
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -84,13 +86,13 @@ const ApplicationDetailPage = () => {
     if (!app) return <div className="p-10 text-center text-gray-500">Không tìm thấy dữ liệu ứng viên.</div>;
 
     // Parse các dữ liệu JSON từ BE
-    const qualifications = JSON.parse(app.qualifications || "[]");
-    const aiParsed = app.parsedContentJson ? JSON.parse(app.parsedContentJson) : null;
+    const qualifications = safeJsonParse(app.qualifications || "[]", []);
+    const aiParsed = app.parsedContentJson ? safeJsonParse(app.parsedContentJson, null) : null;
 
     return (
         <div className="apd-wrapper bg-gray-50 min-h-screen p-6">
             <button
-                onClick={() => window.history.back()}
+                onClick={() => navigate(-1)}
                 className="apd-btn-back flex items-center gap-2 text-gray-600 hover:text-blue-600 transition mb-6"
             >
                 <ChevronLeft size={20}/> Quay lại danh sách

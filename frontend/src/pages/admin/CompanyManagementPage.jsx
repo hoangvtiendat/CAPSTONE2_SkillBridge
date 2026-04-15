@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Search,
     Building2,
     Ban,
     CheckCircle,
-    ExternalLink,
     Eye,
     Globe,
     MapPin,
@@ -13,8 +11,6 @@ import {
     Shield,
     X,
     Calendar,
-    ChevronLeft,
-    ChevronRight,
     Loader2
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -22,8 +18,13 @@ import adminService from '../../services/api/adminService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
-
-const API_BASE_URL = "http://localhost:8081/identity";
+import AppPagination from '../../components/common/AppPagination';
+import ManagementFilterBar from '../../components/common/ManagementFilterBar';
+import TableActionBar from '../../components/common/TableActionBar';
+import StatusBadge from '../../components/common/StatusBadge';
+import AppImage from '../../components/common/AppImage';
+import FilterResetButton from '../../components/common/FilterResetButton';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
 
 const CompanyManagementPage = () => {
     const [companies, setCompanies] = useState([]);
@@ -145,48 +146,25 @@ const CompanyManagementPage = () => {
         }
     };
 
-    const getImageUrl = (path) => {
-        if (!path) return null;
-        // Nếu path đã có http/https thì trả về luôn
-        if (path.startsWith('http')) return path;
-
-        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-        const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
-        console.log("aaa: ", `${baseUrl}${cleanPath}`)
-        return `${baseUrl}${cleanPath}`;
-    };
-
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'ACTIVE': return { backgroundColor: '#ecfdf5', color: '#059669' };
-            case 'BAN': return { backgroundColor: '#fef2f2', color: '#dc2626' };
-            case 'PENDING': return { backgroundColor: '#fffbeb', color: '#d97706' };
-            default: return { backgroundColor: '#f8fafc', color: '#64748b' };
-        }
+    const handleResetFilters = () => {
+        setFilters({ name: '', taxId: '', status: '' });
     };
 
     return (
         <div className="company-management animate-fade-in">
             <div className="flex-between" style={{ marginBottom: '32px' }}>
                 <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0 }}>Quản lý công ty</h1>
-                    <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Kiểm soát chất lượng và trạng thái hoạt động của các doanh nghiệp.</p>
+                    <h1 className="management-page-title">Quản lý công ty</h1>
+                    <p className="management-page-subtitle">Kiểm soát chất lượng và trạng thái hoạt động của các doanh nghiệp.</p>
                 </div>
             </div>
 
             <div className="modern-card">
-                <div className="filters-bar">
-                    <div className="search-wrapper">
-                        <Search size={18} className="search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Tìm tên công ty..."
-                            className="modern-input"
-                            value={filters.name}
-                            onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value }))}
-                        />
-                    </div>
+                <ManagementFilterBar
+                    searchValue={filters.name}
+                    onSearchChange={(value) => setFilters(prev => ({ ...prev, name: value }))}
+                    searchPlaceholder="Tìm tên công ty..."
+                >
                     <div className="filters-group">
                         <div className="filter-item">
                             <FileCheck2 size={14} className="filter-icon" />
@@ -212,8 +190,9 @@ const CompanyManagementPage = () => {
                                 <option value="PENDING">Chờ duyệt</option>
                             </select>
                         </div>
+                        <FilterResetButton onClick={handleResetFilters} disabled={loading} />
                     </div>
-                </div>
+                </ManagementFilterBar>
 
                 <div className="table-container">
                     {loading && (
@@ -237,13 +216,7 @@ const CompanyManagementPage = () => {
                                         <td>
                                             <div className="user-info-cell">
                                                 <div className="user-avatar-wrapper" style={{ borderRadius: '12px' }}>
-                                                    {company.imageUrl ? (
-                                                        <img src={getImageUrl(company.imageUrl )} className="user-avatar" alt="" />
-                                                    ) : (
-                                                        <div className="user-avatar-placeholder" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}>
-                                                            <Building2 size={20} />
-                                                        </div>
-                                                    )}
+                                                    <AppImage src={company.imageUrl} fallbackSrc={DEFAULT_COMPANY_IMAGE} className="user-avatar" alt={company.name || 'Company'} />
                                                 </div>
                                                 <div className="user-details">
                                                     <p className="user-name">{company.name}</p>
@@ -257,42 +230,35 @@ const CompanyManagementPage = () => {
                                             <p style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>{company.taxId}</p>
                                         </td>
                                         <td>
-                                            <div className={`status-indicator ${company.status === 'ACTIVE' ? 'active' : company.status === 'BAN' ? 'banned' : ''}`}>
-                                                <div className="status-dot"></div>
-                                                <span>
-                                                    {company.status === 'ACTIVE' ? 'Đã xác thực' :
-                                                        company.status === 'BAN' ? 'Đã khóa' :
-                                                            company.status === 'PENDING' ? 'Chờ duyệt' : company.status}
-                                                </span>
-                                            </div>
+                                            <StatusBadge status={company.status} />
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
-                                            <div className="actions-wrapper">
-                                                <button
-                                                    onClick={() => handleViewDetail(company.id)}
-                                                    className="action-btn info-btn"
-                                                    title="Xem chi tiết"
-                                                >
-                                                    <Eye size={18} />
-                                                </button>
-                                                {company.status === 'BAN' ? (
-                                                    <button
-                                                        onClick={() => handleUnbanCompany(company.id, company.name)}
-                                                        className="action-btn unban-btn"
-                                                        title="Mở khóa công ty"
-                                                    >
-                                                        <CheckCircle size={18} />
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleBanCompany(company.id, company.name)}
-                                                        className="action-btn ban-btn"
-                                                        title="Khóa công ty"
-                                                    >
-                                                        <Ban size={18} />
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <TableActionBar
+                                                actions={[
+                                                    {
+                                                        key: 'view',
+                                                        title: 'Xem chi tiết',
+                                                        icon: Eye,
+                                                        tone: 'info-btn',
+                                                        onClick: () => handleViewDetail(company.id)
+                                                    },
+                                                    company.status === 'BAN'
+                                                        ? {
+                                                            key: 'unban',
+                                                            title: 'Mở khóa công ty',
+                                                            icon: CheckCircle,
+                                                            tone: 'unban-btn',
+                                                            onClick: () => handleUnbanCompany(company.id, company.name)
+                                                        }
+                                                        : {
+                                                            key: 'ban',
+                                                            title: 'Khóa công ty',
+                                                            icon: Ban,
+                                                            tone: 'ban-btn',
+                                                            onClick: () => handleBanCompany(company.id, company.name)
+                                                        }
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 ))
@@ -310,57 +276,13 @@ const CompanyManagementPage = () => {
                     </table>
                 </div>
 
-                {pagination.totalPages > 1 && (
-                    <div className="modern-pagination">
-                        <div className="pagination-info">
-                            Tổng <b>{pagination.totalElements}</b> doanh nghiệp
-                        </div>
-                        <div className="pagination-controls">
-                            <button
-                                disabled={pagination.page === 0}
-                                onClick={() => fetchCompanies(pagination.page - 1)}
-                                className="pagination-btn"
-                                title="Trang trước"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-
-                            {[...Array(pagination.totalPages)].map((_, index) => {
-                                // Show first, last, and pages around current
-                                if (
-                                    index === 0 ||
-                                    index === pagination.totalPages - 1 ||
-                                    (index >= pagination.page - 1 && index <= pagination.page + 1)
-                                ) {
-                                    return (
-                                        <button
-                                            key={index}
-                                            onClick={() => fetchCompanies(index)}
-                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
-                                        >
-                                            {index + 1}
-                                        </button>
-                                    );
-                                } else if (
-                                    index === pagination.page - 2 ||
-                                    index === pagination.page + 2
-                                ) {
-                                    return <span key={index} className="pagination-ellipsis">...</span>;
-                                }
-                                return null;
-                            })}
-
-                            <button
-                                disabled={pagination.page >= pagination.totalPages - 1}
-                                onClick={() => fetchCompanies(pagination.page + 1)}
-                                className="pagination-btn"
-                                title="Trang sau"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <AppPagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={fetchCompanies}
+                    zeroBased
+                    summary={<>Tổng <b>{pagination.totalElements}</b> doanh nghiệp</>}
+                />
             </div>
 
             {/* Company Detail Modal */}
@@ -424,21 +346,17 @@ const CompanyManagementPage = () => {
                                     {/* Top Section */}
                                     <div style={{ display: 'flex', gap: '24px' }}>
                                         <div className="user-avatar-wrapper" style={{ width: '120px', height: '120px', borderRadius: '24px', flexShrink: 0 }}>
-                                            {selectedCompany.imageUrl ? (
-                                                <img src={selectedCompany.imageUrl} className="user-avatar" alt="" />
-                                            ) : (
-                                                <div className="user-avatar-placeholder" style={{ fontSize: '40px' }}>
-                                                    <Building2 size={48} />
-                                                </div>
-                                            )}
+                                            <AppImage
+                                                src={selectedCompany.imageUrl}
+                                                fallbackSrc={DEFAULT_COMPANY_IMAGE}
+                                                className="user-avatar"
+                                                alt={selectedCompany.name || 'Company'}
+                                            />
                                         </div>
                                         <div style={{ flex: 1 }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                 <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>{selectedCompany.name}</h3>
-                                                <div className={`status-indicator ${selectedCompany.status === 'ACTIVE' ? 'active' : selectedCompany.status === 'BAN' ? 'banned' : ''}`}>
-                                                    <div className="status-dot"></div>
-                                                    <span>{selectedCompany.status === 'ACTIVE' ? 'Đã xác thực' : selectedCompany.status === 'BAN' ? 'Đã khóa' : 'Chờ duyệt'}</span>
-                                                </div>
+                                                <StatusBadge status={selectedCompany.status} />
                                             </div>
                                             <p style={{ margin: '8px 0', fontSize: '15px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <FileCheck2 size={16} /> MST: <b>{selectedCompany.taxId}</b>

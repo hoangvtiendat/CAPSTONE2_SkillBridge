@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { KeyRound, ArrowLeft } from "lucide-react";
 import "./ForgotPasswordForm.css";
+import { API_BASE_URL } from "../../config/appConfig";
 
 export function ForgotPasswordForm() {
     const navigate = useNavigate();
@@ -28,37 +29,35 @@ export function ForgotPasswordForm() {
         try {
 
 
-            const response = await fetch("http://localhost:8081/identity/auth/forgot-password", {
+            const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
             });
+            const data = await response.json().catch(() => ({}));
 
-            if (response.ok || true) {
-                toast.success("Đã gửi mã OTP", {
-                    description: `Mã xác thực đã gửi tới ${email}`,
-                    style: toastStyles.success
-                });
-
-                setTimeout(() => {
-                    navigate("/otp-verification", {
-                        state: {
-                            email: email,
-                            flow: "forgot-password"
-                        }
-                    });
-                }, 1500);
+            if (!response.ok) {
+                throw new Error(data?.message || "Không thể gửi mã OTP");
             }
-
-        } catch (err) {
-            console.log("Mocking success for testing...");
-            toast.success("Đã gửi mã OTP (Test)", { description: "Chuyển hướng đến trang nhập mã...", style: toastStyles.success });
+            toast.success("Đã gửi mã OTP", {
+                description: `Mã xác thực đã gửi tới ${email}`,
+                style: toastStyles.success
+            });
 
             setTimeout(() => {
                 navigate("/otp-verification", {
-                    state: { email: email, flow: "forgot-password" }
+                    state: {
+                        email: email,
+                        flow: "forgot-password"
+                    }
                 });
             }, 1500);
+
+        } catch (err) {
+            toast.error("Không thể gửi mã OTP", {
+                description: err.message || "Vui lòng thử lại sau",
+                style: toastStyles.error
+            });
         } finally {
             setIsLoading(false);
         }

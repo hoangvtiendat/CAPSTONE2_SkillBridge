@@ -21,6 +21,8 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import './Recruiter.css';
+import AppImage from '../common/AppImage';
+import { DEFAULT_AVATAR_IMAGE } from '../../utils/imageUtils';
 
 const RecruiterLayout = () => {
     const { logout, user } = useAuth();
@@ -44,17 +46,6 @@ const RecruiterLayout = () => {
     ];
 
     const currentLabel = menuItems.find(i => i.path === location.pathname)?.label || 'Tổng quan';
-
-    const API_BASE_URL = "http://localhost:8081/identity";
-    const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
-
-    const getImageUrl = (path) => {
-        if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
-        if (path.startsWith('http')) return path;
-        const baseUrl = API_BASE_URL;
-        const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-        return `${baseUrl}/${cleanPath}?t=${new Date().getTime()}`;
-    };
 
     return (
         <div className="recruiter-layout">
@@ -103,10 +94,11 @@ const RecruiterLayout = () => {
                         {/* Thông tin người dùng di chuyển lên đây */}
                         <div className="header-user-profile">
                             <div className="user-avatar-mini">
-                                <img
-                                    src={getImageUrl(user?.avatar)}
+                                <AppImage
+                                    src={user?.avatar}
+                                    fallbackSrc={DEFAULT_AVATAR_IMAGE}
                                     alt={user?.name || "User Avatar"}
-                                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                    className="recruiter-avatar-img"
                                 />
                             </div>
                             <div className="user-details-mini">

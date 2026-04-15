@@ -1,26 +1,28 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import jobService from '../../services/api/jobService';
 import './AdminJobPending.css';
 import '../../components/admin/Admin.css';
 import { useNavigate } from 'react-router-dom';
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
+import confirmAction from '../../utils/confirmAction';
+import AppPagination from '../../components/common/AppPagination';
+import TableActionBar from '../../components/common/TableActionBar';
+import FilterResetButton from '../../components/common/FilterResetButton';
+import ManagementFilterBar from '../../components/common/ManagementFilterBar';
 import {
     MapPin,
-    RotateCcw,
     ShieldAlert,
     CheckCircle,
     Building2,
-    ChevronDown,
     Filter,
     AlertTriangle,
-    ChevronLeft,
-    ChevronRight
 } from 'lucide-react';
 
 const AdminJobPending = () => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(false);
     const [modFilter, setModFilter] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const [pagination, setPagination] = useState({
         page: 0,
@@ -61,6 +63,7 @@ const AdminJobPending = () => {
     const handleReset = () => {
         if (loading) return;
         setModFilter('');
+        setSearchTerm('');
     };
 
     const handleApprove = async (e, id) => {
@@ -77,11 +80,18 @@ const AdminJobPending = () => {
 
     const handleBan = async (e, id) => {
         e.stopPropagation();
-        if (!window.confirm("Bạn chắc chắn muốn từ chối bài đăng này?")) return;
+        const confirmed = await confirmAction({
+            title: 'Từ chối bài đăng?',
+            text: 'Bài đăng sẽ bị khóa và không còn hiển thị công khai.',
+            confirmText: 'Từ chối',
+            icon: 'warning',
+            confirmButtonColor: '#ef4444'
+        });
+        if (!confirmed) return;
 
         const toastId = toast.loading("Đang xử lý...");
         try {
-            await jobService.responseJobPending(id, "CLOCK");
+            await jobService.responseJobPending(id, "LOCK");
             setJobs(prev => prev.filter(j => j.jobId !== id));
             toast.success("Đã từ chối tin đăng!", { id: toastId });
         } catch (err) {
@@ -89,10 +99,25 @@ const AdminJobPending = () => {
         }
     };
 
+    const formatSubmittedAt = (value) => {
+        if (!value) return 'N/A';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'N/A';
+        return `${date.toLocaleDateString('vi-VN')} ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+    };
+
+    const filteredJobs = jobs.filter((job) => {
+        const q = searchTerm.trim().toLowerCase();
+        if (!q) return true;
+        return (
+            (job?.description || '').toLowerCase().includes(q) ||
+            (job?.companyName || '').toLowerCase().includes(q) ||
+            (job?.location || '').toLowerCase().includes(q)
+        );
+    });
+
     return (
         <div className="admin-pending-container">
-            <Toaster position="top-right" richColors />
-
             <div className="admin-pending-header">
                 <div className="header-left">
                     <div className="header-icon-box">
@@ -107,35 +132,30 @@ const AdminJobPending = () => {
                     </div>
                 </div>
 
-                <div className="header-right">
-                    <div className="filter-wrapper">
-                        <div className="custom-select-box">
-                            <Filter size={16} />
-                            <select
-                                value={modFilter}
-                                onChange={(e) => setModFilter(e.target.value)}
-                                disabled={loading}
-                            >
-                                <option value="">Tất cả mức độ</option>
-                                <option value="YELLOW">Nghi ngờ (Yellow)</option>
-                                <option value="RED">Nguy hiểm (Red)</option>
-                            </select>
-                            <ChevronDown size={16} className="arrow" />
-                        </div>
-
-                        <button
-                            className={`btn-refresh ${loading ? 'spinning' : ''}`}
-                            onClick={handleReset}
-                            disabled={loading}
-                            title="Làm mới"
-                        >
-                            <RotateCcw size={18} />
-                        </button>
-                    </div>
-                </div>
+                <div className="header-right"></div>
             </div>
 
             <div className="pending-content-card">
+                <ManagementFilterBar
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    searchPlaceholder="Tìm theo công ty, nội dung, địa điểm..."
+                >
+                    <div className="filter-item">
+                        <Filter size={14} className="filter-icon" />
+                        <select
+                            className="modern-select"
+                            value={modFilter}
+                            onChange={(e) => setModFilter(e.target.value)}
+                            disabled={loading}
+                        >
+                            <option value="">Tất cả mức độ</option>
+                            <option value="YELLOW">Nghi ngờ (Yellow)</option>
+                            <option value="RED">Nguy hiểm (Red)</option>
+                        </select>
+                    </div>
+                    <FilterResetButton onClick={handleReset} disabled={loading} spinning={loading} />
+                </ManagementFilterBar>
                 <div className="table-scroll-container">
                     <table className="pending-table-core">
                         <thead>
@@ -149,8 +169,8 @@ const AdminJobPending = () => {
                         </thead>
 
                         <tbody>
-                            {jobs.length > 0 &&
-                                jobs.map((job) => (
+                            {filteredJobs.length > 0 &&
+                                filteredJobs.map((job) => (
                                     <tr
                                         key={job.requestId || job.id}
                                         className="job-row-item"
@@ -186,26 +206,33 @@ const AdminJobPending = () => {
                                             </div>
                                         </td>
 
-                                        <td className="center timestamp">12/03/2026</td>
+                                        <td className="center timestamp">{formatSubmittedAt(job.createdAt)}</td>
 
                                         <td
                                             className="center"
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <div className="action-btns-group">
-                                                <button
-                                                    className="btn-action-approve"
-                                                    onClick={(e) => handleApprove(e, job.jobId)}
-                                                >
-                                                    <CheckCircle size={14} /> Duyệt
-                                                </button>
-                                                <button
-                                                    className="btn-action-reject"
-                                                    onClick={(e) => handleBan(e, job.jobId)}
-                                                >
-                                                    Từ chối
-                                                </button>
-                                            </div>
+                                            <TableActionBar
+                                                actions={[
+                                                    {
+                                                        key: 'approve',
+                                                        label: 'Duyệt',
+                                                        title: 'Duyệt bài đăng',
+                                                        icon: CheckCircle,
+                                                        variant: 'solid',
+                                                        tone: 'approve',
+                                                        onClick: (e) => handleApprove(e, job.jobId)
+                                                    },
+                                                    {
+                                                        key: 'reject',
+                                                        label: 'Từ chối',
+                                                        title: 'Từ chối bài đăng',
+                                                        variant: 'solid',
+                                                        tone: 'reject',
+                                                        onClick: (e) => handleBan(e, job.jobId)
+                                                    }
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 ))}
@@ -221,45 +248,12 @@ const AdminJobPending = () => {
                         </div>
                     )}
 
-                    {/* Page based pagination UI */}
-                    {pagination.totalPages > 1 && (
-                        <div className="modern-pagination">
-                            <div className="pagination-info">
-                                Đang xem trang <b>{pagination.page + 1} / {pagination.totalPages}</b>
-                            </div>
-                            <div className="pagination-controls">
-                                <button
-                                    disabled={pagination.page === 0}
-                                    onClick={() => fetchData(pagination.page - 1, modFilter)}
-                                    className="pagination-btn"
-                                    title="Trang trước"
-                                >
-                                    <ChevronLeft size={18} />
-                                </button>
-
-                                {[...Array(pagination.totalPages)].map((_, index) => {
-                                    return (
-                                        <button
-                                            key={index}
-                                            onClick={() => fetchData(index, modFilter)}
-                                            className={`pagination-btn ${pagination.page === index ? 'active' : ''}`}
-                                        >
-                                            {index + 1}
-                                        </button>
-                                    );
-                                })}
-
-                                <button
-                                    disabled={pagination.page >= pagination.totalPages - 1}
-                                    onClick={() => fetchData(pagination.page + 1, modFilter)}
-                                    className="pagination-btn"
-                                    title="Trang sau"
-                                >
-                                    <ChevronRight size={18} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <AppPagination
+                        currentPage={pagination.page}
+                        totalPages={pagination.totalPages}
+                        onPageChange={(page) => fetchData(page, modFilter)}
+                        zeroBased
+                    />
                 </div>
             </div>
         </div>

@@ -62,8 +62,9 @@ const adminService = {
 
     // Industry (Category) Management
     getCategories: async (params = {}) => {
-        const {page = 0, size = 10, sortBy = 'createdAt', direction = 'desc'} = params;
+        const {page = 0, size = 10, sortBy = 'createdAt', direction = 'desc', name} = params;
         const queryParams = new URLSearchParams({page, size, sortBy, direction});
+        if (name) queryParams.append('name', name);
 
         const response = await api.get(`/admin/categories?${queryParams.toString()}`);
         return response.data;

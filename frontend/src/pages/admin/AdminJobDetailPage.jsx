@@ -5,17 +5,19 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import {
     MapPin, Banknote, Tag, Clock,
-    Trash2, ChevronLeft, Sparkles
+    Trash2, ChevronLeft
 } from 'lucide-react';
 import './AdminJobDetail.css';
 import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
+import AppImage from '../../components/common/AppImage';
+import { DEFAULT_COMPANY_IMAGE } from '../../utils/imageUtils';
+import '../../components/admin/Admin.css';
 
 const formatSalary = (amount) => {
     if (!amount && amount !== 0) return "Thỏa thuận";
     return new Intl.NumberFormat('vi-VN').format(amount) + " VND";
 };
-const API_BASE_URL = "http://localhost:8081/identity";
 
 const AdminJobDetailPage = () => {
     const { jobId } = useParams();
@@ -24,17 +26,6 @@ const AdminJobDetailPage = () => {
     const [sections, setSections] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-      const getImageUrl = (path) => {
-                if (!path) return null;
-                if (path.startsWith('http')) return path;
-
-                const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-                const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
-                console.log("aaa: ", `${baseUrl}${cleanPath}`)
-                return `${baseUrl}${cleanPath}`;
-            };
 
     const fetchJobDetail = useCallback(async () => {
         try {
@@ -118,15 +109,19 @@ const AdminJobDetailPage = () => {
     return (
         <>
             <div className="admin-job-detail-container">
-                <Toaster position="top-right" richColors closeButton />
-                <button className="btn-back-nav" onClick={() => navigate(-1)}>
+                <button className="app-back-btn" onClick={() => navigate(-1)}>
                     <ChevronLeft size={20} /> Quay lại
                 </button>
 
                 <div className="detail-card header-combined">
                     <div className="header-main-content">
                         <div className="company-info-section">
-                            <img src={getImageUrl(job.companyImageUrl)} alt="logo" className="company-logo-large" />
+                            <AppImage
+                                src={job.companyImageUrl}
+                                fallbackSrc={DEFAULT_COMPANY_IMAGE}
+                                alt={job.companyName || 'Company'}
+                                className="company-logo-large"
+                            />
                             <div className="job-title-info">
                                 <h1>{job.jobTitle || "Chi tiết công việc"}</h1>
                                 <div className="company-and-plan">

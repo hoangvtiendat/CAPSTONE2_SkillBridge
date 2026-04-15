@@ -1,14 +1,17 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '../common/Sidebar';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, User } from 'lucide-react';
+import { ChevronDown, LogOut, User } from 'lucide-react';
 import { toast } from 'sonner';
 import './Admin.css';
+import AppImage from '../common/AppImage';
+import { DEFAULT_AVATAR_IMAGE } from '../../utils/imageUtils';
 
 const AdminLayout = () => {
     const { logout, user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = async () => {
         await logout();
@@ -16,15 +19,16 @@ const AdminLayout = () => {
         navigate('/login');
     };
 
-    const API_BASE_URL = "http://localhost:8081/identity";
-    const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
-
-    const getImageUrl = (path) => {
-        if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
-        if (path.startsWith('http')) return path;
-        const baseUrl = API_BASE_URL;
-        const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-        return `${baseUrl}/${cleanPath}?t=${new Date().getTime()}`;
+    const getHeaderTitle = () => {
+        if (location.pathname.includes('/management/users')) return 'Quản lý người dùng';
+        if (location.pathname.includes('/management/companies')) return 'Quản lý doanh nghiệp';
+        if (location.pathname.includes('/approve-companies')) return 'Duyệt doanh nghiệp';
+        if (location.pathname.includes('/approve-jobs')) return 'Duyệt tin đăng';
+        if (location.pathname.includes('/management/industries')) return 'Quản lý ngành nghề';
+        if (location.pathname.includes('/management/skills')) return 'Quản lý kỹ năng';
+        if (location.pathname.includes('/subscriptions')) return 'Quản lý gói dịch vụ';
+        if (location.pathname.includes('/logs')) return 'System Logs';
+        return 'Dashboard';
     };
 
     return (
@@ -39,28 +43,29 @@ const AdminLayout = () => {
                 {/* Topbar/Header for Admin */}
                 <header className="admin-header">
                     <div className="flex-between gap-2">
-                        <span className="text-slate-900 text-sm font-semibold capitalize" style={{ fontWeight: '700', fontSize: '25px', color: '#424242ff' }}>Dashboard</span>
+                        <span className="admin-header-title">{getHeaderTitle()}</span>
                     </div>
                     <div className="flex-between gap-4">
-                        <div style={{ height: '32px', width: '1px', backgroundColor: '#e2e8f0' }}></div>
+                        <div className="admin-header-divider"></div>
                         <div className="flex-between gap-3">
-                            <div style={{ textAlign: 'right' }}>
-                                <p style={{ fontSize: '12px', fontWeight: '800', margin: 0, color: '#0f172a' }}>{user?.firstName || 'Admin'}</p>
-                                <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{user?.role === 'ADMIN' ? 'Super Admin' : user?.role}</p>
-                            </div>
-                            <div className="admin-avatar-container" style={{ position: 'relative', cursor: 'pointer' }}>
-                                <div
-                                    className="admin-avatar"
-                                    style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                >
-                                    <img
-                                        src={getImageUrl(user?.avatar)}
-                                        alt={user?.firstName || "Admin"}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
+                            <div className="admin-avatar-container">
+                                <div className="admin-user-pill">
+                                    <div className="admin-avatar">
+                                        <AppImage
+                                            src={user?.avatar}
+                                            fallbackSrc={DEFAULT_AVATAR_IMAGE}
+                                            alt={user?.firstName || "Admin"}
+                                            className="admin-avatar-image"
+                                        />
+                                    </div>
+                                    <div className="admin-user-info">
+                                        <p className="admin-user-name">{user?.firstName || 'Admin'}</p>
+                                        <p className="admin-user-role">{user?.role === 'ADMIN' ? 'Super Admin' : user?.role}</p>
+                                    </div>
+                                    <ChevronDown size={14} className="admin-chevron-down" />
                                 </div>
                                 <div className="admin-dropdown-menu">
-                                    <button onClick={() => navigate('/admin/profile')} className="logout-btn" style={{ borderBottom: '1px solid #eee', borderRadius: '8px 8px 0 0', color: '#000' }}>
+                                    <button onClick={() => navigate('/admin/profile')} className="logout-btn profile-btn">
                                         <User size={16} />
                                         <span>Hồ sơ cá nhân</span>
                                     </button>

@@ -1,31 +1,24 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
-    Plus, Trash2, Save, AlertCircle, MapPin, RotateCcw, Clock,
-    ListChecks, Users, Settings2, UserPlus, UserMinus, ArrowLeft,
+    Plus, Trash2, Save, AlertCircle, MapPin, Clock,
+    ListChecks, Users, Settings2, UserPlus, UserMinus, ChevronLeft,
     X, Edit3, Lock, Eye
 } from 'lucide-react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import interviewService from '../../services/api/interviewService';
 import './BatchSlotCreate.css';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+import useStompSubscription from '../../hooks/useStompSubscription';
+import toastOnce from '../../utils/toastOnce';
+import confirmAction from '../../utils/confirmAction';
+import AppImage from '../../components/common/AppImage';
+import FilterResetButton from '../../components/common/FilterResetButton';
+import { DEFAULT_AVATAR_IMAGE } from '../../utils/imageUtils';
+import '../../components/admin/Admin.css';
 
 const BatchSlotCreate = () => {
-    const API_BASE_URL = "http://localhost:8081/identity";
-    const stompClientRef = useRef(null);
     const tableBodyRef = useRef(null);
 
-    const getImageUrl = (path) => {
-        if (!path) return null;
-        if (path.startsWith('http')) return path;
-
-        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-        const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
-        console.log("aaa: ", `${baseUrl}${cleanPath}`)
-        return `${baseUrl}${cleanPath}`;
-    };
     const { jobId } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -65,51 +58,34 @@ const BatchSlotCreate = () => {
     }, [showModal, selectedSlot]);
     useEffect(() => {
         fetchExistingSlots();
+    }, [fetchExistingSlots]);
 
-        const token = localStorage.getItem('accessToken');
-        const client = new Client({
-            webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws-log`),
-            connectHeaders: { Authorization: `Bearer ${token}` },
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
-        });
+    useStompSubscription({
+        destination: `/topic/job-slots/${jobId}`,
+        enabled: Boolean(jobId),
+        onMessage: async (message) => {
+            if (message.body !== 'UPDATE') return;
 
-        client.onConnect = (frame) => {
-            console.log('Connected to Slot WebSocket');
-            client.subscribe(`/topic/job-slots/${jobId}`, async (message) => {
-                if (message.body === "UPDATE") {
-                    console.log("Realtime: Nhận tín hiệu UPDATE...");
-                    const response = await interviewService.getSlotsByJob(jobId);
-                    const newSlots = response.result || [];
-                    setExistingSlots([...newSlots]);
-                    const { showModal: isVisible, selectedSlot: currentSlot } = modalStateRef.current;
+            const response = await interviewService.getSlotsByJob(jobId);
+            const newSlots = response.result || [];
+            setExistingSlots([...newSlots]);
 
-                    if (isVisible && currentSlot) {
-                        const slotId = currentSlot.interviewSlotId || currentSlot.id;
-                        const freshSlotData = newSlots.find(s => (s.interviewSlotId || s.id) === slotId);
+            const { showModal: isVisible, selectedSlot: currentSlot } = modalStateRef.current;
+            if (!isVisible || !currentSlot) return;
 
-                        if (freshSlotData) {
-                            console.log("Realtime: Cập nhật trực tiếp dữ liệu Modal cho slot:", slotId);
-                            setSelectedSlot({...freshSlotData});
-                            interviewService.getCandidatesBySlot(slotId)
-                                .then(res => setCandidates(res.result || []))
-                                .catch(err => console.error("Lỗi cập nhật ứng viên:", err));
-                        }
-                    }
-                }
-            });
-        };
+            const slotId = currentSlot.interviewSlotId || currentSlot.id;
+            const freshSlotData = newSlots.find(s => (s.interviewSlotId || s.id) === slotId);
+            if (!freshSlotData) return;
 
-        client.activate();
-        stompClientRef.current = client;
-
-        return () => {
-            if (stompClientRef.current) {
-                stompClientRef.current.deactivate();
+            setSelectedSlot({ ...freshSlotData });
+            try {
+                const candidateRes = await interviewService.getCandidatesBySlot(slotId);
+                setCandidates(candidateRes.result || []);
+            } catch (error) {
+                console.error('Lỗi cập nhật ứng viên realtime:', error);
             }
-        };
-    }, [jobId, fetchExistingSlots]);
+        }
+    });
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -161,6 +137,15 @@ const BatchSlotCreate = () => {
     }, [duration, defaultCapacity, locationLink, description]);
 
     const [slots, setSlots] = useState([createNewSlot()]);
+
+    const handleResetForm = () => {
+        setDescription('');
+        setLocationLink('');
+        setDefaultCapacity(1);
+        setDuration(30);
+        setSlots([createNewSlot()]);
+        setActiveExpand(null);
+    };
 
     useEffect(() => {
         if (tableBodyRef.current) {
@@ -290,7 +275,7 @@ const BatchSlotCreate = () => {
                 endTime: `${editData.date}T${calculateEndTime(editData.time, duration)}:00`
             };
             await interviewService.updateSlot(slotId, payload);
-            toast.success("Cập nhật thành công!");
+            toastOnce('success', "Cập nhật thành công!");
             setShowModal(false);
             fetchExistingSlots();
         } catch (error) {
@@ -303,7 +288,7 @@ const BatchSlotCreate = () => {
 
         try {
             await interviewService.toggleLockSlot(slotId, newLockStatus);
-            toast.success(newLockStatus ? "Đã khóa khung giờ thành công!" : "Đã mở khóa khung giờ!");
+            toastOnce('success', newLockStatus ? "Đã khóa khung giờ thành công!" : "Đã mở khóa khung giờ!");
             setShowModal(false);
             fetchExistingSlots();
         } catch (error) {
@@ -326,10 +311,17 @@ const BatchSlotCreate = () => {
             return;
         }
 
-        if (window.confirm("Bạn muốn xóa khung giờ này?")) {
+        const confirmed = await confirmAction({
+            title: 'Xóa khung giờ?',
+            text: 'Khung giờ sẽ bị xóa vĩnh viễn khỏi lịch tuyển dụng.',
+            confirmText: 'Xóa khung giờ',
+            icon: 'warning',
+            confirmButtonColor: '#ef4444'
+        });
+        if (confirmed) {
             try {
                 await interviewService.deleteSlot(slotId);
-                toast.success("Đã xóa thành công.");
+                toastOnce('success', "Đã xóa thành công.");
                 setShowModal(false);
                 fetchExistingSlots();
             } catch (error) {
@@ -357,12 +349,12 @@ const BatchSlotCreate = () => {
 
     return (
         <div className="batch-slot-container">
-            <Toaster richColors position="top-right" />
             <div className="batch-slot-grid">
                 <div className="batch-slot-main-card">
                     <div className="card-header-simple">
-                        <button type="button" className="back-btn-circle" onClick={() => navigate(-1)} title="Quay lại">
-                            <ArrowLeft size={18} />
+                        <button type="button" className="app-back-btn" onClick={() => navigate(-1)} title="Quay lại">
+                            <ChevronLeft size={18} />
+                            Quay lại
                         </button>
                         <Plus size={20} />
                         <span>Cấu hình khung giờ</span>
@@ -435,7 +427,7 @@ const BatchSlotCreate = () => {
                         </div>
 
                         <div className="batch-slot-footer">
-                            <button type="button" className="reset-btn" onClick={() => window.location.reload()}><RotateCcw size={16} />Reset</button>
+                            <FilterResetButton onClick={handleResetForm} disabled={loading} />
                             <button type="submit" disabled={loading} className="save-all-btn">{loading ? "Đang lưu..." : <><Save size={18} /> Lưu tất cả</>}</button>
                         </div>
                     </form>
@@ -611,13 +603,12 @@ const BatchSlotCreate = () => {
                                                         alignItems: 'center',
                                                         justifyItems: 'center'
                                                     }}>
-                                                        {getImageUrl(can.avatar) ? (
-                                                            <img src={getImageUrl(can.avatar)} alt={can.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                        ) : (
-                                                            <div style={{ background: '#007bff', color: '#fff', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                                                                {can.name?.charAt(0).toUpperCase() || 'C'}
-                                                            </div>
-                                                        )}
+                                                        <AppImage
+                                                            src={can.avatar}
+                                                            fallbackSrc={DEFAULT_AVATAR_IMAGE}
+                                                            alt={can.name || 'Candidate'}
+                                                            className="candidate-avatar-img"
+                                                        />
                                                     </div>
 
                                                     <div className="can-info" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>

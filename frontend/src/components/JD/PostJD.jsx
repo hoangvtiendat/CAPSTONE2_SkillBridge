@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Hand, Plus, Trash2, Search } from 'lucide-react'; // Đã thêm Search icon
+import { Plus, Trash2, Search } from 'lucide-react';
 
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
@@ -186,8 +186,6 @@ const PostJD = () => {
 
    return (
         <div className="jd-board-container">
-            <Toaster position="top-right" />
-            
             <header className="jd-board-header">
                 <h2>
                     Tạo bài tuyển dụng mới

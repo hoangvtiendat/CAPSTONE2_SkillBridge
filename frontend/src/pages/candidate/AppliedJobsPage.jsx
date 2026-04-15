@@ -3,13 +3,14 @@ import jobService from '../../services/api/jobService';
 import { MapPin, DollarSign, Calendar, Building2, Video } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './AppliedJobsPage.css';
+import { API_BASE_URL } from '../../config/appConfig';
 
 const AppliedJobsPage = () => {
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    const API_IMAGE_BASE = "http://localhost:8081/identity";
+    const API_IMAGE_BASE = API_BASE_URL;
 
     useEffect(() => {
         const fetchJobs = async () => {

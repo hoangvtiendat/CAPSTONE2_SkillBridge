@@ -41,3 +41,9 @@
 .content-with-header {
   /* Offset for the sticky header */
 }
+
+.recruiter-page-container {
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  padding: 20px;
+}

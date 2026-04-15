@@ -91,7 +91,7 @@ const fetchLogs = async (cursor = null, isAppend = false) => {
         fetchLogs(null, false);
 
         const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8081/identity/ws-log'),
+            webSocketFactory: () => new SockJS('http://localhost:8081/api/v1/ws-log'),
             connectHeaders: {
                 Authorization: `Bearer ${localStorage.getItem('accessToken')}`
             },

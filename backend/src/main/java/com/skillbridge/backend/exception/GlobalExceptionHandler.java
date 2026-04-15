@@ -38,7 +38,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<?>> handleAppException(AppException ex) {
         ErrorCode errorCode = ex.getErrorCode();
-        return buildResponse(errorCode, mapErrorCodeToStatus(errorCode));
+        log.warn("Business exception: code={}, message={}", errorCode.getCode(), errorCode.getMessage());
+        return buildResponse(errorCode, errorCode.getHttpStatus());
     }
 
     // ===== LỖI VALIDATION (@Valid trên DTO) =====
@@ -82,12 +83,4 @@ public class GlobalExceptionHandler {
         );
     }
 
-    private HttpStatus mapErrorCodeToStatus(ErrorCode errorCode) {
-        return switch (errorCode) {
-            case TOKEN_EXPIRED, UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
-            case FORBIDDEN, USER_STATUS -> HttpStatus.FORBIDDEN;
-            case USER_NOT_FOUND, ENDPOINT_NOT_FOUND -> HttpStatus.NOT_FOUND;
-            default -> HttpStatus.BAD_REQUEST;
-        };
-    }
 }
