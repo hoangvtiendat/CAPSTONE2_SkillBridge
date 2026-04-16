@@ -133,7 +133,11 @@
     display: flex;
     align-items: center;
 }
-
+.user-profile-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Khoảng cách giữa avatar và nút mail */
+}
 /* User Dropdown */
 .user-menu-container {
     position: relative;
@@ -214,6 +218,44 @@
     height: 1px;
     background: rgba(148, 163, 184, 0.14);
     margin: 4px 0;
+}
+.invitation-btn {
+  position: relative;
+  background: none;
+  border: none;
+  color: #475569; /* Màu slate xám chuyên nghiệp */
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+
+.invitation-btn:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+
+/* Badge số lượng thông báo */
+.badge-count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #ef4444; /* Màu đỏ thông báo */
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid white;
 }
 
 .logout-btn {
@@ -402,4 +444,66 @@
         width: 240px;
         right: 0;
     }
+}
+.portal-overlay-full {
+    position: fixed;
+    inset: 0;
+    z-index: 99999; /* Cao hơn header (100) và dropdown (1000) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Hiệu ứng nền mờ */
+.portal-backdrop-blur {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Nội dung Portal */
+.portal-content-main {
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    overflow: hidden;
+    animation: portalFadeIn 0.3s ease;
+}
+
+@keyframes portalFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Các thành phần bổ trợ cho giao diện Portal */
+.portal-header {
+    padding: 24px 30px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+}
+
+.portal-body {
+    padding: 20px 30px;
+    overflow-y: auto;
+}
+
+.invitation-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    margin-bottom: 12px;
 }

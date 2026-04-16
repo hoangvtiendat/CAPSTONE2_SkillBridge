@@ -36,6 +36,7 @@ import CompanyDetailPage from './pages/candidate/CompanyDetailPage';
 import TaxLookup from './pages/company/TaxLookup';
 import AppliedJobsPage from './pages/candidate/AppliedJobsPage';
 import InterviewBookingPage from './pages/candidate/InterviewBookingPage';
+import InvitationsPortal from './pages/candidate/InvitationsPortal';
 
 // Pages: Recruiter
 import RecruiterDashboardPage from './pages/recruiter/RecruiterDashboardPage';
@@ -217,23 +218,40 @@ function App() {
                             )
                         }
                     />
-<Route
-    path="/interviews/book/:jobId"
-    element={
-        user ? (
-            <div className="home-page">
-                <div className="home-container">
-                    <Sidebar />
-                    <main className="home-main">
-                        <InterviewBookingPage />
-                    </main>
-                </div>
-            </div>
-        ) : (
-            <Navigate to="/login" replace />
-        )
-    }
-/>
+                    <Route
+                        path="/interviews/book/:jobId"
+                        element={
+                            user ? (
+                                <div className="home-page">
+                                    <div className="home-container">
+                                        <Sidebar />
+                                        <main className="home-main">
+                                            <InterviewBookingPage />
+                                        </main>
+                                    </div>
+                                </div>
+                            ) : (
+                                <Navigate to="/login" replace />
+                            )
+                        }
+                    />
+                    <Route
+                        path="/invitations"
+                        element={
+                            user ? (
+                                <div className="home-page">
+                                    <div className="home-container">
+                                        <Sidebar />
+                                        <main className="home-main">
+                                            <InvitationsPortal />
+                                        </main>
+                                    </div>
+                                </div>
+                            ) : (
+                                <Navigate to="/login" replace />
+                            )
+                        }
+                    />
                     {/* Recruiter Routes (Wrapped in Layout & Guard) */}
                     <Route element={<RecruiterRoute><RecruiterLayout /></RecruiterRoute>}>
                         <Route path="/recruiter">

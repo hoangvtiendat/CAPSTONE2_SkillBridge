@@ -401,14 +401,14 @@ public class JobService {
         User creator = job.getCompanyMember().getUser();
         notificationService.createNotification(creator, null, subject, content, type, link, true);
         companyMemberRepository.findByCompany_IdAndRole(job.getCompany().getId(), CompanyRole.ADMIN)
-                .stream()
-                .findFirst()
-                .ifPresent(adminMember -> {
-                    User adminUser = adminMember.getUser();
-                    if (!adminUser.getId().equals(creator.getId())) {
-                        notificationService.createNotification(adminUser, null, subject, content, type, link, true);
-                    }
-                });
+            .stream()
+            .findFirst()
+            .ifPresent(adminMember -> {
+                User adminUser = adminMember.getUser();
+                if (!adminUser.getId().equals(creator.getId())) {
+                    notificationService.createNotification(adminUser, null, subject, content, type, link, true);
+                }
+            });
     }
 
     /**
@@ -663,37 +663,37 @@ public class JobService {
 
     public JobResponse mapToJobResponse(Job job) {
         return JobResponse.builder()
-                .id(job.getId())
-                .title(job.getTitle())
-                .position(job.getPosition())
-                .description(job.getDescription())
-                .location(job.getLocation())
-                .status(job.getStatus() != null ? job.getStatus().name() : null)
-                .salaryMin(job.getSalaryMin())
-                .salaryMax(job.getSalaryMax())
+            .id(job.getId())
+            .title(job.getTitle())
+            .position(job.getPosition())
+            .description(job.getDescription())
+            .location(job.getLocation())
+            .status(job.getStatus() != null ? job.getStatus().name() : null)
+            .salaryMin(job.getSalaryMin())
+            .salaryMax(job.getSalaryMax())
 
-                .category(job.getCategory() != null ?
-                        JobResponse.CategoryDTO.builder()
-                                .id(job.getCategory().getId())
-                                .name(job.getCategory().getName())
-                                .build() : null)
+            .category(job.getCategory() != null ?
+                JobResponse.CategoryDTO.builder()
+                    .id(job.getCategory().getId())
+                    .name(job.getCategory().getName())
+                    .build() : null)
 
-                .company(job.getCompany() != null ?
-                        JobResponse.CompanyDTO.builder()
-                                .id(job.getCompany().getId())
-                                .name(job.getCompany().getName())
-                                .logoUrl(job.getCompany().getImageUrl())
-                                .build() : null)
+            .company(job.getCompany() != null ?
+                JobResponse.CompanyDTO.builder()
+                    .id(job.getCompany().getId())
+                    .name(job.getCompany().getName())
+                    .logoUrl(job.getCompany().getImageUrl())
+                    .build() : null)
 
-                .skills(job.getJobSkills() != null ?
-                        job.getJobSkills().stream().map(js ->
-                                JobResponse.JobSkillDTO.builder()
-                                        .name(js.getSkill().getName())
-                                        .required(js.getIsRequired())
-                                        .build()
-                        ).toList()
-                        : new ArrayList<>())
-                .build();
+            .skills(job.getJobSkills() != null ?
+                job.getJobSkills().stream().map(js ->
+                    JobResponse.JobSkillDTO.builder()
+                        .name(js.getSkill().getName())
+                        .required(js.getIsRequired())
+                        .build()
+                ).toList()
+                : new ArrayList<>())
+            .build();
     }
 
     public Job updateStatus(String id, int type) {
