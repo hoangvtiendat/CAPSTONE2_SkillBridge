@@ -82,4 +82,6 @@ public class Company extends BaseEntity {
                 .map(sub -> sub.getName())
                 .orElse(SubscriptionPlanStatus.FREE);
     }
+
+
 }
