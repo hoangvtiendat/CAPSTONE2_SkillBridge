@@ -73,6 +73,18 @@ const candidateService = {
         const response = await api.get(`/candidates/potential/${jobId}`);
         return response.data;
     },
+    inviteCandidate: async (jobId, candidateId) => {
+        try {
+            // Sử dụng path variable cho jobId và body cho candidateId như backend yêu cầu
+            const response = await api.post(`/jobs/${jobId}/invite`, {
+                candidateId: candidateId
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error in inviteCandidate service:", error);
+            throw error;
+        }
+    },
     evaluateByRecruiter: async (candidateId, jobId) => {
         try {
             const response = await api.get(`/candidates/evaluate-by-recruiter/${candidateId}/${jobId}`);

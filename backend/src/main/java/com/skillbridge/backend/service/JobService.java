@@ -40,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -70,6 +71,7 @@ public class JobService {
     CVJobEvaluationRepository cvJobEvaluationRepository;
     AIJobService aiJobService;
     MailServiceImpl mailService;
+    JobInvitationRepository jobInvitationRepository;
 
     LocalDate date = LocalDate.now();
 
@@ -1051,30 +1053,67 @@ public class JobService {
     }
 
     public String inviteJob(String id, String candidateId) {
-        Job job = jobRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-        Candidate candidate = candidateRepository.findById(candidateId).orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
-        System.out.println("candiateId: " + candidateId + "\nCandidate: " + candidate);
+        Job job = jobRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
+
         User user = candidate.getUser();
+
+        // Kiểm tra xem ứng viên đã ứng tuyển chưa
         if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
             throw new AppException(ErrorCode.ALREADY_APPLIED);
         }
 
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
-        Company company = companyRepository.findById(job.getCompany().getId()).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+        Company company = companyRepository.findById(job.getCompany().getId())
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
-        companyMemberRepository.findByCompany_IdAndUser_Id(company.getId(), currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
-        Map<String, Object> jobTitleMap = job.getTitle();
+        // Xác thực quyền của thành viên công ty
+        companyMemberRepository.findByCompany_IdAndUser_Id(company.getId(), currentUser.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
 
+        // --- LOGIC KIỂM TRA VÀ XỬ LÝ LỜI MỜI ---
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime newExpiration = now.plusDays(3); // Thời hạn 3 ngày
+
+        Optional<JobInvitation> existingInvitationOpt = jobInvitationRepository.findByJobAndCandidate(job, candidate);
+
+        if (existingInvitationOpt.isPresent()) {
+            JobInvitation existingInvitation = existingInvitationOpt.get();
+
+            // Nếu lời mời vẫn còn hạn -> Throw Exception
+            if (existingInvitation.getExpiresAt().isAfter(now)) {
+                // Lưu ý: Bạn cần khai báo thêm INVITATION_ALREADY_SENT trong file ErrorCode của bạn
+                throw new AppException(ErrorCode.INVITATION_ALREADY_SENT);
+            } else {
+                // Nếu lời mời đã hết hạn -> Gia hạn lời mời cũ (không tạo mới)
+                existingInvitation.setExpiresAt(newExpiration);
+                jobInvitationRepository.save(existingInvitation);
+            }
+        } else {
+            // Nếu chưa từng có lời mời -> Tạo lời mời mới (đã bỏ status)
+            JobInvitation newInvitation = JobInvitation.builder()
+                    .job(job)
+                    .candidate(candidate)
+                    .expiresAt(newExpiration)
+                    .build();
+            jobInvitationRepository.save(newInvitation);
+        }
 
         // --- TẠO NỘI DUNG THÔNG BÁO ---
         String title = "Lời mời ứng tuyển từ " + company.getName();
+        String formattedExpiration = newExpiration.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
         String messageBody = String.format(
                 "Chào %s,\n\nCông ty %s đã gửi lời mời bạn ứng tuyển vào vị trí %s.\n" +
-                        "Hãy truy cập hệ thống để xem chi tiết và ứng tuyển ngay!",
+                        "Lời mời này có hiệu lực trong vòng 3 ngày (đến %s).\n" +
+                        "Hãy truy cập hệ thống để xem chi tiết và ứng tuyển ngay!\n" +
+                        "",
                 candidate.getName(),
                 company.getName(),
-                job.getPosition()
+                job.getPosition(),
+                formattedExpiration
         );
 
         // --- GỬI THÔNG BÁO ---
@@ -1089,7 +1128,6 @@ public class JobService {
         );
 
         return "Gửi lời mời ứng tuyển thành công!";
-
     }
 
     /**

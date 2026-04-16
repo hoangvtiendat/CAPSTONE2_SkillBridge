@@ -162,9 +162,9 @@ h2 {
     transform: translateY(-5px);
 }
 
-.stat-icon {
-    margin: 0 auto 16px;
-}
+/*.stat-icon {*/
+/*    margin: 0 auto 16px;*/
+/*}*/
 
 .icon-blue {
     color: var(--sf-blue, #3b82f6);

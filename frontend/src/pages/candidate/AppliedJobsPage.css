@@ -4,6 +4,7 @@
     max-width: 1440px;
     margin: 0 auto;
     font-family: 'Inter', sans-serif;
+    padding-left: 140px;
 }
 
 .applied-title {
@@ -19,11 +20,37 @@
     margin-bottom: 2rem;
 }
 
+
+
 /* --- GRID HỆ THỐNG --- */
 .job-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 20px;
+}
+.action{
+    display: flex;
+    flex-direction: row;
+    width: 75px;
+    justify-content: space-between;
+}
+.btn-withdraw-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #ffefef; /* Màu xanh nhạt */
+    color: #3b82f6;
+    border: 1px solid #fedbdb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-withdraw-icon:hover {
+    background: #fecaca;
+    transform: scale(1.1);
+    transform: scale(1.1) rotate(5deg);
 }
 
 /* --- CARD ITEM --- */

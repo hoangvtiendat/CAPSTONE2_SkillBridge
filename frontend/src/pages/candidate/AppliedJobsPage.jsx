@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import jobService from '../../services/api/jobService';
-import { MapPin, DollarSign, Calendar, Building2, Video } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import {MapPin, DollarSign, Calendar, Building2, Video, UserX} from 'lucide-react';
+import {useNavigate} from 'react-router-dom';
 import './AppliedJobsPage.css';
+import {toast} from 'sonner';
 
 const AppliedJobsPage = () => {
     const [appliedJobs, setAppliedJobs] = useState([]);
@@ -49,6 +50,25 @@ const AppliedJobsPage = () => {
         </div>
     );
 
+    const handleWithdraw = async (e, applicationId) => {
+        e.stopPropagation(); // Ngăn sự kiện click vào card (chuyển trang)
+
+        if (!window.confirm("Bạn có chắc chắn muốn rút hồ sơ ứng tuyển này không?")) {
+            return;
+        }
+
+        try {
+            const response = await jobService.withdrawApplication(applicationId);
+            if (response.code === 200) {
+                toast.success(response.result || "Rút hồ sơ thành công");
+                // Cập nhật lại UI bằng cách lọc bỏ hồ sơ đã rút
+                setAppliedJobs(prev => prev.filter(item => item.applicationId !== applicationId));
+            }
+        } catch (err) {
+            toast.error("Không thể rút hồ sơ. Vui lòng thử lại!");
+        }
+    };
+
     return (
         <div className="applied-container">
             <div className="applied-header">
@@ -68,21 +88,35 @@ const AppliedJobsPage = () => {
                             <span className={`status-badge-v2 ${getStatusClass(item.status)}`}>
                                 {item.status}
                             </span>
+                            <div className="action">
+                                {item.status === 'PENDING' && (
+                                    <button
+                                        className="btn-withdraw-icon"
+                                        onClick={(e) => handleWithdraw(e, item.applicationId)}
+                                        title="Rút hồ sơ"
+                                        style={{color: '#ef4444'}} // Màu đỏ minimalist
+                                    >
+                                        <UserX size={14}/>
+                                    </button>
+                                )}
 
-                            <button
-                                className="btn-book-icon-v3"
-                                onClick={(e) => handleGoToBooking(e, item.jobId)}
-                                title="Đặt lịch phỏng vấn"
-                            >
-                                <Video size={14} />
-                            </button>
+                                <button
+                                    className="btn-book-icon-v3"
+                                    onClick={(e) => handleGoToBooking(e, item.jobId)}
+                                    title="Đặt lịch phỏng vấn"
+                                >
+                                    <Video size={14}/>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="job-logo-v2">
                             <img
                                 src={getLogoUrl(item.companyLogo)}
                                 alt={item.companyName}
-                                onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Error'; }}
+                                onError={(e) => {
+                                    e.target.src = 'https://via.placeholder.com/150?text=Error';
+                                }}
                             />
                         </div>
 
@@ -92,20 +126,20 @@ const AppliedJobsPage = () => {
                             </h3>
 
                             <div className="job-company-v2 text-truncate">
-                                <Building2 size={14} />
+                                <Building2 size={14}/>
                                 <span>{item.companyName}</span>
                             </div>
 
                             <div className="job-meta-v2">
                                 <div className="meta-row">
-                                    <MapPin size={14} /> <span>{item.location}</span>
+                                    <MapPin size={14}/> <span>{item.location}</span>
                                 </div>
                                 <div className="meta-row salary">
-                                    <DollarSign size={14} />
+                                    <DollarSign size={14}/>
                                     <span>{item.salaryMin.toLocaleString()} - {item.salaryMax.toLocaleString()}</span>
                                 </div>
                                 <div className="meta-row date">
-                                    <Calendar size={14} />
+                                    <Calendar size={14}/>
                                     <span>{new Date(item.appliedAt).toLocaleDateString('vi-VN')}</span>
                                 </div>
                             </div>

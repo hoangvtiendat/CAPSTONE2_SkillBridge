@@ -279,6 +279,15 @@ const jobService = {
             throw error;
         }
     },
+    withdrawApplication: async (applicationId) => {
+        try {
+            const response = await api.post(`/applications/${applicationId}/withdraw`);
+            return response.data;
+        } catch (error) {
+            console.error("Error withdrawing application:", error);
+            throw error;
+        }
+    }
 
 };
 

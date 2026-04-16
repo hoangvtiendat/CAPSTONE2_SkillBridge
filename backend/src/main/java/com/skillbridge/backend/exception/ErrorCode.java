@@ -124,9 +124,11 @@ public enum ErrorCode {
     // 7xxx: APPLICATION
     APPLICATION_NOT_FOUND(7000, "Không tìm thấy hồ sơ ứng tuyển", HttpStatus.NOT_FOUND),
     ALREADY_APPLIED(7001, "Bạn đã ứng tuyển vào vị trí này trước đó rồi", HttpStatus.BAD_REQUEST),
+
     EVALUATION_NOT_FOUND(8002, "Hiện tại chưa có đánh giá của ứng viên này đối với bài đăng", HttpStatus.BAD_REQUEST),
     AI_SERVICE_BUSY(8003, "Hệ thống AI đang bận", HttpStatus.BAD_REQUEST),
     AI_PARSING_FAILED(8001, "Không thể phân tích được CV của chức năng parsingCV", HttpStatus.BAD_REQUEST),
+
     // 9xxx: INTERVIEW & SLOTS (THÊM MỚI VÀO ĐÂY)
     SLOT_NOT_FOUND(9000, "Khung giờ phỏng vấn không tồn tại", HttpStatus.NOT_FOUND),
     SLOT_ALREADY_BOOKED(9001, "Rất tiếc! Khung giờ này đã có người khác nhanh tay chọn mất rồi", HttpStatus.BAD_REQUEST),
@@ -135,8 +137,10 @@ public enum ErrorCode {
     INTERVIEW_NOT_FOUND(9004, "Không tìm thấy thông tin buổi phỏng vấn", HttpStatus.NOT_FOUND),
     CANNOT_DELETE_BOOKED_SLOT(9005, "Không thể xoá khung giờ đã có ứng viên đặt lịch.", HttpStatus.BAD_REQUEST),
     SLOT_EXPIRED(9006, "Khung giờ này đã trôi qua, không thể đặt lịch", HttpStatus.BAD_REQUEST),
-    SLOT_IS_LOCKED(9007,"Khung giờ này đã bị khoá", HttpStatus.BAD_REQUEST);
+    SLOT_IS_LOCKED(9007,"Khung giờ này đã bị khoá", HttpStatus.BAD_REQUEST),
 
+    //INVIVATION
+    INVITATION_ALREADY_SENT(11000,"Bạn đã gửi lời mời cho ứng viên này", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private final HttpStatus httpStatus;
