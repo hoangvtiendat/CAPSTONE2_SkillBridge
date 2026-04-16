@@ -90,7 +90,7 @@
   background: rgba(37, 99, 235, 0.05);
   padding: 6px 10px;
   border-radius: 10px;
-  width: fit-content;
+  width: 100%;
 }
 
 .salary-amount-mini {
