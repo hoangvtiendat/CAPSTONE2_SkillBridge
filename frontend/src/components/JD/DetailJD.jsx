@@ -21,6 +21,41 @@ const toastStyles = {
 const API_BASE_URL = "http://localhost:8081/identity";
 const normalizeSkillName = (value) => String(value || '').trim().toLowerCase();
 
+const trimText = (value) => String(value || '').trim();
+
+const cloneTitles = (titles = []) => titles.map(item => ({ key: String(item?.key || ''), value: String(item?.value || '') }));
+
+const normalizeSkillsForCompare = (skills = []) => {
+    const deduped = dedupeSkills(skills).map((skill) => ({
+        skillId: String(skill?.skillId || '').trim(),
+        name: normalizeSkillName(skill?.name),
+        isRequired: Boolean(skill?.isRequired)
+    }));
+
+    return deduped
+        .filter((skill) => skill.skillId || skill.name)
+        .sort((a, b) => {
+            const left = `${a.skillId}-${a.name}-${a.isRequired ? '1' : '0'}`;
+            const right = `${b.skillId}-${b.name}-${b.isRequired ? '1' : '0'}`;
+            return left.localeCompare(right);
+        });
+};
+
+const normalizeFormForCompare = (form = {}) => ({
+    categoryId: String(form.categoryId || '').trim(),
+    position: trimText(form.position),
+    description: trimText(form.description),
+    location: trimText(form.location),
+    salaryMin: Number(form.salaryMin || 0),
+    salaryMax: Number(form.salaryMax || 0),
+    skills: normalizeSkillsForCompare(form.skills || [])
+});
+
+const hasInvalidLeadingTrailingWhitespace = (value) => {
+    if (typeof value !== 'string') return false;
+    return value !== value.trim();
+};
+
 const dedupeSkills = (skills = []) => {
     const deduped = [];
 
@@ -171,9 +206,15 @@ const DetailJD = () => {
             skills: dedupeSkills(mappedSkills)
         };
 
-        setDynamicTitles(initialTitles);
-        setEditForm(formObj);
-        setInitialFormState({ editForm: formObj, dynamicTitles: initialTitles });
+        const titlesForEdit = cloneTitles(initialTitles);
+        const formForEdit = { ...formObj, skills: [...formObj.skills] };
+
+        setDynamicTitles(titlesForEdit);
+        setEditForm(formForEdit);
+        setInitialFormState({
+            editForm: normalizeFormForCompare(formForEdit),
+            dynamicTitles: cloneTitles(titlesForEdit).map(item => ({ key: trimText(item.key), value: trimText(item.value) }))
+        });
         setIsModalOpen(true);
     };
 
@@ -225,6 +266,32 @@ const DetailJD = () => {
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
 
+        const textFieldConfig = [
+            { key: 'position', label: 'Vị trí công việc' },
+            { key: 'description', label: 'Mô tả công việc' },
+            { key: 'location', label: 'Địa điểm làm việc' }
+        ];
+
+        const invalidTextField = textFieldConfig.find(({ key }) => hasInvalidLeadingTrailingWhitespace(editForm[key]));
+        if (invalidTextField) {
+            toast.error('Lỗi nhập liệu', {
+                description: `${invalidTextField.label} không được có khoảng trắng ở đầu hoặc cuối`,
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        const hasInvalidWhitespaceDynamicTitles = dynamicTitles.some(item =>
+            hasInvalidLeadingTrailingWhitespace(item.key) || hasInvalidLeadingTrailingWhitespace(item.value)
+        );
+        if (hasInvalidWhitespaceDynamicTitles) {
+            toast.error('Lỗi nhập liệu', {
+                description: 'Tiêu đề và mô tả chi tiết không được có khoảng trắng ở đầu hoặc cuối',
+                style: toastStyles.warning
+            });
+            return;
+        }
+
         const hasEmptyDynamicTitles = dynamicTitles.some(item => item.key.trim() === "" || item.value.trim() === "");
         if (hasEmptyDynamicTitles) {
             toast.error("Lỗi nhập liệu", { description: "Vui lòng điền đầy đủ Tiêu đề và Mô tả", style: toastStyles.warning });
@@ -248,7 +315,10 @@ const DetailJD = () => {
         }
 
         const titleObject = {};
-        dynamicTitles.forEach(item => { titleObject[item.key.trim() === "" ? "Mục khác" : item.key.trim()] = item.value; });
+        dynamicTitles.forEach(item => {
+            const titleKey = item.key.trim() === "" ? "Mục khác" : item.key.trim();
+            titleObject[titleKey] = item.value.trim();
+        });
 
         const cleanSkills = validSkillsToSubmit.map(s => {
             const realSkill = skillsList.find(listS => {
@@ -260,7 +330,15 @@ const DetailJD = () => {
 
         const dedupedCleanSkills = dedupeSkills(cleanSkills).filter(s => s.skillId);
 
-        const payloadToSubmit = { ...editForm, title: titleObject, skills: dedupedCleanSkills };
+        const payloadToSubmit = {
+            ...editForm,
+            categoryId: String(editForm.categoryId || '').trim(),
+            position: trimText(editForm.position),
+            description: trimText(editForm.description),
+            location: trimText(editForm.location),
+            title: titleObject,
+            skills: dedupedCleanSkills
+        };
 
         setIsUpdating(true);
         try {
@@ -275,7 +353,13 @@ const DetailJD = () => {
         }
     };
 
-    const isFormChanged = initialFormState && (JSON.stringify(initialFormState.editForm) !== JSON.stringify(editForm) || JSON.stringify(initialFormState.dynamicTitles) !== JSON.stringify(dynamicTitles));
+    const isFormChanged = Boolean(initialFormState) && (() => {
+        const normalizedCurrentForm = normalizeFormForCompare(editForm || {});
+        const normalizedCurrentTitles = cloneTitles(dynamicTitles).map(item => ({ key: trimText(item.key), value: trimText(item.value) }));
+
+        return JSON.stringify(initialFormState.editForm) !== JSON.stringify(normalizedCurrentForm)
+            || JSON.stringify(initialFormState.dynamicTitles) !== JSON.stringify(normalizedCurrentTitles);
+    })();
 
     const filteredSkillsList = skillsList.filter(skill => {
         const skillName = String(skill.name || skill.skillName || skill.title || "").toLowerCase();
