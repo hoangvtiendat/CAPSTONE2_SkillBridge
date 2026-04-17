@@ -73,7 +73,7 @@ public class InterviewService {
                 .filter(app -> !interviewRepository.existsByApplicationId(app.getId()))
                 .toList();
 
-        String notificationMessage = String.format("Có khung giờ phỏng vấn mới cho vị trí: %s", job.getPosition());
+        String notificationMessage = String.format("Có khung giờ phỏng vấn mới cho vị trí: %s", JobService.getJobPositionName(job));
 
         pendingApplicants.forEach(app -> {
             notificationService.createNotification(
@@ -140,7 +140,7 @@ public class InterviewService {
         if (slot.getCurrentOccupancy() > 0) {
             List<Interview> bookedInterviews = interviewRepository.findAllBySlotId(slotId);
             String message = String.format("Lịch phỏng vấn vị trí %s đã được thay đổi. Thời gian mới: %s",
-                    slot.getJob().getPosition(), updated.getStartTime());
+                    JobService.getJobPositionName(slot.getJob()), updated.getStartTime());
 
             bookedInterviews.forEach(interview -> {
                 notificationService.createNotification(
@@ -246,7 +246,7 @@ public class InterviewService {
                 app.getCandidate().getUser(),
                 null,
                 "Đặt lịch thành công",
-                "Bạn đã đặt lịch lúc " + slot.getStartTime() +" với vị trí "+ slot.getJob().getPosition()+" của công ty "+slot.getJob().getCompany().getName(),
+                "Bạn đã đặt lịch lúc " + slot.getStartTime() +" với vị trí "+ JobService.getJobPositionName(slot.getJob())+" của công ty "+slot.getJob().getCompany().getName(),
                 "INTERVIEW_BOOKED",
                 "/candidate/my-interviews",
                 true

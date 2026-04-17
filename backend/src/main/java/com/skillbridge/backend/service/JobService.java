@@ -421,7 +421,7 @@ public class JobService {
                         "<p>Bài đăng vị trí <b>%s</b> tại công ty <b>%s</b> %s.</p>" +
                         "<p>Vui lòng đăng nhập hệ thống để biết thêm chi tiết.</p>" +
                         "</div>",
-                color, job.getPosition(), job.getCompany().getName(), actionText
+                color, getJobPositionName(job), job.getCompany().getName(), actionText
         );
     }
 
@@ -665,26 +665,23 @@ public class JobService {
         return JobResponse.builder()
                 .id(job.getId())
                 .title(job.getTitle())
-                .position(job.getPosition())
+                .position(getJobPositionName(job))
                 .description(job.getDescription())
                 .location(job.getLocation())
                 .status(job.getStatus() != null ? job.getStatus().name() : null)
                 .salaryMin(job.getSalaryMin())
                 .salaryMax(job.getSalaryMax())
-
                 .category(job.getCategory() != null ?
                         JobResponse.CategoryDTO.builder()
                                 .id(job.getCategory().getId())
                                 .name(job.getCategory().getName())
                                 .build() : null)
-
                 .company(job.getCompany() != null ?
                         JobResponse.CompanyDTO.builder()
                                 .id(job.getCompany().getId())
                                 .name(job.getCompany().getName())
                                 .logoUrl(job.getCompany().getImageUrl())
                                 .build() : null)
-
                 .skills(job.getJobSkills() != null ?
                         job.getJobSkills().stream().map(js ->
                                 JobResponse.JobSkillDTO.builder()
@@ -694,6 +691,29 @@ public class JobService {
                         ).toList()
                         : new ArrayList<>())
                 .build();
+    }
+
+    public static String getJobPositionName(Job job) {
+        if (job == null) return "N/A";
+        
+        // 1. Check if position field is valid
+        String pos = job.getPosition();
+        if (pos != null && !pos.trim().isEmpty() && !pos.equalsIgnoreCase("N/A")) {
+            return pos;
+        }
+
+        // 2. Try to extract from title JSON map
+        Map<String, Object> titleMap = job.getTitle();
+        if (titleMap != null && !titleMap.isEmpty()) {
+            // Prefer Vietnamese, then English, then any first key
+            if (titleMap.containsKey("vi")) return String.valueOf(titleMap.get("vi"));
+            if (titleMap.containsKey("en")) return String.valueOf(titleMap.get("en"));
+            
+            Object firstValue = titleMap.values().stream().findFirst().orElse(null);
+            if (firstValue != null) return String.valueOf(firstValue);
+        }
+
+        return (pos != null) ? pos : "N/A";
     }
 
     public Job updateStatus(String id, int type) {
@@ -723,7 +743,7 @@ public class JobService {
 
         if (type == 1) {
             List<Application> getListCandidateINJD = applicationRepository.findByJob_Id(id);
-            String nameJD = job.getPosition();
+            String nameJD = getJobPositionName(job);
 
             String companyName = job.getCompany().getName();
             String subject = "[SkillBridge] Thông báo quan trọng về vị trí: " + nameJD;
@@ -1001,9 +1021,10 @@ public class JobService {
 
         Map<String, Object> jobTitleMap = job.getTitle();
 
-        String title = "Ứng tuyển mới: " + job.getPosition();
+        String jobPosition = getJobPositionName(job);
+        String title = "Ứng tuyển mới: " + request.getName();
         String content = String.format("Ứng viên %s vừa nộp hồ sơ vào vị trí %s. Kiểm tra ngay để không bỏ lỡ tài năng!",
-                request.getName(), job.getPosition());
+                request.getName(), jobPosition);
         String link = "/recruiter/applications/" + savedApp.getId();
 
         Set<User> distinctRecruiters = companyMemberRepository.findByCompany_Id(job.getCompany().getId())
@@ -1074,7 +1095,7 @@ public class JobService {
                         "Hãy truy cập hệ thống để xem chi tiết và ứng tuyển ngay!",
                 candidate.getName(),
                 company.getName(),
-                job.getPosition()
+                getJobPositionName(job)
         );
 
         // --- GỬI THÔNG BÁO ---
