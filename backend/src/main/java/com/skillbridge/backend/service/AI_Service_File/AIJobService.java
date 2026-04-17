@@ -5,11 +5,13 @@ import com.skillbridge.backend.dto.request.SemanticSearchRequest;
 import com.skillbridge.backend.dto.request.SkillRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.Candidate;
+import com.skillbridge.backend.entity.JDTag;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CategoryRepository;
+import com.skillbridge.backend.repository.JDTagRepository;
 import com.skillbridge.backend.repository.JobRepository;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.enums.JobStatus;
@@ -26,6 +28,7 @@ import com.skillbridge.backend.utils.SecurityUtils;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 
@@ -45,6 +48,9 @@ public class AIJobService {
     CandidateService candidateService;
     @Autowired
     SecurityUtils securityUtils;
+    @Autowired
+    JDTagRepository jdTagRepository;
+
     LocalDate date = LocalDate.now();
 
     /// Lấy nội dung vector để so sánh
@@ -130,9 +136,9 @@ public class AIJobService {
 
             }
             System.out.println("maxSimilarity" + maxSimilarity);
-            if (maxSimilarity >= 0.6 && maxSimilarity < 0.8)
+            if (maxSimilarity == 0.6)
             {return 2;}
-            if (maxSimilarity >= 0.8){
+            if (maxSimilarity > 0.6){
             ///  Lây detail của JD mới
             String detailNewJD = getJobComparisonResponse(idOfJob);
             ///  Lấy detail cảu JD cũ
@@ -205,18 +211,22 @@ public class AIJobService {
     ///  Tiến hành cơ chế đèn giao thông
     @Async
     @Transactional
-    public void ai_Check_Approval (String dataOfJD){
+    public void ai_Check_Approval (String idJD){
 
         try {
-            Job job = jobRepository.findById(dataOfJD)
+
+            Job job = jobRepository.findById(idJD)
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
             String companyId = job.getCompany().getId();
-            Optional<User> userOptional = jobRepository.findUserByJobAndCompany(dataOfJD, companyId);
+            Optional<User> userOptional = jobRepository.findUserByJobAndCompany(idJD, companyId);
             LocalDate endDate = LocalDate.now().plusDays(job.getPostingDay());
             User receiver = userOptional.get();
+            ///  gán thẻ cho bài đăng
+            String tagOfJD = JD_Of_Tag(idJD);
 
-            JobDetailResponse in4JD = getIn4OfJD(dataOfJD);
-            String titleText = in4JD.getTitle() != null ? in4JD.getPosition() : "N/A";
+
+            JobDetailResponse in4JD = getIn4OfJD(idJD);
+            String titleText = in4JD.getTitle() != null ? in4JD.getTitle().toString() : "N/A";
             String skillsText = in4JD.getSkills() != null ? String.join(", ", in4JD.getSkills()) : "";
             String dataForAI = String.format(
                     "Position: %s\nTitle: %s\nCategory: %s\nSkills: %s\nSalary: %s - %s\nLocation: %s\nDescription: %s",
@@ -229,16 +239,50 @@ public class AIJobService {
                     in4JD.getLocation(),
                     in4JD.getDescription()
             );
-            System.out.println("dataForAI: " + dataForAI);
-            System.out.println("dataTyoe " + dataForAI);
+
+            ObjectMapper tagChek = new ObjectMapper();
+            JsonNode jsonTag = tagChek.readTree(tagOfJD);
+
+            JsonNode matchedTags = jsonTag.path("matched_tags");
+            ///  biến đôi mảng trành String
+            List<String> tags = new ArrayList<>();
+            if (matchedTags.isArray()) {
+                for (JsonNode tag : matchedTags) {
+                    tags.add(tag.asText());
+                }
+            }
+
+            String tagText = String.join(", ", tags);
+
+            System.out.println("tagText: " + tagText);
+
+            Job updateTagOFJD = jobRepository.getReferenceById(idJD);
+            updateTagOFJD.setTagOfJd(tagText);
+            jobRepository.save(updateTagOFJD);
+
+            if (jsonTag.path("has_new_tags").asInt() == 1) {
+                JsonNode newTag = jsonTag.path("new_tags");
+
+                if (newTag.isArray()) {
+                    for (JsonNode tagNode : newTag) {
+                        String tag = tagNode.asText();
+
+                        System.out.println("tag: " + tag);
+
+                        JDTag jd = new JDTag();
+                        jd.setName(tag);
+                        jdTagRepository.save(jd);
+                    }
+                }
+            }
+            System.out.println("ddax chayj tagOfJD");
+            /// Ai đánh giá
             String resultOdAI = aiService.Ai_OF_SKILLBRIDGE(dataForAI, 1);
-            System.out.println("resultOdAI: " + resultOdAI);
             /// 　String > json
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(resultOdAI);
             /// Bóc tách dữ liệu nèdd
-            System.out.println("NejsonNode: " + jsonNode.toString());
-            System.out.println("dataForAI: " + dataForAI);
+
             boolean checkResultAI = jsonNode.path("isApproved").asBoolean(false);
             String subject = "Thông báo duyệt bài đăng";
             String messageBody= "";
@@ -278,7 +322,7 @@ public class AIJobService {
                         subject,
                         messageBody,
                         "JOB_MODERATION_FAILED",
-                        "/detail-jd/dataOfJD",
+                        "/detail-jd/idJD",
                         true
 
                 );
@@ -286,7 +330,7 @@ public class AIJobService {
 
             else{
                 float[] vectorOFFJ = job.getVectorEmbedding();
-                int result = checkSpamJd_of_company(job.getCompany().getId(),dataOfJD ,vectorOFFJ);
+                int result = checkSpamJd_of_company(job.getCompany().getId(),idJD ,vectorOFFJ);
                 System.out.println("ketquaspamtrave" + result);
                 if (result == 1) {
                     messageBody = String.format(
@@ -335,7 +379,7 @@ public class AIJobService {
                             titleText
                     );
                     job.setModerationStatus(ModerationStatus.RED);
-                    job.setStatus(JobStatus.LOCK);
+                    job.setStatus(JobStatus.PENDING);
 
                 }
                 if (!messageBody.isEmpty()) {
@@ -347,12 +391,11 @@ public class AIJobService {
                             subject,
                             messageBody,
                             "JOB_MODERATION_FAILED",
-                            "/detail-jd/dataOfJD",
+                            "/detail-jd/idJD",
                             true
                     );
                 }
             }
-
 
         } catch (Exception e) {
         e.printStackTrace();
@@ -370,10 +413,11 @@ public class AIJobService {
 
         try {
             String idOfUser = securityUtils.getCurrentUserId();
-            System.out.println("idOfUser" + idOfUser);
             UpdateCandidateCvResponse cv = candidateService.getCV_searchsenematic(idOfUser);
-            System.out.println("cvNe" + cv);
-            System.out.println("requestOfCandidate" + requestOfCandidate);
+            List<String> listTagName = jdTagRepository.findAllTagNames();
+            ObjectMapper objectListTagName = new ObjectMapper();
+            String jsonTags = objectListTagName.writeValueAsString(listTagName);
+
 
             List<SkillRequest> skills = new ArrayList<>();
             String candidateCategory = null;
@@ -416,28 +460,26 @@ public class AIJobService {
                     Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
                     ... (Nội dung Prompt của bạn) ...
                     [DANH SÁCH CATEGORY HỆ THỐNG]: %s
+                    [EXISTING_TAGS]:%s
                     [DỮ LIỆU CV HIỆN TẠI]: %s
                     [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
                     """;
             String requstForAI = String.format(promptTemplate,
                     jsonStringCategory,
+                    jsonTags,
                     jsonStringCandidate,
                     requestOfCandidate
             );
-
             String aiResponse = aiService.Ai_OF_SKILLBRIDGE(requstForAI, 3);
             System.out.println("aiResponse " + aiResponse);
             JsonNode rootNode = objectMapper.readTree(aiResponse);
-            System.out.println("requstForAI\n" + requstForAI);
 
             String categoryName, city;
             Long salaryExpect;
-            List<String> skillIds = new ArrayList<>();
-            List<String> degreeNames = new ArrayList<>();
+
 
             int type = rootNode.get("typeTraVe").asInt();
-            System.out.println("typeTraVe " + type);
-            System.out.println("rootNode" + rootNode);
+
 
             categoryName = (rootNode.has("category_name") && !rootNode.get("category_name").asText().isEmpty())
                     ? rootNode.get("category_name").asText() : null;
@@ -453,9 +495,19 @@ public class AIJobService {
                     if (!s.isEmpty()) skillsName.add(s);
                 }
             }
+            List<String> tagList = new ArrayList<>();
+            JsonNode tagsNode = rootNode.get("matched_tags");
+            for (JsonNode tag : tagsNode) {
+                String s = tag.asText();
+                if (!s.isEmpty()) tagList.add(s);
+            }
+            boolean hasTags = tagList != null && !tagList.isEmpty();
+            String tagPattern = hasTags ? String.join("|", tagList) : "";
 
             boolean hasSkills = !skillsName.isEmpty();
-            salaryExpect = rootNode.get("salary_expect").asLong();
+            salaryExpect = rootNode.path("salary_expect").isNull()
+                    ? null
+                    : rootNode.path("salary_expect").asLong();
 
             List<Job> jobsFromDb = new ArrayList<>();
             List<String> querySkills = hasSkills ? skillsName : Collections.singletonList("");
@@ -465,14 +517,16 @@ public class AIJobService {
                 System.out.println("hasSkills " + hasSkills);
                 System.out.println("skillsName " + skillsName);
                 System.out.println("salaryExpect " + salaryExpect);
-
+                System.out.println();
                 jobsFromDb = jobRepository.findJobsByRequirements(
                         JobStatus.OPEN.name(),
                         city,
                         categoryName,
                         querySkills,
                         hasSkills,
-                        salaryExpect
+                        salaryExpect,
+                        tagPattern,
+                        hasTags
                 );
             } else if (type == 1) {
                 jobsFromDb = jobRepository.findJobsByRequirements_Not_sameCategory(
@@ -481,7 +535,9 @@ public class AIJobService {
                         categoryName,
                         querySkills,
                         hasSkills,
-                        salaryExpect
+                        salaryExpect,
+                        tagPattern,
+                        hasTags
                 );
             } else if (type == 2) {
                 System.out.println("AI không tìm thấy ngành phù hợp.");
@@ -545,5 +601,46 @@ public class AIJobService {
         } finally {
             System.out.println("findJobBySemanticSearch đã chạy xong");
         }
+    }
+    ///  Thêm || update thẻ JD
+    @Async
+    @Transactional
+    public String JD_Of_Tag(String idJD) {
+        try {
+            JobDetailResponse in4JD = getIn4OfJD(idJD);
+            String titleText = in4JD.getTitle() != null ? in4JD.getTitle().toString() : "N/A";
+            String skillsText = in4JD.getSkills() != null ? String.join(", ", in4JD.getSkills()) : "";
+            String dataForAI = String.format(
+                    "Position: %s\nTitle: %s\nCategory: %s\nSkills: %s\nSalary: %s - %s\nLocation: %s\nDescription: %s",
+                    in4JD.getPosition(),
+                    titleText,
+                    in4JD.getCategoryName(),
+                    skillsText,
+                    in4JD.getSalaryMin(),
+                    in4JD.getSalaryMax(),
+                    in4JD.getLocation(),
+                    in4JD.getDescription()
+            );
+
+
+            List<String> listTagName = jdTagRepository.findAllTagNames();
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonTags = objectMapper.writeValueAsString(listTagName);
+
+            String dataRequstAI ="1.Dữ Liệu JD" + dataForAI + "\n2.Các dữ thẻ tag hiện đang có trong bảng:" + jsonTags;
+            System.out.println("dataRequstAI " + dataRequstAI);
+            String result = aiService.addTagJD(dataForAI, jsonTags);
+            System.out.println("result_Tag " + result);
+
+            return result;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("JD_Of_Tag Error: " + e.getMessage());
+        }
+        finally {
+            System.out.println("Đã chạy xong chức năng Tạo TAG cho JD");
+        }
+        return null;
     }
 }

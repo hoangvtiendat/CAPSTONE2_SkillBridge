@@ -147,96 +147,101 @@ public class AiService {
     [INPUT DATA]
     """;
     private static final String PROMPT_CHECK_NEWJOV_VS_OLDJOB = """
-            Bạn là hệ thống AI Chuyên gia Kiểm duyệt Nội dung Tuyển dụng (Job Description - JD) cấp cao.
-            
-            Nhiệm vụ của bạn là so sánh hai JD được cung cấp dựa trên PHÂN TÍCH NGỮ NGHĨA SÂU (Deep Semantic Analysis) để xác định xem đây có phải là hành vi đăng bài SPAM (trùng lặp) hay không.
-            
-            ----------------------------------------
-            NGUYÊN TẮC CỐT LÕI
-            ----------------------------------------
-            1. Dựa trên NGỮ NGHĨA và BẢN CHẤT CÔNG VIỆC, tuyệt đối KHÔNG chỉ so sánh từ khóa hay cú pháp.
-            2. NHẬN DIỆN CÁC THỦ THUẬT: Việc đảo lộn thứ tự câu, thay thế bằng từ đồng nghĩa, hoặc thay đổi định dạng trình bày không làm thay đổi bản chất JD.
-            3. NGÔN NGỮ: Có khả năng đối chiếu xuyên ngôn ngữ (Ví dụ: Một JD tiếng Việt và một JD tiếng Anh dịch sát nghĩa của nhau được xem là giống nhau).
-            4. BỎ QUA TÊN CÔNG TY: Không dùng tên công ty làm tiêu chí đánh giá.
-            
-            ----------------------------------------
-            TIÊU CHÍ ĐÁNH GIÁ (Phân tích theo thứ tự)
-            ----------------------------------------
-            1. Vai trò & Chuyên môn (Role & Expertise).
-            2. Cấp bậc (Seniority/Level: Intern, Fresher, Junior, Senior, Lead, Manager, v.v.).
-            3. Hình thức làm việc (Job Type: Full-time, Part-time, Freelance, Contract).
-            4. Địa điểm làm việc (Location: Thành phố cụ thể, Khu vực, hoặc Remote).
-            5. Trách nhiệm & Yêu cầu cốt lõi (Core Responsibilities & Requirements).
-            6. Khung lương (Salary Range) & Quyền lợi.
-            
-            ----------------------------------------
-            KẾT LUẬN: LÀ SPAM (Trùng lặp - Giá trị "true") NẾU RƠI VÀO CÁC TRƯỜNG HỢP SAU:
-            ----------------------------------------
-            - Trùng lặp hoàn toàn: Nội dung, level, địa điểm giống nhau gần như 100%.
-            - Spam thủ thuật: Cùng bản chất công việc, cùng level, cùng địa điểm nhưng dùng từ đồng nghĩa, đảo cấu trúc câu, cấu trúc gạch đầu dòng.
-            - Spam dịch thuật: Cùng một công việc (cùng level, địa điểm) nhưng một bản tiếng Anh, một bản tiếng Việt.
-            - Tóm tắt vs Chi tiết: Một JD là phiên bản tóm tắt ngắn gọn của JD kia (cắt bớt râu ria) nhưng bản chất yêu cầu, level và vị trí không đổi.
-            - Đổi title nhưng giữ nguyên lõi: Ví dụ đổi "Nhân viên Content" thành "Chuyên viên Sáng tạo nội dung" nhưng yêu cầu, lương và mức độ công việc y hệt nhau.
-            
-            ----------------------------------------
-            KẾT LUẬN: KHÔNG PHẢI SPAM (Hợp lệ - Giá trị "false") NẾU CÓ SỰ KHÁC BIỆT RÕ RÀNG VỀ:
-            ----------------------------------------
-            - Cấp bậc (Level): Ví dụ: Trợ lý vs Quản lý; Junior vs Senior.
-            - Chênh lệch lương quá lớn: Chỉ ra rằng đây là hai vị trí thuộc hai phân khúc/level khác nhau dù title giống nhau.
-            - Địa điểm (Location): Cùng vị trí nhưng tuyển ở hai thành phố khác nhau (VD: Hà Nội vs TP.HCM). Lưu ý: Nếu một bên là "Hà Nội" và một bên là "Remote", tính là Khác nhau.
-            - Hình thức làm việc (Job Type): Một bên Full-time, một bên Part-time/Freelance.
-            - Tính chất dự án: Cùng title, cùng level nhưng mô tả công việc đòi hỏi technical skills/công cụ hoàn toàn khác nhau cho các dự án chuyên biệt khác nhau.
-            - NẾU KHÔNG CHẮC CHẮN (Tỷ lệ phân vân > 20%): Mặc định ưu tiên KHÔNG PHẢI SPAM để tránh xóa nhầm bài hợp lệ của nhà tuyển dụng.
-            
-            ----------------------------------------
-            RÀNG BUỘC ĐẦU RA (BẮT BUỘC)
-            ----------------------------------------
-            Chỉ được phép trả về duy nhất một chuỗi JSON hợp lệ, tuyệt đối không giải thích thêm, không có text nào nằm ngoài JSON.
-            
-            {
-              "spam": true | false
-            }
-            """;
+YÊU CẦU:
+So sánh 2 JD bằng NGỮ NGHĨA (không phải từ khóa) để xác định có SPAM (trùng lặp) hay không.
 
+NGUYÊN TẮC:
+- Dựa vào bản chất công việc, không dựa vào wording.
+- Bỏ qua tên công ty.
+- Nhận diện các thủ thuật: đổi từ, đảo câu, format khác → vẫn coi là giống.
+- Hỗ trợ so sánh khác ngôn ngữ (Việt - Anh).
+
+TIÊU CHÍ SO SÁNH:
+1. Vị trí & chuyên môn
+2. Cấp bậc (Junior, Senior,...)
+3. Hình thức làm việc (Full-time, Part-time,...)
+4. Địa điểm (hoặc Remote)
+5. Trách nhiệm & yêu cầu chính
+6. Lương & quyền lợi
+
+KẾT LUẬN SPAM (true) nếu:
+- Nội dung gần như giống nhau
+- Chỉ đổi cách viết, từ đồng nghĩa, format
+- Một bản là bản rút gọn / dịch của bản kia
+- Đổi title nhưng bản chất công việc không đổi
+
+KHÔNG SPAM (false) nếu:
+- Khác cấp bậc
+- Khác địa điểm / Remote
+- Khác hình thức làm việc
+- Khác rõ về yêu cầu, trách nhiệm hoặc lương
+- Không chắc chắn → chọn false
+
+OUTPUT (CHỈ JSON):
+{
+  "spam": true | false
+}
+""";
     private static final String SEMANTIC_SEARCH = """
-    SYSTEM ROLE:
-    Bạn là Chuyên gia Nhân sự AI cao cấp của hệ thống SkillBridge. Nhiệm vụ của bạn là phân tích "YÊU CẦU NGƯỜI DÙNG" và đối chiếu với "DỮ LIỆU CV" để xuất ra đối tượng JSON chuẩn phục vụ truy vấn Database.
+SYSTEM INSTRUCTION: Bạn không phải là trợ lý chat. Bạn là một RESTful API endpoint chuyên xử lý dữ liệu nhân sự.
+Nhiệm vụ của bạn là nhận Input và trả về ĐÚNG MỘT CHUỖI JSON DUY NHẤT.
 
-    QUY TRÌNH XỬ LÝ DỮ LIỆU:
-    1. Xác định Ngành nghề (category_name): 
-       - Đối chiếu yêu cầu với danh sách ngành nghề của hệ thống.
-       - Với trường hợp mà người dùng không có đề cập đến ngành nghề thị mặc định sẽ tự động lấy ngành nghề theo CV 
-       - Nếu chỉ có kỹ năng (VD: "ReactJS", "Java"), hãy tự suy luận ngành nghề tương ứng (VD: "Công nghệ thông tin").
+[LỆNH CẤM TUYỆT ĐỐI - NẾU VI PHẠM HỆ THỐNG SẼ CRASH]:
+1. CẤM tạo thêm bất kỳ field nào ngoài 6 keys quy định (Tuyệt đối không dùng "structured_data", "data", "logic", "reason").
+2. CẤM lồng ghép (nesting) JSON nhiều lớp. Chỉ sử dụng JSON phẳng (flat JSON).
+3. CẤM sinh ra các khoảng trắng, dấu cách thừa, hoặc giải thích bằng text.
+4. Mọi thông tin không xử lý được -> BẮT BUỘC gán giá trị null hoặc [].
 
-    2. Chuẩn hóa Địa điểm (city):
-       - Trả về tên tiếng Việt chuẩn cho địa điểm ở Việt Nam (VD: "Hồ Chí Minh", "Đà Nẵng").
-       - Ràng buộc: Nếu người dùng yêu cầu "toàn quốc", "mọi nơi", hoặc không đề cập địa điểm -> BẮT BUỘC trả về null.
-       - Nếu mà liên quan đến các từ có ý nghĩa tương đồng như "quanh tôi","Khu vực tôi sống", .... thì mặc định lấy Địa điểm trong CV
+[QUY TẮC NGHIỆP VỤ]:
+1. typeTraVe: 0 (Đúng ngành trong CV), 1 (Trái ngành -> skill_names=[]), 2 (Vô nghĩa).
+2. category_name: Trích xuất chuẩn xác theo [DANH SÁCH CATEGORY].
+3. city: Dịch tiếng lóng/viết tắt sang tiếng Việt có dấu. (VD: "quanh tôi" -> Lấy tỉnh/thành phố từ địa chỉ CV).
+4. skill_names: CHỈ được bốc ra từ mảng skill trong CV. Không có -> [].
+5. salary_expect: Đưa về số nguyên (VD: "15M" -> 15000000) hoặc null.
+6. matched_tags: CHỈ chọn tag từ [EXISTING_TAGS] đồng nghĩa với mong muốn của user (VD: "đi du lịch" -> "Khám phá địa điểm du lịch"). Không bịa thêm tag.
 
-    3. Xử lý Lương (salary_expect):
-       - Trả về giá trị số nguyên (Long) nếu người dùng có yêu cầu con số cụ thể.
-       - Với trường hơp các câu nói tắt về giá như "12M", "12 Triệu", ... hay bất kì 1 cách gọn nào khác hãy viết lại thành số (Vd: 12M => 12000000, 12Ngàn => 12000)
-       - Nếu không đề cập hoặc yêu cầu chung chung -> BẮT BUỘC trả về null.
+[JSON SCHEMA BẮT BUỘC]:
+{
+  "typeTraVe": <0, 1 hoặc 2>,
+  "category_name": "<Tên ngành hoặc null>",
+  "city": "<Tên tỉnh/thành phố hoặc null>",
+  "skill_names": [<Chỉ các skill có trong CV>],
+  "salary_expect": <số nguyên hoặc null>,
+  "matched_tags": [<Chỉ tag lấy từ EXISTING_TAGS>]
+}
 
-    4. Phân loại Logic (typeTraVe):
-       - typeTraVe = 0: Người dùng tìm việc thuộc lĩnh vực và kỹ năng ĐÃ CÓ trong CV. skill_names chứa các kỹ năng liên quan được trích xuất.
-       - typeTraVe = 1: Người dùng muốn chuyển sang ngành MỚI hoặc tìm kỹ năng MỚI (không có trong CV). 
-         LƯU Ý: Trong trường hợp này, skill_names PHẢI là mảng rỗng [].
-       - typeTraVe = 2: Không xác định được ngành nghề phù hợp hoặc yêu cầu không hợp lệ.
-    5. trường hợp nếu mà CV của candidate chưa cập nhật (tức các trường đều là null) thì hãy lấy theo yêu cầu của candidate và trả về dữ liệu dựa trên mô tả candidate
-    ĐỊNH DẠNG ĐẦU RA (RÀNG BUỘC TUYỆT ĐỐI):
-    Chỉ trả về DUY NHẤT một khối JSON theo cấu trúc dưới đây. 
-    KHÔNG kèm theo lời giải thích, KHÔNG nằm trong dấu ngoặc kép hay khối mã (code block):
+[INPUT DATA]:
 
-    {
-      "typeTraVe": 0 | 1 | 2,
-      "category_name": "Tên ngành nghề",
-      "city": "Tên thành phố" | null,
-      "skill_names": ["Kỹ năng 1", "Kỹ năng 2"] | [],
-      "salary_expect": number | null
-    }
-    ----- Dữ liệu đây ------- 
-    """;
+""";
+    private static final String TagJD_AI = """
+NHIỆM VỤ: Trích xuất Tag TẬP TRUNG VÀO VỊ TRÍ VÀ QUYỀN LỢI từ JD_CONTENT dựa trên EXISTING_TAGS.
+
+LUẬT CHỐNG NHIỄU & SUY DIỄN (STRICT RULES):
+1. CẤM LẤY KỸ NĂNG VÀ NHIỆM VỤ: TUYỆT ĐỐI KHÔNG trích xuất các công việc hàng ngày, chuyên môn hay kỹ năng mềm (VD: Cấm lấy "Phát triển hệ thống", "API RESTful", "Tối ưu hiệu năng", "Làm việc nhóm").
+2. CHỈ TẬP TRUNG VÀO 2 NHÓM DỮ LIỆU SAU:
+   - [VỊ TRÍ]: Chức danh công việc chính (BẮT BUỘC có 1 tag).
+   - [PHÚC LỢI]: Quyền lợi, đãi ngộ cụ thể (BẮT BUỘC trích xuất toàn bộ phúc lợi có trong văn bản. Tự động chuẩn hóa thành các cụm từ như: "Lương tháng 13", "Thường xuyên đi du lịch", "Làm việc remote", "Cấp MacBook").
+3. TUYỆT ĐỐI BÁM SÁT NGỮ CẢNH: Chỉ lấy những đãi ngộ THỰC SỰ ĐƯỢC NHẮC ĐẾN trong văn bản. Không copy ví dụ trong prompt nếu JD không có.
+
+QUY TẮC ĐỐI CHIẾU EXISTING_TAGS:
+- Bước A: Nếu tag Vị trí/Phúc lợi vừa trích xuất khớp ý nghĩa với EXISTING_TAGS -> Dùng đúng tên tag của EXISTING_TAGS.
+- Bước B: Nếu là đãi ngộ/vị trí hoàn toàn mới -> Đưa vào "new_tags".
+
+RÀNG BUỘC SỐ LƯỢNG & BỔ SUNG:
+- Cố gắng tìm đủ các tag phúc lợi.
+- NẾU JD QUÁ NGẮN: CHỈ ĐƯỢC tự bổ sung các tag phúc lợi chung (như: "Chế độ bảo hiểm", "Môi trường năng động"). TUYỆT ĐỐI KHÔNG tự bổ sung thêm tag VỊ TRÍ.
+
+ĐỊNH DẠNG JSON (TRẢ VỀ ĐÚNG 3 FIELD, KHÔNG LẶP LẠI KEY):
+{
+  "matched_tags": ["Tập hợp TẤT CẢ tag Vị trí và Phúc lợi thu thập được"],
+  "has_new_tags": <chỉ điền 0 hoặc 1>,
+  "new_tags": ["Chỉ chứa các tag KHÔNG CÓ trong EXISTING_TAGS"]
+}
+
+LUẬT CHỐT `has_new_tags`:
+- Nếu new_tags rỗng [] -> has_new_tags: 0
+- Nếu new_tags có dữ liệu -> has_new_tags: 1
+""";
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {
         this.ollamaRestClient = ollamaRestClient;
         this.objectMapper = objectMapper;
@@ -369,7 +374,9 @@ public class AiService {
             else if(type_Function == 3){
                 finalPrompt = SEMANTIC_SEARCH +
                         "\n\n--- Data ---\n" + dataJD_of_Company;
+                System.out.println("dataSearch = " + dataJD_of_Company);
             }
+
             OllamaRequest requestAI = OllamaRequest.builder()
                     .model(model)
                     .prompt(finalPrompt)
@@ -391,6 +398,42 @@ public class AiService {
         }
         finally {
             System.out.println("Đã chạy xong chứ năng đánh giá bài đăng ");
+        }
+    }
+    ///  Thêm thể cho bài ddnawg
+    public String addTagJD(String dataJD, String listTag) {
+        try {
+            System.out.println("addTagJD: " + dataJD);
+            System.out.println("listTagJD: " + listTag);
+            OllamaOptions options = OllamaOptions.builder()
+                    .temperature(0.0)
+                    .top_k(10)
+                    .top_p(0.1)
+                    .num_predict(1500)
+                    .num_ctx(8192)
+                    .build();
+            String finalPrompt = TagJD_AI +
+                    "\n\n--- JD String ---\n" + dataJD + "\n\n--- Tag List ---\n" + listTag +
+                    "\n\nResponse must be a valid JSON object.";
+            OllamaRequest requestPayload = OllamaRequest.builder()
+                    .model(model)
+                    .prompt(finalPrompt)
+                    .stream(false)
+                    .format("json")
+                    .options(options)
+                    .build();
+            OllamaResponse response = ollamaRestClient.post()
+                    .uri("/api/generate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestPayload)
+                    .retrieve()
+                    .body(OllamaResponse.class);
+
+            return response != null ? response.response() : "{}";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "{}";
         }
     }
 }
