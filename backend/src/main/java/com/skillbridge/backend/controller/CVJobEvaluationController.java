@@ -1,6 +1,5 @@
 package com.skillbridge.backend.controller;
 
-import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CVJobEvaluationRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.CVJobEvaluationResponse;
@@ -25,11 +24,11 @@ public class CVJobEvaluationController {
     @PostMapping("/{jobId}")
     public ResponseEntity<ApiResponse<CVJobEvaluationResponse>> createCVJobEvaluation(@PathVariable String jobId, @RequestBody CVJobEvaluationRequest request) {
         try {
-            CVJobEvaluationResponse rs = cvJobEvaluationService.createCVJobEvaluation(jobId, request);
+            CVJobEvaluationResponse rs = cvJobEvaluationService.candidate_self_Evaluation(jobId, request);
             ApiResponse<CVJobEvaluationResponse> response = new ApiResponse<>(
-                    HttpStatus.OK.value(),
-                    "Chấm điểm độ phù hợp",
-                    rs
+                HttpStatus.OK.value(),
+                "Chấm điểm độ phù hợp",
+                rs
             );
             return ResponseEntity.ok(response);
         } catch (AppException ex) {

@@ -94,6 +94,15 @@ const candidateService = {
             throw error;
         }
     },
+    getMyInvitations: async () => {
+        try {
+            const response = await api.get('/candidates/my-invitations');
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching invitations:", error);
+            throw error;
+        }
+    },
 };
 
 export default candidateService;

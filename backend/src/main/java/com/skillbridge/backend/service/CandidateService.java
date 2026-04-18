@@ -4,10 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.dto.request.CandidateSkillRequest;
-import com.skillbridge.backend.dto.request.DegreeRequest;
-import com.skillbridge.backend.dto.request.ExperienceDetail;
-import com.skillbridge.backend.dto.request.UpdateCandidateCvRequest;
+import com.skillbridge.backend.dto.DegreeDTO;
+import com.skillbridge.backend.dto.ExperienceDTO;
+import com.skillbridge.backend.dto.request.*;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.exception.AppException;
@@ -54,11 +53,12 @@ public class CandidateService {
     FileStorageService fileStorageService;
     ApplicationRepository applicationRepository;
     InterviewRepository interviewRepository;
-
+    CVJobEvaluationService cvJobEvaluationService;
     CVJobEvaluationRepository cvJobEvaluationRepository;
     JobRepository jobRepository;
     CosineSimilarityUtils cosineSimilarityUtils;
     AiService aiService;
+    JobInvitationRepository jobInvitationRepository;
 
     @NonFinal
     @Value("${gemini.api.key}")
@@ -579,39 +579,95 @@ public class CandidateService {
                 new CandidateSkillResponse(s.getSkill().getId(), s.getSkill().getName(), s.getExperienceYears())
         ).toList();
         return CandidateResponse.builder()
-                .id(candidate.getId())
-                .name(candidate.getName())
-                .email(user != null ? user.getEmail():null)
-                .phoneNumber(user != null ? user.getPhoneNumber():null)
-                .address(candidate.getAddress())
-                .avatar(user != null ? user.getAvatar() : null)
-                .description(candidate.getDescription())
-                .aiMatchingScore(candidate.getAiMatchingScore())
-                .experience(candidate.getExperience())
-                .degrees(candidate.getDegree())
-                .skills(skillResponses)
-                .category(candidate.getCategory() != null ? candidate.getCategory().getName() : null)
-                .build();
+            .id(candidate.getId())
+            .name(candidate.getName())
+            .email(user != null ? user.getEmail():null)
+            .phoneNumber(user != null ? user.getPhoneNumber():null)
+            .address(candidate.getAddress())
+            .avatar(user != null ? user.getAvatar() : null)
+            .description(candidate.getDescription())
+            .aiMatchingScore(candidate.getAiMatchingScore())
+            .experience(candidate.getExperience())
+            .degrees(candidate.getDegree())
+            .skills(skillResponses)
+            .category(candidate.getCategory() != null ? candidate.getCategory().getName() : null)
+            .build();
     }
     /**
      *  Nhà ứng tuyển đã tìm được người phù hợp và đánh gía ứng viên đó với job
      */
     @Transactional
-    public CVJobEvaluation getOrInitiateRecruiterEvaluation(String candidateId, String jobId) {
-        Optional<CVJobEvaluation> existingEval = cvJobEvaluationRepository
-                .findByCandidateIdAndJobId(candidateId, jobId);
+    public CVJobEvaluationResponse getOrInitiateRecruiterEvaluation(String candidateId, String jobId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        try {
+            Candidate candidate = candidateRepository.findById(candidateId)
+                    .orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
 
-//        if (existingEval.isPresent()){
-//            CVJobEvaluation eval = existingEval.get();
-//            return eval;
-//        }
+            Job job = jobRepository.findById(jobId)
+                    .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+            Optional<CVJobEvaluation> existingEvalOpt = cvJobEvaluationRepository
+                    .findByCandidateIdAndJobId(candidateId, jobId);
 
-        CVJobEvaluation eval = existingEval.get();
-        return eval;
+            if (existingEvalOpt.isPresent()) {
+                CVJobEvaluation existingEval = existingEvalOpt.get();
+                if (existingEval.getCreatedAt().isAfter(candidate.getUpdatedAt())) {
+                    log.info("[EVALUATION] Reusing valid existing evaluation for Candidate: {}", candidateId);
+                    return mapToResponse(existingEval, candidate, job);
+                }
+                log.info("[EVALUATION] Outdated evaluation found (CV updated). Initiating re-evaluation.");
+            }
 
-//        log.info("[SOURCING] Khởi tạo đánh giá mới từ Recruiter cho Candidate: {} - Job: {}", candidateId, jobId);
-//        return performNewEvaluationByRecruiter(candidateId, jobId);
-//        return existingEval.get();
+            CVJobEvaluationRequest evaluationRequest = new CVJobEvaluationRequest();
+            evaluationRequest.setName(candidate.getName());
+            evaluationRequest.setAddress(candidate.getAddress());
+            evaluationRequest.setDescription(candidate.getDescription());
+
+            if (candidate.getCategory() != null) {
+                evaluationRequest.setCategory(candidate.getCategory().getName());
+            }
+
+            try {
+                if (candidate.getDegree() != null) {
+                    evaluationRequest.setDegrees(objectMapper.convertValue(
+                            candidate.getDegree(), new TypeReference<List<DegreeDTO>>() {}));
+                }
+                if (candidate.getExperience() != null) {
+                    evaluationRequest.setExperience(objectMapper.convertValue(
+                            candidate.getExperience(), new TypeReference<List<ExperienceDTO>>() {}));
+                }
+
+                // Lấy danh sách kỹ năng từ bảng trung gian CandidateSkill
+                List<CandidateSkill> candidateSkills = candidateSkillRepository.findByCandidate(candidate);
+                List<String> skillNames = candidateSkills.stream()
+                        .map(cs -> cs.getSkill().getName())
+                        .collect(Collectors.toList());
+                evaluationRequest.setSkills(skillNames);
+
+            } catch (Exception e) {
+                log.error("[CONVERT_ERROR] Lỗi khi parse dữ liệu Candidate sang Request: {}", e.getMessage());
+            }
+
+            return cvJobEvaluationService.createCVJobEvaluation(jobId, evaluationRequest, candidate);
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Lỗi trong quá trình đánh giá ứng viên: ", e);
+            systemLog.danger(currentUser, "Không thể đánh giá ứng viên: " + e.getMessage());
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+    private CVJobEvaluationResponse mapToResponse(CVJobEvaluation eval, Candidate candidate, Job job) {
+        CVJobEvaluationResponse response = new CVJobEvaluationResponse();
+        response.setCandidateId(candidate.getId());
+        response.setCandidateName(candidate.getName());
+        response.setJobId(job.getId());
+        response.setTitleJob(job.getDescription());
+        response.setMatchScore(eval.getMatchScore());
+        response.setStrengths(eval.getStrengths());
+        response.setWeaknesses(eval.getWeaknesses());
+        response.setRoadmap(eval.getRoadmap());
+        return response;
     }
     ///  check CV ccó kt đảy lên hay chưa
     public Boolean checkCV(){
@@ -625,5 +681,24 @@ public class CandidateService {
             return result;
         }
        return result;
+    }
+
+    public List<JobInvitationResponse> getCandidateInvitations() {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String candidateId = currentUser.getUserId();
+        List<JobInvitation> invitations = jobInvitationRepository.findByCandidateIdOrderByCreatedAtDesc(candidateId);
+        return invitations.stream().map(inv -> {
+            var job = inv.getJob();
+            return JobInvitationResponse.builder()
+                    .id(inv.getId())
+                    .expiresAt(inv.getExpiresAt())
+                    .job(JobInvitationResponse.JobInfo.builder()
+                            .id(job.getId())
+                            .title(job.getDescription())
+                            .companyName(job.getCompany().getName())
+                            .location(job.getLocation())
+                            .build())
+                    .build();
+        }).toList();
     }
 }

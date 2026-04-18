@@ -7,8 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface JobInvitationRepository extends JpaRepository<JobInvitation, String> {
+    List<JobInvitation> findByCandidateIdOrderByCreatedAtDesc(String candidateId);
+
+    boolean existsByJobAndCandidate(Job job, Candidate candidate);
     Optional<JobInvitation> findByJobAndCandidate(Job job, Candidate candidate);
 }

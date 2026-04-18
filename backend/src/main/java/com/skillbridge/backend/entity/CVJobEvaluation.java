@@ -44,6 +44,4 @@ public class CVJobEvaluation extends BaseEntity {
 
     @Column(name = "create_by_user_id", columnDefinition = "TEXT")
     String createByUserId;
-
-
 }

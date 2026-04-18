@@ -1,13 +1,8 @@
 package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.request.UpdateCandidateCvRequest;
-import com.skillbridge.backend.dto.response.ApiResponse;
-import com.skillbridge.backend.dto.response.CandidateResponse;
-import com.skillbridge.backend.dto.response.UpdateCandidateCvResponse;
-import com.skillbridge.backend.entity.CVJobEvaluation;
-import com.skillbridge.backend.dto.response.LLMResumeResponse;
+import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.Category;
 import com.skillbridge.backend.entity.Skill;
 import com.skillbridge.backend.exception.AppException;
@@ -147,12 +142,12 @@ public class CandidateController {
      * URL: GET /candidates/evaluate-by-recruiter/{candidateId}/{jobId}
      */
     @GetMapping("/evaluate-by-recruiter/{candidateId}/{jobId}")
-    public ResponseEntity<ApiResponse<CVJobEvaluation>> evaluateByRecruiter(
+    public ResponseEntity<ApiResponse<CVJobEvaluationResponse>> evaluateByRecruiter(
             @PathVariable String candidateId,
             @PathVariable String jobId
     ) {
-        CVJobEvaluation result = candidateService.getOrInitiateRecruiterEvaluation(candidateId, jobId);
-        return ResponseEntity.ok(ApiResponse.<CVJobEvaluation>builder()
+        CVJobEvaluationResponse result = candidateService.getOrInitiateRecruiterEvaluation(candidateId, jobId);
+        return ResponseEntity.ok(ApiResponse.<CVJobEvaluationResponse>builder()
             .code(HttpStatus.OK.value())
             .message("Nhà tuyển dụng đánh giá ứng viên thành công")
             .result(result)
@@ -164,5 +159,17 @@ public class CandidateController {
     @GetMapping("/cv/check")
     public Boolean checkCV(){
         return candidateService.checkCV();
+    }
+
+    @GetMapping("/my-invitations")
+    public ResponseEntity<ApiResponse<List<JobInvitationResponse>>> getMyInvitations(
+
+    ) {
+        List<JobInvitationResponse> result = candidateService.getCandidateInvitations();
+        return ResponseEntity.ok(ApiResponse.<List<JobInvitationResponse>>builder()
+            .code(HttpStatus.OK.value())
+            .message("Tìm được " + result.size() + "lời mời")
+            .result(result)
+            .build());
     }
 }

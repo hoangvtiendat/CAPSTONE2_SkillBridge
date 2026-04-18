@@ -17,12 +17,7 @@ import com.skillbridge.backend.utils.SecurityUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,12 +44,18 @@ public class CVJobEvaluationService {
         return response;
     }
 
-    public CVJobEvaluationResponse createCVJobEvaluation(String jobId, CVJobEvaluationRequest request) {
+    public CVJobEvaluationResponse candidate_self_Evaluation(String jobId,CVJobEvaluationRequest request){
         System.out.println("request: " + request);
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Candidate candidate = candidateRepository.findById(user.getId()).orElseThrow(() -> new AppException(ErrorCode.CANDIDATE_NOT_FOUND));
+        return createCVJobEvaluation(jobId, request, candidate);
+    }
+
+    public CVJobEvaluationResponse createCVJobEvaluation(String jobId, CVJobEvaluationRequest request,Candidate candidate) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));

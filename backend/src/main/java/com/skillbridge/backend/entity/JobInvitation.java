@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobInvitation {
+public class JobInvitation extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

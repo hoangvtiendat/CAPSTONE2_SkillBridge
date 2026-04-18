@@ -1,29 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Mail, Building2, MapPin, Calendar, X } from "lucide-react";
 import './Header.css';
-
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
+import InvitationsPortal from '../../pages/candidate/InvitationsPortal';
 import NotificationBell from '../common/NotificationBell';
-
 const API_BASE_URL = "http://localhost:8081/identity";
-const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
+const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.jpg`;
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { user, logout } = useAuth(); // Get user and logout from AuthContext
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
+  const [isPortalOpen, setIsPortalOpen] = useState(false);
 
   const getImageUrl = (path) => {
     if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
     if (path.startsWith('http')) return path;
-
     const baseUrl = API_BASE_URL;
     const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-
-    // Thêm timestamp để khi cập nhật ở Profile, Header cũng đổi ảnh ngay
     return `${baseUrl}/${cleanPath}?t=${new Date().getTime()}`;
   };
 
@@ -39,7 +38,6 @@ const Header = () => {
     }
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -47,9 +45,7 @@ const Header = () => {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleLogout = async () => {
@@ -59,37 +55,40 @@ const Header = () => {
   };
 
   return (
-    <header className="header">
-      <div className="header-container">
-        {/* Logo */}
-        <Link to="/" className="logo">
-          <img src="/logo.png" alt="SkillBridge logo" className="logo-img" />
-          <span className="logo-text">SkillBridge</span>
-        </Link>
+    <>
+      <header className="header">
+        <div className="header-container">
+          {/* Logo */}
+          <Link to="/" className="logo">
+            <img src="/logo.png" alt="SkillBridge logo" className="logo-img" />
+            <span className="logo-text">SkillBridge</span>
+          </Link>
 
-        {/* Navigation */}
-        <nav className={`nav ${isMobileMenuOpen ? 'open' : ''}`}>
-          <Link to="/" className="nav-link">Trang Chủ</Link>
-          <a href="#job-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'job-grid')}>Tìm Việc Làm</a>
-          <a href="#company-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'company-grid')}>Công Ty</a>
-          <Link to="/about" className="nav-link">Về Chúng Tôi</Link>
-        </nav>
+          {/* Navigation */}
+          <nav className={`nav ${isMobileMenuOpen ? 'open' : ''}`}>
+            <Link to="/" className="nav-link">Trang Chủ</Link>
+            <a href="#job-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'job-grid')}>Tìm Việc Làm</a>
+            <a href="#company-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'company-grid')}>Công Ty</a>
+            <Link to="/about" className="nav-link">Về Chúng Tôi</Link>
+          </nav>
 
-        {/* Auth Buttons */}
-        <div className="header-actions">
-          {user ? (
-            <>
-              <NotificationBell />
+          {/* Auth Buttons */}
+          <div className="header-actions">
+            {user ? (
               <div className="user-menu-container" ref={dropdownRef}>
-                <div
-                  className="user-profile-link"
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                >
-                  <img
-                    src={getImageUrl(user.avatar)}
-                    alt={user.name || "User Avatar"}
-                    className="user-avatar"
-                  />
+                <div className="user-profile-wrapper">
+                  <div className="user-profile-link" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}>
+                    <img src={getImageUrl(user.avatar)} alt="Avatar" className="user-avatar" />
+                  </div>
+
+                  <button
+                    className={`invitation-btn ${isPortalOpen ? 'active' : ''}`}
+                    onClick={() => setIsPortalOpen(true)}
+                    title="Xem nhanh lời mời"
+                  >
+                    <Mail size={22} strokeWidth={2} />
+                    <span className="badge-count">3</span>
+                  </button>
                 </div>
 
                 {isUserMenuOpen && (
@@ -99,51 +98,37 @@ const Header = () => {
                       <span className="user-email">{user.email || ""}</span>
                     </div>
                     <div className="dropdown-divider"></div>
-                    {user.role === 'ADMIN' && (
-                      <Link
-                        to="/admin"
-                        className="user-dropdown-item admin-link"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        Trang Quản trị
-                      </Link>
-                    )}
-                    <Link
-                      to="/profile"
-                      className="user-dropdown-item"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
+                    <Link to="/profile" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
                       Quản lý hồ sơ cá nhân
                     </Link>
-                    <div className="dropdown-divider"></div>
-                    <button
-                      className="user-dropdown-item logout-btn"
-                      onClick={handleLogout}
-                    >
+                    <button className="user-dropdown-item logout-btn" onClick={handleLogout}>
                       Đăng xuất
                     </button>
                   </div>
                 )}
               </div>
-            </>
-          ) : (
-            <Link to="/login" className="btn-login">
-              Tham gia
-            </Link>
-          )}
-        </div>
+            ) : (
+              <Link to="/login" className="btn-login">Tham gia</Link>
+            )}
+          </div>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          className={`mobile-menu-toggle ${isMobileMenuOpen ? 'open' : ''}`}
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-      </div>
-    </header>
+          <button
+            className={`mobile-menu-toggle ${isMobileMenuOpen ? 'open' : ''}`}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+                <span></span>
+                <span></span>
+                <span></span>
+          </button>
+        </div>
+      </header>
+
+      {/* PORTAL HIỂN THỊ TRÊN NỀN MỜ */}
+      <InvitationsPortal
+          isOpen={isPortalOpen}
+          onClose={() => setIsPortalOpen(false)}
+        />
+      </>
   );
 };
 
