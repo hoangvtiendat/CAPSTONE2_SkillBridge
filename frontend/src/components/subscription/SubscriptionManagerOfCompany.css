@@ -184,9 +184,7 @@
 }
 
 .theme-dark .sub-badge.badge-yellow {
-    background: rgba(251, 191, 36, 0.2);
     color: #fcd34d;
-    border: 1px solid rgba(251, 191, 36, 0.35);
 }
 
 .theme-dark .sub-name {

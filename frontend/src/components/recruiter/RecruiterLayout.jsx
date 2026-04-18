@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios'; // Thêm axios để gọi API
 import {
     LayoutDashboard,
     Users,
@@ -23,10 +24,45 @@ import { toast } from 'sonner';
 import './Recruiter.css';
 import NotificationBell from '../common/NotificationBell';
 
+const API_BASE_URL = "http://localhost:8081/identity";
+
 const RecruiterLayout = () => {
     const { logout, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+
+    // 1. State lưu số lượng ứng viên
+    const [candidateCount, setCandidateCount] = useState(0);
+
+    // 2. Gọi API đếm số lượng ứng viên
+    useEffect(() => {
+        const fetchCandidateCount = async () => {
+            if (user) {
+                try {
+                    // Lấy token từ nơi bạn đang lưu trữ (localStorage, cookie, v.v.)
+                    const token = localStorage.getItem('accessToken');
+
+                    // TODO: THAY ĐỔI URL DƯỚI ĐÂY THÀNH API THẬT CỦA BẠN
+                    const response = await axios.get(`http://localhost:8081/identity/applications/company/${user.companyId}`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
+                    // Kiểm tra và đếm độ dài mảng
+                    if (Array.isArray(response.data)) {
+                        setCandidateCount(response.data.length);
+                    } else if (response.data.result && Array.isArray(response.data.result)) {
+                        setCandidateCount(response.data.result.length);
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi lấy danh sách ứng viên:", error);
+                }
+            }
+        };
+
+        fetchCandidateCount();
+    }, [user]);
 
     const handleLogout = async () => {
         await logout();
@@ -34,10 +70,16 @@ const RecruiterLayout = () => {
         navigate('/login');
     };
 
+    // 3. Cập nhật menuItems, thay số cứng bằng state candidateCount
     const menuItems = [
         { icon: <LayoutDashboard size={20} />, label: 'Bảng điều khiển', path: '/recruiter/dashboard' },
         { icon: <UserCog size={20} />, label: 'Quản lý nhân viên', path: '/company/member' },
-        { icon: <Users size={20} />, label: 'Ứng viên', path: '/recruiter/candidates', badge: 12 },
+        {
+            icon: <Users size={20} />,
+            label: 'Ứng viên',
+            path: '/recruiter/candidates',
+            badge: candidateCount // Truyền state vào đây
+        },
         { icon: <FileText size={20} />, label: 'Tin tuyển dụng', path: '/company/jd-list' },
         { icon: <CreditCard size={20} />, label: 'Gói dịch vụ', path: '/company/subscriptions' },
         { icon: <Settings size={20} />, label: 'Cài đặt công ty', path: '/recruiter/settings' },
@@ -46,7 +88,6 @@ const RecruiterLayout = () => {
 
     const currentLabel = menuItems.find(i => i.path === location.pathname)?.label || 'Tổng quan';
 
-    const API_BASE_URL = "http://localhost:8081/identity";
     const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.jpg`;
 
     const getImageUrl = (path) => {
@@ -74,7 +115,9 @@ const RecruiterLayout = () => {
                         >
                             {item.icon}
                             <span className="nav-label">{item.label}</span>
-                            {item.badge && <span className="nav-badge">{item.badge}</span>}
+
+                            {/* Chỉ hiển thị badge nếu số lượng > 0 */}
+                            {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
                         </Link>
                     ))}
                 </nav>
@@ -98,7 +141,6 @@ const RecruiterLayout = () => {
 
                         <div className="header-divider"></div>
 
-                        {/* Thông tin người dùng di chuyển lên đây */}
                         <div className="header-user-profile">
                             <div className="user-avatar-mini">
                                 <img
@@ -113,7 +155,6 @@ const RecruiterLayout = () => {
                             </div>
                             <ChevronDown size={14} color="#86868b" />
 
-                            {/* Dropdown Logout (Ẩn hiện khi hover hoặc click) */}
                             <div className="user-dropdown-glass">
                                 <button onClick={() => navigate('/recruiter/profile')} className="dropdown-item-logout" style={{ marginBottom: '8px', background: 'rgba(0, 122, 255, 0.1)', color: 'var(--sf-blue)', fontSize: '13px' }}>
                                     <User size={16} />

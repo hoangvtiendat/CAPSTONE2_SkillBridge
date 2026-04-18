@@ -12,7 +12,7 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   width: 100%;
-  max-width: 320px; /* Giới hạn chiều rộng để card trông gọn hơn */
+  max-width: 320px;
 }
 
 .job-card-compact:hover {

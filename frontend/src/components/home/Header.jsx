@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Building2, MapPin, Calendar, X } from "lucide-react";
+import { Building2, MapPin, Calendar, X } from "lucide-react"; // Đã xoá Mail
 import './Header.css';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
-import InvitationsPortal from '../../pages/candidate/InvitationsPortal';
-import NotificationBell from '../common/NotificationBell';
+import NotificationBell from '../common/NotificationBell'; // Đã xoá import InvitationsPortal
+
 const API_BASE_URL = "http://localhost:8081/identity";
 const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.jpg`;
 
@@ -16,7 +16,8 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
-  const [isPortalOpen, setIsPortalOpen] = useState(false);
+
+  // Đã xoá state isPortalOpen
 
   const getImageUrl = (path) => {
     if (!path || path === "" || path === "null") return DEFAULT_AVATAR;
@@ -55,7 +56,6 @@ const Header = () => {
   };
 
   return (
-    <>
       <header className="header">
         <div className="header-container">
           {/* Logo */}
@@ -75,60 +75,45 @@ const Header = () => {
           {/* Auth Buttons */}
           <div className="header-actions">
             {user ? (
-              <div className="user-menu-container" ref={dropdownRef}>
-                <div className="user-profile-wrapper">
-                  <div className="user-profile-link" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}>
-                    <img src={getImageUrl(user.avatar)} alt="Avatar" className="user-avatar" />
-                  </div>
-
-                  <button
-                    className={`invitation-btn ${isPortalOpen ? 'active' : ''}`}
-                    onClick={() => setIsPortalOpen(true)}
-                    title="Xem nhanh lời mời"
-                  >
-                    <Mail size={22} strokeWidth={2} />
-                    <span className="badge-count">3</span>
-                  </button>
-                </div>
-
-                {isUserMenuOpen && (
-                  <div className="user-dropdown">
-                    <div className="user-info-mini">
-                      <span className="user-name">{user.name || "User"}</span>
-                      <span className="user-email">{user.email || ""}</span>
+                <div className="user-menu-container" ref={dropdownRef}>
+                  <div className="user-profile-wrapper">
+                    <div className="user-profile-link" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}>
+                      <img src={getImageUrl(user.avatar)} alt="Avatar" className="user-avatar" />
                     </div>
-                    <div className="dropdown-divider"></div>
-                    <Link to="/profile" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
-                      Quản lý hồ sơ cá nhân
-                    </Link>
-                    <button className="user-dropdown-item logout-btn" onClick={handleLogout}>
-                      Đăng xuất
-                    </button>
+                    {/* Đã xoá nút invitation-btn ở đây */}
                   </div>
-                )}
-              </div>
+
+                  {isUserMenuOpen && (
+                      <div className="user-dropdown">
+                        <div className="user-info-mini">
+                          <span className="user-name">{user.name || "User"}</span>
+                          <span className="user-email">{user.email || ""}</span>
+                        </div>
+                        <div className="dropdown-divider"></div>
+                        <Link to="/profile" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                          Quản lý hồ sơ cá nhân
+                        </Link>
+                        <button className="user-dropdown-item logout-btn" onClick={handleLogout}>
+                          Đăng xuất
+                        </button>
+                      </div>
+                  )}
+                </div>
             ) : (
-              <Link to="/login" className="btn-login">Tham gia</Link>
+                <Link to="/login" className="btn-login">Tham gia</Link>
             )}
           </div>
 
           <button
-            className={`mobile-menu-toggle ${isMobileMenuOpen ? 'open' : ''}`}
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`mobile-menu-toggle ${isMobileMenuOpen ? 'open' : ''}`}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-                <span></span>
-                <span></span>
-                <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
           </button>
         </div>
       </header>
-
-      {/* PORTAL HIỂN THỊ TRÊN NỀN MỜ */}
-      <InvitationsPortal
-          isOpen={isPortalOpen}
-          onClose={() => setIsPortalOpen(false)}
-        />
-      </>
   );
 };
 

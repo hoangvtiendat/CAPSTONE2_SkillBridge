@@ -12,6 +12,17 @@ const PotentialCandidates = () => {
     const [loading, setLoading] = useState(true);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [invitedIds, setInvitedIds] = useState(new Set());
+    const API_BASE_URL = "http://localhost:8081/identity";
+    const getImageUrl = (path) => {
+        if (!path || path === "" || path === "null") return null;
+        if (path.startsWith('http')) return path; // Nếu ảnh là link ngoài (Google, Facebook...)
+
+        // Xóa dấu / ở đầu nếu có để tránh bị duplicate (VD: /avatars -> avatars)
+        const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+
+        // Thêm timestamp để tránh lỗi cache trình duyệt (tùy chọn)
+        return `${API_BASE_URL}/${cleanPath}?t=${new Date().getTime()}`;
+    };
 
     useEffect(() => {
         const fetchCandidates = async () => {
@@ -85,7 +96,9 @@ const PotentialCandidates = () => {
                                 <div className="card-top-compact">
                                     <div className="avatar-mini">
                                         {can.avatar ?
-                                            <img src={can.avatar} alt=""/> :
+                                            // Sử dụng hàm getImageUrl ở đây
+                                            <img src={getImageUrl(can.avatar)} alt={can.name}
+                                                 style={{width: '100%', height: '100%', objectFit: 'cover'}}/> :
                                             <span className="material-symbols-outlined"
                                                   style={{fontSize: '32px', color: '#cbd5e1'}}>person</span>
                                         }
