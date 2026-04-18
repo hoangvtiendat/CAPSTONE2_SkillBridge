@@ -340,9 +340,9 @@
 }
 
 .filter-bar button.active {
-    background: var(--brand-dark);
+    background: var(--sf-blue);
     color: #fff;
-    border-color: var(--brand-dark);
+    border-color: var(--sf-blue);
 }
 
 /* --- FOOTER & BUTTONS --- */
