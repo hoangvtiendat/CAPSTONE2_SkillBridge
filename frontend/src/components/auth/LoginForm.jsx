@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -7,7 +7,7 @@ import "./LoginForm.css";
 export function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
+  const hasProcess = useRef(false); // Ngăn chặn multiple submit
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState("login"); // "login" hoặc "register"
   const [email, setEmail] = useState("");
@@ -18,10 +18,13 @@ export function LoginForm() {
     const params = new URLSearchParams(window.location.search);
     const error = params.get("error");
     const message = params.get("message");
+    if (hasProcess.current) return; // Đã xử lý lỗi, không làm lại
 
     if (error && message) {
+      hasProcess.current = true;
       toast.error("Lỗi đăng nhập", { description: decodeURIComponent(message) });
       const newUrl = window.location.origin + window.location.pathname;
+      
       window.history.replaceState({}, document.title, newUrl);
     }
   }, []);

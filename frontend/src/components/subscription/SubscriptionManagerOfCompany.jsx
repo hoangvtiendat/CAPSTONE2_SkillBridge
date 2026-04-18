@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef} from 'react';
 import { useNavigate } from 'react-router-dom';
 import subscriptionService from '../../services/api/subscriptionService';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { ca } from 'date-fns/locale';
 const SubscriptionManagerOfCompany = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
+    const hasProcessedUrl = useRef(false);
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -84,8 +85,11 @@ const getListSubscriptionOfCompany = async () => {
 
             const pendingPaymentId = sessionStorage.getItem('pendingPayment');
 
-            if (returnFromPayment) {
+            if (returnFromPayment && !hasProcessedUrl.current) {
+                hasProcessedUrl.current = true;
+                
                 window.history.replaceState({}, '', window.location.pathname);
+                console.log("Safari Safety: URL Cleaned");
             }
 
             const data = await subscriptionService.listSubcriftionOfCompany(token);
@@ -127,6 +131,7 @@ const getListSubscriptionOfCompany = async () => {
             if (returnFromPayment && paymentStatus === '1') {
                 sessionStorage.removeItem('pendingPayment');
             }
+            
 
             // Không tự động hủy giao dịch chỉ vì thiếu tham số return URL.
             // Nhiều cổng thanh toán dùng key khác, và giao dịch pending vẫn cần hiển thị để người dùng thao tác.
@@ -214,6 +219,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
             if (openDropdownId && !isClickInsideDropdown && !isClickOnRow && !isClickOnNotification) {
                 setOpenDropdownId(null);
             }
+            if (hasProcessedUrl.current) return; // Đã xử lý URL callback, không làm lại
 
             if (showNotification && !isClickOnNotification) {
                 setShowNotification(false);

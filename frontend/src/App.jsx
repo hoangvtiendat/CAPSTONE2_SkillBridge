@@ -72,6 +72,11 @@ function App() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const userRole = user?.role?.toUpperCase();
+    const isRestrictedRecruiter =
+        userRole === 'RECRUITER' &&
+        user?.companyStatus === 'DEACTIVATED' &&
+        user?.companyRole !== 'ADMIN';
 
     // 1. Logic xác định Layout
     const isAdminPath = location.pathname.startsWith('/admin');
@@ -126,18 +131,24 @@ function App() {
     // 3. Điều hướng dựa trên Role
     useEffect(() => {
         if (user) {
-            if (user.role === 'ADMIN') {
+            if (userRole === 'ADMIN') {
                 if (!isAdminPath && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/admin/dashboard', { replace: true });
                 }
-            } else if (user.role === 'RECRUITER') {
+            } else if (userRole === 'RECRUITER') {
+                if (isRestrictedRecruiter) {
+                    if (location.pathname === '/login') {
+                        navigate('/', { replace: true });
+                    }
+                    return;
+                }
                 // Cho phép Recruiter ở lại trang identity nếu họ muốn cập nhật lại thông tin
                 if (!isRecruiterPath && location.pathname !== '/recruiter/identity' && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/recruiter/dashboard', { replace: true });
                 }
             }
         }
-    }, [user, isAdminPath, isRecruiterPath, location.pathname, navigate]);
+    }, [user, userRole, isRestrictedRecruiter, isAdminPath, isRecruiterPath, location.pathname, navigate]);
 
     return (
         <>
