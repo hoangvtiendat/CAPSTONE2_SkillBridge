@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Header.css';
 
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from '../common/NotificationBell';
 
 const API_BASE_URL = "http://localhost:8081/identity";
 const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
@@ -77,51 +78,54 @@ const Header = () => {
         {/* Auth Buttons */}
         <div className="header-actions">
           {user ? (
-            <div className="user-menu-container" ref={dropdownRef}>
-              <div
-                className="user-profile-link"
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              >
-                <img
-                  src={getImageUrl(user.avatar)}
-                  alt={user.name || "User Avatar"}
-                  className="user-avatar"
-                />
-              </div>
+            <>
+              <NotificationBell />
+              <div className="user-menu-container" ref={dropdownRef}>
+                <div
+                  className="user-profile-link"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                >
+                  <img
+                    src={getImageUrl(user.avatar)}
+                    alt={user.name || "User Avatar"}
+                    className="user-avatar"
+                  />
+                </div>
 
-              {isUserMenuOpen && (
-                <div className="user-dropdown">
-                  <div className="user-info-mini">
-                    <span className="user-name">{user.name || "User"}</span>
-                    <span className="user-email">{user.email || ""}</span>
-                  </div>
-                  <div className="dropdown-divider"></div>
-                  {user.role === 'ADMIN' && (
+                {isUserMenuOpen && (
+                  <div className="user-dropdown">
+                    <div className="user-info-mini">
+                      <span className="user-name">{user.name || "User"}</span>
+                      <span className="user-email">{user.email || ""}</span>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    {user.role === 'ADMIN' && (
+                      <Link
+                        to="/admin"
+                        className="user-dropdown-item admin-link"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Trang Quản trị
+                      </Link>
+                    )}
                     <Link
-                      to="/admin"
-                      className="user-dropdown-item admin-link"
+                      to="/profile"
+                      className="user-dropdown-item"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      Trang Quản trị
+                      Quản lý hồ sơ cá nhân
                     </Link>
-                  )}
-                  <Link
-                    to="/profile"
-                    className="user-dropdown-item"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    Quản lý hồ sơ cá nhân
-                  </Link>
-                  <div className="dropdown-divider"></div>
-                  <button
-                    className="user-dropdown-item logout-btn"
-                    onClick={handleLogout}
-                  >
-                    Đăng xuất
-                  </button>
-                </div>
-              )}
-            </div>
+                    <div className="dropdown-divider"></div>
+                    <button
+                      className="user-dropdown-item logout-btn"
+                      onClick={handleLogout}
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <Link to="/login" className="btn-login">
               Tham gia

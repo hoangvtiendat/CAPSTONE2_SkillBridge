@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LogOut, User } from 'lucide-react';
 import { toast } from 'sonner';
 import './Admin.css';
+import NotificationBell from '../common/NotificationBell';
 
 const AdminLayout = () => {
     const { logout, user } = useAuth();
@@ -42,6 +43,7 @@ const AdminLayout = () => {
                         <span className="text-slate-900 text-sm font-semibold capitalize" style={{ fontWeight: '700', fontSize: '25px', color: '#424242ff' }}>Dashboard</span>
                     </div>
                     <div className="flex-between gap-4">
+                        <NotificationBell />
                         <div style={{ height: '32px', width: '1px', backgroundColor: '#e2e8f0' }}></div>
                         <div className="flex-between gap-3">
                             <div style={{ textAlign: 'right' }}>

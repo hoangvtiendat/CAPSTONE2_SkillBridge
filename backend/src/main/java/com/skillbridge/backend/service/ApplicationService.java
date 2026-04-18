@@ -109,7 +109,8 @@ public class ApplicationService {
         Map<String, Object> jobTitleMap = job.getTitle();
 
         // 3. Tạo tiêu đề và nội dung thân thiện
-        String title = "Cập nhật từ SkillBridge: " +  job.getPosition();
+        String jobDisplayName = JobService.getJobPositionName(job);
+        String title = "Cập nhật từ SkillBridge: " + jobDisplayName;
 
         // Chuyển Enum status sang tiếng Việt cho thân thiện (Tùy chọn)
         String statusVi = translateStatus(newStatus);
@@ -117,7 +118,7 @@ public class ApplicationService {
         String messageBody = String.format(
                 "Chào %s,\n\nCông ty %s đã cập nhật trạng thái hồ sơ của bạn cho vị trí %s thành: %s.\n" +
                         "Vui lòng truy cập hệ thống để xem chi tiết.",
-                application.getFullName(), companyName, job.getPosition(), statusVi
+                application.getFullName(), companyName, jobDisplayName, statusVi
         );
 
         // --- THỰC HIỆN LUỒNG THÔNG BÁO ---

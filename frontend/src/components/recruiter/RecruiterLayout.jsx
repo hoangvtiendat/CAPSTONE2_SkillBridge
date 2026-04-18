@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import './Recruiter.css';
+import NotificationBell from '../common/NotificationBell';
 
 const RecruiterLayout = () => {
     const { logout, user } = useAuth();
@@ -93,10 +94,7 @@ const RecruiterLayout = () => {
                             <input type="text" placeholder="Tìm nhanh hồ sơ..." />
                         </div>
 
-                        <button className="header-icon-btn">
-                            <Bell size={20} />
-                            <span className="notification-dot"></span>
-                        </button>
+                        <NotificationBell />
 
                         <div className="header-divider"></div>
 

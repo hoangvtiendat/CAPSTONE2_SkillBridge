@@ -14,6 +14,7 @@ import com.skillbridge.backend.repository.JobRepository;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.service.CandidateService;
+import com.skillbridge.backend.service.JobService;
 import com.skillbridge.backend.service.MailService;
 import com.skillbridge.backend.service.NotificationService;
 import jakarta.transaction.Transactional;
@@ -265,7 +266,7 @@ public class AIJobService {
                                 "Trân trọng,\n" +
                                 "SkillBridge AI Moderator",
                         receiver.getName(),
-                        job.getPosition(),
+                        JobService.getJobPositionName(job),
                         reason,
                         keywordsString
                 );

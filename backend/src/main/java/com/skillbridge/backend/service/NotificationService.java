@@ -1,5 +1,6 @@
 package com.skillbridge.backend.service;
 
+import com.skillbridge.backend.dto.response.NotificationResponse;
 import com.skillbridge.backend.entity.Notification;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.repository.NotificationRepository;
@@ -11,6 +12,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -69,5 +72,38 @@ public class NotificationService {
                 log.error("Email dispatch failed for user {}: {}", receiver.getEmail(), e.getMessage());
             }
         }
+    }
+
+    public List<NotificationResponse> getNotificationsForUser(String userId) {
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional
+    public void markAsRead(String notificationId) {
+        notificationRepository.findById(notificationId).ifPresent(notification -> {
+            notification.setRead(true);
+            notificationRepository.save(notification);
+        });
+    }
+
+    @Transactional
+    public void markAllAsRead(String userId) {
+        List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        notifications.forEach(n -> n.setRead(true));
+        notificationRepository.saveAll(notifications);
+    }
+
+    private NotificationResponse mapToResponse(Notification notification) {
+        return NotificationResponse.builder()
+                .id(notification.getId())
+                .title(notification.getTitle())
+                .content(notification.getContent())
+                .isRead(notification.isRead())
+                .type(notification.getType())
+                .link(notification.getLink())
+                .createdAt(notification.getCreatedAt())
+                .build();
     }
 }
