@@ -63,6 +63,7 @@ import AdminCompanyPending from './pages/admin/AdminCompanyPending';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 import IndustryManagementPage from './pages/admin/IndustryManagementPage';
+import LocationManagementPage from './pages/admin/LocationManagementPage';
 import SkillManagementPage from './pages/admin/SkillManagementPage';
 import SkillPageContainer from './pages/Skill/SkillPage';
 import SubscriptionManager from "./pages/subscription/SubscriptionManager";
@@ -283,6 +284,7 @@ function App() {
                         <Route path="management/companies" element={<CompanyManagementPage />} />
                         <Route path="approve-companies" element={<AdminCompanyPending />} />
                         <Route path="management/industries" element={<IndustryManagementPage />} />
+                        <Route path="management/locations" element={<LocationManagementPage />} />
                         <Route path="management/skills" element={<SkillManagementPage />} />
                         <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer /></AdminRoute>} />
                         <Route path="subscriptions" element={<AdminRoute><SubscriptionManager /></AdminRoute>} />
