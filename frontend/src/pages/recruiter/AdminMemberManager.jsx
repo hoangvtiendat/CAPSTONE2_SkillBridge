@@ -47,9 +47,6 @@ const AdminMemberManager = () => {
                 <div className="header-info">
                     <h2>Quản lý nhân sự</h2>
                 </div>
-                <button className="btn-invite" onClick={() => toast.info("Tính năng đang phát triển")}>
-                    <UserPlus size={18} /> Mời nhân viên
-                </button>
             </div>
 
             {pendingMembers.length > 0 && (
