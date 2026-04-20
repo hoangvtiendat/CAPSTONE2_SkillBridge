@@ -209,7 +209,7 @@ public class AiService {
        - Nếu chỉ có kỹ năng (VD: "ReactJS", "Java"), hãy tự suy luận ngành nghề tương ứng (VD: "Công nghệ thông tin").
 
     2. Chuẩn hóa Địa điểm (city):
-       - Trả về tên tiếng Việt chuẩn cho địa điểm ở Việt Nam (VD: "Hồ Chí Minh", "Đà Nẵng").
+       - Trả về tên tiếng Việt chuẩn cho địa điểm ở Việt Nam (VD: "Hồ Chí Minh", "Đà Nẵng").(Không có cho TP, Thành Phố. Chỉ hiện đúng tên).
        - Ràng buộc: Nếu người dùng yêu cầu "toàn quốc", "mọi nơi", hoặc không đề cập địa điểm -> BẮT BUỘC trả về null.
        - Nếu mà liên quan đến các từ có ý nghĩa tương đồng như "quanh tôi","Khu vực tôi sống", .... thì mặc định lấy Địa điểm trong CV
 

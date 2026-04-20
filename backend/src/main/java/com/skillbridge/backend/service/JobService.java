@@ -70,6 +70,7 @@ public class JobService {
     CVJobEvaluationRepository cvJobEvaluationRepository;
     AIJobService aiJobService;
     MailServiceImpl mailService;
+    provincesRepository provincesRepository;
 
     LocalDate date = LocalDate.now();
 
@@ -1115,5 +1116,27 @@ public class JobService {
             .collect(Collectors.toList());
     }
 
+    ///  Lấy danh sách địa phương
+    public List<provinces> getALlProvinces() {
+        return provincesRepository.findAllProvincesCustom();
+    }
+    public provinces deleteProvince(String id) {
+        provinces deleteProvince = provincesRepository.findById(id).orElse(null);
+        deleteProvince.setIsDeleted(!deleteProvince.getIsDeleted());
+
+        return provincesRepository.save(deleteProvince);
+    }
+    public provinces updateProvince(String id, provinces request) {
+        provinces existingProvince = provincesRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tỉnh thành với ID: " + id));
+
+        if (request.getName() != null) {
+            existingProvince.setName(request.getName());
+        }
+   if (request.getIsDeleted() != null) {
+            existingProvince.setIsDeleted(request.getIsDeleted());
+        }
+    return provincesRepository.save(existingProvince);
+    }
 
 }
