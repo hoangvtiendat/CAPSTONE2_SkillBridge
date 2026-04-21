@@ -8,6 +8,7 @@ import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 import applicationService from '../../services/api/applicationService';
+import provincesServices from '../../services/api/provincesServices';
 import { useParams, useNavigate } from 'react-router-dom';
 import './DetailJD.css';
 
@@ -20,6 +21,10 @@ const toastStyles = {
 
 const API_BASE_URL = "http://localhost:8081/identity";
 const normalizeSkillName = (value) => String(value || '').trim().toLowerCase();
+const isProvinceActive = (province) => {
+    const deletedValue = province?.isDeleted ?? province?.is_delete ?? province?.isDelete ?? 0;
+    return Number(deletedValue) === 0;
+};
 
 const trimText = (value) => String(value || '').trim();
 
@@ -102,6 +107,8 @@ const DetailJD = () => {
     const [initialFormState, setInitialFormState] = useState(null);
 
     const [categories, setCategories] = useState([]);
+    const [provinces, setProvinces] = useState([]);
+    const [loadingProvinces, setLoadingProvinces] = useState(false);
     const [skillsList, setSkillsList] = useState([]);
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
     const [hasAppliedCandidate, setHasAppliedCandidate] = useState(false);
@@ -136,6 +143,7 @@ const DetailJD = () => {
     useEffect(() => {
         fetchJdDetail();
         getListCategories();
+        getListProvinces();
         checkAppliedStatus();
     }, [id, fetchJdDetail, checkAppliedStatus]);
 
@@ -146,6 +154,21 @@ const DetailJD = () => {
             setCategories(Array.isArray(data) ? data : []);
         } catch (error) {
             toast.error("Lỗi khi tải danh mục", { style: toastStyles.error });
+        }
+    };
+
+    const getListProvinces = async () => {
+        setLoadingProvinces(true);
+        try {
+            const response = await provincesServices.getProvinces();
+            const data = response?.result || [];
+            const activeProvinces = Array.isArray(data) ? data.filter(isProvinceActive) : [];
+            setProvinces(activeProvinces);
+        } catch (error) {
+            toast.error("Lỗi khi tải danh sách địa điểm", { style: toastStyles.error });
+            setProvinces([]);
+        } finally {
+            setLoadingProvinces(false);
         }
     };
 
@@ -365,6 +388,21 @@ const DetailJD = () => {
         const skillName = String(skill.name || skill.skillName || skill.title || "").toLowerCase();
         return skillName.includes(skillSearchTerm.toLowerCase());
     });
+
+    const locationOptions = (() => {
+        const base = [...provinces];
+        const currentLocation = trimText(editForm?.location);
+        const hasCurrent = currentLocation && base.some((province) => {
+            const provinceName = trimText(province?.name || province?.provinceName || '');
+            return provinceName === currentLocation;
+        });
+
+        if (!hasCurrent && currentLocation) {
+            base.unshift({ id: `current-${currentLocation}`, name: currentLocation });
+        }
+
+        return base;
+    })();
 
     if (loading) return <div className="loading-container"><div className="spinner"></div><p>Đang tải dữ liệu...</p></div>;
     if (!jdDetail) return <div className="error-container">Không tìm thấy thông tin JD</div>;
@@ -595,7 +633,26 @@ const DetailJD = () => {
                                         <h3 className="card-title">Yêu cầu & Lương</h3>
                                         <div className="input-item full-width">
                                             <label>Địa điểm làm việc</label>
-                                            <input type="text" name="location" value={editForm.location} onChange={handleChange} required />
+                                            <select
+                                                className="location-select"
+                                                name="location"
+                                                value={editForm.location}
+                                                onChange={handleChange}
+                                                required
+                                                disabled={loadingProvinces}
+                                            >
+                                                <option value="">
+                                                    {loadingProvinces ? 'Đang tải địa điểm...' : '-- Chọn địa điểm --'}
+                                                </option>
+                                                {locationOptions.map((province) => (
+                                                    <option
+                                                        key={province.id || province._id || province.name || province.provinceName}
+                                                        value={province.name || province.provinceName || ''}
+                                                    >
+                                                        {province.name || province.provinceName}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
                                         <div className="salary-group">
                                             <div className="input-item">

@@ -166,10 +166,7 @@ const JdList = () => {
                     <h1 className="jd-list-title">Quản lý tuyển dụng</h1>
                     <p className="jd-subtitle">Hệ thống quản lý tin đăng của công ty</p>
                 </div>
-                <div className="jd-total-badge">
-                    <span className="jd-total-number">{jdList.length}</span>
-                    <span className="jd-total-label">bài đăng hiện có</span>
-                </div>
+             
                 <div className="header-actions">
                     {role === 'ADMIN' && (
                         <button className="btn-subscription" onClick={() => navigate('/company/subscriptions')}>
@@ -206,9 +203,7 @@ const JdList = () => {
                 </div>
             </div>
 
-            <div className="result-summary">
-                Đang hiển thị <strong>{visibleCount}</strong> / <strong>{jdList.length}</strong> bài đăng
-            </div>
+         
 
             {loading ? (
                 <div className="loader">Đang tải dữ liệu...</div>

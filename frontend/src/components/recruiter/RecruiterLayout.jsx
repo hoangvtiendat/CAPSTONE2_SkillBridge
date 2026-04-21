@@ -16,7 +16,8 @@ import {
     Search,
     Bell,
     ChevronDown,
-    UserCog
+    UserCog,
+    Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -33,15 +34,30 @@ const RecruiterLayout = () => {
         navigate('/login');
     };
 
+    // Check if company is deactivated
+    const isCompanyDeactivated = user?.companyStatus === 'DEACTIVATED';
+
+    // Menu items that are always accessible even when company is deactivated
+    const alwaysAccessiblePaths = ['/recruiter/settings', '/recruiter/analytics'];
+
     const menuItems = [
-        { icon: <LayoutDashboard size={20} />, label: 'Bảng điều khiển', path: '/recruiter/dashboard' },
-        { icon: <UserCog size={20} />, label: 'Quản lý nhân viên', path: '/company/member' },
-        { icon: <Users size={20} />, label: 'Ứng viên', path: '/recruiter/candidates', badge: 12 },
-        { icon: <FileText size={20} />, label: 'Tin tuyển dụng', path: '/company/jd-list' },
-        { icon: <CreditCard size={20} />, label: 'Gói dịch vụ', path: '/company/subscriptions' },
-        { icon: <Settings size={20} />, label: 'Cài đặt công ty', path: '/recruiter/settings' },
-        { icon: <BarChart3 size={20} />, label: 'Phân tích', path: '/recruiter/analytics' },
+        { icon: <LayoutDashboard size={20} />, label: 'Bảng điều khiển', path: '/recruiter/dashboard', disabled: isCompanyDeactivated },
+        { icon: <UserCog size={20} />, label: 'Quản lý nhân viên', path: '/company/member', disabled: isCompanyDeactivated },
+        { icon: <Users size={20} />, label: 'Ứng viên', path: '/recruiter/candidates', badge: 12, disabled: isCompanyDeactivated },
+        { icon: <FileText size={20} />, label: 'Tin tuyển dụng', path: '/company/jd-list', disabled: isCompanyDeactivated },
+        { icon: <CreditCard size={20} />, label: 'Gói dịch vụ', path: '/company/subscriptions', disabled: isCompanyDeactivated },
+        { icon: <Settings size={20} />, label: 'Cài đặt công ty', path: '/recruiter/settings', disabled: false },
+        { icon: <BarChart3 size={20} />, label: 'Phân tích', path: '/recruiter/analytics', disabled: false },
     ];
+
+    const handleMenuItemClick = (e, item) => {
+        if (item.disabled) {
+            e.preventDefault();
+            toast.error('Danh mục này đã bị khóa vì công ty của bạn đã bị vô hiệu hóa. Vui lòng liên hệ admin.', {
+                description: 'Bạn chỉ có thể truy cập "Cài đặt công ty" hoặc "Phân tích".'
+            });
+        }
+    };
 
     const currentLabel = menuItems.find(i => i.path === location.pathname)?.label || 'Tổng quan';
 
@@ -69,11 +85,14 @@ const RecruiterLayout = () => {
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                            onClick={(e) => handleMenuItemClick(e, item)}
+                            className={`nav-item ${location.pathname === item.path ? 'active' : ''} ${item.disabled ? 'disabled' : ''}`}
+                            title={item.disabled ? 'Công ty của bạn đã bị vô hiệu hóa' : item.label}
                         >
                             {item.icon}
                             <span className="nav-label">{item.label}</span>
                             {item.badge && <span className="nav-badge">{item.badge}</span>}
+                            {item.disabled && <Lock size={16} className="nav-lock-icon" />}
                         </Link>
                     ))}
                 </nav>
@@ -130,7 +149,21 @@ const RecruiterLayout = () => {
 
                         <button
                             className="btn-create-job-pill"
-                            onClick={() => navigate('/create-jd')}
+                            onClick={() => {
+                                if (isCompanyDeactivated) {
+                                    toast.error('Công ty của bạn đã bị vô hiệu hóa', {
+                                        description: 'Bạn không thể tạo tin tuyển dụng mới. Vui lòng liên hệ admin.'
+                                    });
+                                    return;
+                                }
+                                navigate('/create-jd');
+                            }}
+                            disabled={isCompanyDeactivated}
+                            style={{
+                                opacity: isCompanyDeactivated ? 0.5 : 1,
+                                cursor: isCompanyDeactivated ? 'not-allowed' : 'pointer'
+                            }}
+                            title={isCompanyDeactivated ? 'Không thể tạo tin vì công ty đã bị vô hiệu hóa' : 'Tạo bài đăng tuyển dụng mới'}
                         >
                             <Plus size={18} />
                             <span>Tạo tin</span>
@@ -140,6 +173,17 @@ const RecruiterLayout = () => {
 
                 {/* --- CONTENT PAGE --- */}
                 <main className="recruiter-content">
+                    {isCompanyDeactivated && (
+                        <div className="deactivation-banner">
+                            <div className="banner-content">
+                                <Lock size={20} className="banner-icon" />
+                                <div className="banner-text">
+                                    <h4>Công ty của bạn đã bị vô hiệu hóa</h4>
+                                    <p>Hầu hết các danh mục đã bị khóa. Bạn chỉ có thể truy cập "Cài đặt công ty" và "Phân tích". Vui lòng liên hệ quản trị viên để mở khóa.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <Outlet />
                 </main>
             </div>

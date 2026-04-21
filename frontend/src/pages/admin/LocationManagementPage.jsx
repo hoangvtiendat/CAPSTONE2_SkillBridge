@@ -49,7 +49,7 @@ const LocationManagementPage = () => {
         setFormData({ name: '', isDeleted: '0' });
     };
 
-    const isOpenStatus = (value) => Number(value) === 1;
+    const isClosedStatus = (value) => Number(value) === 1;
 
     const normalizeNameValue = (value) => {
         const trimmed = String(value).trim();
@@ -178,8 +178,8 @@ const LocationManagementPage = () => {
                                                     value={String(formData.isDeleted)}
                                                     onChange={(e) => setFormData((prev) => ({ ...prev, isDeleted: e.target.value }))}
                                                 >
-                                                    <option value="1">Đang mở</option>
-                                                    <option value="0">Đang đóng</option>
+                                                    <option value="0">Đang mở</option>
+                                                    <option value="1">Đang đóng</option>
                                                 </select>
                                             ) : (
                                                 <span
@@ -189,11 +189,11 @@ const LocationManagementPage = () => {
                                                         borderRadius: '999px',
                                                         fontSize: '12px',
                                                         fontWeight: '700',
-                                                        backgroundColor: isOpenStatus(location.isDeleted) ? '#ecfdf5' : '#fef2f2',
-                                                        color: isOpenStatus(location.isDeleted) ? '#059669' : '#dc2626'
+                                                        backgroundColor: isClosedStatus(location.isDeleted) ? '#fef2f2' : '#ecfdf5',
+                                                        color: isClosedStatus(location.isDeleted) ? '#dc2626' : '#059669'
                                                     }}
                                                 >
-                                                    {isOpenStatus(location.isDeleted) ? 'Mở' : 'Đóng'}
+                                                    {isClosedStatus(location.isDeleted) ? 'Đóng' : 'Mở'}
                                                 </span>
                                             )}
                                         </td>

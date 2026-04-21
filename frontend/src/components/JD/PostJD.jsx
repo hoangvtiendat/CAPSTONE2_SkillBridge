@@ -16,6 +16,11 @@ const toastStyles = {
     error: { borderRadius: '9px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }
 };
 
+const isProvinceActive = (province) => {
+    const deletedValue = province?.isDeleted ?? province?.is_delete ?? province?.isDelete ?? 0;
+    return Number(deletedValue) === 0;
+};
+
 const PostJD = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -81,7 +86,8 @@ const PostJD = () => {
         try {
             const response = await provincesServices.getProvinces();
             const data = response?.result || [];
-            setProvinces(Array.isArray(data) ? data : []);
+            const activeProvinces = Array.isArray(data) ? data.filter(isProvinceActive) : [];
+            setProvinces(activeProvinces);
         } catch (error) {
             toast.error("Lỗi khi tải danh sách địa điểm", { style: toastStyles.error });
             setProvinces([]);
@@ -234,6 +240,7 @@ const PostJD = () => {
                             <div className="input-item">
                                 <label>Danh mục kỹ năng</label>
                                 <select
+                                    className="category-select"
                                     value={formData.categoryId}
                                     onChange={handleCategoryChange}
                                     required

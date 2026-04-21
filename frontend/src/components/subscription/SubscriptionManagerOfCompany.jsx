@@ -326,6 +326,25 @@ const handleDeleteSubscription = async (id, options = {}) => {
         return true;
     });
     const premiumPkg = systemPackages.length > 0 ? systemPackages[0] : null;
+
+    const hasPartialUsage = !!currentSubscription && (
+        (Number(currentSubscription.currentJobCount || 0) > 0 && Number(currentSubscription.currentJobCount || 0) < Number(currentSubscription.jobLimit || 0)) ||
+        (Number(currentSubscription.currentViewCount || 0) > 0 && Number(currentSubscription.currentViewCount || 0) < Number(currentSubscription.candidateViewLimit || 0))
+    );
+
+    const handleOpenUpgradeModal = () => {
+        if (hasPartialUsage) {
+            const confirmed = window.confirm(
+                'Hiện tại Tin đăng + Săn nhân tài mới dùng một chút. Bạn có chắc là muốn thay đổi không?'
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        setShowUpgradeModal(true);
+    };
     return (
         <div className="sub-manager-container">
             {pendingTransaction && countdown > 0 && (
@@ -516,7 +535,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
                 <div className="sub-actions mt-4">
                     <button
                         className="btn-sub-yellow"
-                        onClick={() => setShowUpgradeModal(true)}
+                        onClick={handleOpenUpgradeModal}
                     >
                         Nâng cấp ngay
                     </button>
