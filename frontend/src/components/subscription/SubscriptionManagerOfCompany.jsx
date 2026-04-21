@@ -166,12 +166,22 @@ const handleDeleteSubscription = async (id, options = {}) => {
         skipConfirm = false,
         silent = false,
         refreshAfterDelete = true,
+        optimistic = false,
     } = options;
 
     console.log(' Attempting to delete subscription:', id);
     console.log('delete options:', options);
 
     if (!skipConfirm && !window.confirm('Bạn có chắc muốn xóa gói đăng ký này?')) return;
+
+    const previousPendingTransaction = pendingTransaction;
+    const previousCountdown = countdown;
+
+    if (optimistic && pendingTransaction && pendingTransaction.id === id) {
+        setPendingTransaction(null);
+        setCountdown(0);
+        setShowNotification(false);
+    }
 
     try {
         console.log(' Calling API to delete subscription:', id);
@@ -196,6 +206,11 @@ const handleDeleteSubscription = async (id, options = {}) => {
         console.error(' Lỗi khi xóa:', error);
         console.error('Error response:', error.response);
         console.error('Error data:', error.response?.data);
+
+        if (optimistic && previousPendingTransaction && previousPendingTransaction.id === id) {
+            setPendingTransaction(previousPendingTransaction);
+            setCountdown(previousCountdown);
+        }
 
         if (!silent) {
             const errorMessage = error.response?.data?.message || 'Không thể xóa gói đăng ký';
@@ -416,6 +431,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
                                             skipConfirm: true,
                                             silent: false,
                                             refreshAfterDelete: true,
+                                            optimistic: true,
                                         });
                                     }}
                                 >

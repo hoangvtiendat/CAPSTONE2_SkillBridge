@@ -150,6 +150,10 @@ const SubscriptionManager = () => {
                                         <Check size={18} />
                                         <span>Duyệt tin ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span>
                                     </li>
+                                    <li className={(sub.isPublic ?? sub.is_public) ? "highlight" : "dimmed"}>
+                                        <Check size={18} />
+                                        <span>Công khai gói: {(sub.isPublic ?? sub.is_public) ? 'Có' : 'Không'}</span>
+                                    </li>
                                 </ul>
                             </div>
 
@@ -244,6 +248,18 @@ const SubscriptionManager = () => {
                                     </label>
                                 </div>
                             )}
+
+                            <div className="form-group" style={{marginTop: '10px'}}>
+                                <label className="checkbox-wrapper">
+                                    <input
+                                        type="checkbox"
+                                        name="isPublic"
+                                        checked={Boolean(editForm.isPublic ?? editForm.is_public)}
+                                        onChange={handleInputChange}
+                                    />
+                                    <span className="checkbox-text">Hiển thị công khai gói (isPublic)</span>
+                                </label>
+                            </div>
 
                             <div className="modal-footer">
                                 <button type="button" className="btn-cancel" onClick={() => setSelectedSubscription(null)}>

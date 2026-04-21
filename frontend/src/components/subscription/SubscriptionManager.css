@@ -258,6 +258,8 @@
     box-shadow: 0 40px 100px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255,255,255,0.7);
     padding: 30px;
     animation: sf-pop-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
 }
 
 .modal-header {
@@ -265,6 +267,21 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
+}
+
+.subscription-admin-manager .modal-header,
+.subscription-admin-manager .modal-footer {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: #0f172a;
 }
 
 .text-highlight {
@@ -291,13 +308,29 @@
 }
 
 /* Form Styling */
-.form-group label {
+.form-group > label:not(.checkbox-wrapper) {
     display: block;
     font-size: 13px;
     font-weight: 800;
     color: #64748b;
-    margin-bottom: -5px;
+    margin-bottom: 8px;
     padding-left: 5px;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.form-group {
+    margin: 0;
 }
 
 .form-control {
@@ -327,12 +360,41 @@
 .checkbox-wrapper {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.3);
-    padding: 15px 20px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    gap: 10px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.2));
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.65);
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.checkbox-wrapper:hover {
+    border-color: rgba(0, 122, 255, 0.45);
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.12);
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #007aff;
+    flex-shrink: 0;
+}
+
+.checkbox-text {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #334155;
+    line-height: 1.35;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 0;
 }
 
 .btn-save {
@@ -351,6 +413,22 @@
     padding: 14px 25px;
     border-radius: 100px;
     font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .modal-content {
+        max-width: calc(100vw - 24px);
+        padding: 20px;
+        border-radius: 24px;
+    }
+
+    .modal-header h2 {
+        font-size: 24px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Animations & Spiner */
