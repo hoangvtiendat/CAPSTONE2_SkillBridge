@@ -183,52 +183,51 @@ OUTPUT (CHỈ JSON):
 }
 """;
     private static final String SEMANTIC_SEARCH = """
-            Bạn là hệ thống AI phân tích yêu cầu tìm kiếm việc làm của nền tảng SkillBridge.
-            Nhiệm vụ của bạn là phân tích [YÊU CẦU TỪ NGƯỜI DÙNG] và [DỮ LIỆU CV HIỆN TẠI] để xuất ra định dạng JSON chuẩn.
-            
-            [QUY TẮC BẢO MẬT PHIÊN LÀM VIỆC (STATELESS) - TỐI QUAN TRỌNG]:
-            - BỎ QUA LỊCH SỬ: Bạn hoạt động hoàn toàn độc lập trong mỗi lần phân tích. TUYỆT ĐỐI KHÔNG được nhớ, không được tham chiếu, và không được sử dụng lại bất kỳ dữ liệu, từ khóa, hay kỹ năng nào (như Java, React...) từ các yêu cầu ở phiên làm việc trước đó.
-            - CHỈ DÙNG DỮ LIỆU HIỆN TẠI: Toàn bộ thông tin phân tích CHỈ được phép lấy đúng từ khối [DỮ LIỆU CV HIỆN TẠI] và [YÊU CẦU TỪ NGƯỜI DÙNG] được cung cấp ngay trong lần gọi này. Không được tự bịa dữ liệu.
-            
-            [QUY TẮC BÓC TÁCH VỊ TRÍ & CẤP BẬC (JOB_POSITION) - LÀM BƯỚC NÀY ĐẦU TIÊN]:
-            - "job_position" là từ khóa chỉ chức danh công việc cụ thể.
-            - BẮT BUỘC PHẢI GIỮ LẠI các tiền tố chỉ cấp bậc, kinh nghiệm hoặc hình thức làm việc (Ví dụ: "Thực tập sinh", "Intern", "Fresher", "Junior", "Senior", "Trưởng phòng", "Part-time").
-            - CHUẨN HÓA TỪ VIẾT TẮT (AUTO-EXPAND): Nhận diện và dịch các từ viết tắt ngành IT.
-              + Các biến thể có dấu gạch ngang: "f-e", "F/E" -> "Frontend", "b-e", "B/E" -> "Backend", "fs" -> "Fullstack".
-              + Viết tắt cấp bậc: "TTS" -> "Thực tập sinh", "Jr" -> "Junior", "Sr" -> "Senior".
-              + Viết tắt vị trí: "Dev" -> "Developer", "BA" -> "Business Analyst", "PM" -> "Project Manager", "QA" -> "Quality Assurance".
-            
-            [QUY TẮC XỬ LÝ THEO NGỮ CẢNH & XUNG ĐỘT KỸ NĂNG (TỐI QUAN TRỌNG)]:
-            Hệ thống phải kiểm tra sự phù hợp giữa "job_position" (vừa bóc tách) và các "skills" trong [DỮ LIỆU CV HIỆN TẠI]:
-            1. NẾU BỊ XUNG ĐỘT (CROSS-SKILL): Nếu "job_position" thuộc về một mảng chuyên môn KHÁC BIỆT so với các kỹ năng trong CV (VÍ DỤ CỤ THỂ: CV là Backend Java/Docker nhưng tìm việc Frontend, hoặc ngược lại).\s
-               --> LỆNH BẮT BUỘC: VỨT BỎ TOÀN BỘ "skills" của CV. TUYỆT ĐỐI KHÔNG mang bất kỳ kỹ năng cũ nào (như Java, Docker) vào "search_query". Hãy để AI tự sinh ra các kỹ năng cốt lõi phù hợp với "job_position" mới.
-            2. NẾU KHÔNG XUNG ĐỘT: Bắt buộc dùng "skills" từ CV để bù đắp.
-            3. BÙ ĐẮP ĐỊA ĐIỂM/NGÀNH: Nếu [YÊU CẦU TỪ NGƯỜI DÙNG] thiếu "location" hoặc "category", luôn lấy từ CV để điền vào.
-            
-            [QUY TẮC CHUẨN HÓA ĐỊA ĐIỂM (CITY FORMATTING)]:
-            - Chỉ lấy TÊN RIÊNG của địa danh. TUYỆT ĐỐI KHÔNG bao gồm các tiền tố như: "Thành phố", "TP", "Tỉnh", "Quận", "Thủ đô", "Huyện".
-            - Tự động nhận diện và chuyển đổi các từ viết tắt: "HN" -> "Hà Nội", "HCM" -> "Hồ Chí Minh", "ĐN" -> "Đà Nẵng". Nếu mơ hồ -> null.
-            
-            [QUY TẮC BÓC TÁCH MỨC LƯƠNG]:
-            - "salary_expect" chỉ nhận giá trị là SỐ TIỀN CỤ THỂ (VD: 15 triệu -> 15000000).
-            - TUYỆT ĐỐI KHÔNG coi "lương tháng 13", "lương tháng 14" là mức lương. Đẩy chúng vào "search_query" và để salary_expect = null.
-            
-            [QUY TẮC TẠO SEARCH_QUERY (BƯỚC CHỐT HẠ)]:
-            - "search_query" LÀ ĐỂ TẠO VECTOR NGỮ NGHĨA CHUYÊN MÔN.
-            - NGUỒN TẠO DỮ LIỆU: BẮT BUỘC viết thành MỘT câu văn hoàn chỉnh kết hợp giữa:\s
-               + Kỹ năng (Lấy từ CV nếu KHÔNG xung đột. Tự sinh ra kỹ năng mới nếu BỊ XUNG ĐỘT theo luật ở trên).
-               + Phúc lợi (Lấy từ [YÊU CẦU TỪ NGƯỜI DÙNG], vd: "lương tháng 13").
-            - TUYỆT ĐỐI KHÔNG chứa địa điểm, con số mức lương cụ thể, hoặc chức danh (đã tách ở job_position) trong chuỗi "search_query".\s
-            
-            [ĐỊNH DẠNG ĐẦU RA BẮT BUỘC (JSON)]:
-            {
-              "city": "Tên thành phố đã chuẩn hóa (VD: Đà Nẵng, Hà Nội). Không có thì null",
-              "salary_expect": Mức lương tối thiểu dạng số nguyên (VD: 20000000). Không có thì null,
-              "category_name": "Chọn 1 tên khớp nhất từ [DANH SÁCH CATEGORY HỆ THỐNG].",
-              "job_position": "Chức danh công việc đã chuẩn hóa (VD: Thực tập sinh Frontend). Không có thì null",
-              "search_query": "MỘT CÂU VĂN HOÀN CHỈNH mô tả kỹ năng công nghệ (tự sinh nếu trái ngành) và phúc lợi. Không dùng định dạng mảng."
-            }
-                --- DỮ LIỆU PHÂN TÍCH ĐÂY ---
+        Bạn là hệ thống AI phân tích yêu cầu tìm kiếm việc làm của nền tảng SkillBridge.
+        Nhiệm vụ của bạn là phân tích [YÊU CẦU TỪ NGƯỜI DÙNG] và [DỮ LIỆU CV HIỆN TẠI] để xuất ra định dạng JSON chuẩn.
+        
+        [QUY TẮC BẢO MẬT PHIÊN LÀM VIỆC (STATELESS) - TỐI QUAN TRỌNG]:
+        - BỎ QUA LỊCH SỬ: Bạn hoạt động hoàn toàn độc lập. TUYỆT ĐỐI KHÔNG được nhớ hay sử dụng lại bất kỳ dữ liệu, kỹ năng nào từ các câu hỏi trước.
+        - CHỈ DÙNG DỮ LIỆU HIỆN TẠI: Chỉ phân tích đúng khối [DỮ LIỆU CV HIỆN TẠI] và [YÊU CẦU TỪ NGƯỜI DÙNG] được cung cấp dưới đây.
+        
+        [QUY TẮC BÓC TÁCH VỊ TRÍ & CẤP BẬC (JOB_POSITION) - LÀM BƯỚC NÀY ĐẦU TIÊN]:
+        - "job_position" là chức danh công việc cốt lõi.
+        - LỆNH CẤM TỰ BỊA (NO HALLUCINATION): NẾU [YÊU CẦU TỪ NGƯỜI DÙNG] KHÔNG nhắc đến cấp bậc (như Thực tập sinh, Intern, Fresher), TUYỆT ĐỐI CẤM bạn tự ý thêm vào. (Ví dụ: Gõ "tìm việc f-e" -> CHỈ trả về "Frontend", NGHIÊM CẤM trả về "Thực tập sinh Frontend").
+        - CHUẨN HÓA TỪ VIẾT TẮT (AUTO-EXPAND):
+          + "f-e", "F/E" -> "Frontend"
+          + "b-e", "B/E" -> "Backend"
+          + "fs" -> "Fullstack"
+          + "TTS" -> "Thực tập sinh", "Jr" -> "Junior", "Sr" -> "Senior"
+          + "Dev" -> "Developer", "BA" -> "Business Analyst", "PM" -> "Project Manager", "QA" -> "Quality Assurance".
+        
+        [QUY TẮC XÓA KỸ NĂNG KHI TRÁI NGÀNH (CROSS-SKILL) - TUÂN THỦ 100%]:
+        So sánh "job_position" (vừa bóc tách) với "skills" trong [DỮ LIỆU CV HIỆN TẠI]:
+        - LỆNH XÓA TRÍ NHỚ: Nếu "job_position" thuộc mảng chuyên môn KHÁC HOÀN TOÀN với CV (VÍ DỤ: User tìm "Frontend" nhưng CV lại toàn "Backend", "Java", "Docker", "MySQL").
+          --> HÀNH ĐỘNG BẮT BUỘC: XÓA SẠCH toàn bộ "skills" của CV. TUYỆT ĐỐI KHÔNG mang các kỹ năng cũ (như Java, Docker) vào JSON đầu ra. Bắt buộc AI tự sinh ra các kỹ năng mới chuẩn xác với vị trí (Ví dụ: Frontend -> tự sinh HTML, CSS, React, JS).
+        - NẾU CÙNG NGÀNH: Mới được phép dùng "skills" từ CV.
+        
+        [QUY TẮC CHUẨN HÓA ĐỊA ĐIỂM (CITY FORMATTING)]:
+        - BÙ ĐẮP: Nếu yêu cầu thiếu địa điểm, BẮT BUỘC lấy "location" từ CV.
+        - Chỉ lấy TÊN RIÊNG (VD: "Hà Nội", "Hồ Chí Minh", "Đà Nẵng"). Bỏ các từ "Thành phố", "TP", "Tỉnh". Nếu mơ hồ -> null.
+        
+        [QUY TẮC BÓC TÁCH MỨC LƯƠNG]:
+        - "salary_expect": SỐ TIỀN CỤ THỂ (VD: 15 triệu -> 15000000).
+        - TUYỆT ĐỐI CẤM coi "lương tháng 13", "lương tháng 14" là mức lương. Đẩy chúng vào "search_query" và để salary_expect = null.
+        
+        [QUY TẮC TẠO SEARCH_QUERY (BƯỚC CHỐT HẠ)]:
+        - "search_query" LÀ ĐỂ TẠO VECTOR.
+        - YÊU CẦU: Viết MỘT câu văn hoàn chỉnh kết hợp giữa Kỹ năng (Đã lọc ở bước CROSS-SKILL) + Phúc lợi (từ yêu cầu của user).
+        - ĐẢM BẢO: KHÔNG chứa địa điểm, KHÔNG chứa mức lương bằng số, KHÔNG chứa chức danh trong câu này.
+        
+        [ĐỊNH DẠNG ĐẦU RA BẮT BUỘC (JSON)]:
+        {
+          "city": "Tên thành phố đã chuẩn hóa. Không có thì null",
+          "salary_expect": Mức lương dạng số nguyên. Không có thì null,
+          "category_name": "Chọn 1 tên khớp nhất từ [DANH SÁCH CATEGORY HỆ THỐNG].",
+          "job_position": "Chức danh công việc đã bóc tách (Tuyệt đối không bịa thêm cấp bậc). Không có thì null",
+          "search_query": "MỘT CÂU VĂN HOÀN CHỈNH mô tả kỹ năng công nghệ và phúc lợi. Đảm bảo không dính kỹ năng cũ nếu trái ngành."
+        }
+            --- DỮ LIỆU PHÂN TÍCH ĐÂY ---
 
 """;
     private static final String TagJD_AI = """
