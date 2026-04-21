@@ -183,65 +183,47 @@ OUTPUT (CHỈ JSON):
 }
 """;
     private static final String SEMANTIC_SEARCH = """
-SYSTEM INSTRUCTION: Bạn không phải là trợ lý chat. Bạn là một RESTful API endpoint chuyên xử lý dữ liệu nhân sự.
-Nhiệm vụ của bạn là nhận Input và trả về ĐÚNG MỘT CHUỖI JSON DUY NHẤT.
-
-[LỆNH CẤM TUYỆT ĐỐI - NẾU VI PHẠM HỆ THỐNG SẼ CRASH]:
-1. CẤM tạo thêm bất kỳ field nào ngoài 6 keys quy định (Tuyệt đối không dùng "structured_data", "data", "logic", "reason").
-2. CẤM lồng ghép (nesting) JSON nhiều lớp. Chỉ sử dụng JSON phẳng (flat JSON).
-3. CẤM sinh ra các khoảng trắng, dấu cách thừa, hoặc giải thích bằng text.
-4. Mọi thông tin không xử lý được -> BẮT BUỘC gán giá trị null hoặc [].
-
-[QUY TẮC NGHIỆP VỤ]:
-1. typeTraVe: 0 (Đúng ngành trong CV), 1 (Trái ngành -> skill_names=[]), 2 (Vô nghĩa).
-2. category_name: Trích xuất chuẩn xác theo [DANH SÁCH CATEGORY].
-3. city: Dịch tiếng lóng/viết tắt sang tiếng Việt có dấu. (VD: "quanh tôi" -> Lấy tỉnh/thành phố từ địa chỉ CV).
-4. skill_names: CHỈ được bốc ra từ mảng skill trong CV. Không có -> [].
-5. salary_expect: Đưa về số nguyên (VD: "15M" -> 15000000) hoặc null.
-6. matched_tags: CHỈ chọn tag từ [EXISTING_TAGS] đồng nghĩa với mong muốn của user (VD: "đi du lịch" -> "Khám phá địa điểm du lịch"). Không bịa thêm tag.
-
-[JSON SCHEMA BẮT BUỘC]:
-{
-  "typeTraVe": <0, 1 hoặc 2>,
-  "category_name": "<Tên ngành hoặc null>",
-  "city": "<Tên tỉnh/thành phố hoặc null>",
-  "skill_names": [<Chỉ các skill có trong CV>],
-  "salary_expect": <số nguyên hoặc null>,
-  "matched_tags": [<Chỉ tag lấy từ EXISTING_TAGS>]
-}
-
-[INPUT DATA]:
+       VAI TRÒ:
+                   Bạn là hệ thống AI phân tích yêu cầu tìm kiếm việc làm của nền tảng SkillBridge. Nhiệm vụ của bạn là bóc tách [YÊU CẦU TỪ NGƯỜI DÙNG] và [DỮ LIỆU CV HIỆN TẠI] để xuất ra một khối JSON duy nhất.
+            
+                   [QUY TẮC BẮT BUỘC]:
+            
+                   1. VỊ TRÍ & CẤP BẬC (JOB_POSITION):
+                   - Chuẩn hóa viết tắt: f-e/FE -> Frontend, b-e/BE -> Backend, fs -> Fullstack, TTS -> Thực tập sinh, Jr -> Junior, Sr -> Senior.
+                   - TUYỆT ĐỐI KHÔNG tự ý thêm cấp bậc (như Intern, Fresher) nếu người dùng không nhắc tới.
+            
+                   2. ĐỊA ĐIỂM (CITY):
+                   - Chỉ lấy tên riêng (Ví dụ: "Hà Nội", "Đà Nẵng"). Bỏ từ "Thành phố", "TP".
+                   - Nếu yêu cầu người dùng thiếu địa điểm, BẮT BUỘC lấy "location" từ [DỮ LIỆU CV HIỆN TẠI].
+            
+                   3. MỨC LƯƠNG (SALARY):
+                   - Trả về số nguyên cụ thể (Ví dụ: 15 triệu -> 15000000).
+                   - "Lương tháng 13/14" được tính là phúc lợi, không phải salary_expect -> để null.
+            
+                   4. LỌC KỸ NĂNG (CROSS-SKILL LOGIC):
+                   - Nếu job_position TRÁI NGÀNH với CV: XÓA SẠCH kỹ năng trong CV. Tự sinh 3-5 kỹ năng chuẩn theo vị trí mới (Ví dụ: Tìm Frontend thì tự sinh HTML, CSS, ReactJS).
+                   - Nếu CÙNG NGÀNH: Sử dụng kỹ năng từ CV.
+            
+                   5. SEARCH QUERY (VECTOR SEARCH):
+                   - Viết duy nhất MỘT câu văn hoàn chỉnh theo công thức: [Kỹ năng đã lọc] + [Phúc lợi từ yêu cầu].
+                   - CẤM: Không chứa địa điểm, không chứa mức lương bằng số, không chứa chức danh công việc trong câu này.
+            
+                   [DANH SÁCH CATEGORY HỆ THỐNG]:
+                   (Hãy dán danh sách ID và Tên Category của bạn vào đây)
+            
+                   [ĐỊNH DẠNG ĐẦU RA (JSON STRICT)]:
+                   Chỉ trả về JSON, không giải thích gì thêm.
+                   {
+                     "city": "Tên thành phố hoặc null",
+                     "salary_expect": số nguyên hoặc null,
+                     "category_name": "Tên category khớp nhất",
+                     "job_position": "Chức danh đã chuẩn hóa",
+                     "search_query": "Câu văn mô tả kỹ năng và phúc lợi,... "
+                   }
+            --- DỮ LIỆU PHÂN TÍCH ĐÂY ---
 
 """;
-    private static final String TagJD_AI = """
-NHIỆM VỤ: Trích xuất Tag TẬP TRUNG VÀO VỊ TRÍ VÀ QUYỀN LỢI từ JD_CONTENT dựa trên EXISTING_TAGS.
 
-LUẬT CHỐNG NHIỄU & SUY DIỄN (STRICT RULES):
-1. CẤM LẤY KỸ NĂNG VÀ NHIỆM VỤ: TUYỆT ĐỐI KHÔNG trích xuất các công việc hàng ngày, chuyên môn hay kỹ năng mềm (VD: Cấm lấy "Phát triển hệ thống", "API RESTful", "Tối ưu hiệu năng", "Làm việc nhóm").
-2. CHỈ TẬP TRUNG VÀO 2 NHÓM DỮ LIỆU SAU:
-   - [VỊ TRÍ]: Chức danh công việc chính (BẮT BUỘC có 1 tag).
-   - [PHÚC LỢI]: Quyền lợi, đãi ngộ cụ thể (BẮT BUỘC trích xuất toàn bộ phúc lợi có trong văn bản. Tự động chuẩn hóa thành các cụm từ như: "Lương tháng 13", "Thường xuyên đi du lịch", "Làm việc remote", "Cấp MacBook").
-3. TUYỆT ĐỐI BÁM SÁT NGỮ CẢNH: Chỉ lấy những đãi ngộ THỰC SỰ ĐƯỢC NHẮC ĐẾN trong văn bản. Không copy ví dụ trong prompt nếu JD không có.
-
-QUY TẮC ĐỐI CHIẾU EXISTING_TAGS:
-- Bước A: Nếu tag Vị trí/Phúc lợi vừa trích xuất khớp ý nghĩa với EXISTING_TAGS -> Dùng đúng tên tag của EXISTING_TAGS.
-- Bước B: Nếu là đãi ngộ/vị trí hoàn toàn mới -> Đưa vào "new_tags".
-
-RÀNG BUỘC SỐ LƯỢNG & BỔ SUNG:
-- Cố gắng tìm đủ các tag phúc lợi.
-- NẾU JD QUÁ NGẮN: CHỈ ĐƯỢC tự bổ sung các tag phúc lợi chung (như: "Chế độ bảo hiểm", "Môi trường năng động"). TUYỆT ĐỐI KHÔNG tự bổ sung thêm tag VỊ TRÍ.
-
-ĐỊNH DẠNG JSON (TRẢ VỀ ĐÚNG 3 FIELD, KHÔNG LẶP LẠI KEY):
-{
-  "matched_tags": ["Tập hợp TẤT CẢ tag Vị trí và Phúc lợi thu thập được"],
-  "has_new_tags": <chỉ điền 0 hoặc 1>,
-  "new_tags": ["Chỉ chứa các tag KHÔNG CÓ trong EXISTING_TAGS"]
-}
-
-LUẬT CHỐT `has_new_tags`:
-- Nếu new_tags rỗng [] -> has_new_tags: 0
-- Nếu new_tags có dữ liệu -> has_new_tags: 1
-""";
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {
         this.ollamaRestClient = ollamaRestClient;
         this.objectMapper = objectMapper;
@@ -398,42 +380,6 @@ LUẬT CHỐT `has_new_tags`:
         }
         finally {
             System.out.println("Đã chạy xong chứ năng đánh giá bài đăng ");
-        }
-    }
-    ///  Thêm thể cho bài ddnawg
-    public String addTagJD(String dataJD, String listTag) {
-        try {
-            System.out.println("addTagJD: " + dataJD);
-            System.out.println("listTagJD: " + listTag);
-            OllamaOptions options = OllamaOptions.builder()
-                    .temperature(0.0)
-                    .top_k(10)
-                    .top_p(0.1)
-                    .num_predict(1500)
-                    .num_ctx(8192)
-                    .build();
-            String finalPrompt = TagJD_AI +
-                    "\n\n--- JD String ---\n" + dataJD + "\n\n--- Tag List ---\n" + listTag +
-                    "\n\nResponse must be a valid JSON object.";
-            OllamaRequest requestPayload = OllamaRequest.builder()
-                    .model(model)
-                    .prompt(finalPrompt)
-                    .stream(false)
-                    .format("json")
-                    .options(options)
-                    .build();
-            OllamaResponse response = ollamaRestClient.post()
-                    .uri("/api/generate")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(requestPayload)
-                    .retrieve()
-                    .body(OllamaResponse.class);
-
-            return response != null ? response.response() : "{}";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "{}";
         }
     }
 }

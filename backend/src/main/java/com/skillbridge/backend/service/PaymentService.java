@@ -66,17 +66,19 @@ public class PaymentService {
         String description = "";
         String idOfSubcriptionOfCompany = "";
         String planName;
-
+        String subscriptionPlanId;
         if (type == 0) {
             SubscriptionPlan getDetailSub = subscriptionPlanRepository.getReferenceById(id_ofBill);
             idOfSubcriptionOfCompany = getDetailSub.getId();
             amount = getDetailSub.getPrice();
             planName = getDetailSub.getName().toString();
+            subscriptionPlanId = id_ofBill;
         } else if (type == 1) {
             SubscriptionOfCompany getDetailSub = subscriptionOfCompanyRepository.getReferenceById(id_ofBill);
             idOfSubcriptionOfCompany = getDetailSub.getId();
             amount = getDetailSub.getPrice();
             planName = "CUSTOM PLAN";
+            subscriptionPlanId = null;
         } else {
             throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
         }
@@ -99,8 +101,10 @@ public class PaymentService {
         transaction.setSubscriptionId(idOfSubcriptionOfCompany);
         transaction.setOrderCode(orderCode);
         transaction.setCompanyId(recruiter.getCompany().getId());
+        ///  Laasy ID goi mac dinh
+        transaction.setIdOfSubscription(subscriptionPlanId);
         paymentTransactionRepository.save(transaction);
-
+        System.out.println("transaction" + transaction);
         systemLog.info(currentUser, "Khởi tạo thanh toán gói " + planName + " - Số tiền: " + amount);
 
         return payOS.paymentRequests().create(paymentRequest).getCheckoutUrl();
@@ -166,6 +170,7 @@ public class PaymentService {
         newSub.setStartDate(LocalDateTime.now());
         newSub.setEndDate(LocalDateTime.now().plusMonths(plan.getPostingDuration() != null ? plan.getPostingDuration() : 1));
         newSub.setIsActive(true);
+        newSub.setSubscriptionPlan_id(transaction.getIdOfSubscription());
 
         updateJobDurations(transaction.getCompanyId(), plan.getPostingDuration());
         subscriptionOfCompanyRepository.save(newSub);

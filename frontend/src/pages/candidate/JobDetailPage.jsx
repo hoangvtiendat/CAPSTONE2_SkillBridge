@@ -81,11 +81,25 @@ const JobDetailPage = () => {
                 } catch (e) {
                     rawTitle = {};
                 }
-                const sections = Object.entries(rawTitle).map(([key, value]) => ({
-                    name: key,
-                    description: Array.isArray(value) ? value : (typeof value === 'string' ? value.split('\n') : [])
-                }));
+
+                const sections = Object.entries(rawTitle || {})
+                    .map(([key, value]) => {
+                        const name = String(key || '').trim();
+                        if (!name) return null;
+
+                        const description = Array.isArray(value)
+                            ? value.map(item => String(item || '').trim()).filter(Boolean)
+                            : typeof value === 'string'
+                                ? value.split(/\r?\n/).map(item => item.trim()).filter(Boolean)
+                                : [];
+
+                        return { name, description };
+                    })
+                    .filter(Boolean);
+
                 setParsedData(sections);
+            } else {
+                setParsedData([]);
             }
         } catch (error) {
             toast.error("Lỗi tải chi tiết công việc");
@@ -435,7 +449,7 @@ const JobDetailPage = () => {
                 <div className="detail-card section"><h3>Mô tả công việc</h3><p style={{whiteSpace: 'pre-line'}}>{job.description}</p></div>
 
                 <div className="detail-grid">
-                    {parsedData?.slice(1).map((sec, i) => (<div key={i} className="detail-card section animate-in">
+                    {parsedData?.map((sec, i) => (<div key={i} className="detail-card section animate-in">
                         <h3>{sec.name}</h3>
                         <ul className="check-list">{sec.description?.map((li, j) => <li key={j}><span>{li}</span></li>)}</ul>
                     </div>))}

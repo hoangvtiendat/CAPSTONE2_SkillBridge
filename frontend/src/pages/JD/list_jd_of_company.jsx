@@ -1,6 +1,10 @@
 import JdList from "../../components/JD/JdList";
+import useCompanyDeactivationCheck from '../../hooks/useCompanyDeactivationCheck';
 
 const ListJdOfCompany = () => {
+    // Check if company is deactivated and prevent access
+    useCompanyDeactivationCheck(['/recruiter/settings', '/recruiter/analytics']);
+
     return (
         <div className="recruiter-page-container">
             <JdList />

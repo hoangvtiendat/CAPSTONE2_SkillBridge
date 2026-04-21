@@ -170,6 +170,34 @@
     opacity: 1;
 }
 
+/* Disabled Menu Items */
+.nav-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.nav-item.disabled svg {
+    color: #d1d5db;
+}
+
+.nav-item.disabled .nav-label {
+    color: #9ca3af;
+}
+
+.nav-item.disabled:hover {
+    background: transparent;
+    transform: none;
+    color: var(--text-main);
+}
+
+.nav-item.disabled .nav-lock-icon {
+    margin-left: auto;
+    color: #ef4444;
+    opacity: 1;
+    flex-shrink: 0;
+}
+
 /* --- HEADER FIXED: FLOATING APPLE STYLE --- */
 .recruiter-header-fixed {
     position: fixed;
@@ -346,6 +374,53 @@
     margin-top: 100px;
     /* Chừa chỗ cho Header Fixed */
     animation: sf-pop-up 0.6s ease-out;
+}
+
+/* Deactivation Banner */
+.deactivation-banner {
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 16px;
+    padding: 18px 24px;
+    animation: slideIn 0.4s ease-out;
+}
+
+.banner-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.banner-icon {
+    color: #ef4444;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.banner-text h4 {
+    margin: 0 0 6px 0;
+    color: #dc2626;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.banner-text p {
+    margin: 0;
+    color: #991b1b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Nút tạo JD (Pill Style) */

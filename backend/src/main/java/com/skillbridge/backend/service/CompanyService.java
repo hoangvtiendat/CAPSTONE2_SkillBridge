@@ -124,7 +124,9 @@ public class CompanyService {
                 SubscriptionPlan freePlan = subscriptionPlanRepository.findByName(SubscriptionPlanStatus.FREE)
                         .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION));
 
+
                 SubscriptionOfCompany freeSubscription = SubscriptionOfCompany.builder()
+
                         .company(company)
                         .name(freePlan.getName())
                         .jobLimit(freePlan.getJobLimit())
@@ -138,6 +140,7 @@ public class CompanyService {
                         .startDate(LocalDateTime.now())
                         .endDate(LocalDateTime.now().plusYears(10))
                         .isActive(true)
+                        .subscriptionPlan_id(freePlan.getId())
                         .build();
 
                 subscriptionOfCompanyRepository.save(freeSubscription);

@@ -171,6 +171,7 @@ public class SubscriptionService {
         newSubscription.setEndDate(LocalDateTime.now().plusDays(30));
         newSubscription.setIsActive(true);
 
+
         SubscriptionOfCompany saved = subcriptionOfCompanyRepository.save(newSubscription);
 
         systemLog.info(currentUser, "Đăng ký gói Custom mới cho công ty: " + recruiter.getCompany().getName());

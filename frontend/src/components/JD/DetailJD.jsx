@@ -8,6 +8,7 @@ import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 import applicationService from '../../services/api/applicationService';
+import provincesServices from '../../services/api/provincesServices';
 import { useParams, useNavigate } from 'react-router-dom';
 import './DetailJD.css';
 
@@ -20,6 +21,10 @@ const toastStyles = {
 
 const API_BASE_URL = "http://localhost:8081/identity";
 const normalizeSkillName = (value) => String(value || '').trim().toLowerCase();
+const isProvinceActive = (province) => {
+    const deletedValue = province?.isDeleted ?? province?.is_delete ?? province?.isDelete ?? 0;
+    return Number(deletedValue) === 0;
+};
 
 const trimText = (value) => String(value || '').trim();
 
@@ -50,11 +55,6 @@ const normalizeFormForCompare = (form = {}) => ({
     salaryMax: Number(form.salaryMax || 0),
     skills: normalizeSkillsForCompare(form.skills || [])
 });
-
-const hasInvalidLeadingTrailingWhitespace = (value) => {
-    if (typeof value !== 'string') return false;
-    return value !== value.trim();
-};
 
 const dedupeSkills = (skills = []) => {
     const deduped = [];
@@ -102,6 +102,8 @@ const DetailJD = () => {
     const [initialFormState, setInitialFormState] = useState(null);
 
     const [categories, setCategories] = useState([]);
+    const [provinces, setProvinces] = useState([]);
+    const [loadingProvinces, setLoadingProvinces] = useState(false);
     const [skillsList, setSkillsList] = useState([]);
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
     const [hasAppliedCandidate, setHasAppliedCandidate] = useState(false);
@@ -136,6 +138,7 @@ const DetailJD = () => {
     useEffect(() => {
         fetchJdDetail();
         getListCategories();
+        getListProvinces();
         checkAppliedStatus();
     }, [id, fetchJdDetail, checkAppliedStatus]);
 
@@ -146,6 +149,21 @@ const DetailJD = () => {
             setCategories(Array.isArray(data) ? data : []);
         } catch (error) {
             toast.error("Lỗi khi tải danh mục", { style: toastStyles.error });
+        }
+    };
+
+    const getListProvinces = async () => {
+        setLoadingProvinces(true);
+        try {
+            const response = await provincesServices.getProvinces();
+            const data = response?.result || [];
+            const activeProvinces = Array.isArray(data) ? data.filter(isProvinceActive) : [];
+            setProvinces(activeProvinces);
+        } catch (error) {
+            toast.error("Lỗi khi tải danh sách địa điểm", { style: toastStyles.error });
+            setProvinces([]);
+        } finally {
+            setLoadingProvinces(false);
         }
     };
 
@@ -266,39 +284,26 @@ const DetailJD = () => {
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
 
-        const textFieldConfig = [
-            { key: 'position', label: 'Vị trí công việc' },
-            { key: 'description', label: 'Mô tả công việc' },
-            { key: 'location', label: 'Địa điểm làm việc' }
-        ];
+        const sanitizedForm = {
+            ...editForm,
+            categoryId: String(editForm.categoryId || '').trim(),
+            position: trimText(editForm.position),
+            description: trimText(editForm.description),
+            location: trimText(editForm.location)
+        };
 
-        const invalidTextField = textFieldConfig.find(({ key }) => hasInvalidLeadingTrailingWhitespace(editForm[key]));
-        if (invalidTextField) {
-            toast.error('Lỗi nhập liệu', {
-                description: `${invalidTextField.label} không được có khoảng trắng ở đầu hoặc cuối`,
-                style: toastStyles.warning
-            });
-            return;
-        }
+        const sanitizedDynamicTitles = dynamicTitles.map((item) => ({
+            key: trimText(item.key),
+            value: trimText(item.value)
+        }));
 
-        const hasInvalidWhitespaceDynamicTitles = dynamicTitles.some(item =>
-            hasInvalidLeadingTrailingWhitespace(item.key) || hasInvalidLeadingTrailingWhitespace(item.value)
-        );
-        if (hasInvalidWhitespaceDynamicTitles) {
-            toast.error('Lỗi nhập liệu', {
-                description: 'Tiêu đề và mô tả chi tiết không được có khoảng trắng ở đầu hoặc cuối',
-                style: toastStyles.warning
-            });
-            return;
-        }
-
-        const hasEmptyDynamicTitles = dynamicTitles.some(item => item.key.trim() === "" || item.value.trim() === "");
+        const hasEmptyDynamicTitles = sanitizedDynamicTitles.some(item => item.key === "" || item.value === "");
         if (hasEmptyDynamicTitles) {
             toast.error("Lỗi nhập liệu", { description: "Vui lòng điền đầy đủ Tiêu đề và Mô tả", style: toastStyles.warning });
             return;
         }
 
-        if (Number(editForm.salaryMax) < Number(editForm.salaryMin)) {
+        if (Number(sanitizedForm.salaryMax) < Number(sanitizedForm.salaryMin)) {
             toast.error("Lỗi nhập liệu", { description: "Lương tối đa phải lớn hơn hoặc bằng tối thiểu", style: toastStyles.warning });
             return;
         }
@@ -315,9 +320,9 @@ const DetailJD = () => {
         }
 
         const titleObject = {};
-        dynamicTitles.forEach(item => {
-            const titleKey = item.key.trim() === "" ? "Mục khác" : item.key.trim();
-            titleObject[titleKey] = item.value.trim();
+        sanitizedDynamicTitles.forEach(item => {
+            const titleKey = item.key === "" ? "Mục khác" : item.key;
+            titleObject[titleKey] = item.value;
         });
 
         const cleanSkills = validSkillsToSubmit.map(s => {
@@ -331,11 +336,7 @@ const DetailJD = () => {
         const dedupedCleanSkills = dedupeSkills(cleanSkills).filter(s => s.skillId);
 
         const payloadToSubmit = {
-            ...editForm,
-            categoryId: String(editForm.categoryId || '').trim(),
-            position: trimText(editForm.position),
-            description: trimText(editForm.description),
-            location: trimText(editForm.location),
+            ...sanitizedForm,
             title: titleObject,
             skills: dedupedCleanSkills
         };
@@ -365,6 +366,21 @@ const DetailJD = () => {
         const skillName = String(skill.name || skill.skillName || skill.title || "").toLowerCase();
         return skillName.includes(skillSearchTerm.toLowerCase());
     });
+
+    const locationOptions = (() => {
+        const base = [...provinces];
+        const currentLocation = trimText(editForm?.location);
+        const hasCurrent = currentLocation && base.some((province) => {
+            const provinceName = trimText(province?.name || province?.provinceName || '');
+            return provinceName === currentLocation;
+        });
+
+        if (!hasCurrent && currentLocation) {
+            base.unshift({ id: `current-${currentLocation}`, name: currentLocation });
+        }
+
+        return base;
+    })();
 
     if (loading) return <div className="loading-container"><div className="spinner"></div><p>Đang tải dữ liệu...</p></div>;
     if (!jdDetail) return <div className="error-container">Không tìm thấy thông tin JD</div>;
@@ -595,7 +611,26 @@ const DetailJD = () => {
                                         <h3 className="card-title">Yêu cầu & Lương</h3>
                                         <div className="input-item full-width">
                                             <label>Địa điểm làm việc</label>
-                                            <input type="text" name="location" value={editForm.location} onChange={handleChange} required />
+                                            <select
+                                                className="location-select"
+                                                name="location"
+                                                value={editForm.location}
+                                                onChange={handleChange}
+                                                required
+                                                disabled={loadingProvinces}
+                                            >
+                                                <option value="">
+                                                    {loadingProvinces ? 'Đang tải địa điểm...' : '-- Chọn địa điểm --'}
+                                                </option>
+                                                {locationOptions.map((province) => (
+                                                    <option
+                                                        key={province.id || province._id || province.name || province.provinceName}
+                                                        value={province.name || province.provinceName || ''}
+                                                    >
+                                                        {province.name || province.provinceName}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
                                         <div className="salary-group">
                                             <div className="input-item">

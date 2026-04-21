@@ -22,7 +22,7 @@ const STATUS_LABELS = {
 
 const JdList = () => {
     const { user, token } = useAuth();
-    const ITEMS_PER_PAGE = 6;
+    const ITEMS_PER_PAGE = 8;
 
     const [jdList, setJdList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -167,6 +167,7 @@ const JdList = () => {
                     <p className="jd-subtitle">Hệ thống quản lý tin đăng của công ty</p>
                 </div>
 
+
                 <div className="header-actions">
                     {role === 'ADMIN' && (
                         <button className="btn-subscription" onClick={() => navigate('/company/subscriptions')}>
@@ -203,9 +204,7 @@ const JdList = () => {
                 </div>
             </div>
 
-            <div className="result-summary">
-                Đang hiển thị <strong>{visibleCount}</strong> / <strong>{jdList.length}</strong> bài đăng
-            </div>
+
 
             {loading ? (
                 <div className="loader">Đang tải dữ liệu...</div>

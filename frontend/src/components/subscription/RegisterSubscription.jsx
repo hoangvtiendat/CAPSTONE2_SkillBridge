@@ -54,7 +54,11 @@ const RegisterSubscription = () => {
         try {
             const response = await subscriptionService.getlistSubscription();
             const data = response?.result || response?.data || response || [];
-            const sortedData = Array.isArray(data) ? data.sort((a, b) => a.price - b.price) : [];
+            const sortedData = Array.isArray(data)
+                ? data
+                    .filter((item) => (item?.isPublic ?? item?.is_public) === true)
+                    .sort((a, b) => a.price - b.price)
+                : [];
             setSubscriptions(sortedData);
         } catch (error) {
             toast.error("Lỗi tải dữ liệu", { description: "Không thể lấy danh sách gói cước hệ thống" });
