@@ -40,4 +40,7 @@ public class SubscriptionPlan extends BaseEntity {
     @Column(name = "has_priority_display")
     @Builder.Default
     private Boolean hasPriorityDisplay = false;
+
+    @Column(name = "is_public")
+    private Boolean isPublic;
 }
