@@ -3,7 +3,7 @@ import jobService from '../../services/api/jobService';
 import './AdminJobPending.css';
 import '../../components/admin/Admin.css';
 import { useNavigate } from 'react-router-dom';
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import {
     MapPin, RotateCcw, ShieldAlert, CheckCircle,
     Building2, ChevronDown, Filter, AlertTriangle,
@@ -66,7 +66,6 @@ const AdminJobPending = () => {
 
     return (
         <div className="admin-pending-container animate-fade-in">
-            <Toaster position="top-right" richColors />
 
             <div className="admin-pending-header">
                 <div className="header-left">

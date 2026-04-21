@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Hand, Plus, Trash2, Search } from 'lucide-react'; // Đã thêm Search icon
 
@@ -7,7 +7,7 @@ import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 
-import './PostJD.css'; 
+import './PostJD.css';
 
 const toastStyles = {
     warning: { borderRadius: '9px', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' },
@@ -33,8 +33,8 @@ const PostJD = () => {
         position: "",
         description: "",
         location: "",
-        salaryMin: "", 
-        salaryMax: "", 
+        salaryMin: "",
+        salaryMax: "",
         skills: []
     });
 
@@ -55,7 +55,7 @@ const PostJD = () => {
         try {
             const response = await categoryJDService.getListCategories();
             const data = response?.data?.data || response?.data || response || [];
-            setCategories(Array.isArray(data) ? data : []); 
+            setCategories(Array.isArray(data) ? data : []);
         } catch (error) {
             toast.error("Lỗi khi tải danh mục JD", { style: toastStyles.error });
         }
@@ -100,9 +100,9 @@ const PostJD = () => {
 
         // Validation: Kiểm tra skills không được để trống
         if (!formData.skills || formData.skills.length === 0) {
-            toast.error("Lỗi nhập liệu", { 
-                description: "Vui lòng chọn ít nhất một kỹ năng yêu cầu", 
-                style: toastStyles.warning 
+            toast.error("Lỗi nhập liệu", {
+                description: "Vui lòng chọn ít nhất một kỹ năng yêu cầu",
+                style: toastStyles.warning
             });
             return;
         }
@@ -141,7 +141,7 @@ const PostJD = () => {
         setFormData(prev => ({
             ...prev,
             categoryId: selectedCategoryId,
-            skills: [] 
+            skills: []
         }));
     };
 
@@ -159,7 +159,7 @@ const PostJD = () => {
     const handleSkillRequiredToggle = (skillId, checked) => {
         setFormData(prev => ({
             ...prev,
-            skills: prev.skills.map(s => 
+            skills: prev.skills.map(s =>
                 s.skillId === skillId ? { ...s, isRequired: checked } : s
             )
         }));
@@ -184,10 +184,9 @@ const PostJD = () => {
         return skillName.includes(skillSearchTerm.toLowerCase());
     });
 
-   return (
+    return (
         <div className="jd-board-container">
-            <Toaster position="top-right" />
-            
+
             <header className="jd-board-header">
                 <h2>
                     Tạo bài tuyển dụng mới
@@ -196,9 +195,9 @@ const PostJD = () => {
             </header>
 
             <form onSubmit={handleCreateJd} className="jd-board-layout">
-                
+
                 <div className="layout-main-column">
-                    
+
                     <section className="form-card">
                         <h3 className="card-title">Thông tin cơ bản</h3>
                         <div className="input-group-grid">
@@ -233,7 +232,7 @@ const PostJD = () => {
 
                     <section className="form-card">
                         <h3 className="card-title">Chi tiết công việc</h3>
-                        
+
                         <div className="input-item full-width">
                             <label>Mô tả công việc</label>
                             <textarea
@@ -289,10 +288,10 @@ const PostJD = () => {
                 </div>
 
                 <div className="layout-sidebar">
-                    
+
                     <section className="form-card sidebar-card">
                         <h3 className="card-title">Yêu cầu & Quyền lợi</h3>
-                        
+
                         <div className="input-item full-width">
                             <label>Địa điểm</label>
                             <input
@@ -346,9 +345,9 @@ const PostJD = () => {
                             {skillsList.length > 0 && (
                                 <div className="search-box">
                                     <Search size={16} />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Tìm nhanh..." 
+                                    <input
+                                        type="text"
+                                        placeholder="Tìm nhanh..."
                                         value={skillSearchTerm}
                                         onChange={(e) => setSkillSearchTerm(e.target.value)}
                                     />

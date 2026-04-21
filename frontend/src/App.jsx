@@ -117,6 +117,9 @@ function App() {
                             navigate={navigate}
                         />
                     ), { duration: 10000 });
+
+                    // Phát sự kiện toàn hệ thống để các component khác (như NotificationBell) cập nhật
+                    window.dispatchEvent(new CustomEvent('NEW_NOTIFICATION', { detail: notification }));
                 });
             };
             stompClient.activate();

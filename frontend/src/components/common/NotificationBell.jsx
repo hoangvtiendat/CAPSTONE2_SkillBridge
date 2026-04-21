@@ -10,15 +10,32 @@ import './NotificationBell.css';
 const NotificationBell = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    // Sync unread count whenever notifications change
+    useEffect(() => {
+        setUnreadCount(notifications.filter(n => !n.read).length);
+    }, [notifications]);
     const [isOpen, setIsOpen] = useState(false);
     const { user } = useAuth();
     const navigate = useNavigate();
     const dropdownRef = useRef(null);
 
     useEffect(() => {
-        if (user) {
-            fetchNotifications();
-        }
+        if (!user) return;
+
+        fetchNotifications();
+
+        // Lắng nghe sự kiện thông báo mới từ App.jsx
+        const handleNewNotification = (event) => {
+            const newNotif = event.detail;
+            setNotifications(prev => [newNotif, ...prev]);
+        };
+
+        window.addEventListener('NEW_NOTIFICATION', handleNewNotification);
+
+        return () => {
+            window.removeEventListener('NEW_NOTIFICATION', handleNewNotification);
+        };
     }, [user]);
 
     useEffect(() => {
@@ -36,7 +53,6 @@ const NotificationBell = () => {
             const response = await notificationService.getNotifications();
             if (response && response.result) {
                 setNotifications(response.result);
-                setUnreadCount(response.result.filter(n => !n.isRead).length);
             }
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
@@ -47,9 +63,8 @@ const NotificationBell = () => {
         try {
             await notificationService.markAsRead(id);
             setNotifications(prev =>
-                prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+                prev.map(n => n.id === id ? { ...n, read: true } : n)
             );
-            setUnreadCount(prev => Math.max(0, prev - 1));
             if (link) {
                 navigate(link);
                 setIsOpen(false);
@@ -62,8 +77,7 @@ const NotificationBell = () => {
     const handleMarkAllAsRead = async () => {
         try {
             await notificationService.markAllAsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            setUnreadCount(0);
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         } catch (error) {
             console.error('Failed to mark all as read:', error);
         }
@@ -108,7 +122,7 @@ const NotificationBell = () => {
                             notifications.map((notif) => (
                                 <div
                                     key={notif.id}
-                                    className={`notif-item ${!notif.isRead ? 'unread' : ''}`}
+                                    className={`notif-item ${!notif.read ? 'unread' : ''}`}
                                     onClick={() => handleMarkAsRead(notif.id, notif.link)}
                                 >
                                     <div className="notif-icon-wrapper">
@@ -127,7 +141,7 @@ const NotificationBell = () => {
                                             })}
                                         </span>
                                     </div>
-                                    {!notif.isRead && (
+                                    {!notif.read && (
                                         <div className="unread-dot" style={{
                                             width: '8px',
                                             height: '8px',

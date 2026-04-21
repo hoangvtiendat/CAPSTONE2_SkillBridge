@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./SetPass.css";
 

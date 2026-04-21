@@ -1042,7 +1042,7 @@ public class JobService {
                     .user(recruiter)
                     .title(title)
                     .content(content)
-                    .isRead(false)
+                    .read(false)
                     .type("NEW_APPLICATION")
                     .link(link)
                     .build();
@@ -1052,7 +1052,7 @@ public class JobService {
                 messagingTemplate.convertAndSendToUser(
                         recruiter.getId(),
                         "/queue/notifications",
-                        notification
+                        notificationService.mapToResponse(notification)
                 );
                 log.info("Đã bắn tin nhắn ứng tuyển mới cho Recruiter: {}", recruiter.getEmail());
             } catch (Exception e) {

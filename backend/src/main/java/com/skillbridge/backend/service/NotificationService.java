@@ -42,7 +42,7 @@ public class NotificationService {
                 .user(receiver)
                 .title(subject)
                 .content(message)
-                .isRead(false)
+                .read(false)
                 .type(type)
                 .link(link)
                 .build();
@@ -55,7 +55,7 @@ public class NotificationService {
             messagingTemplate.convertAndSendToUser(
                     receiver.getId(),
                     "/queue/notifications",
-                    notification
+                    mapToResponse(notification)
             );
             log.info("WebSocket dispatched to user: {}", receiver.getId());
         } catch (Exception e) {
@@ -95,12 +95,12 @@ public class NotificationService {
         notificationRepository.saveAll(notifications);
     }
 
-    private NotificationResponse mapToResponse(Notification notification) {
+    public NotificationResponse mapToResponse(Notification notification) {
         return NotificationResponse.builder()
                 .id(notification.getId())
                 .title(notification.getTitle())
                 .content(notification.getContent())
-                .isRead(notification.isRead())
+                .read(notification.isRead())
                 .type(notification.getType())
                 .link(notification.getLink())
                 .createdAt(notification.getCreatedAt())

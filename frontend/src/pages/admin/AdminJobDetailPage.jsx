@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import './AdminJobDetail.css';
 import DeleteConfirmPage from '../../components/admin/DeleteConfirmPage';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 const formatSalary = (amount) => {
     if (!amount && amount !== 0) return "Thỏa thuận";
@@ -25,16 +25,16 @@ const AdminJobDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-      const getImageUrl = (path) => {
-                if (!path) return null;
-                if (path.startsWith('http')) return path;
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
 
-                const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-                const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
-                console.log("aaa: ", `${baseUrl}${cleanPath}`)
-                return `${baseUrl}${cleanPath}`;
-            };
+        console.log("aaa: ", `${baseUrl}${cleanPath}`)
+        return `${baseUrl}${cleanPath}`;
+    };
 
     const fetchJobDetail = useCallback(async () => {
         try {
@@ -47,8 +47,8 @@ const AdminJobDetailPage = () => {
                     let itemsArray = [];
                     if (typeof value === 'string') {
                         itemsArray = value.split('\n')
-                                         .map(i => i.trim())
-                                         .filter(i => i !== "");
+                            .map(i => i.trim())
+                            .filter(i => i !== "");
                     } else if (Array.isArray(value)) {
                         itemsArray = value;
                     }
@@ -118,7 +118,6 @@ const AdminJobDetailPage = () => {
     return (
         <>
             <div className="admin-job-detail-container">
-                <Toaster position="top-right" richColors closeButton />
                 <button className="btn-back-nav" onClick={() => navigate(-1)}>
                     <ChevronLeft size={20} /> Quay lại
                 </button>

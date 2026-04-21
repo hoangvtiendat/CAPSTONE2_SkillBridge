@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../../context/AuthContext";
@@ -6,8 +6,10 @@ import { useAuth } from "../../context/AuthContext";
 function OAuthSuccess() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const processedRef = useRef(false);
 
   useEffect(() => {
+    if (processedRef.current) return;
     const params = new URLSearchParams(window.location.search);
 
     const error = params.get("error");
@@ -40,6 +42,7 @@ function OAuthSuccess() {
         name: nameFromGoogle ? decodeURIComponent(nameFromGoogle) : "Google User"
       };
 
+      processedRef.current = true;
       login(userData);
       toast.success("Đăng nhập thành công!");
 
