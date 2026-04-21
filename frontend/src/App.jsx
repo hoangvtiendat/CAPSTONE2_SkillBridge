@@ -63,6 +63,7 @@ import AdminCompanyPending from './pages/admin/AdminCompanyPending';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 import IndustryManagementPage from './pages/admin/IndustryManagementPage';
+import LocationManagementPage from './pages/admin/LocationManagementPage';
 import SkillManagementPage from './pages/admin/SkillManagementPage';
 import SkillPageContainer from './pages/Skill/SkillPage';
 import SubscriptionManager from "./pages/subscription/SubscriptionManager";
@@ -72,6 +73,11 @@ function App() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const userRole = user?.role?.toUpperCase();
+    const isRestrictedRecruiter =
+        userRole === 'RECRUITER' &&
+        user?.companyStatus === 'DEACTIVATED' &&
+        user?.companyRole !== 'ADMIN';
 
     // 1. Logic xác định Layout
     const isAdminPath = location.pathname.startsWith('/admin');
@@ -126,18 +132,24 @@ function App() {
     // 3. Điều hướng dựa trên Role
     useEffect(() => {
         if (user) {
-            if (user.role === 'ADMIN') {
+            if (userRole === 'ADMIN') {
                 if (!isAdminPath && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/admin/dashboard', { replace: true });
                 }
-            } else if (user.role === 'RECRUITER') {
+            } else if (userRole === 'RECRUITER') {
+                if (isRestrictedRecruiter) {
+                    if (location.pathname === '/login') {
+                        navigate('/', { replace: true });
+                    }
+                    return;
+                }
                 // Cho phép Recruiter ở lại trang identity nếu họ muốn cập nhật lại thông tin
                 if (!isRecruiterPath && location.pathname !== '/recruiter/identity' && (location.pathname === '/' || location.pathname === '/login')) {
                     navigate('/recruiter/dashboard', { replace: true });
                 }
             }
         }
-    }, [user, isAdminPath, isRecruiterPath, location.pathname, navigate]);
+    }, [user, userRole, isRestrictedRecruiter, isAdminPath, isRecruiterPath, location.pathname, navigate]);
 
     return (
         <>
@@ -272,6 +284,7 @@ function App() {
                         <Route path="management/companies" element={<CompanyManagementPage />} />
                         <Route path="approve-companies" element={<AdminCompanyPending />} />
                         <Route path="management/industries" element={<IndustryManagementPage />} />
+                        <Route path="management/locations" element={<LocationManagementPage />} />
                         <Route path="management/skills" element={<SkillManagementPage />} />
                         <Route path="category/:categoryId/skills" element={<AdminRoute><SkillPageContainer /></AdminRoute>} />
                         <Route path="subscriptions" element={<AdminRoute><SubscriptionManager /></AdminRoute>} />

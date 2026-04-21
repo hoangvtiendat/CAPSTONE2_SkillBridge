@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Hand, Plus, Trash2, Search } from 'lucide-react'; // Đã thêm Search icon
+import { Plus, Trash2, Search } from 'lucide-react'; // Đã thêm Search icon
 
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
+import provincesServices from '../../services/api/provincesServices';
 
 import './PostJD.css'; 
 
@@ -22,6 +23,8 @@ const PostJD = () => {
     const [categories, setCategories] = useState([]);
     const [skillsList, setSkillsList] = useState([]);
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
+    const [provinces, setProvinces] = useState([]);
+    const [loadingProvinces, setLoadingProvinces] = useState(false);
 
     const [dynamicTitles, setDynamicTitles] = useState([
         { key: "Quyền lợi", value: "" },
@@ -40,6 +43,7 @@ const PostJD = () => {
 
     useEffect(() => {
         getListCategories();
+        getListProvinces();
     }, []);
 
     useEffect(() => {
@@ -69,6 +73,20 @@ const PostJD = () => {
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Đã có lỗi xảy ra khi tải danh sách kỹ năng";
             toast.error("Lỗi khi tải danh sách kỹ năng", { description: errorMessage, style: toastStyles.error });
+        }
+    };
+
+    const getListProvinces = async () => {
+        setLoadingProvinces(true);
+        try {
+            const response = await provincesServices.getProvinces();
+            const data = response?.result || [];
+            setProvinces(Array.isArray(data) ? data : []);
+        } catch (error) {
+            toast.error("Lỗi khi tải danh sách địa điểm", { style: toastStyles.error });
+            setProvinces([]);
+        } finally {
+            setLoadingProvinces(false);
         }
     };
 
@@ -295,19 +313,28 @@ const PostJD = () => {
                         
                         <div className="input-item full-width">
                             <label>Địa điểm</label>
-                            <input
-                                type="text"
+                            <select
+                                className="location-select"
                                 name="location"
                                 value={formData.location}
                                 onChange={handleChange}
                                 required
-                                placeholder="VD: TP. Hồ Chí Minh"
-                            />
+                                disabled={loadingProvinces}
+                            >
+                                <option value="">
+                                    {loadingProvinces ? 'Đang tải địa điểm...' : '-- Chọn địa điểm --'}
+                                </option>
+                                {provinces.map((province) => (
+                                    <option key={province.id || province._id} value={province.name || province.provinceName || ''}>
+                                        {province.name || province.provinceName}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="salary-group">
                             <div className="input-item">
-                                <label>Lương tối thiểu (VNĐ)</label>
+                                <label>Lương tối thiểu</label>
                                 <input
                                     type="text"
                                     name="salaryMin"
@@ -322,7 +349,7 @@ const PostJD = () => {
                                 />
                             </div>
                             <div className="input-item">
-                                <label>Lương tối đa (VNĐ)</label>
+                                <label>Lương tối đa</label>
                                 <input
                                     type="text"
                                     name="salaryMax"

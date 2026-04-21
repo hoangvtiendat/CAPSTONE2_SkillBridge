@@ -230,35 +230,7 @@ OUTPUT (CHỈ JSON):
             --- DỮ LIỆU PHÂN TÍCH ĐÂY ---
 
 """;
-    private static final String TagJD_AI = """
-NHIỆM VỤ: Trích xuất Tag TẬP TRUNG VÀO VỊ TRÍ VÀ QUYỀN LỢI từ JD_CONTENT dựa trên EXISTING_TAGS.
 
-LUẬT CHỐNG NHIỄU & SUY DIỄN (STRICT RULES):
-1. CẤM LẤY KỸ NĂNG VÀ NHIỆM VỤ: TUYỆT ĐỐI KHÔNG trích xuất các công việc hàng ngày, chuyên môn hay kỹ năng mềm (VD: Cấm lấy "Phát triển hệ thống", "API RESTful", "Tối ưu hiệu năng", "Làm việc nhóm").
-2. CHỈ TẬP TRUNG VÀO 2 NHÓM DỮ LIỆU SAU:
-   - [VỊ TRÍ]: Chức danh công việc chính (BẮT BUỘC có 1 tag).
-   - [PHÚC LỢI]: Quyền lợi, đãi ngộ cụ thể (BẮT BUỘC trích xuất toàn bộ phúc lợi có trong văn bản. Tự động chuẩn hóa thành các cụm từ như: "Lương tháng 13", "Thường xuyên đi du lịch", "Làm việc remote", "Cấp MacBook").
-3. TUYỆT ĐỐI BÁM SÁT NGỮ CẢNH: Chỉ lấy những đãi ngộ THỰC SỰ ĐƯỢC NHẮC ĐẾN trong văn bản. Không copy ví dụ trong prompt nếu JD không có.
-
-QUY TẮC ĐỐI CHIẾU EXISTING_TAGS:
-- Bước A: Nếu tag Vị trí/Phúc lợi vừa trích xuất khớp ý nghĩa với EXISTING_TAGS -> Dùng đúng tên tag của EXISTING_TAGS.
-- Bước B: Nếu là đãi ngộ/vị trí hoàn toàn mới -> Đưa vào "new_tags".
-
-RÀNG BUỘC SỐ LƯỢNG & BỔ SUNG:
-- Cố gắng tìm đủ các tag phúc lợi.
-- NẾU JD QUÁ NGẮN: CHỈ ĐƯỢC tự bổ sung các tag phúc lợi chung (như: "Chế độ bảo hiểm", "Môi trường năng động"). TUYỆT ĐỐI KHÔNG tự bổ sung thêm tag VỊ TRÍ.
-
-ĐỊNH DẠNG JSON (TRẢ VỀ ĐÚNG 3 FIELD, KHÔNG LẶP LẠI KEY):
-{
-  "matched_tags": ["Tập hợp TẤT CẢ tag Vị trí và Phúc lợi thu thập được"],
-  "has_new_tags": <chỉ điền 0 hoặc 1>,
-  "new_tags": ["Chỉ chứa các tag KHÔNG CÓ trong EXISTING_TAGS"]
-}
-
-LUẬT CHỐT `has_new_tags`:
-- Nếu new_tags rỗng [] -> has_new_tags: 0
-- Nếu new_tags có dữ liệu -> has_new_tags: 1
-""";
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {
         this.ollamaRestClient = ollamaRestClient;
         this.objectMapper = objectMapper;
@@ -415,42 +387,6 @@ LUẬT CHỐT `has_new_tags`:
         }
         finally {
             System.out.println("Đã chạy xong chứ năng đánh giá bài đăng ");
-        }
-    }
-    ///  Thêm thể cho bài ddnawg
-    public String addTagJD(String dataJD, String listTag) {
-        try {
-            System.out.println("addTagJD: " + dataJD);
-            System.out.println("listTagJD: " + listTag);
-            OllamaOptions options = OllamaOptions.builder()
-                    .temperature(0.0)
-                    .top_k(10)
-                    .top_p(0.1)
-                    .num_predict(1500)
-                    .num_ctx(8192)
-                    .build();
-            String finalPrompt = TagJD_AI +
-                    "\n\n--- JD String ---\n" + dataJD + "\n\n--- Tag List ---\n" + listTag +
-                    "\n\nResponse must be a valid JSON object.";
-            OllamaRequest requestPayload = OllamaRequest.builder()
-                    .model(model)
-                    .prompt(finalPrompt)
-                    .stream(false)
-                    .format("json")
-                    .options(options)
-                    .build();
-            OllamaResponse response = ollamaRestClient.post()
-                    .uri("/api/generate")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(requestPayload)
-                    .retrieve()
-                    .body(OllamaResponse.class);
-
-            return response != null ? response.response() : "{}";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "{}";
         }
     }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import companyService from '../../services/api/companyService';
 import './TaxLookup.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Search, Database, History, Info,Building } from 'lucide-react';
 
 const TaxLookup = () => {
@@ -13,6 +13,7 @@ const TaxLookup = () => {
     const [apiOnline, setApiOnline] = useState(true);
     const [lastSync, setLastSync] = useState('N/A');
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const savedHistory = JSON.parse(localStorage.getItem('tax_history') || '[]');
@@ -48,7 +49,18 @@ const TaxLookup = () => {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        // 1. Lấy tham số từ URL (?taxCode=123...)
+        const params = new URLSearchParams(location.search);
+        const codeFromUrl = params.get('taxCode');
 
+        if (codeFromUrl) {
+            // 2. Cập nhật vào ô input để người dùng thấy
+            setTaxCode(codeFromUrl);
+            // 3. Gọi hàm search ngay lập tức
+            handleSearch(codeFromUrl);
+        }
+    }, [location.search])
     const updateHistory = (item, originalMst) => {
         const newHistory = [
             { taxCode: originalMst, name: item.name },

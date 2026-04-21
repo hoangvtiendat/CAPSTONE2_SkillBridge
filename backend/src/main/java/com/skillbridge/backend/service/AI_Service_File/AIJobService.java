@@ -227,7 +227,6 @@ public class AIJobService {
             LocalDate endDate = LocalDate.now().plusDays(job.getPostingDay());
             User receiver = userOptional.get();
             ///  gán thẻ cho bài đăng
-            String tagOfJD = JD_Of_Tag(idJD);
 
 
             JobDetailResponse in4JD = getIn4OfJD(idJD);
@@ -334,7 +333,7 @@ public class AIJobService {
                                     "Trân trọng,\n" +
                                     "Đội ngũ SkillBridge AI Moderator",
                             receiver.getName(),
-                            titleText
+                            job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.YELLOW);
 
@@ -350,7 +349,7 @@ public class AIJobService {
                                     "Trân trọng,\n" +
                                     "Đội ngũ SkillBridge",
                             receiver.getName(),
-                            titleText
+                            job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.RED);
                     job.setStatus(JobStatus.PENDING);
@@ -586,45 +585,5 @@ public class AIJobService {
 
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
-    ///  Thêm || update thẻ JD
-    @Async
-    @Transactional
-    public String JD_Of_Tag(String idJD) {
-        try {
-            JobDetailResponse in4JD = getIn4OfJD(idJD);
-            String titleText = in4JD.getTitle() != null ? in4JD.getTitle().toString() : "N/A";
-            String skillsText = in4JD.getSkills() != null ? String.join(", ", in4JD.getSkills()) : "";
-            String dataForAI = String.format(
-                    "Position: %s\nTitle: %s\nCategory: %s\nSkills: %s\nSalary: %s - %s\nLocation: %s\nDescription: %s",
-                    in4JD.getPosition(),
-                    titleText,
-                    in4JD.getCategoryName(),
-                    skillsText,
-                    in4JD.getSalaryMin(),
-                    in4JD.getSalaryMax(),
-                    in4JD.getLocation(),
-                    in4JD.getDescription()
-            );
 
-
-            List<String> listTagName = jdTagRepository.findAllTagNames();
-            ObjectMapper objectMapper = new ObjectMapper();
-            String jsonTags = objectMapper.writeValueAsString(listTagName);
-
-            String dataRequstAI ="1.Dữ Liệu JD" + dataForAI + "\n2.Các dữ thẻ tag hiện đang có trong bảng:" + jsonTags;
-            System.out.println("dataRequstAI " + dataRequstAI);
-            String result = aiService.addTagJD(dataForAI, jsonTags);
-            System.out.println("result_Tag " + result);
-
-            return result;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("JD_Of_Tag Error: " + e.getMessage());
-        }
-        finally {
-            System.out.println("Đã chạy xong chức năng Tạo TAG cho JD");
-        }
-        return null;
-    }
 }
