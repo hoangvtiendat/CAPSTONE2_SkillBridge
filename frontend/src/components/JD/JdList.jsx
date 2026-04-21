@@ -22,7 +22,7 @@ const STATUS_LABELS = {
 
 const JdList = () => {
     const { user, token } = useAuth();
-    const ITEMS_PER_PAGE = 6;
+    const ITEMS_PER_PAGE = 8;
 
     const [jdList, setJdList] = useState([]);
     const [loading, setLoading] = useState(true);
