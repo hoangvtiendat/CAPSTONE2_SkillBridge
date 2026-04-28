@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 @Service
@@ -428,12 +429,12 @@ public class AIJobService {
             String jsonStringCandidate = objectMapper.writeValueAsString(getImportantDataOfCandidate);
 
             String promptTemplate = """
-            Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
-            ... (Nội dung Prompt của bạn) ...
-            [DANH SÁCH CATEGORY HỆ THỐNG]: %s
-            [DỮ LIỆU CV HIỆN TẠI]: %s
-            [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
-            """;
+                    Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
+                    ... (Nội dung Prompt của bạn) ...
+                    [DANH SÁCH CATEGORY HỆ THỐNG]: %s
+                    [DỮ LIỆU CV HIỆN TẠI]: %s
+                    [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
+                    """;
 
             String requestForAI = String.format(promptTemplate, jsonStringCategory, jsonStringCandidate, requestOfCandidate);
             String aiResponse = aiService.Ai_OF_SKILLBRIDGE(requestForAI, 3);
@@ -456,7 +457,8 @@ public class AIJobService {
             // Lấy position
             String getPosition = (rootNode.has("job_position") && !rootNode.get("job_position").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("job_position").asText()))
                     ? rootNode.get("job_position").asText() : null;
-
+            // Lấy search_query
+            String StringOfsearch_query = rootNode.path("search_query").asText("");
             if (getPosition != null) {
                 getPosition = getPosition.toLowerCase().replace(" ", "").replace("-", "").replace("_", "");
             }
@@ -474,8 +476,8 @@ public class AIJobService {
             System.out.println("jobsFromDb: " + jobsFromDb);
             System.out.println("--> ẢI 1 (SQL): " + jobsFromDb.size() + " jobs lọt qua.");
 
-            List<Job> ListJDFlowVector = new ArrayList<>();
 
+            List<Job> ListJDFlowVector;
             if (!jobsFromDb.isEmpty() && !getQueryEmbedding.isBlank()) {
                 try {
                     float[] queryVector = embeddingService.createEmbedding(getQueryEmbedding);
@@ -485,7 +487,7 @@ public class AIJobService {
                         float[] jobVector = job.getVectorEmbedding();
 
                         if (jobVector != null && jobVector.length > 0) {
-                            System.out.println("jobVector dđã chạy" );
+                            System.out.println("jobVector dđã chạy");
                             double score = calculateCosineSimilarityForSemanticSearch(queryVector, jobVector);
 
                             if (score > 0.2) {
@@ -494,32 +496,38 @@ public class AIJobService {
                         }
                     }
                     ///  Dùng AI đọc LẠI List JD
-                
                     ListJDFlowVector = jobScores.entrySet().stream()
                             .sorted(Map.Entry.<Job, Double>comparingByValue().reversed())
                             .peek(entry -> System.out.println("   + Job: " + entry.getKey().getTitle() + " - Score-Final: " + entry.getValue()))
                             .map(Map.Entry::getKey)
                             .collect(Collectors.toList());
-                    ///  Chuyen lai sang Sitrng
-                    String JDListString = ListJDFlowVector.stream().map(job -> String.format(
-                            "{ ID: %s, Tiêu đề: '%s', Ngành: '%s', Mức lương: %s-%s, Yêu cầu/Quyền lợi: '%s' }",
-                            job.getId(),
-                            job.getCompany().getName().toUpperCase(),
-                            job.getTitle(),
-                            job.getCategory() != null ? job.getCategory().getName() : "N/A",
-                            job.getSalaryMin(),
-                            job.getSalaryMax(),
-                            job.getDescription()
-                            ))
+
+                    ///  Chuyen lai sang Sitrng + Gán ID
+                    String JDListString = IntStream.range(0, ListJDFlowVector.size())
+                            .mapToObj(i -> {
+                                Job job = ListJDFlowVector.get(i);
+                                int displayID = i + 1;
+                                return String.format(
+                                        "[%d] Công ty: %s | Vị trí: %s | Ngành: %s | Lương: %s-%s | Mô tả: %s",
+                                        displayID,
+                                        job.getCompany().getName().toUpperCase(),
+                                        job.getTitle(),
+                                        job.getCategory() != null ? job.getCategory().getName() : "N/A",
+                                        job.getSalaryMin(),
+                                        job.getSalaryMax(),
+
+                                        job.getDescription()
+                                );
+                            })
                             .collect(Collectors.joining("\n"));
                     String promptTemplate2 = """
-                    Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
-                    ... (Nội dung Prompt của bạn) ...
-                    [Danh sách các JD ]: %s
-                    [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
-                    """;
-                    String promptAIChekRequest = String.format(promptTemplate2,JDListString, requestOfCandidate);
-                    System.out.println("promptAIChekRequest" + promptAIChekRequest);
+                            Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
+                            ... (Nội dung Prompt của bạn) ...
+                            [Danh sách các JD ]: %s
+                            [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
+                            """;
+                    String promptAIChekRequest = String.format(promptTemplate2, JDListString, StringOfsearch_query);
+                    System.out.println("promptAICpromptAIChekRequesthekRequest" + promptAIChekRequest);
                     String aiFinalReSpond = aiService.Ai_OF_SKILLBRIDGE(promptAIChekRequest, 4);
                     System.out.println("aiFinalReSpond: " + aiFinalReSpond);
                 } catch (Exception e) {

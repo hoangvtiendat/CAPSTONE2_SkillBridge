@@ -183,75 +183,61 @@ OUTPUT (CHỈ JSON):
 }
 """;
     private static final String SEMANTIC_SEARCH = """
-            VAI TRÒ:
-            Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. Nhiệm vụ: Phân tích [DANH SÁCH CATEGORY HỆ THỐNG], [DỮ LIỆU CV HIỆN TẠI] và [YÊU CẦU TỪ NGƯỜI DÙNG] để xuất ra duy nhất một khối JSON hợp lệ.
-            
-            QUY TẮC TRÍCH XUẤT TỐI CAO:
-            
-            1. THÔNG TIN VỊ TRÍ & NGÀNH NGHỀ:
-            - job_position: Chuẩn hóa (f-e -> Frontend, b-e -> Backend, fs -> Fullstack, Jr -> Junior, Sr -> Senior). Nếu user KHÔNG nhập vị trí -> BẮT BUỘC trả về null.
-            - category_name: Trích xuất chính xác 1 tên từ [DANH SÁCH CATEGORY HỆ THỐNG]. Ưu tiên theo user gõ. Nếu user không nhắc đến ngành nghề -> BẮT BUỘC lấy dữ liệu từ trường "category" trong CV.
-            
-            2. ĐỊA ĐIỂM (city) - LỆNH BẮT BUỘC QUÉT CV:
-            >> BƯỚC 1: KIỂM TRA YÊU CẦU NGƯỜI DÙNG
-            - Nếu user CÓ gõ địa điểm (VD: Đà Nẵng, Quận 1): Lấy chính xác những gì user gõ, bỏ chữ "TP" hoặc "Thành phố". (Dừng bước).
-            - Nếu user KHÔNG gõ địa điểm: BẮT BUỘC chuyển sang Bước 2.
-            
-            >> BƯỚC 2: FALLBACK TỪ CV (BẮT BUỘC THỰC HIỆN KHI BƯỚC 1 TRỐNG)
-            - LỆNH KIỂM TRA CHÉO: TUYỆT ĐỐI KHÔNG được để trống city nếu trong [DỮ LIỆU CV HIỆN TẠI] có chứa trường "location".
-            - Lệnh xử lý: Quét trường "location", CHỈ trích xuất tên TỈNH / THÀNH PHỐ và dịch sang tiếng Việt.\s
-            - Lệnh xóa rác: TUYỆT ĐỐI XÓA BỎ các phần: Ngày tháng, Số nhà, Tên đường, Phường/Xã, Quận/Huyện, Tên quốc gia.
-            - VÍ DỤ: "15/10/2024, Lien Chieu, Da Nang, Vietnam" -> BẮT BUỘC TRẢ VỀ: "Đà Nẵng".
-            
-            3. MỨC LƯƠNG (salary_expect):
-            - Chuyển thành số nguyên. Không có số -> null.
-            
-            4. TRUY VẤN NGỮ NGHĨA (search_query):
-            - Nếu user có dùng từ ("phù hợp", "cho tôi", "theo CV"): Ghép [Kỹ năng từ CV] + [Yêu cầu].
-            - Nếu user KHÔNG dùng các từ trên: CẤM lấy kỹ năng từ CV. Chỉ lấy đúng yêu cầu/quyền lợi user nhập (VD: "có thể onsite"). Nếu user không gõ yêu cầu gì thêm -> trả về null hoặc "".
-            - LỆNH CẤM: TUYỆT ĐỐI KHÔNG chứa Địa điểm, Mức lương, hoặc Chức danh trong search_query.
-            
-            ĐỊNH DẠNG ĐẦU RA BẮT BUỘC (CẤM LÀM SAI):
-            - Chỉ xuất ra định dạng JSON. Không có markdown code block.
-            - BẮT BUỘC phải có CHÍNH XÁC 5 keys. Không được xóa key nào dù nó trống.
-            - LỆNH NULL: Nếu giá trị trống, phải trả về giá trị null chuẩn của JSON (tuyệt đối không có ngoặc kép xung quanh chữ null, CẤM xuất "null").
-            
-            {
-              "city": "Giá trị trích xuất (Ưu tiên User -> sau đó bắt buộc lấy từ CV) hoặc null",
-              "salary_expect": 15000000 hoặc null,
-              "category_name": "Tên ngành nghề hoặc null",
-              "job_position": "Chức danh chuẩn hoặc null",
-              "search_query": "Yêu cầu thực tế hoặc null"
-            }
-            --- DỮ LIỆU PHÂN TÍCH ĐÂY ---
+VAI TRÒ BẮT BUỘC:
+Bạn là API trích xuất dữ liệu lõi của ứng dụng SkillBridge. Nhiệm vụ DUY NHẤT của bạn là phân tích [DỮ LIỆU ĐẦU VÀO] và trả về MỘT khối JSON hợp lệ. TUYỆT ĐỐI KHÔNG giải thích, KHÔNG thêm văn bản.
 
+CẤU TRÚC JSON BẮT BUỘC (KHÓA CHẶT):
+Bạn CHỈ ĐƯỢC PHÉP trả về một JSON Object chứa ĐÚNG 5 keys sau đây. 
+LỆNH CẤM: TUYỆT ĐỐI KHÔNG ĐƯỢC TẠO KEY MỚI. TUYỆT ĐỐI KHÔNG ĐƯỢC LẤY LỜI NÓI CỦA USER LÀM TÊN KEY.
+
+1. "city" (String/null):
+- Nếu User có nhắc địa điểm -> Lấy địa điểm đó.
+- Nếu User KHÔNG nhắc -> BẮT BUỘC lấy Tỉnh/Thành phố từ trường "location" trong CV (Dịch sang Tiếng Việt, xóa ngày tháng, số nhà).
+
+2. "salary_expect" (Integer/null): 
+- Số tiền User mong muốn.
+
+3. "category_name" (String/null): 
+- Ưu tiên User. Nếu User không nhập ngành -> BẮT BUỘC lấy "category" từ CV.
+
+4. "job_position" (String/null): 
+- Chức danh chuẩn hóa (Frontend, Backend...).
+
+5. "search_query" (String/null) - BẮT BUỘC ĐỌC KỸ LUẬT GÁN GIÁ TRỊ:
+- TRƯỜNG HỢP A (Có từ khóa cá nhân): Nếu câu của User có các từ ("phù hợp", "cho tôi", "theo CV") -> Gán giá trị bằng: [Yêu cầu của User] + [Các kỹ năng (skills) có trong CV].
+- TRƯỜNG HỢP B (Không có từ khóa cá nhân): -> Gán giá trị bằng: [Chỉ yêu cầu của User]. TUYỆT ĐỐI KHÔNG lấy CV.
+- LỆNH CẤM TẠI ĐÂY: KHÔNG ĐƯỢC bịa thêm chữ. KHÔNG lấy tên Key là "phù hợp". CHỈ ĐƯỢC dùng key "search_query".
+
+MẪU ĐẦU RA DUY NHẤT ĐƯỢC CHẤP NHẬN:
+{
+  "city": "Đà Nẵng",
+  "salary_expect": null,
+  "category_name": "Công nghệ thông tin",
+  "job_position": null,
+  "search_query": "được cấp máy tính, Triển khai Docker & Kubernetes, Hệ quản trị CSDL (MySQL, MongoDB), Lập trình Java (Spring Boot)"
+}
+--- BẮT ĐẦU DỮ LIỆU ĐẦU VÀO ---
 """;
     private static final String SEMANTIC_SEARCH_2 = """
-        VAI TRÒ BẮT BUỘC:
-        Bạn là một API xử lý dữ liệu tự động. Nhiệm vụ DUY NHẤT của bạn là quét văn bản và trả về một khối JSON chứa mảng các ID. Không phân tích, không giải thích.
-        
-        QUY TẮC LỌC DỮ LIỆU:
-        1. Đọc [YÊU CẦU TỪ NGƯỜI DÙNG]. Hiểu theo ngữ nghĩa mở rộng (Ví dụ: "máy tính" = "máy tính xách tay", "MacBook", "PC", "Laptop").
-        2. Quét [DANH SÁCH CÁC JD], chỉ lấy trường "ID" của những JD thực sự có quyền lợi/yêu cầu khớp với người dùng.
-        
-        RÀNG BUỘC ĐẦU RA TỐI CAO (CẤM LÀM SAI):
-        - BẮT BUỘC trả về một JSON Object chứa DUY NHẤT một key là "jd".
-        - Giá trị của key "jd" phải là một mảng (Array) chứa các chuỗi ID.
-        - TUYỆT ĐỐI KHÔNG sinh ra thêm bất kỳ key nào khác ngoài "jd" (như "Yêu cầu", "Ngành", "Phân tích"...).
-        - TUYỆT ĐỐI KHÔNG dùng markdown (không bọc trong ```json).
-        - Nếu không có JD nào khớp, BẮT BUỘC trả về mảng rỗng theo format: { "jd": [] }
-        
-        VÍ DỤ ĐẦU RA DUY NHẤT ĐƯỢC CHẤP NHẬN:
-        {
-          "jd": [
-            "d6ea18e4-3b7e-4742-ac9d-9fcc7790680a",
-            "145b16d9-16fb-434c-923e-be24b45506a4"
-          ]
-        }
-        
-        --- BẮT ĐẦU DỮ LIỆU ---
+VAI TRÒ:
+Bạn là hệ thống lọc dữ liệu logic. Nhiệm vụ: Đối soát [DANH SÁCH JD] với [YÊU CẦU NGƯỜI DÙNG] để tìm ra những JD thỏa mãn 100% điều kiện.
 
-        """;
+QUY TRÌNH XỬ LÝ (BẮT BUỘC):
+1. Phân tách [YÊU CẦU NGƯỜI DÙNG] thành các tiêu chí riêng biệt (Ví dụ: "cấp máy tính" là tiêu chí A, "Java" là tiêu chí B...).
+2. Với mỗi JD, bạn phải tạo một "Bảng kiểm" ngầm:
+   - Nếu JD có nhắc đến "cấp máy tính" (Macbook, Laptop, thiết bị làm việc) -> ĐẠT tiêu chí A.
+   - Nếu JD có nhắc đến "Docker/Kubernetes" -> ĐẠT tiêu chí B.
+   ... (lặp lại cho mọi tiêu chí).
+3. LUẬT LOẠI TRỪ (STRICT AND): 
+   - Một JD CHỈ được đưa vào mảng "selected_ids" nếu nó ĐẠT TẤT CẢ các tiêu chí đã phân tách ở Bước 1.
+   - CHỈ CẦN THIẾU 1 TIÊU CHÍ (Ví dụ: có Java nhưng không nhắc đến việc cấp máy tính) -> LOẠI BỎ JD đó ngay lập tức.
+
+RÀNG BUỘC ĐẦU RA:
+- Trả về JSON Object duy nhất: { "selected_ids": [số_thứ_tự] }.
+- Không giải thích, không markdown. Nếu không có JD nào khớp 100%, trả về { "selected_ids": [] }.
+
+--- DỮ LIỆU ĐỐI SOÁT ---
+""";
 
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {
         this.ollamaRestClient = ollamaRestClient;
