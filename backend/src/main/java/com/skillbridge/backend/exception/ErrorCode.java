@@ -35,7 +35,7 @@ public enum ErrorCode {
     EMAIL_EXIST(2005, "Email này đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
     EMAIL_ALREADY_REGISTERED_BY_PASSWORD(2006, "Email này đã được đăng ký bằng mật khẩu, vui lòng không dùng mạng xã hội", HttpStatus.BAD_REQUEST),
     INVALID_OTP(2007, "Mã xác thực (OTP) không chính xác", HttpStatus.BAD_REQUEST),
-
+    GG_INVALID_FORGOT_PASSWORD(2208, "Chức năng không áp dụng cho tài khoản đăng nhập bằng tài khoản gmail", HttpStatus.BAD_REQUEST),
     // 3xxx: USER & CANDIDATE
     USER_NOT_FOUND(3000, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
     USER_STATUS_LOCKED(3001, "Tài khoản của bạn hiện đang bị khóa", HttpStatus.FORBIDDEN),

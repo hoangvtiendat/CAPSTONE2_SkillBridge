@@ -222,7 +222,7 @@
 
 .pending-table-core thead th {
     padding: 0 14px 16px;
-    text-align: center;
+    text-align: left;
     font-size: 12px;
     font-weight: 800;
     text-transform: uppercase;

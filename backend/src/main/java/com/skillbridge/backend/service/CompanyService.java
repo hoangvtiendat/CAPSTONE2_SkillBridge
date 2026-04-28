@@ -402,7 +402,7 @@ public class CompanyService {
                     subject,
                     content,
                     "JOIN_REQUEST",
-                    "/company/requests",
+                    "/company/member",
                     true
             );
             otpService.sendOtpEmail(admin.getEmail(), subject, content);

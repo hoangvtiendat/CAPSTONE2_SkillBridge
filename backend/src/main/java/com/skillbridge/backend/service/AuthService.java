@@ -244,7 +244,9 @@ public class AuthService {
 
     public String forgotPassword(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
+        if(user.getProvider().equals("GOOGLE")){
+            throw new AppException(ErrorCode.GG_INVALID_FORGOT_PASSWORD);
+        }
         String subject = "[SkillBridge] Mã xác thực quên mật khẩu";
         String otp = otpService.generateOtp(user.getEmail());
         String content = "<div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;'>" +

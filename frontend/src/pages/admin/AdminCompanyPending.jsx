@@ -134,7 +134,7 @@ const AdminCompanyPending = () => {
                                                 <Hash size={14} /> Tra cứu
                                             </button>
                                             <button className="btn-action-approve" onClick={(e) => handleApprove(e, comp.id)}>
-                                                <CheckCircle size={14} /> Duyệt
+                                                <CheckCircle size={14} />
                                             </button>
                                             <button className="btn-action-reject" onClick={(e) => handleReject(e, comp.id)}>
                                                 <XCircle size={14} />

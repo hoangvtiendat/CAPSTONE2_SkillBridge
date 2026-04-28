@@ -207,7 +207,7 @@ export function OTPVerification() {
                     )}
                 </div>
 
-                <button onClick={() => navigate("/login")} className="toggle-btn">Hủy bỏ giao dịch</button>
+                <button onClick={() => navigate("/login")} className="toggle-btn">Hủy bỏ</button>
             </div>
         </main>
     );

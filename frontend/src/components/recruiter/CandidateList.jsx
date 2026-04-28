@@ -211,7 +211,7 @@ const CandidateList = () => {
                                                 onClick={() => handleAddBack(app.id)}
                                             >
                                                 <UserPlus size={16} />
-                                                <span>Add Back</span>
+                                                <span>Thêm lại</span>
                                             </button>
                                         )}
                                         <button

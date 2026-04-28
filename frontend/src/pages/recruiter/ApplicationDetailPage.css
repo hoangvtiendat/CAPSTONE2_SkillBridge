@@ -13,6 +13,17 @@
     /*        linear-gradient(180deg, var(--lg-bg-1) 0%, var(--lg-bg-2) 55%, var(--lg-bg-3) 100%);*/
 }
 
+.apd-profile{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.apd-contact{
+    display: flex;
+    align-items: center;
+}
 .apd-wrapper::before {
     content: "";
     position: fixed;

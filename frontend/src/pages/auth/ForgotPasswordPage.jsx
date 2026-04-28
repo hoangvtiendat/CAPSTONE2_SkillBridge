@@ -7,7 +7,6 @@ import './authForm.css';
 const ForgotPasswordPage = () => {
     return(
     <div className="home-page">
-        <Header />
         <div className="home-container">
         <main className="card-main">
             <ForgotPasswordForm />

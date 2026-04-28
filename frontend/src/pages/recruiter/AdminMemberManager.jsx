@@ -47,9 +47,6 @@ const AdminMemberManager = () => {
                 <div className="header-info">
                     <h2>Quản lý nhân sự</h2>
                 </div>
-                <button className="btn-invite" onClick={() => toast.info("Tính năng đang phát triển")}>
-                    <UserPlus size={18} /> Mời nhân viên
-                </button>
             </div>
 
             {pendingMembers.length > 0 && (
@@ -62,7 +59,7 @@ const AdminMemberManager = () => {
                                     <th>Nhân viên</th>
                                     <th>Vai trò yêu cầu</th>
                                     <th>Thông tin liên hệ</th>
-                                    <th style={{ textAlign: 'right' }}>Hành động</th>
+                                    <th>Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -77,7 +74,7 @@ const AdminMemberManager = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td><span className="badge-role">{m.role}</span></td>
+                                        <td><span className="badge-role">Nhân viên</span></td>
                                         <td>
                                             <div className="contact-info">
                                                 <div className="contact-item"><Phone size={14} color="#6366f1" /> {m.recruiterPhoneNumber || 'N/A'}</div>
@@ -111,7 +108,7 @@ const AdminMemberManager = () => {
                                 <th>Vai trò</th>
                                 <th>Thông tin liên hệ</th>
                                 <th className="text-center">Số tin đã đăng</th>
-                                <th style={{ textAlign: 'right' }}>Hành động</th>
+                                <th>Hành động</th>
                             </tr>
                         </thead>
                         <tbody>

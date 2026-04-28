@@ -34,7 +34,15 @@ export function ForgotPasswordForm() {
                 body: JSON.stringify({ email }),
             });
 
-            if (response.ok || true) {
+            const data = await response.json();  if (data.code === 2208) {
+                toast.error("Không thể thực hiện", {
+                    description: data.message,
+                    style: toastStyles.error
+                });
+                return;
+            }
+
+            if (response.ok) {
                 toast.success("Đã gửi mã OTP", {
                     description: `Mã xác thực đã gửi tới ${email}`,
                     style: toastStyles.success
