@@ -255,10 +255,12 @@ public interface JobRepository extends JpaRepository<Job, String> {
           OR (j.salary_min <= :salaryExpect AND j.salary_max >= :salaryExpect)
       )
       AND (
-                :jobPosition IS NULL OR :jobPosition = ''\s
-                OR REPLACE(REPLACE(REPLACE(LOWER(j.title), ' ', ''), '-', ''), '_', '') LIKE CONCAT('%', :jobPosition, '%')
-                OR REPLACE(REPLACE(REPLACE(LOWER(j.position), ' ', ''), '-', ''), '_', '') LIKE CONCAT('%', :jobPosition, '%')
-            ) 
+          :jobPosition IS NULL OR :jobPosition = '' 
+          OR REPLACE(REPLACE(REPLACE(LOWER(j.title), ' ', ''), '-', ''), '_', '') 
+             LIKE CONCAT('%', REPLACE(REPLACE(REPLACE(LOWER(:jobPosition), ' ', ''), '-', ''), '_', ''), '%')
+          OR REPLACE(REPLACE(REPLACE(LOWER(j.position), ' ', ''), '-', ''), '_', '') 
+             LIKE CONCAT('%', REPLACE(REPLACE(REPLACE(LOWER(:jobPosition), ' ', ''), '-', ''), '_', ''), '%')
+      ) 
 """, nativeQuery = true)
     List<Job> findJobsByRequirements(
             @Param("status") String status,

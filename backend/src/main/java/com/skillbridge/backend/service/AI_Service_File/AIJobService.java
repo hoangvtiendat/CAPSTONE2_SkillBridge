@@ -315,7 +315,7 @@ public class AIJobService {
                                     "Trân trọng,\n" +
                                     "SkillBridge AI Moderator",
                             receiver.getName(),
-                            titleText
+                            job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.GREEN);
                     job.setStartDate(date.atStartOfDay());
@@ -474,7 +474,7 @@ public class AIJobService {
             System.out.println("jobsFromDb: " + jobsFromDb);
             System.out.println("--> ẢI 1 (SQL): " + jobsFromDb.size() + " jobs lọt qua.");
 
-            List<Job> finalSortedJobs = new ArrayList<>();
+            List<Job> ListJDFlowVector = new ArrayList<>();
 
             if (!jobsFromDb.isEmpty() && !getQueryEmbedding.isBlank()) {
                 try {
@@ -488,31 +488,53 @@ public class AIJobService {
                             System.out.println("jobVector dđã chạy" );
                             double score = calculateCosineSimilarityForSemanticSearch(queryVector, jobVector);
 
-                            if (score > 0.4) {
+                            if (score > 0.2) {
                                 jobScores.put(job, score);
                             }
                         }
                     }
-
-                    finalSortedJobs = jobScores.entrySet().stream()
+                    ///  Dùng AI đọc LẠI List JD
+                
+                    ListJDFlowVector = jobScores.entrySet().stream()
                             .sorted(Map.Entry.<Job, Double>comparingByValue().reversed())
-                            .peek(entry -> System.out.println("   + Job: " + entry.getKey().getTitle() + " - Score: " + entry.getValue()))
+                            .peek(entry -> System.out.println("   + Job: " + entry.getKey().getTitle() + " - Score-Final: " + entry.getValue()))
                             .map(Map.Entry::getKey)
                             .collect(Collectors.toList());
-
+                    ///  Chuyen lai sang Sitrng
+                    String JDListString = ListJDFlowVector.stream().map(job -> String.format(
+                            "{ ID: %s, Tiêu đề: '%s', Ngành: '%s', Mức lương: %s-%s, Yêu cầu/Quyền lợi: '%s' }",
+                            job.getId(),
+                            job.getCompany().getName().toUpperCase(),
+                            job.getTitle(),
+                            job.getCategory() != null ? job.getCategory().getName() : "N/A",
+                            job.getSalaryMin(),
+                            job.getSalaryMax(),
+                            job.getDescription()
+                            ))
+                            .collect(Collectors.joining("\n"));
+                    String promptTemplate2 = """
+                    Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
+                    ... (Nội dung Prompt của bạn) ...
+                    [Danh sách các JD ]: %s
+                    [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
+                    """;
+                    String promptAIChekRequest = String.format(promptTemplate2,JDListString, requestOfCandidate);
+                    System.out.println("promptAIChekRequest" + promptAIChekRequest);
+                    String aiFinalReSpond = aiService.Ai_OF_SKILLBRIDGE(promptAIChekRequest, 4);
+                    System.out.println("aiFinalReSpond: " + aiFinalReSpond);
                 } catch (Exception e) {
                     System.out.println("Lỗi tạo vector hoặc so sánh Cosine");
                     e.printStackTrace();
                     throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
                 }
             } else {
-                finalSortedJobs = jobsFromDb;
+                ListJDFlowVector = jobsFromDb;
             }
 
-            System.out.println("--> ẢI 2 (Vector): " + finalSortedJobs.size() + " jobs được chọn.");
+            System.out.println("--> ẢI 2 (Vector): " + ListJDFlowVector.size() + " jobs được chọn.");
 
             List<JobSemanticSearchResponse> resultList = new ArrayList<>();
-            for (Job job : finalSortedJobs) {
+            for (Job job : ListJDFlowVector) {
                 JobResponse.CompanyDTO companyDTO = null;
                 if (job.getCompany() != null) {
                     companyDTO = JobResponse.CompanyDTO.builder()

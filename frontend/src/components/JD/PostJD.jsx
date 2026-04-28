@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Search } from 'lucide-react'; // Đã thêm Search icon
+import { Plus, Trash2, Search } from 'lucide-react';
 
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
-import provincesServices from '../../services/api/provincesServices';
+import vietnamAdministrativeLegacy from '../../data/vietnamAdministrativeLegacy.json';
 
 import './PostJD.css'; 
 
@@ -28,8 +28,11 @@ const PostJD = () => {
     const [categories, setCategories] = useState([]);
     const [skillsList, setSkillsList] = useState([]);
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
-    const [provinces, setProvinces] = useState([]);
-    const [loadingProvinces, setLoadingProvinces] = useState(false);
+    const [provinces] = useState(vietnamAdministrativeLegacy);
+    const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
+    const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
+    const [selectedWardCode, setSelectedWardCode] = useState("");
+    const [specificAddress, setSpecificAddress] = useState("");
 
     const [dynamicTitles, setDynamicTitles] = useState([
         { key: "Quyền lợi", value: "" },
@@ -48,7 +51,6 @@ const PostJD = () => {
 
     useEffect(() => {
         getListCategories();
-        getListProvinces();
     }, []);
 
     useEffect(() => {
@@ -81,21 +83,6 @@ const PostJD = () => {
         }
     };
 
-    const getListProvinces = async () => {
-        setLoadingProvinces(true);
-        try {
-            const response = await provincesServices.getProvinces();
-            const data = response?.result || [];
-            const activeProvinces = Array.isArray(data) ? data.filter(isProvinceActive) : [];
-            setProvinces(activeProvinces);
-        } catch (error) {
-            toast.error("Lỗi khi tải danh sách địa điểm", { style: toastStyles.error });
-            setProvinces([]);
-        } finally {
-            setLoadingProvinces(false);
-        }
-    };
-
     const handleCreateJd = async (e) => {
         e.preventDefault();
 
@@ -105,10 +92,18 @@ const PostJD = () => {
             return;
         }
 
-        const stringFields = ["categoryId", "position", "description", "location"];
+        const stringFields = ["categoryId", "position", "description"];
         const hasEmptyStringFields = stringFields.some(field => !formData[field] || formData[field].trim() === "");
         if (hasEmptyStringFields) {
             toast.error("Lỗi nhập liệu", { description: "Vui lòng điền đầy đủ các trường bắt buộc", style: toastStyles.warning });
+            return;
+        }
+
+        if (!selectedProvinceCode || !selectedDistrictCode || !selectedWardCode || !specificAddress.trim()) {
+            toast.error("Lỗi nhập liệu", {
+                description: "Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện, Xã/Phường và nhập địa chỉ cụ thể",
+                style: toastStyles.warning
+            });
             return;
         }
 
@@ -137,8 +132,22 @@ const PostJD = () => {
             titleObject[finalKey] = item.value;
         });
 
+        const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+        const selectedDistrict = selectedProvince?.districts?.find(
+            (district) => String(district.code) === selectedDistrictCode
+        );
+        const selectedWard = selectedDistrict?.wards?.find((ward) => String(ward.code) === selectedWardCode);
+
+        const finalLocation = [
+            specificAddress.trim(),
+            selectedWard?.name,
+            selectedDistrict?.name,
+            selectedProvince?.name
+        ].filter(Boolean).join(', ');
+
         const payloadToSubmit = {
             ...formData,
+            location: finalLocation,
             title: titleObject
         };
 
@@ -208,26 +217,46 @@ const PostJD = () => {
         return skillName.includes(skillSearchTerm.toLowerCase());
     });
 
+    const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+    const districtOptions = selectedProvince?.districts || [];
+    const selectedDistrict = districtOptions.find((district) => String(district.code) === selectedDistrictCode);
+    const wardOptions = selectedDistrict?.wards || [];
+
+    const locationPreview = [
+        specificAddress.trim(),
+        wardOptions.find((ward) => String(ward.code) === selectedWardCode)?.name,
+        selectedDistrict?.name,
+        selectedProvince?.name
+    ].filter(Boolean).join(', ');
+
    return (
         <div className="jd-board-container">
             <Toaster position="top-right" />
             
             <header className="jd-board-header">
-                <h2>
-                    Tạo bài tuyển dụng mới
-                </h2>
-                <p className="subtitle">Điền thông tin chi tiết để đăng tuyển vị trí mới</p>
+                <div className="jd-header-copy">
+                    <p className="eyebrow">Job Posting Studio</p>
+                    <h2>Tạo Bài Tuyển Dụng Mới</h2>
+                </div>
+
+                <button
+                    type="submit"
+                    form="post-jd-form"
+                    disabled={loading}
+                    className="btn-primary-large btn-header-submit"
+                >
+                    {loading ? 'Đang Xử Lý...' : 'Xác Nhận Tạo JD'}
+                </button>
             </header>
 
-            <form onSubmit={handleCreateJd} className="jd-board-layout">
+            <form id="post-jd-form" onSubmit={handleCreateJd} className="jd-board-layout">
                 
                 <div className="layout-main-column">
-                    
-                    <section className="form-card">
-                        <h3 className="card-title">Thông tin cơ bản</h3>
+                    <section className="form-card scroll-card">
+                        <h3 className="card-title">Thông Tin Cơ Bản</h3>
                         <div className="input-group-grid">
                             <div className="input-item">
-                                <label>Vị trí công việc</label>
+                                <label>Vị Trí Công Việc</label>
                                 <input
                                     type="text"
                                     name="position"
@@ -238,7 +267,7 @@ const PostJD = () => {
                                 />
                             </div>
                             <div className="input-item">
-                                <label>Danh mục kỹ năng</label>
+                                <label>Danh Mục Kỹ Năng</label>
                                 <select
                                     className="category-select"
                                     value={formData.categoryId}
@@ -254,11 +283,10 @@ const PostJD = () => {
                                 </select>
                             </div>
                         </div>
-                    </section>
 
-                    <section className="form-card">
-                        <h3 className="card-title">Chi tiết công việc</h3>
-                        
+                        <div className="card-section-divider" />
+
+                        <h3 className="card-title">Chi Tiết Công Việc</h3>
                         <div className="input-item full-width">
                             <label>Mô tả công việc</label>
                             <textarea
@@ -267,15 +295,15 @@ const PostJD = () => {
                                 onChange={handleChange}
                                 required
                                 rows="3"
-                                placeholder="Tham gia xây dựng và triển khai..."
+                                placeholder="Mô tả chi tiết về vị trí, trách nhiệm và môi trường làm việc..."
                             ></textarea>
                         </div>
 
                         <div className="dynamic-section">
                             <div className="dynamic-header">
-                                <label>Các mục Tiêu đề & Chi tiết</label>
+                                <label>Các mục tiêu đề & Chi tiết</label>
                                 <button type="button" onClick={addDynamicTitle} className="btn-add-outline">
-                                    <Plus size={16} /> Thêm mục
+                                    <Plus size={14} /> Thêm mục
                                 </button>
                             </div>
 
@@ -286,13 +314,13 @@ const PostJD = () => {
                                             type="text"
                                             value={item.key}
                                             onChange={(e) => handleDynamicTitleChange(index, "key", e.target.value)}
-                                            placeholder="Tiêu đề (VD: Quyền lợi)"
+                                            placeholder="Ví dụ: Quyền lợi, Yêu cầu..."
                                             className="dynamic-input-key"
                                         />
                                         <textarea
                                             value={item.value}
                                             onChange={(e) => handleDynamicTitleChange(index, "value", e.target.value)}
-                                            placeholder="Mô tả chi tiết..."
+                                            placeholder="Nhập chi tiết cho mục này..."
                                             rows="2"
                                             className="dynamic-input-value"
                                         />
@@ -314,34 +342,97 @@ const PostJD = () => {
                 </div>
 
                 <div className="layout-sidebar">
-                    
-                    <section className="form-card sidebar-card">
-                        <h3 className="card-title">Yêu cầu & Quyền lợi</h3>
-                        
-                        <div className="input-item full-width">
-                            <label>Địa điểm</label>
-                            <select
-                                className="location-select"
-                                name="location"
-                                value={formData.location}
-                                onChange={handleChange}
-                                required
-                                disabled={loadingProvinces}
-                            >
-                                <option value="">
-                                    {loadingProvinces ? 'Đang tải địa điểm...' : '-- Chọn địa điểm --'}
-                                </option>
-                                {provinces.map((province) => (
-                                    <option key={province.id || province._id} value={province.name || province.provinceName || ''}>
-                                        {province.name || province.provinceName}
-                                    </option>
-                                ))}
-                            </select>
+                    <section className="form-card sidebar-card scroll-card">
+                        <h3 className="card-title">Địa Điểm & Mức Lương</h3>
+                        <div className="input-item full-width location-input-shell">
+                            <div className="location-field-group">
+                                
+
+                                <div className="location-grid">
+                                    <div className="location-select-wrap location-field-half">
+                                        <label className="location-mini-label">Tỉnh/Thành Phố</label>
+                                        <select
+                                            className="location-select"
+                                            value={selectedProvinceCode}
+                                            onChange={(e) => {
+                                                setSelectedProvinceCode(e.target.value);
+                                                setSelectedDistrictCode("");
+                                                setSelectedWardCode("");
+                                            }}
+                                            required
+                                        >
+                                            <option value="">-- Chọn tỉnh/thành phố --</option>
+                                            {provinces.filter(isProvinceActive).map((province) => (
+                                                <option key={province.code} value={province.code}>
+                                                    {province.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="location-select-wrap location-field-half">
+                                        <label className="location-mini-label">Quận/Huyện</label>
+                                        <select
+                                            className="location-select"
+                                            value={selectedDistrictCode}
+                                            onChange={(e) => {
+                                                setSelectedDistrictCode(e.target.value);
+                                                setSelectedWardCode("");
+                                            }}
+                                            required
+                                            disabled={!selectedProvinceCode}
+                                        >
+                                            <option value="">-- Chọn quận/huyện --</option>
+                                            {districtOptions.map((district) => (
+                                                <option key={district.code} value={district.code}>
+                                                    {district.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="location-select-wrap location-field-full">
+                                        <label className="location-mini-label">Xã/Phường</label>
+                                        <select
+                                            className="location-select"
+                                            value={selectedWardCode}
+                                            onChange={(e) => setSelectedWardCode(e.target.value)}
+                                            required
+                                            disabled={!selectedDistrictCode}
+                                        >
+                                            <option value="">-- Chọn xã/phường --</option>
+                                            {wardOptions.map((ward) => (
+                                                <option key={ward.code} value={ward.code}>
+                                                    {ward.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="location-detail-wrap location-field-full">
+                                        <label className="location-mini-label">Địa Chỉ Cụ Thể</label>
+                                        <input
+                                            type="text"
+                                            value={specificAddress}
+                                            onChange={(e) => setSpecificAddress(e.target.value)}
+                                            placeholder="VD: Số 12 Nguyễn Huệ"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {locationPreview && (
+                                    <div className="location-preview">
+                                        <span>Địa Chỉ Đã Chọn</span>
+                                        <strong>{locationPreview}</strong>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="salary-group">
                             <div className="input-item">
-                                <label>Lương tối thiểu</label>
+                                <label>Lương Tối Thiểu</label>
                                 <input
                                     type="text"
                                     name="salaryMin"
@@ -352,11 +443,11 @@ const PostJD = () => {
                                         setFormData(prev => ({ ...prev, salaryMin: numValue }));
                                     }}
                                     required
-                                    placeholder="Ví dụ: 10.000.000"
+                                    placeholder="VD: 10.000.000"
                                 />
                             </div>
                             <div className="input-item">
-                                <label>Lương tối đa</label>
+                                <label>Lương Tối Đa</label>
                                 <input
                                     type="text"
                                     name="salaryMax"
@@ -367,22 +458,19 @@ const PostJD = () => {
                                         setFormData(prev => ({ ...prev, salaryMax: numValue }));
                                     }}
                                     required
-                                    placeholder="Ví dụ: 20.000.000"
+                                    placeholder="VD: 20.000.000"
                                 />
                             </div>
                         </div>
-                    </section>
 
-                    {/* Card 4: Kỹ năng */}
-                    <section className="form-card sidebar-card skills-card">
                         <div className="skills-header">
-                            <h3 className="card-title">Kỹ năng yêu cầu</h3>
+                            <h3 className="card-title">Kỹ năng Yêu Cầu</h3>
                             {skillsList.length > 0 && (
                                 <div className="search-box">
                                     <Search size={16} />
                                     <input 
                                         type="text" 
-                                        placeholder="Tìm nhanh..." 
+                                        placeholder="Tìm kiếm..." 
                                         value={skillSearchTerm}
                                         onChange={(e) => setSkillSearchTerm(e.target.value)}
                                     />
@@ -418,29 +506,24 @@ const PostJD = () => {
                                                                 checked={selectedSkill.isRequired}
                                                                 onChange={(e) => handleSkillRequiredToggle(skillId, e.target.checked)}
                                                             />
-                                                            Bắt buộc?
+                                                            Yêu cầu bắt buộc
                                                         </label>
                                                     )}
                                                 </div>
                                             );
                                         })
                                     ) : (
-                                        <p className="empty-text">Không tìm thấy kỹ năng.</p>
+                                        <p className="empty-text">Không tìm thấy kỹ năng phù hợp</p>
                                     )}
                                 </div>
                             ) : formData.categoryId ? (
-                                <p className="empty-text">Đang tải hoặc chưa có kỹ năng...</p>
+                                <p className="empty-text">Đang tải danh sách kỹ năng...</p>
                             ) : (
-                                <p className="empty-text">Vui lòng chọn danh mục để xem kỹ năng.</p>
+                                <p className="empty-text">Vui lòng chọn danh mục để xem kỹ năng</p>
                             )}
                         </div>
-                    </section>
 
-                    <div className="action-wrapper">
-                        <button type="submit" disabled={loading} className="btn-primary-large">
-                            {loading ? 'Đang xử lý...' : 'Xác nhận Tạo JD'}
-                        </button>
-                    </div>
+                    </section>
                 </div>
             </form>
         </div>

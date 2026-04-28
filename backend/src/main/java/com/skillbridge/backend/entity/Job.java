@@ -93,6 +93,5 @@ public class Job extends BaseEntity {
     @Column(name = "end_date")
     private LocalDateTime endDate;
 
-    @Column(name = "tag_of_jd")
-    private String tagOfJd;
+
 }

@@ -183,46 +183,75 @@ OUTPUT (CHỈ JSON):
 }
 """;
     private static final String SEMANTIC_SEARCH = """
-       VAI TRÒ:
-                   Bạn là hệ thống AI phân tích yêu cầu tìm kiếm việc làm của nền tảng SkillBridge. Nhiệm vụ của bạn là bóc tách [YÊU CẦU TỪ NGƯỜI DÙNG] và [DỮ LIỆU CV HIỆN TẠI] để xuất ra một khối JSON duy nhất.
+            VAI TRÒ:
+            Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. Nhiệm vụ: Phân tích [DANH SÁCH CATEGORY HỆ THỐNG], [DỮ LIỆU CV HIỆN TẠI] và [YÊU CẦU TỪ NGƯỜI DÙNG] để xuất ra duy nhất một khối JSON hợp lệ.
             
-                   [QUY TẮC BẮT BUỘC]:
+            QUY TẮC TRÍCH XUẤT TỐI CAO:
             
-                   1. VỊ TRÍ & CẤP BẬC (JOB_POSITION):
-                   - Chuẩn hóa viết tắt: f-e/FE -> Frontend, b-e/BE -> Backend, fs -> Fullstack, TTS -> Thực tập sinh, Jr -> Junior, Sr -> Senior.
-                   - TUYỆT ĐỐI KHÔNG tự ý thêm cấp bậc (như Intern, Fresher) nếu người dùng không nhắc tới.
+            1. THÔNG TIN VỊ TRÍ & NGÀNH NGHỀ:
+            - job_position: Chuẩn hóa (f-e -> Frontend, b-e -> Backend, fs -> Fullstack, Jr -> Junior, Sr -> Senior). Nếu user KHÔNG nhập vị trí -> BẮT BUỘC trả về null.
+            - category_name: Trích xuất chính xác 1 tên từ [DANH SÁCH CATEGORY HỆ THỐNG]. Ưu tiên theo user gõ. Nếu user không nhắc đến ngành nghề -> BẮT BUỘC lấy dữ liệu từ trường "category" trong CV.
             
-                   2. ĐỊA ĐIỂM (CITY):
-                   - Chỉ lấy tên riêng (Ví dụ: "Hà Nội", "Đà Nẵng"). Bỏ từ "Thành phố", "TP".
-                   - Nếu yêu cầu người dùng thiếu địa điểm, BẮT BUỘC lấy "location" từ [DỮ LIỆU CV HIỆN TẠI].
+            2. ĐỊA ĐIỂM (city) - LỆNH BẮT BUỘC QUÉT CV:
+            >> BƯỚC 1: KIỂM TRA YÊU CẦU NGƯỜI DÙNG
+            - Nếu user CÓ gõ địa điểm (VD: Đà Nẵng, Quận 1): Lấy chính xác những gì user gõ, bỏ chữ "TP" hoặc "Thành phố". (Dừng bước).
+            - Nếu user KHÔNG gõ địa điểm: BẮT BUỘC chuyển sang Bước 2.
             
-                   3. MỨC LƯƠNG (SALARY):
-                   - Trả về số nguyên cụ thể (Ví dụ: 15 triệu -> 15000000).
-                   - "Lương tháng 13/14" được tính là phúc lợi, không phải salary_expect -> để null.
+            >> BƯỚC 2: FALLBACK TỪ CV (BẮT BUỘC THỰC HIỆN KHI BƯỚC 1 TRỐNG)
+            - LỆNH KIỂM TRA CHÉO: TUYỆT ĐỐI KHÔNG được để trống city nếu trong [DỮ LIỆU CV HIỆN TẠI] có chứa trường "location".
+            - Lệnh xử lý: Quét trường "location", CHỈ trích xuất tên TỈNH / THÀNH PHỐ và dịch sang tiếng Việt.\s
+            - Lệnh xóa rác: TUYỆT ĐỐI XÓA BỎ các phần: Ngày tháng, Số nhà, Tên đường, Phường/Xã, Quận/Huyện, Tên quốc gia.
+            - VÍ DỤ: "15/10/2024, Lien Chieu, Da Nang, Vietnam" -> BẮT BUỘC TRẢ VỀ: "Đà Nẵng".
             
-                   4. LỌC KỸ NĂNG (CROSS-SKILL LOGIC):
-                   - Nếu job_position TRÁI NGÀNH với CV: XÓA SẠCH kỹ năng trong CV. Tự sinh 3-5 kỹ năng chuẩn theo vị trí mới (Ví dụ: Tìm Frontend thì tự sinh HTML, CSS, ReactJS).
-                   - Nếu CÙNG NGÀNH: Sử dụng kỹ năng từ CV.
+            3. MỨC LƯƠNG (salary_expect):
+            - Chuyển thành số nguyên. Không có số -> null.
             
-                   5. SEARCH QUERY (VECTOR SEARCH):
-                   - Viết duy nhất MỘT câu văn hoàn chỉnh theo công thức: [Kỹ năng đã lọc] + [Phúc lợi từ yêu cầu].
-                   - CẤM: Không chứa địa điểm, không chứa mức lương bằng số, không chứa chức danh công việc trong câu này.
+            4. TRUY VẤN NGỮ NGHĨA (search_query):
+            - Nếu user có dùng từ ("phù hợp", "cho tôi", "theo CV"): Ghép [Kỹ năng từ CV] + [Yêu cầu].
+            - Nếu user KHÔNG dùng các từ trên: CẤM lấy kỹ năng từ CV. Chỉ lấy đúng yêu cầu/quyền lợi user nhập (VD: "có thể onsite"). Nếu user không gõ yêu cầu gì thêm -> trả về null hoặc "".
+            - LỆNH CẤM: TUYỆT ĐỐI KHÔNG chứa Địa điểm, Mức lương, hoặc Chức danh trong search_query.
             
-                   [DANH SÁCH CATEGORY HỆ THỐNG]:
-                   (Hãy dán danh sách ID và Tên Category của bạn vào đây)
+            ĐỊNH DẠNG ĐẦU RA BẮT BUỘC (CẤM LÀM SAI):
+            - Chỉ xuất ra định dạng JSON. Không có markdown code block.
+            - BẮT BUỘC phải có CHÍNH XÁC 5 keys. Không được xóa key nào dù nó trống.
+            - LỆNH NULL: Nếu giá trị trống, phải trả về giá trị null chuẩn của JSON (tuyệt đối không có ngoặc kép xung quanh chữ null, CẤM xuất "null").
             
-                   [ĐỊNH DẠNG ĐẦU RA (JSON STRICT)]:
-                   Chỉ trả về JSON, không giải thích gì thêm.
-                   {
-                     "city": "Tên thành phố hoặc null",
-                     "salary_expect": số nguyên hoặc null,
-                     "category_name": "Tên category khớp nhất",
-                     "job_position": "Chức danh đã chuẩn hóa",
-                     "search_query": "Câu văn mô tả kỹ năng và phúc lợi,... "
-                   }
+            {
+              "city": "Giá trị trích xuất (Ưu tiên User -> sau đó bắt buộc lấy từ CV) hoặc null",
+              "salary_expect": 15000000 hoặc null,
+              "category_name": "Tên ngành nghề hoặc null",
+              "job_position": "Chức danh chuẩn hoặc null",
+              "search_query": "Yêu cầu thực tế hoặc null"
+            }
             --- DỮ LIỆU PHÂN TÍCH ĐÂY ---
 
 """;
+    private static final String SEMANTIC_SEARCH_2 = """
+        VAI TRÒ BẮT BUỘC:
+        Bạn là một API xử lý dữ liệu tự động. Nhiệm vụ DUY NHẤT của bạn là quét văn bản và trả về một khối JSON chứa mảng các ID. Không phân tích, không giải thích.
+        
+        QUY TẮC LỌC DỮ LIỆU:
+        1. Đọc [YÊU CẦU TỪ NGƯỜI DÙNG]. Hiểu theo ngữ nghĩa mở rộng (Ví dụ: "máy tính" = "máy tính xách tay", "MacBook", "PC", "Laptop").
+        2. Quét [DANH SÁCH CÁC JD], chỉ lấy trường "ID" của những JD thực sự có quyền lợi/yêu cầu khớp với người dùng.
+        
+        RÀNG BUỘC ĐẦU RA TỐI CAO (CẤM LÀM SAI):
+        - BẮT BUỘC trả về một JSON Object chứa DUY NHẤT một key là "jd".
+        - Giá trị của key "jd" phải là một mảng (Array) chứa các chuỗi ID.
+        - TUYỆT ĐỐI KHÔNG sinh ra thêm bất kỳ key nào khác ngoài "jd" (như "Yêu cầu", "Ngành", "Phân tích"...).
+        - TUYỆT ĐỐI KHÔNG dùng markdown (không bọc trong ```json).
+        - Nếu không có JD nào khớp, BẮT BUỘC trả về mảng rỗng theo format: { "jd": [] }
+        
+        VÍ DỤ ĐẦU RA DUY NHẤT ĐƯỢC CHẤP NHẬN:
+        {
+          "jd": [
+            "d6ea18e4-3b7e-4742-ac9d-9fcc7790680a",
+            "145b16d9-16fb-434c-923e-be24b45506a4"
+          ]
+        }
+        
+        --- BẮT ĐẦU DỮ LIỆU ---
+
+        """;
 
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {
         this.ollamaRestClient = ollamaRestClient;
@@ -327,7 +356,7 @@ OUTPUT (CHỈ JSON):
         return "{}";
     }
     }
-    public String Ai_OF_SKILLBRIDGE(String dataJD_of_Company, int type_Function){
+    public String Ai_OF_SKILLBRIDGE(String data_Request, int type_Function){
         try{
             String finalPrompt = "";
             OllamaOptions options = OllamaOptions.builder()
@@ -343,20 +372,24 @@ OUTPUT (CHỈ JSON):
 
                 finalPrompt = PROMPT_CHECK_APPROVAL +
                         "\n\n[DỮ LIỆU CẦN KIỂM TRA]:\n\"\"\"\n" +
-                        dataJD_of_Company +
+                        data_Request +
                         "\n\"\"\"\n\n" +
                         "CHỈ TRẢ VỀ JSON, KHÔNG ĐƯỢC NHẮC LẠI NỘI DUNG TRÊN.";
             }
             ///   Kiểm tra nâng cao của JD so sánh cũ + mới  !!!!!!!!!!!!!!!!!!!!!!
             else if(type_Function == 2){
                 finalPrompt = PROMPT_CHECK_NEWJOV_VS_OLDJOB +
-                        "\n\n--- Data ---\n" + dataJD_of_Company;
+                        "\n\n--- Data ---\n" + data_Request;
             }
             ///  Bóc tách dữ liệu
             else if(type_Function == 3){
                 finalPrompt = SEMANTIC_SEARCH +
-                        "\n\n--- Data ---\n" + dataJD_of_Company;
-                System.out.println("dataSearch = " + dataJD_of_Company);
+                        "\n\n--- Data ---\n" + data_Request;
+                System.out.println("dataSearch = " + data_Request);
+            }
+            else if(type_Function == 4){
+                finalPrompt =SEMANTIC_SEARCH_2 + 
+                        data_Request;
             }
 
             OllamaRequest requestAI = OllamaRequest.builder()

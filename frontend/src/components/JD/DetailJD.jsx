@@ -496,7 +496,7 @@ const DetailJD = () => {
                                 <div>
                                     <span className="info-label">Mức lương</span>
                                     <span className="info-value highlight">
-                                        {Number(jdDetail.salaryMin).toLocaleString()} - {Number(jdDetail.salaryMax).toLocaleString()} VND
+                                        {Number(jdDetail.salary_min).toLocaleString()} - {Number(jdDetail.salaryMax).toLocaleString()} VND
                                     </span>
                                 </div>
                             </div>
