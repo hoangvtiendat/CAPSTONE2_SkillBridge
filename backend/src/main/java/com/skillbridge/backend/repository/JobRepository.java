@@ -248,7 +248,12 @@ public interface JobRepository extends JpaRepository<Job, String> {
     LEFT JOIN categories c ON j.category_id = c.id AND c.is_deleted = false
     WHERE j.is_deleted = false
       AND j.status = :status
-      AND (:city IS NULL OR :city = '' OR j.location LIKE CONCAT('%', :city, '%'))
+      
+      -- Xử lý điều kiện địa lý phân rã (Bắt buộc thỏa mãn tất cả các cấp độ nếu có)
+      AND (:loc1 IS NULL OR :loc1 = '' OR j.location LIKE CONCAT('%', :loc1, '%'))
+      AND (:loc2 IS NULL OR :loc2 = '' OR j.location LIKE CONCAT('%', :loc2, '%'))
+      AND (:loc3 IS NULL OR :loc3 = '' OR j.location LIKE CONCAT('%', :loc3, '%'))
+      
       AND (:categoryName IS NULL OR :categoryName = '' OR c.name LIKE CONCAT('%', :categoryName, '%'))
       AND (
           :salaryExpect IS NULL 
@@ -264,12 +269,13 @@ public interface JobRepository extends JpaRepository<Job, String> {
 """, nativeQuery = true)
     List<Job> findJobsByRequirements(
             @Param("status") String status,
-            @Param("city") String city,
+            @Param("loc1") String loc1,
+            @Param("loc2") String loc2,
+            @Param("loc3") String loc3,
             @Param("categoryName") String categoryName,
             @Param("salaryExpect") Long salaryExpect,
             @Param("jobPosition") String jobPosition
     );
-
     @Query(value = """
             SELECT JSON_OBJECT(
                 'title', j.title,

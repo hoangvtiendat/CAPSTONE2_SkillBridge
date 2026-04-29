@@ -183,60 +183,76 @@ OUTPUT (CHỈ JSON):
 }
 """;
     private static final String SEMANTIC_SEARCH = """
-VAI TRÒ BẮT BUỘC:
-Bạn là API trích xuất dữ liệu lõi của ứng dụng SkillBridge. Nhiệm vụ DUY NHẤT của bạn là phân tích [DỮ LIỆU ĐẦU VÀO] và trả về MỘT khối JSON hợp lệ. TUYỆT ĐỐI KHÔNG giải thích, KHÔNG thêm văn bản.
+VAI TRÒ:
+Bạn là một Robot xử lý chuỗi (String Processor). Nhiệm vụ của bạn là chuyển đổi dữ liệu đầu vào thành một JSON duy nhất, chính xác 100% theo định dạng yêu cầu.
 
-CẤU TRÚC JSON BẮT BUỘC (KHÓA CHẶT):
-Bạn CHỈ ĐƯỢC PHÉP trả về một JSON Object chứa ĐÚNG 5 keys sau đây. 
-LỆNH CẤM: TUYỆT ĐỐI KHÔNG ĐƯỢC TẠO KEY MỚI. TUYỆT ĐỐI KHÔNG ĐƯỢC LẤY LỜI NÓI CỦA USER LÀM TÊN KEY.
+QUY TẮC CỨNG (KHÔNG ĐƯỢC VI PHẠM):
+1. CHỈ TRẢ VỀ JSON: Không lời chào, không giải thích, không dùng dấu nháy ngược (```).
+2. GIÁ TRỊ NULL: Nếu không có dữ liệu cho một key, giá trị bắt buộc là null (không để trong ngoặc kép).
+3. KHÔNG TRÙNG KEY: Mỗi key chỉ xuất hiện đúng 1 lần.
 
-1. "city" (String/null):
-- Nếu User có nhắc địa điểm -> Lấy địa điểm đó.
-- Nếu User KHÔNG nhắc -> BẮT BUỘC lấy Tỉnh/Thành phố từ trường "location" trong CV (Dịch sang Tiếng Việt, xóa ngày tháng, số nhà).
+CÔNG THỨC TRÍCH XUẤT (MAPPING LOGIC):
+- "textOfAI": Ghi tóm tắt lý do chọn các giá trị dưới đây.
+- "city": Ưu tiên 1: Tên tỉnh/thành phố trong [YÊU CẦU TỪ NGƯỜI DÙNG]. Ưu tiên 2: Tỉnh/thành phố từ "location" trong [DỮ LIỆU CV HIỆN TẠI].
+- "salary_expect": Số tiền từ yêu cầu người dùng (ví dụ: "20 triệu" -> 20000000). Nếu không có -> null.
+- "category_name": Ngành nghề người dùng nhắc tới. Nếu không nhắc -> lấy "category" từ [DỮ LIỆU CV HIỆN TẠI].
+- "job_position": Vị trí cụ thể (Backend, Java Dev...). Nếu không nhắc -> null.
+- "search_query": ĐÂY LÀ CHUỖI TỔNG HỢP (PHẢI LÀ STRING PHẲNG, CẤM XUẤT HIỆN DẤU NGOẶC TRONG GIÁ TRỊ):
+    + Thành phần 1 (Đặc quyền): Tìm các từ như "du lịch", "máy tính", "onsite", "remote" trong yêu cầu người dùng.
+    + Thành phần 2 (Skills): Lấy TẤT CẢ "skills" từ [DỮ LIỆU CV HIỆN TẠI] nếu ngành là Công nghệ thông tin.
+    + CÁCH GHÉP: [Thành phần 1] + ", " + [Thành phần 2]. (Ví dụ: "du lịch, Triển khai Docker, Lập trình Java"). 
+    + LƯU Ý: Nếu người dùng tìm trái ngành với CV, KHÔNG lấy Thành phần 2.
 
-2. "salary_expect" (Integer/null): 
-- Số tiền User mong muốn.
-
-3. "category_name" (String/null): 
-- Ưu tiên User. Nếu User không nhập ngành -> BẮT BUỘC lấy "category" từ CV.
-
-4. "job_position" (String/null): 
-- Chức danh chuẩn hóa (Frontend, Backend...).
-
-5. "search_query" (String/null) - BẮT BUỘC ĐỌC KỸ LUẬT GÁN GIÁ TRỊ:
-- TRƯỜNG HỢP A (Có từ khóa cá nhân): Nếu câu của User có các từ ("phù hợp", "cho tôi", "theo CV") -> Gán giá trị bằng: [Yêu cầu của User] + [Các kỹ năng (skills) có trong CV].
-- TRƯỜNG HỢP B (Không có từ khóa cá nhân): -> Gán giá trị bằng: [Chỉ yêu cầu của User]. TUYỆT ĐỐI KHÔNG lấy CV.
-- LỆNH CẤM TẠI ĐÂY: KHÔNG ĐƯỢC bịa thêm chữ. KHÔNG lấy tên Key là "phù hợp". CHỈ ĐƯỢC dùng key "search_query".
-
-MẪU ĐẦU RA DUY NHẤT ĐƯỢC CHẤP NHẬN:
+CẤU TRÚC JSON MẪU (BẮT BUỘC):
 {
+  "textOfAI": "Trích xuất yêu cầu du lịch, lấy địa điểm và skill từ CV vì cùng ngành IT.",
   "city": "Đà Nẵng",
   "salary_expect": null,
   "category_name": "Công nghệ thông tin",
   "job_position": null,
-  "search_query": "được cấp máy tính, Triển khai Docker & Kubernetes, Hệ quản trị CSDL (MySQL, MongoDB), Lập trình Java (Spring Boot)"
+  "search_query": "du lịch, Triển khai Docker & Kubernetes, Hệ quản trị CSDL (MySQL, MongoDB), Lập trình Java (Spring Boot)"
 }
---- BẮT ĐẦU DỮ LIỆU ĐẦU VÀO ---
 """;
     private static final String SEMANTIC_SEARCH_2 = """
-VAI TRÒ:
-Bạn là hệ thống lọc dữ liệu logic. Nhiệm vụ: Đối soát [DANH SÁCH JD] với [YÊU CẦU NGƯỜI DÙNG] để tìm ra những JD thỏa mãn 100% điều kiện.
-
-QUY TRÌNH XỬ LÝ (BẮT BUỘC):
-1. Phân tách [YÊU CẦU NGƯỜI DÙNG] thành các tiêu chí riêng biệt (Ví dụ: "cấp máy tính" là tiêu chí A, "Java" là tiêu chí B...).
-2. Với mỗi JD, bạn phải tạo một "Bảng kiểm" ngầm:
-   - Nếu JD có nhắc đến "cấp máy tính" (Macbook, Laptop, thiết bị làm việc) -> ĐẠT tiêu chí A.
-   - Nếu JD có nhắc đến "Docker/Kubernetes" -> ĐẠT tiêu chí B.
-   ... (lặp lại cho mọi tiêu chí).
-3. LUẬT LOẠI TRỪ (STRICT AND): 
-   - Một JD CHỈ được đưa vào mảng "selected_ids" nếu nó ĐẠT TẤT CẢ các tiêu chí đã phân tách ở Bước 1.
-   - CHỈ CẦN THIẾU 1 TIÊU CHÍ (Ví dụ: có Java nhưng không nhắc đến việc cấp máy tính) -> LOẠI BỎ JD đó ngay lập tức.
-
-RÀNG BUỘC ĐẦU RA:
-- Trả về JSON Object duy nhất: { "selected_ids": [số_thứ_tự] }.
-- Không giải thích, không markdown. Nếu không có JD nào khớp 100%, trả về { "selected_ids": [] }.
-
---- DỮ LIỆU ĐỐI SOÁT ---
+            VAI TRÒ:
+            Bạn là BỘ LỌC DỮ LIỆU LOGIC TÀN NHẪN (Zero-Tolerance Evaluator). Nhiệm vụ của bạn là soi chiếu [DANH SÁCH JD] và đưa ra phán quyết "ĐẠT" hoặc "LOẠI" dựa trên chiến lược phân tích linh hoạt 100% khớp với [YÊU CẦU NGƯỜI DÙNG].
+            
+            QUY TẮC SINH TỬ (CƠ CHẾ RẼ NHÁNH PHÂN TÍCH):
+            Bước 1: Phân loại yêu cầu để chọn CHIẾN LƯỢC ĐÁNH GIÁ.
+            
+            > TRƯỜNG HỢP A (CHIẾN LƯỢC TÌM ĐẶC QUYỀN CỤ THỂ):\s
+            - Dấu hiệu: Nếu [YÊU CẦU NGƯỜI DÙNG] có nhắc đến các phúc lợi cụ thể (Ví dụ: "máy tính", "du lịch", "remote", "onsite"...).
+            - Hành động: BẠN PHẢI TẬP TRUNG ĐỘC TÔN vào từ khóa phúc lợi đó. TUYỆT ĐỐI BỎ QUA mọi kỹ năng IT (như Java, Docker, MySQL...) bị dính kèm trong chuỗi.
+            - Luật Pass: JD BẮT BUỘC phải có BẰNG CHỨNG NGHĨA ĐEN của phúc lợi đó (Ví dụ tìm "máy tính" thì JD phải có "laptop/macbook", không được nhầm với "hỗ trợ thủ tục").
+            
+            > TRƯỜNG HỢP B (CHIẾN LƯỢC TÌM VIỆC CHUNG CHUNG / KỸ NĂNG):
+            - Dấu hiệu: Nếu [YÊU CẦU NGƯỜI DÙNG] chỉ nói "tìm công việc phù hợp với tôi", "cho tôi" và đi kèm một danh sách các Kỹ năng.
+            - Hành động: BẠN PHẢI CHUYỂN SANG QUÉT KỸ NĂNG.\s
+            - Luật Pass (LỆNH NỚI LỎNG): KHÔNG BẮT BUỘC JD PHẢI CÓ TẤT CẢ KỸ NĂNG. CHỈ CẦN JD CHỨA ÍT NHẤT MỘT (>= 1) kỹ năng được nhắc đến trong yêu cầu -> LẬP TỨC CHO "ĐẠT". (Ví dụ: Yêu cầu có "Java, Docker", JD chỉ có "Java" -> Vẫn ĐẠT).
+            > TRƯỜNG HỢP C (KẾT HỢP ĐẶC QUYỀN & KỸ NĂNG - STRICT AND):
+                   - Dấu hiệu: Yêu cầu xuất hiện CẢ từ khóa phúc lợi (máy tính, du lịch...) LẪN các kỹ năng IT (do có chữ "phù hợp" bị nối đuôi).
+                   - Luật Pass: BẮT BUỘC THỎA MÃN ĐỒNG THỜI 2 ĐIỀU KIỆN:
+                     1. Phải có bằng chứng nghĩa đen về phúc lợi đó (Ví dụ: có "máy tính").
+                     2. Phải có ít nhất 1 (>= 1) kỹ năng IT khớp với yêu cầu.
+                     CHỈ CẦN THIẾU 1 TRONG 2 ĐIỀU KIỆN -> LẬP TỨC CHO "LOẠI". (Ví dụ: Có máy tính nhưng không khớp skill nào -> LOẠI. Khớp skill nhưng không cấp máy tính -> LOẠI).
+            
+            RÀNG BUỘC ĐẦU RA (TỐI QUAN TRỌNG):
+            - XUẤT RA DUY NHẤT 1 ĐỐI TƯỢNG JSON.
+            - NGHIÊM CẤM SỬ DỤNG MARKDOWN (Không được có ```json ở đầu và cuối).
+            - NGHIÊM CẤM IN RA BẤT KỲ VĂN BẢN NÀO NGOÀI JSON.
+            
+            ĐỊNH DẠNG JSON BẮT BUỘC:
+            {
+              "reasoning": {
+                "1": "JD [1] Thuộc TRƯỜNG HỢP A: Không có từ khóa 'máy tính', chỉ có 'hỗ trợ thủ tục' -> LOẠI",
+                "2": "JD [2] Thuộc TRƯỜNG HỢP B: Câu hỏi là tìm việc phù hợp. JD này có kỹ năng 'Java'. Thỏa mãn điều kiện có ít nhất 1 skill -> ĐẠT",
+                "3": "JD [3] Thuộc TRƯỜNG HỢP B: JD KHÔNG khớp bất kỳ kỹ năng nào trong danh sách yêu cầu -> LOẠI"
+              },
+              "selected_ids": [2]
+            }
+            (Lưu ý: Nếu tất cả JD đều thất bại, trả về "selected_ids": [])
+            --- DỮ LIỆU ĐỐI SOÁT ---
+            
 """;
 
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {

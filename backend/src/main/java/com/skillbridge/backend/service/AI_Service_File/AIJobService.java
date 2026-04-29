@@ -430,10 +430,10 @@ public class AIJobService {
 
             String promptTemplate = """
                     Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
-                    ... (Nội dung Prompt của bạn) ...
-                    [DANH SÁCH CATEGORY HỆ THỐNG]: %s
-                    [DỮ LIỆU CV HIỆN TẠI]: %s
-                    [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
+                    --- BẮT ĐẦU DỮ LIỆU ĐẦU VÀO ---                 
+                    + [DANH SÁCH CATEGORY HỆ THỐNG]: %s  
+                    + [DỮ LIỆU CV HIỆN TẠI]: %s 
+                    + [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"  
                     """;
 
             String requestForAI = String.format(promptTemplate, jsonStringCategory, jsonStringCandidate, requestOfCandidate);
@@ -446,8 +446,25 @@ public class AIJobService {
                     ? rootNode.get("category_name").asText() : null;
 
             // LẤY CITY
-            String city = (rootNode.has("city") && !rootNode.get("city").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("city").asText()))
+            String cityRaw = (rootNode.has("city") && !rootNode.get("city").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("city").asText()))
                     ? rootNode.get("city").asText() : null;
+
+            String loc1 = null;
+            String loc2 = null;
+            String loc3 = null;
+
+            if (cityRaw != null) {
+                String[] parts = cityRaw.split(",");
+                if (parts.length > 0 && !parts[0].trim().isEmpty()) {
+                    loc1 = parts[0].trim();
+                }
+                if (parts.length > 1 && !parts[1].trim().isEmpty()) {
+                    loc2 = parts[1].trim();
+                }
+                if (parts.length > 2 && !parts[2].trim().isEmpty()) {
+                    loc3 = parts[2].trim();
+                }
+            }
 
             // LẤY MỨC LƯƠNG
             Long salaryExpect = rootNode.path("salary_expect").isNull() ? null : rootNode.path("salary_expect").asLong();
@@ -463,12 +480,13 @@ public class AIJobService {
                 getPosition = getPosition.toLowerCase().replace(" ", "").replace("-", "").replace("_", "");
             }
 
-            System.out.println("Parsed -> salaryExpect: " + salaryExpect + " | categoryName: " + categoryName + " | city: " + city + " | jobPosition: " + getPosition);
 
             // GỌI REPOSITORY
             List<Job> jobsFromDb = jobRepository.findJobsByRequirements(
                     JobStatus.OPEN.name(),
-                    city,
+                    loc1,
+                    loc2,
+                    loc3,
                     categoryName,
                     salaryExpect,
                     getPosition
@@ -498,14 +516,17 @@ public class AIJobService {
                     ///  Dùng AI đọc LẠI List JD
                     ListJDFlowVector = jobScores.entrySet().stream()
                             .sorted(Map.Entry.<Job, Double>comparingByValue().reversed())
+                            .limit(8)
                             .peek(entry -> System.out.println("   + Job: " + entry.getKey().getTitle() + " - Score-Final: " + entry.getValue()))
                             .map(Map.Entry::getKey)
                             .collect(Collectors.toList());
 
+                    final List<Job> finalListForLambda = ListJDFlowVector;
+
                     ///  Chuyen lai sang Sitrng + Gán ID
-                    String JDListString = IntStream.range(0, ListJDFlowVector.size())
+                    String JDListString = IntStream.range(0, finalListForLambda.size())
                             .mapToObj(i -> {
-                                Job job = ListJDFlowVector.get(i);
+                                Job job = finalListForLambda.get(i);
                                 int displayID = i + 1;
                                 return String.format(
                                         "[%d] Công ty: %s | Vị trí: %s | Ngành: %s | Lương: %s-%s | Mô tả: %s",
@@ -530,6 +551,37 @@ public class AIJobService {
                     System.out.println("promptAICpromptAIChekRequesthekRequest" + promptAIChekRequest);
                     String aiFinalReSpond = aiService.Ai_OF_SKILLBRIDGE(promptAIChekRequest, 4);
                     System.out.println("aiFinalReSpond: " + aiFinalReSpond);
+                    /// --- Khu vực bóc tách ID Ảo của AI trả về ---
+                    try {
+                        JsonNode aiResultNode = objectMapper.readTree(aiFinalReSpond);
+
+                        if (aiResultNode.has("selected_ids") && aiResultNode.get("selected_ids").isArray()) {
+                            Set<Integer> selectedDisplayIds = new HashSet<>();
+                            for (JsonNode idNode : aiResultNode.get("selected_ids")) {
+                                selectedDisplayIds.add(idNode.asInt());
+                            }
+
+                            System.out.println("--> AI selected_ids: " + selectedDisplayIds);
+
+                            List<Job> filteredByAI = new ArrayList<>();
+                            for (int i = 0; i < ListJDFlowVector.size(); i++) {
+                                if (selectedDisplayIds.contains(i + 1)) {
+                                    filteredByAI.add(ListJDFlowVector.get(i));
+                                }
+                            }
+
+                            System.out.println("--> Sau AI filter: " + filteredByAI.size() + " jobs được giữ lại.");
+                            ListJDFlowVector = filteredByAI;
+
+                        } else {
+                            System.out.println("--> AI không trả về selected_ids → giữ nguyên " + ListJDFlowVector.size() + " jobs.");
+                        }
+
+                    } catch (Exception parseEx) {
+                        System.out.println("--> Lỗi parse aiFinalReSpond → fallback giữ nguyên danh sách.");
+                        parseEx.printStackTrace();
+                    }
+                ///  ---- End Boc tách
                 } catch (Exception e) {
                     System.out.println("Lỗi tạo vector hoặc so sánh Cosine");
                     e.printStackTrace();
