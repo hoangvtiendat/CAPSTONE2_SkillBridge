@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import companyService from '../../services/api/companyService';
 import './AdminMemberManager.css';
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { UserCheck, UserPlus, Shield, XCircle, CheckCircle, Phone, MapPin } from 'lucide-react';
 
 const AdminMemberManager = () => {
@@ -41,7 +41,6 @@ const AdminMemberManager = () => {
 
     return (
         <div className="member-manager-container">
-            <Toaster position="top-right" richColors />
 
             <div className="manager-header">
                 <div className="header-info">

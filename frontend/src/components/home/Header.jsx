@@ -56,64 +56,64 @@ const Header = () => {
   };
 
   return (
-      <header className="header">
-        <div className="header-container">
-          {/* Logo */}
-          <Link to="/" className="logo">
-            <img src="/logo.png" alt="SkillBridge logo" className="logo-img" />
-            <span className="logo-text">SkillBridge</span>
-          </Link>
+    <header className="header">
+      <div className="header-container">
+        {/* Logo */}
+        <Link to="/" className="logo">
+          <img src="/logo.png" alt="SkillBridge logo" className="logo-img" />
+          <span className="logo-text">SkillBridge</span>
+        </Link>
 
-          {/* Navigation */}
-          <nav className={`nav ${isMobileMenuOpen ? 'open' : ''}`}>
-            <Link to="/" className="nav-link">Trang Chủ</Link>
-            <a href="#job-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'job-grid')}>Tìm Việc Làm</a>
-            <a href="#company-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'company-grid')}>Công Ty</a>
-            <Link to="/about" className="nav-link">Về Chúng Tôi</Link>
-          </nav>
+        {/* Navigation */}
+        <nav className={`nav ${isMobileMenuOpen ? 'open' : ''}`}>
+          <Link to="/" className="nav-link">Trang Chủ</Link>
+          <a href="#job-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'job-grid')}>Tìm Việc Làm</a>
+          <a href="#company-grid" className="nav-link" onClick={(e) => handleNavClick(e, 'company-grid')}>Công Ty</a>
+          <Link to="/about" className="nav-link">Về Chúng Tôi</Link>
+        </nav>
 
-          {/* Auth Buttons */}
-          <div className="header-actions">
-            {user ? (
-                <div className="user-menu-container" ref={dropdownRef}>
-                  <div className="user-profile-wrapper">
-                    <div className="user-profile-link" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}>
-                      <img src={getImageUrl(user.avatar)} alt="Avatar" className="user-avatar" />
-                    </div>
-                    {/* Đã xoá nút invitation-btn ở đây */}
-                  </div>
-
-                  {isUserMenuOpen && (
-                      <div className="user-dropdown">
-                        <div className="user-info-mini">
-                          <span className="user-name">{user.name || "User"}</span>
-                          <span className="user-email">{user.email || ""}</span>
-                        </div>
-                        <div className="dropdown-divider"></div>
-                        <Link to="/profile" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
-                          Quản lý hồ sơ cá nhân
-                        </Link>
-                        <button className="user-dropdown-item logout-btn" onClick={handleLogout}>
-                          Đăng xuất
-                        </button>
-                      </div>
-                  )}
+        {/* Auth Buttons */}
+        <div className="header-actions">
+          {user ? (
+            <div className="user-menu-container" ref={dropdownRef}>
+              <div className="user-profile-wrapper">
+                <NotificationBell />
+                <div className="user-profile-link" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}>
+                  <img src={getImageUrl(user.avatar)} alt="Avatar" className="user-avatar" />
                 </div>
-            ) : (
-                <Link to="/login" className="btn-login">Tham gia</Link>
-            )}
-          </div>
+              </div>
 
-          <button
-              className={`mobile-menu-toggle ${isMobileMenuOpen ? 'open' : ''}`}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
+              {isUserMenuOpen && (
+                <div className="user-dropdown">
+                  <div className="user-info-mini">
+                    <span className="user-name">{user.name || "User"}</span>
+                    <span className="user-email">{user.email || ""}</span>
+                  </div>
+                  <div className="dropdown-divider"></div>
+                  <Link to="/profile" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                    Quản lý hồ sơ cá nhân
+                  </Link>
+                  <button className="user-dropdown-item logout-btn" onClick={handleLogout}>
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="btn-login">Tham gia</Link>
+          )}
         </div>
-      </header>
+
+        <button
+          className={`mobile-menu-toggle ${isMobileMenuOpen ? 'open' : ''}`}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </header>
   );
 };
 

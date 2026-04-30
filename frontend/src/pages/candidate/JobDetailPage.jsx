@@ -1,19 +1,18 @@
-import React, {useEffect, useState, useCallback} from 'react';
-import {useParams, useNavigate} from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import jobService from '../../services/api/jobService';
 import candidateService from '../../services/api/candidateService';
 import axios from 'axios';
-import {formatDistanceToNow} from 'date-fns';
-import {vi} from 'date-fns/locale';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import {
     MapPin, Banknote, Tag, Clock, ChevronLeft, Building2,
     Send, Sparkles, AlertCircle, X, FileText, CheckCircle2,
     Upload, Database, Edit3, Plus, Trash2, Save
 } from 'lucide-react';
 import './JobDetail.css';
-import {toast, Toaster} from 'sonner';
-import {useAuth} from '../../context/AuthContext';
-import Sidebar from "../../components/home/Sidebar";
+import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 
 const API_BASE_URL = "http://localhost:8081/identity";
 
@@ -23,8 +22,8 @@ const formatSalary = (amount) => {
 };
 
 const JobDetailPage = () => {
-    const {user} = useAuth();
-    const {jobId} = useParams();
+    const { user } = useAuth();
+    const { jobId } = useParams();
     const navigate = useNavigate();
 
     const [job, setJob] = useState(null);
@@ -136,19 +135,19 @@ const JobDetailPage = () => {
                     const fullCvUrl = `http://localhost:8081/identity${res.cvUrl}`;
                     try {
                         const fileResponse = await axios.get(fullCvUrl, {
-                            headers: {'Authorization': `Bearer ${token}`}, responseType: 'blob'
+                            headers: { 'Authorization': `Bearer ${token}` }, responseType: 'blob'
                         });
                         const fileName = res.cvUrl.split('/').pop();
-                        setCvFile(new File([fileResponse.data], fileName, {type: 'application/pdf'}));
+                        setCvFile(new File([fileResponse.data], fileName, { type: 'application/pdf' }));
                     } catch (fileErr) {
                         toast.error("Hệ thống tìm thấy hồ sơ nhưng không tải được file CV gốc.");
                     }
                 }
                 setShowConfirmModal(true);
-                toast.success("Đã nạp hồ sơ thành công!", {id: toastId});
+                toast.success("Đã nạp hồ sơ thành công!", { id: toastId });
             }
         } catch (error) {
-            toast.error("Bạn chưa có hồ sơ trên hệ thống. Vui lòng tải CV mới.", {id: toastId});
+            toast.error("Bạn chưa có hồ sơ trên hệ thống. Vui lòng tải CV mới.", { id: toastId });
             setApplyMethod('upload');
         }
     };
@@ -170,14 +169,14 @@ const JobDetailPage = () => {
                 setCvData({
                     name: res.name || '', description: res.description || '', address: res.address || '',
                     categoryId: res.categoryId || '', category: res.category || '',
-                    skills: res.skills?.map(s => ({skillId: s.skillId || null, skillName: s.skillName || s.name, experienceYears: s.experienceYears || 1})) || [],
+                    skills: res.skills?.map(s => ({ skillId: s.skillId || null, skillName: s.skillName || s.name, experienceYears: s.experienceYears || 1 })) || [],
                     degrees: res.degrees || [], experience: res.experience || []
                 });
                 setShowConfirmModal(true);
-                toast.success("AI đã phân tích xong!", {id: toastId});
+                toast.success("AI đã phân tích xong!", { id: toastId });
             }
         } catch (error) {
-            toast.error("AI lỗi phân tích, hãy nhập thủ công.", {id: toastId});
+            toast.error("AI lỗi phân tích, hãy nhập thủ công.", { id: toastId });
             setShowConfirmModal(true);
         } finally {
             setIsParsing(false);
@@ -198,7 +197,7 @@ const JobDetailPage = () => {
             parsedContent: { ...cvData, skills: cvData.skills.map(s => s.skillName) }
         };
 
-        data.append('request', new Blob([JSON.stringify(jsonRequest)], {type: 'application/json'}));
+        data.append('request', new Blob([JSON.stringify(jsonRequest)], { type: 'application/json' }));
         data.append('cv', cvFile);
 
         try {
@@ -206,10 +205,10 @@ const JobDetailPage = () => {
             await axios.post(`${API_BASE_URL}/jobs/${jobId}/apply`, data, {
                 headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` }
             });
-            toast.success("Ứng tuyển thành công!", {id: toastId});
+            toast.success("Ứng tuyển thành công!", { id: toastId });
             setShowApplyModal(false);
         } catch (error) {
-            toast.error(error.response?.data?.message || "Lỗi khi gửi hồ sơ.", {id: toastId});
+            toast.error(error.response?.data?.message || "Lỗi khi gửi hồ sơ.", { id: toastId });
         } finally {
             setSubmitting(false);
         }
@@ -231,7 +230,7 @@ const JobDetailPage = () => {
         try {
             // Bước 1: GET kết quả đánh giá cũ
             const response = await axios.get(`${API_BASE_URL}/evaluation/${jobId}`, {
-                headers: {'Authorization': `Bearer ${token}`}
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.data && response.data.result) {
@@ -270,11 +269,11 @@ const JobDetailPage = () => {
                     degrees: res.degrees || [],
                     experience: res.experience || []
                 });
-                toast.success("Nạp dữ liệu thành công!", {id: toastId});
+                toast.success("Nạp dữ liệu thành công!", { id: toastId });
                 setShowConfirmModal(true); // Hiển thị form cho user sửa
             }
-        } catch(e) {
-            toast.error("Bạn chưa có hồ sơ hệ thống. Hãy tải lên CV mới.", {id: toastId});
+        } catch (e) {
+            toast.error("Bạn chưa có hồ sơ hệ thống. Hãy tải lên CV mới.", { id: toastId });
         }
     };
 
@@ -294,14 +293,14 @@ const JobDetailPage = () => {
                 setCvData({
                     name: res.name || '', description: res.description || '', address: res.address || '',
                     categoryId: res.categoryId || '', category: res.categoryName || res.category || '',
-                    skills: res.skills?.map(s => ({skillId: s.skillId || null, skillName: s.skillName || s.name, experienceYears: s.experienceYears || 1})) || [],
+                    skills: res.skills?.map(s => ({ skillId: s.skillId || null, skillName: s.skillName || s.name, experienceYears: s.experienceYears || 1 })) || [],
                     degrees: res.degrees || [], experience: res.experience || []
                 });
-                toast.success("AI đã trích xuất xong!", {id: toastId});
+                toast.success("AI đã trích xuất xong!", { id: toastId });
                 setShowConfirmModal(true); // Hiển thị form cho user sửa
             }
         } catch (err) {
-            toast.error("Lỗi phân tích CV.", {id: toastId});
+            toast.error("Lỗi phân tích CV.", { id: toastId });
         }
     };
 
@@ -341,7 +340,7 @@ const JobDetailPage = () => {
             if (response.data && response.data.result) {
                 setAiResults(response.data.result);
                 setShowConfirmModal(false); // Đóng form confirm
-                toast.success("Đánh giá hoàn tất!", {id: toastId});
+                toast.success("Đánh giá hoàn tất!", { id: toastId });
                 setShowAIModal(true); // Mở Modal Show kết quả
             }
         } catch (error) {
@@ -352,7 +351,7 @@ const JobDetailPage = () => {
                     duration: 5000
                 });
             } else {
-                toast.error("Có lỗi xảy ra, vui lòng kiểm tra lại kết nối.", {id: toastId});
+                toast.error("Có lỗi xảy ra, vui lòng kiểm tra lại kết nối.", { id: toastId });
             }
         }
     };
@@ -360,24 +359,24 @@ const JobDetailPage = () => {
 
 
     // --- FORM HANDLERS (Chung cho Confirm Modal) ---
-    const updateField = (field, value) => setCvData(prev => ({...prev, [field]: value}));
+    const updateField = (field, value) => setCvData(prev => ({ ...prev, [field]: value }));
 
     const addDegree = (type) => setCvData(prev => ({
         ...prev, degrees: [...prev.degrees, type === 'DEGREE'
-            ? {id: Date.now(), type, degree: '', major: '', institution: '', graduationYear: ''}
-            : {id: Date.now(), type, name: '', year: ''}]
+            ? { id: Date.now(), type, degree: '', major: '', institution: '', graduationYear: '' }
+            : { id: Date.now(), type, name: '', year: '' }]
     }));
 
     const updateDegreeItem = (id, field, value) => setCvData(prev => ({
-        ...prev, degrees: prev.degrees.map(d => (d.id === id || d._id === id) ? {...d, [field]: value} : d)
+        ...prev, degrees: prev.degrees.map(d => (d.id === id || d._id === id) ? { ...d, [field]: value } : d)
     }));
 
     const addExperience = () => setCvData(prev => ({
-        ...prev, experience: [...prev.experience, {id: Date.now(), startDate: '', endDate: '', description: ''}]
+        ...prev, experience: [...prev.experience, { id: Date.now(), startDate: '', endDate: '', description: '' }]
     }));
 
     const updateExperience = (id, field, value) => setCvData(prev => ({
-        ...prev, experience: prev.experience.map(e => (e.id === id || e._id === id) ? {...e, [field]: value} : e)
+        ...prev, experience: prev.experience.map(e => (e.id === id || e._id === id) ? { ...e, [field]: value } : e)
     }));
 
     const handleAddSkill = () => {
@@ -405,10 +404,8 @@ const JobDetailPage = () => {
 
     return (
         <div className="candidate-job-detail-wrapper">
-            <Toaster position="top-right" richColors/>
-            <Sidebar/>
             <div className="container">
-                <button className="btn-back-nav" onClick={() => navigate(-1)}><ChevronLeft size={20}/> Quay lại</button>
+                <button className="btn-back-nav" onClick={() => navigate(-1)}><ChevronLeft size={20} /> Quay lại</button>
 
                 {/* Job Info Header */}
                 <div className="detail-card header-combined animate-in">
@@ -417,24 +414,24 @@ const JobDetailPage = () => {
                             <img src={job?.companyImageUrl ? `http://localhost:8081/identity${job.companyImageUrl}` : ''} alt="logo" className="company-logo-large" />
                             <div className="job-title-info">
                                 <h1>{job?.position}</h1>
-                                <p className="company-name-text" onClick={() => navigate(`/companies/${job.companyId}`)}><Building2 size={18}/> {job?.companyName}</p>
+                                <p className="company-name-text" onClick={() => navigate(`/companies/${job.companyId}`)}><Building2 size={18} /> {job?.companyName}</p>
                                 <div className="job-meta-tags">
-                                    <span><MapPin size={16}/> {job?.location}</span>
-                                    <span className="salary-tag"><Banknote size={16}/> {formatSalary(job.salaryMin)} - {formatSalary(job.salaryMax)}</span>
-                                    <span><Clock size={16}/> {job?.createdAt && formatDistanceToNow(new Date(job.createdAt), { locale: vi, addSuffix: true })}</span>
+                                    <span><MapPin size={16} /> {job?.location}</span>
+                                    <span className="salary-tag"><Banknote size={16} /> {formatSalary(job.salaryMin)} - {formatSalary(job.salaryMax)}</span>
+                                    <span><Clock size={16} /> {job?.createdAt && formatDistanceToNow(new Date(job.createdAt), { locale: vi, addSuffix: true })}</span>
                                 </div>
                             </div>
                         </div>
                         <div className="candidate-action-panel side-panel">
-                            <button className="btn-apply-primary" onClick={handleApplyClick}><Send size={18}/> ỨNG TUYỂN</button>
+                            <button className="btn-apply-primary" onClick={handleApplyClick}><Send size={18} /> ỨNG TUYỂN</button>
                             <button className="btn-ai-sparkle" onClick={handleAIEvaluation} disabled={loadingAI}>
-                                <Sparkles size={18}/> ĐÁNH GIÁ AI
+                                <Sparkles size={18} /> ĐÁNH GIÁ AI
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="detail-card section"><h3>Mô tả công việc</h3><p style={{whiteSpace: 'pre-line'}}>{job.description}</p></div>
+                <div className="detail-card section"><h3>Mô tả công việc</h3><p style={{ whiteSpace: 'pre-line' }}>{job.description}</p></div>
 
                 <div className="detail-grid">
                     {parsedData?.slice(1).map((sec, i) => (<div key={i} className="detail-card section animate-in">
@@ -447,20 +444,20 @@ const JobDetailPage = () => {
             {/* --- MODAL CHỌN OPTION ĐÁNH GIÁ AI MỚI --- */}
             {showAIOptionsModal && (
                 <div className="apply-modal-overlay">
-                    <div className="apply-modal-content animate-in" style={{maxWidth: '450px'}}>
+                    <div className="apply-modal-content animate-in" style={{ maxWidth: '450px' }}>
                         <div className="apply-modal-header border-b pb-3 mb-4">
                             <h2>Nguồn Dữ Liệu Đánh Giá</h2>
-                            <button className="close-x" onClick={() => setShowAIOptionsModal(false)}><X/></button>
+                            <button className="close-x" onClick={() => setShowAIOptionsModal(false)}><X /></button>
                         </div>
                         <p className="text-gray-600 mb-5 text-center">
                             Để AI có thể phân tích mức độ phù hợp, vui lòng cung cấp thông tin hồ sơ của bạn.
                         </p>
-                        <div className="apply-method-tabs" style={{flexDirection: 'column', gap: '12px'}}>
+                        <div className="apply-method-tabs" style={{ flexDirection: 'column', gap: '12px' }}>
                             <button className="tab-item w-full py-3 justify-center text-md font-medium" onClick={handleAIEvalSystemCV}>
-                                <Database size={20}/> Sử dụng CV từ hệ thống
+                                <Database size={20} /> Sử dụng CV từ hệ thống
                             </button>
-                            <label className="tab-item w-full py-3 justify-center text-md font-medium cursor-pointer" style={{margin: 0}}>
-                                <Upload size={20}/> Tải CV mới lên (PDF)
+                            <label className="tab-item w-full py-3 justify-center text-md font-medium cursor-pointer" style={{ margin: 0 }}>
+                                <Upload size={20} /> Tải CV mới lên (PDF)
                                 <input type="file" accept=".pdf" hidden onChange={handleAIEvalUploadCV} />
                             </label>
                         </div>
@@ -473,20 +470,20 @@ const JobDetailPage = () => {
                 <div className="apply-modal-content animate-in">
                     <div className="apply-modal-header">
                         <h2>Nộp hồ sơ ứng tuyển</h2>
-                        <button className="close-x" onClick={() => setShowApplyModal(false)}><X/></button>
+                        <button className="close-x" onClick={() => setShowApplyModal(false)}><X /></button>
                     </div>
 
                     <div className="apply-method-tabs">
                         <button className={`tab-item ${applyMethod === 'upload' ? 'active' : ''}`}
-                                onClick={() => {
-                                    setApplyMethod('upload');
-                                    setCvData({ name: '', description: '', address: '', categoryId: '', category: '', degrees: [], skills: [], experience: []});
-                                    setCvFile(null);
-                                }}>
-                            <Upload size={16}/> Tải CV mới
+                            onClick={() => {
+                                setApplyMethod('upload');
+                                setCvData({ name: '', description: '', address: '', categoryId: '', category: '', degrees: [], skills: [], experience: [] });
+                                setCvFile(null);
+                            }}>
+                            <Upload size={16} /> Tải CV mới
                         </button>
                         <button className={`tab-item ${applyMethod === 'existing' ? 'active' : ''}`} onClick={handleUseExistingCV}>
-                            <Database size={16}/> Dùng hồ sơ hệ thống
+                            <Database size={16} /> Dùng hồ sơ hệ thống
                         </button>
                     </div>
 
@@ -494,7 +491,7 @@ const JobDetailPage = () => {
                         <div className="form-grid">
                             <div className="input-group">
                                 <label>Số điện thoại liên hệ *</label>
-                                <input type="text" value={formData.numberPhone} onChange={(e) => setFormData({...formData, numberPhone: e.target.value})} required/>
+                                <input type="text" value={formData.numberPhone} onChange={(e) => setFormData({ ...formData, numberPhone: e.target.value })} required />
                             </div>
 
                             <div className="input-group">
@@ -502,26 +499,26 @@ const JobDetailPage = () => {
                                 {isParsing ? (<div className="cv-status-box loading"><div className="mini-loader"></div><span>AI đang trích xuất dữ liệu...</span></div>) :
                                     cvData.name ? (
                                         <div className="cv-status-box loaded">
-                                            <FileText size={18}/>
+                                            <FileText size={18} />
                                             <div className="cv-info-mini">
                                                 <span className="cv-name-display">{cvData.name}</span>
                                                 <span className="cv-status-text">Đã sẵn sàng</span>
                                             </div>
                                             <button type="button" onClick={() => setShowConfirmModal(true)} className="btn-re-edit" title="Chỉnh sửa thông tin">
-                                                <Edit3 size={14}/> Sửa
+                                                <Edit3 size={14} /> Sửa
                                             </button>
                                             {applyMethod === 'upload' && (<label htmlFor="cv-input" className="btn-change-file"> Đổi file</label>)}
                                         </div>) : (
                                         <label htmlFor="cv-input" className="btn-trigger-upload-full">
-                                            <Upload size={20}/><span>Nhấn để tải lên CV (PDF)</span>
+                                            <Upload size={20} /><span>Nhấn để tải lên CV (PDF)</span>
                                         </label>)}
-                                <input type="file" id="cv-input" accept=".pdf" onChange={handleFileChange} hidden/>
+                                <input type="file" id="cv-input" accept=".pdf" onChange={handleFileChange} hidden />
                             </div>
                         </div>
 
-                        <div className="input-group full-width" style={{width: "100%", marginTop: '15px'}}>
+                        <div className="input-group full-width" style={{ width: "100%", marginTop: '15px' }}>
                             <label>Thư giới thiệu</label>
-                            <textarea rows="3" placeholder="Lời nhắn gửi đến nhà tuyển dụng..." value={formData.recommendationLetter} onChange={(e) => setFormData({...formData, recommendationLetter: e.target.value})}></textarea>
+                            <textarea rows="3" placeholder="Lời nhắn gửi đến nhà tuyển dụng..." value={formData.recommendationLetter} onChange={(e) => setFormData({ ...formData, recommendationLetter: e.target.value })}></textarea>
                         </div>
 
                         <div className="modal-actions">
@@ -538,7 +535,7 @@ const JobDetailPage = () => {
                 <div className="ai-modal-content wide-modal animate-in liquid-glass scrollable-modal">
                     <div className="ai-modal-header">
                         <div className="header-title">
-                            <CheckCircle2 className="text-green-500" size={24}/>
+                            <CheckCircle2 className="text-green-500" size={24} />
                             <div>
                                 <h2>Xác nhận hồ sơ</h2>
                                 <p className="text-sm text-gray-500">
@@ -546,7 +543,7 @@ const JobDetailPage = () => {
                                 </p>
                             </div>
                         </div>
-                        <button className="close-x" onClick={() => setShowConfirmModal(false)}><X/></button>
+                        <button className="close-x" onClick={() => setShowConfirmModal(false)}><X /></button>
                     </div>
 
                     <div className="ai-modal-body">
@@ -555,11 +552,11 @@ const JobDetailPage = () => {
                             <h3 className="confirm-section-title">Thông tin chung</h3>
                             <div className="confirm-flex-container">
                                 <div className="confirm-flex-row">
-                                    <div className="input-group flex-1"><label>Họ tên</label><input value={cvData.name} onChange={e => updateField('name', e.target.value)}/></div>
-                                    <div className="input-group flex-1"><label>Địa chỉ</label><input value={cvData.address} onChange={e => updateField('address', e.target.value)}/></div>
+                                    <div className="input-group flex-1"><label>Họ tên</label><input value={cvData.name} onChange={e => updateField('name', e.target.value)} /></div>
+                                    <div className="input-group flex-1"><label>Địa chỉ</label><input value={cvData.address} onChange={e => updateField('address', e.target.value)} /></div>
                                 </div>
                                 <div className="confirm-flex-row full-width">
-                                    <div className="input-group full-width"><label>Mô tả bản thân</label><textarea rows={3} value={cvData.description} onChange={e => updateField('description', e.target.value)}/></div>
+                                    <div className="input-group full-width"><label>Mô tả bản thân</label><textarea rows={3} value={cvData.description} onChange={e => updateField('description', e.target.value)} /></div>
                                 </div>
                             </div>
                         </div>
@@ -568,19 +565,19 @@ const JobDetailPage = () => {
                         <div className="confirm-section">
                             <div className="flex justify-between items-center mb-3">
                                 <h3 className="confirm-section-title">Bằng cấp & Học vấn</h3>
-                                <button className="btn-add-mini" onClick={() => addDegree('DEGREE')}><Plus size={14}/> Thêm</button>
+                                <button className="btn-add-mini" onClick={() => addDegree('DEGREE')}><Plus size={14} /> Thêm</button>
                             </div>
                             {cvData.degrees.filter(d => d.type === 'DEGREE').map((item, idx) => (
                                 <div key={idx} className="confirm-item-card">
-                                    <button className="remove-item-btn" onClick={() => setCvData(p => ({...p, degrees: p.degrees.filter(d => d !== item)}))}><Trash2 size={14}/></button>
+                                    <button className="remove-item-btn" onClick={() => setCvData(p => ({ ...p, degrees: p.degrees.filter(d => d !== item) }))}><Trash2 size={14} /></button>
                                     <div className="confirm-flex-container">
                                         <div className="confirm-flex-row">
-                                            <div className="input-group flex-1"><label>Trường</label><input value={item.institution} onChange={e => updateDegreeItem(item.id || item._id, 'institution', e.target.value)}/></div>
-                                            <div className="input-group flex-1"><label>Chuyên ngành</label><input value={item.major} onChange={e => updateDegreeItem(item.id || item._id, 'major', e.target.value)}/></div>
+                                            <div className="input-group flex-1"><label>Trường</label><input value={item.institution} onChange={e => updateDegreeItem(item.id || item._id, 'institution', e.target.value)} /></div>
+                                            <div className="input-group flex-1"><label>Chuyên ngành</label><input value={item.major} onChange={e => updateDegreeItem(item.id || item._id, 'major', e.target.value)} /></div>
                                         </div>
                                         <div className="confirm-flex-row">
-                                            <div className="input-group flex-1"><label>Bằng cấp</label><input value={item.degree} onChange={e => updateDegreeItem(item.id || item._id, 'degree', e.target.value)}/></div>
-                                            <div className="input-group flex-1"><label>Năm tốt nghiệp</label><input type="number" value={item.graduationYear} onChange={e => updateDegreeItem(item.id || item._id, 'graduationYear', e.target.value)}/></div>
+                                            <div className="input-group flex-1"><label>Bằng cấp</label><input value={item.degree} onChange={e => updateDegreeItem(item.id || item._id, 'degree', e.target.value)} /></div>
+                                            <div className="input-group flex-1"><label>Năm tốt nghiệp</label><input type="number" value={item.graduationYear} onChange={e => updateDegreeItem(item.id || item._id, 'graduationYear', e.target.value)} /></div>
                                         </div>
                                     </div>
                                 </div>))}
@@ -590,17 +587,17 @@ const JobDetailPage = () => {
                         <div className="confirm-section">
                             <div className="flex justify-between items-center mb-3">
                                 <h3 className="confirm-section-title">Kinh nghiệm làm việc</h3>
-                                <button className="btn-add-mini" onClick={addExperience}><Plus size={14}/> Thêm</button>
+                                <button className="btn-add-mini" onClick={addExperience}><Plus size={14} /> Thêm</button>
                             </div>
                             {cvData.experience.map((item, idx) => (<div key={idx} className="confirm-item-card">
-                                <button className="remove-item-btn" onClick={() => setCvData(p => ({...p, experience: p.experience.filter(e => e !== item)}))}><Trash2 size={14}/></button>
+                                <button className="remove-item-btn" onClick={() => setCvData(p => ({ ...p, experience: p.experience.filter(e => e !== item) }))}><Trash2 size={14} /></button>
                                 <div className="confirm-flex-container">
                                     <div className="confirm-flex-row">
-                                        <div className="input-group flex-1"><label>Bắt đầu</label><input type="date" value={item.startDate} onChange={e => updateExperience(item.id || item._id, 'startDate', e.target.value)}/></div>
-                                        <div className="input-group flex-1"><label>Kết thúc</label><input type="date" value={item.endDate || ''} onChange={e => updateExperience(item.id || item._id, 'endDate', e.target.value)}/></div>
+                                        <div className="input-group flex-1"><label>Bắt đầu</label><input type="date" value={item.startDate} onChange={e => updateExperience(item.id || item._id, 'startDate', e.target.value)} /></div>
+                                        <div className="input-group flex-1"><label>Kết thúc</label><input type="date" value={item.endDate || ''} onChange={e => updateExperience(item.id || item._id, 'endDate', e.target.value)} /></div>
                                     </div>
                                     <div className="confirm-flex-row full-width">
-                                        <div className="input-group full-width"><label>Chi tiết công việc</label><textarea rows={2} value={item.description} onChange={e => updateExperience(item.id || item._id, 'description', e.target.value)}/></div>
+                                        <div className="input-group full-width"><label>Chi tiết công việc</label><textarea rows={2} value={item.description} onChange={e => updateExperience(item.id || item._id, 'description', e.target.value)} /></div>
                                     </div>
                                 </div>
                             </div>))}
@@ -612,21 +609,21 @@ const JobDetailPage = () => {
                             <div className="confirm-skills-wrap">
                                 {cvData.skills.map((s, idx) => (
                                     <span key={idx} className="confirm-skill-tag">
-                                    {s.skillName} ({s.experienceYears}n)
-                                    <button type="button" onClick={() => setCvData(p => ({...p, skills: p.skills.filter((_, i) => i !== idx)}))}><X size={12}/></button>
-                                </span>
+                                        {s.skillName} ({s.experienceYears}n)
+                                        <button type="button" onClick={() => setCvData(p => ({ ...p, skills: p.skills.filter((_, i) => i !== idx) }))}><X size={12} /></button>
+                                    </span>
                                 ))}
                             </div>
-                            <div className="confirm-flex-row mt-3 skill-input-row" style={{alignItems: 'flex-end'}}>
+                            <div className="confirm-flex-row mt-3 skill-input-row" style={{ alignItems: 'flex-end' }}>
                                 <div className="input-group flex-1">
                                     <label>Tên kỹ năng</label>
-                                    <input className="skill-input-mini" placeholder="Ví dụ: Java, Photoshop..." value={newSkillName} onChange={e => setNewSkillName(e.target.value)} onKeyDown={addSkill}/>
+                                    <input className="skill-input-mini" placeholder="Ví dụ: Java, Photoshop..." value={newSkillName} onChange={e => setNewSkillName(e.target.value)} onKeyDown={addSkill} />
                                 </div>
-                                <div className="input-group" style={{width: '80px'}}>
+                                <div className="input-group" style={{ width: '80px' }}>
                                     <label>Số năm</label>
-                                    <input type="number" className="skill-year-mini" value={newSkillExp} onChange={e => setNewSkillExp(e.target.value)} min={1}/>
+                                    <input type="number" className="skill-year-mini" value={newSkillExp} onChange={e => setNewSkillExp(e.target.value)} min={1} />
                                 </div>
-                                <button type="button" className="btn-add-skill-action" onClick={handleAddSkill}><Plus size={18}/> Thêm</button>
+                                <button type="button" className="btn-add-skill-action" onClick={handleAddSkill}><Plus size={18} /> Thêm</button>
                             </div>
                         </div>
                     </div>
@@ -635,11 +632,11 @@ const JobDetailPage = () => {
                         {/* Render nút Đóng tuỳ Context */}
                         {confirmContext === 'apply' ? (
                             <button className="btn-confirm-save" onClick={() => setShowConfirmModal(false)}>
-                                <Save size={18}/> LƯU & QUAY LẠI ỨNG TUYỂN
+                                <Save size={18} /> LƯU & QUAY LẠI ỨNG TUYỂN
                             </button>
                         ) : (
-                            <button className="btn-confirm-save" onClick={submitAIEvaluation} style={{background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none'}}>
-                                <Sparkles size={18}/> TIẾN HÀNH ĐÁNH GIÁ AI
+                            <button className="btn-confirm-save" onClick={submitAIEvaluation} style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none' }}>
+                                <Sparkles size={18} /> TIẾN HÀNH ĐÁNH GIÁ AI
                             </button>
                         )}
                     </div>
@@ -652,7 +649,7 @@ const JobDetailPage = () => {
                     <div className="ai-modal-content animate-in">
                         <div className="ai-modal-header">
                             <h2>Đánh giá AI</h2>
-                            <button className="close-x" onClick={() => setShowAIModal(false)}><X/></button>
+                            <button className="close-x" onClick={() => setShowAIModal(false)}><X /></button>
                         </div>
 
                         <div className="ai-modal-body">
@@ -667,24 +664,24 @@ const JobDetailPage = () => {
                                 alignItems: 'center',
                                 gap: '10px'
                             }}>
-                                <Sparkles size={24}/>
+                                <Sparkles size={24} />
                                 Điểm phù hợp: {aiResults.matchScore} / 10
                             </div>
 
                             <div className="ai-section">
                                 <h4>Điểm mạnh</h4>
-                                <p style={{lineHeight: '1.6'}}>
+                                <p style={{ lineHeight: '1.6' }}>
                                     {aiResults.strengths?.split(/\\n|\n/).map((line, idx) => (
-                                        <React.Fragment key={idx}>{line}<br/></React.Fragment>
+                                        <React.Fragment key={idx}>{line}<br /></React.Fragment>
                                     ))}
                                 </p>
                             </div>
 
                             <div className="ai-section">
                                 <h4>Điểm yếu</h4>
-                                <p style={{lineHeight: '1.6'}}>
+                                <p style={{ lineHeight: '1.6' }}>
                                     {aiResults.weaknesses?.split(/\\n|\n/).map((line, idx) => (
-                                        <React.Fragment key={idx}>{line}<br/></React.Fragment>
+                                        <React.Fragment key={idx}>{line}<br /></React.Fragment>
                                     ))}
                                 </p>
                             </div>
@@ -692,13 +689,13 @@ const JobDetailPage = () => {
                             <div className="ai-section">
                                 <h4>Lộ trình cải thiện (Roadmap)</h4>
                                 {aiResults.roadmap?.map((item, index) => (
-                                    <div key={index} className="roadmap-item" style={{background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid #6366f1'}}>
-                                        <h5 style={{color: '#1e293b', marginBottom: '5px', fontSize: '15px'}}>
-                                            {item.title} <span style={{fontSize: '12px', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', marginLeft: '5px'}}>{item.priority}</span>
+                                    <div key={index} className="roadmap-item" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid #6366f1' }}>
+                                        <h5 style={{ color: '#1e293b', marginBottom: '5px', fontSize: '15px' }}>
+                                            {item.title} <span style={{ fontSize: '12px', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', marginLeft: '5px' }}>{item.priority}</span>
                                         </h5>
-                                        <p style={{fontSize: '14px', color: '#475569', marginBottom: '8px'}}>{item.description}</p>
-                                        <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748b'}}>
-                                            <span><Clock size={12} className="inline mr-1"/> {item.duration}</span>
+                                        <p style={{ fontSize: '14px', color: '#475569', marginBottom: '8px' }}>{item.description}</p>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748b' }}>
+                                            <span><Clock size={12} className="inline mr-1" /> {item.duration}</span>
                                         </div>
                                     </div>
                                 ))}

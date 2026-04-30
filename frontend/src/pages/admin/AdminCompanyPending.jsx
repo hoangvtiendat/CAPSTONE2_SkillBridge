@@ -3,7 +3,7 @@ import companyService from '../../services/api/companyService';
 import './AdminCompanyPending.css';
 import '../../components/admin/Admin.css';
 import { useNavigate } from 'react-router-dom';
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import {
     Building2, RotateCcw, ShieldCheck, CheckCircle,
     Globe, Hash, ChevronLeft, ChevronRight, XCircle
@@ -73,7 +73,6 @@ const AdminCompanyPending = () => {
 
     return (
         <div className="admin-pending-container animate-fade-in">
-            <Toaster position="top-right" richColors />
 
             <div className="admin-pending-header">
                 <div className="header-left">

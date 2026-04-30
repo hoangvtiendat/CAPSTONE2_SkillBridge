@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import jobService from '../../services/api/jobService';
 import companyMemberService from '../../services/api/companyMemberService';
@@ -130,7 +130,7 @@ const JdList = () => {
     const filteredJdList = jdList.filter(jd => {
         const search = searchTerm.toLowerCase();
         return (jd.position?.toLowerCase().includes(search) ||
-                jd.company?.name?.toLowerCase().includes(search)) &&
+            jd.company?.name?.toLowerCase().includes(search)) &&
             (statusFilter === 'ALL' || jd.status === statusFilter);
     });
 
@@ -159,7 +159,6 @@ const JdList = () => {
 
     return (
         <main className="jd-list-container">
-            <Toaster richColors position="top-right" />
 
             <div className="jd-page-header">
                 <div>
@@ -222,7 +221,7 @@ const JdList = () => {
                                                 alt="logo"
                                                 onError={(e) => e.target.src = 'https://via.placeholder.com/100'}
                                             />
-                                            </div>
+                                        </div>
                                         <div className="title-box">
                                             <h2 className="position-title">{jd.position}</h2>
                                             <span className={`status-badge ${jd.status}`}>{STATUS_LABELS[jd.status] || jd.status}</span>
@@ -246,8 +245,8 @@ const JdList = () => {
 
                                                     return (
                                                         <span key={`${jd.id}-skill-${index}`} className="skill-tag">
-                                                        {skillLabel}
-                                                    </span>
+                                                            {skillLabel}
+                                                        </span>
                                                     );
                                                 })}
 

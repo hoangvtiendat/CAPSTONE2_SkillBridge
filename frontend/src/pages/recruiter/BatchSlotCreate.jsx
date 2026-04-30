@@ -4,7 +4,7 @@ import {
     ListChecks, Users, Settings2, UserPlus, UserMinus, ArrowLeft,
     X, Edit3, Lock, Eye
 } from 'lucide-react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import interviewService from '../../services/api/interviewService';
 import './BatchSlotCreate.css';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -91,7 +91,7 @@ const BatchSlotCreate = () => {
 
                         if (freshSlotData) {
                             console.log("Realtime: Cập nhật trực tiếp dữ liệu Modal cho slot:", slotId);
-                            setSelectedSlot({...freshSlotData});
+                            setSelectedSlot({ ...freshSlotData });
                             interviewService.getCandidatesBySlot(slotId)
                                 .then(res => setCandidates(res.result || []))
                                 .catch(err => console.error("Lỗi cập nhật ứng viên:", err));
@@ -357,7 +357,6 @@ const BatchSlotCreate = () => {
 
     return (
         <div className="batch-slot-container">
-            <Toaster richColors position="top-right" />
             <div className="batch-slot-grid">
                 <div className="batch-slot-main-card">
                     <div className="card-header-simple">
@@ -379,7 +378,7 @@ const BatchSlotCreate = () => {
                             </div>
                         </div>
 
-                        <div className="input-field-group" style={{marginTop: '12px'}}>
+                        <div className="input-field-group" style={{ marginTop: '12px' }}>
                             <label><MapPin size={14} /> Địa điểm</label>
                             <input type="text" value={locationLink} onChange={(e) => setLocationLink(e.target.value)} placeholder="Địa điểm mặc định..." />
                         </div>
@@ -455,10 +454,10 @@ const BatchSlotCreate = () => {
                                 onClick={() => setStatusFilter(id)}
                             >
                                 {id === 'ALL' ? 'Tất cả' :
-                                 id === 'EMPTY' ? 'Trống' :
-                                 id === 'AVAILABLE' ? 'Còn chỗ' :
-                                 id === 'FULL' ? 'Đầy' :
-                                 id === 'LOCKED' ? 'Đã khóa' : 'Hết hạn'}
+                                    id === 'EMPTY' ? 'Trống' :
+                                        id === 'AVAILABLE' ? 'Còn chỗ' :
+                                            id === 'FULL' ? 'Đầy' :
+                                                id === 'LOCKED' ? 'Đã khóa' : 'Hết hạn'}
                             </button>
                         ))}
                     </div>
@@ -474,7 +473,7 @@ const BatchSlotCreate = () => {
                                     <div key={idx}
                                         className={`existing-slot-item ${isFull ? 'booked-row' : ''} ${isExpired ? 'expired-row' : ''}`}
                                         onClick={() => handleOpenDetail(item)}
-                                        style={{cursor: 'pointer'}}>
+                                        style={{ cursor: 'pointer' }}>
                                         <div className="slot-info-main">
                                             <div className="slot-date-badge">{new Date(item.startTime).toLocaleDateString('vi-VN')}</div>
                                             <div className="slot-time-range"><Clock size={12} /> {item.startTime.split('T')[1].substring(0, 5)} - {item.endTime.split('T')[1].substring(0, 5)}</div>
@@ -538,8 +537,8 @@ const BatchSlotCreate = () => {
                                     <label>Thời gian:</label>
                                     {editMode ? (
                                         <div className="edit-time-group">
-                                            <input type="date" value={editData.date} onChange={e => setEditData({...editData, date: e.target.value})} />
-                                            <input type="time" value={editData.time} onChange={e => setEditData({...editData, time: e.target.value})} />
+                                            <input type="date" value={editData.date} onChange={e => setEditData({ ...editData, date: e.target.value })} />
+                                            <input type="time" value={editData.time} onChange={e => setEditData({ ...editData, time: e.target.value })} />
                                         </div>
                                     ) : (
                                         <span>{new Date(selectedSlot.startTime).toLocaleString('vi-VN')}</span>
@@ -548,7 +547,7 @@ const BatchSlotCreate = () => {
                                 <div className="info-item full-width">
                                     <label>Địa điểm:</label>
                                     {editMode ? (
-                                        <input type="text" value={editData.locationLink} onChange={e => setEditData({...editData, locationLink: e.target.value})} />
+                                        <input type="text" value={editData.locationLink} onChange={e => setEditData({ ...editData, locationLink: e.target.value })} />
                                     ) : (
                                         <span className="text-truncate">{selectedSlot.locationLink || "Chưa cập nhật"}</span>
                                     )}
@@ -556,7 +555,7 @@ const BatchSlotCreate = () => {
                                 <div className="info-item full-width">
                                     <label>Ghi chú:</label>
                                     {editMode ? (
-                                        <textarea value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})} />
+                                        <textarea value={editData.description} onChange={e => setEditData({ ...editData, description: e.target.value })} />
                                     ) : (
                                         <p>{selectedSlot.description || "Không có ghi chú"}</p>
                                     )}
