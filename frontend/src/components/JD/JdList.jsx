@@ -22,7 +22,7 @@ const STATUS_LABELS = {
 
 const JdList = () => {
     const { user, token } = useAuth();
-    const ITEMS_PER_PAGE = 8;
+    const ITEMS_PER_PAGE = 6;
 
     const [jdList, setJdList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -82,6 +82,21 @@ const JdList = () => {
         fetchJdList();
         fetchRole();
     }, [fetchJdList, fetchRole]);
+
+    // Listen for real-time JD status updates
+    useEffect(() => {
+        const handler = (e) => {
+            try {
+                const { jdId, status } = e.detail || {};
+                if (!jdId) return;
+                setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status } : jd));
+            } catch (err) {
+                console.warn('Error handling jdStatusUpdated', err);
+            }
+        };
+        window.addEventListener('jdStatusUpdated', handler);
+        return () => window.removeEventListener('jdStatusUpdated', handler);
+    }, []);
 
     /* ================= ACTIONS ================= */
 

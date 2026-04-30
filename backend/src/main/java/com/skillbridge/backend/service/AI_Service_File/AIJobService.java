@@ -218,6 +218,7 @@ public class AIJobService {
     @Async
     @Transactional
     public void ai_Check_Approval (String idJD){
+        JobStatus finalStatus = null;
 
         try {
 
@@ -289,16 +290,16 @@ public class AIJobService {
                 );
                 job.setModerationStatus(ModerationStatus.RED);
                 job.setStatus(JobStatus.LOCK);
-
-                notificationService.createNotification(
+                finalStatus = JobStatus.LOCK;
+                notificationService.notificationForAiCheckTrafficLight(
                         receiver,
                         null,
+                        idJD,
+                        finalStatus,
                         subject,
                         messageBody,
-                        "JOB_MODERATION_FAILED",
-                        "/detail-jd/idJD",
-                        true
-
+                        true,
+                        "JOB_MODERATION_FAILED"
                 );
             }
 
@@ -322,6 +323,7 @@ public class AIJobService {
                     job.setStartDate(date.atStartOfDay());
                     job.setEndDate(endDate.atStartOfDay());
                     job.setStatus(JobStatus.OPEN);
+                    finalStatus = JobStatus.OPEN;
                 }
                 else if(result == 2){
                     messageBody = String.format(
@@ -337,6 +339,7 @@ public class AIJobService {
                             job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.YELLOW);
+                    finalStatus = JobStatus.OPEN;
 
                 }
                 else if (result == 3) {
@@ -354,19 +357,20 @@ public class AIJobService {
                     );
                     job.setModerationStatus(ModerationStatus.RED);
                     job.setStatus(JobStatus.PENDING);
-
+                    finalStatus = JobStatus.PENDING;
                 }
                 if (!messageBody.isEmpty()) {
                     jobRepository.save(job);
 
-                    notificationService.createNotification(
+                    notificationService.notificationForAiCheckTrafficLight(
                             receiver,
                             null,
+                            idJD,
+                            finalStatus,
                             subject,
                             messageBody,
-                            "JOB_MODERATION_FAILED",
-                            "/detail-jd/idJD",
-                            true
+                            true,
+                            "JOB_MODERATION_FAILED"
                     );
                 }
             }
@@ -383,14 +387,13 @@ public class AIJobService {
     ///  Tìm Job theo ngữ nghĩa
     @Transactional
     public List<JobSemanticSearchResponse> findJobBySemanticSearch(String requestOfCandidate)
-    {// ... [Các code setup phía trên giữ nguyên] ...
+    {
         ObjectMapper objectMapper = new ObjectMapper();
 
         try {
             String idOfUser = securityUtils.getCurrentUserId();
             UpdateCandidateCvResponse cv = candidateService.getCV_searchsenematic(idOfUser);
 
-            List<String> listTagName = jdTagRepository.findAllTagNames();
 
             System.out.println("CV: " + cv);
 
