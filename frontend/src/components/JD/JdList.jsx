@@ -87,9 +87,12 @@ const JdList = () => {
     useEffect(() => {
         const handler = (e) => {
             try {
-                const { jdId, status } = e.detail || {};
-                if (!jdId) return;
-                setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status } : jd));
+                const { objId, status } = e.detail || {};
+                if (!objId) return;
+                setJdList(prev => prev.map(jd => {
+                    const jdId = String(jd.id || jd._id || '');
+                    return jdId === String(objId) ? { ...jd, status } : jd;
+                }));
             } catch (err) {
                 console.warn('Error handling jdStatusUpdated', err);
             }

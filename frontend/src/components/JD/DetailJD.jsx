@@ -139,6 +139,23 @@ const DetailJD = () => {
         checkAppliedStatus();
     }, [id, fetchJdDetail, checkAppliedStatus]);
 
+    useEffect(() => {
+        const handler = (e) => {
+            try {
+                const { objId } = e.detail || {};
+                if (!objId) return;
+                if (String(objId) === String(id)) {
+                    fetchJdDetail();
+                }
+            } catch (err) {
+                console.warn('Error handling jdStatusUpdated in DetailJD', err);
+            }
+        };
+
+        window.addEventListener('jdStatusUpdated', handler);
+        return () => window.removeEventListener('jdStatusUpdated', handler);
+    }, [id, fetchJdDetail]);
+
     const getListCategories = async () => {
         try {
             const response = await categoryJDService.getListCategories();

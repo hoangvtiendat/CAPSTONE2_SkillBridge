@@ -111,7 +111,7 @@ function App() {
                 heartbeatOutgoing: 4000,
             });
 
-            stompClient.onConnect = (frame) => {
+            stompClient.onConnect = () => {
                 stompClient.subscribe('/user/queue/notifications', (message) => {
                     const notification = JSON.parse(message.body);
                     toast.custom((t) => (
@@ -124,32 +124,32 @@ function App() {
                         />
                     ), { duration: 10000 });
 
-                    // Phát sự kiện toàn hệ thống để các component khác (như NotificationBell) cập nhật
                     window.dispatchEvent(new CustomEvent('NEW_NOTIFICATION', { detail: notification }));
                 });
-            };
-              stompClient.onConnect = (frame) => {
+
                 stompClient.subscribe('/user/queue/Notification_JD', (message) => {
                     const notification = JSON.parse(message.body);
+                    const jdObjId = notification.objId || notification.objID || notification.objIdString || notification.obj_id || notification.id;
+                    const jdStatus = notification.status || notification.jobStatus || notification.state || null;
+
                     toast.custom((t) => (
                         <NotificationCard
                             t={t}
                             title={notification.title}
-                            content={notification.message}
-                            idJD = {notification.objId}
-                            status = {notification.status}
+                            content={notification.message || notification.content}
+                            idJD={jdObjId}
+                            status={jdStatus}
                             navigate={navigate}
                         />
                     ), { duration: 10000 });
 
-                    // Emit a global event so other components (JD list/detail) can react
-                    try {
-                        const jdId = notification.objId || notification.objID || notification.objIdString || notification.obj_id;
-                        const status = notification.status || notification.jobStatus || notification.state || null;
-                        window.dispatchEvent(new CustomEvent('jdStatusUpdated', { detail: { jdId, status } }));
-                    } catch (e) {
-                        console.warn('Failed to emit jdStatusUpdated event', e);
-                    }
+                    window.dispatchEvent(new CustomEvent('jdStatusUpdated', {
+                        detail: {
+                            objId: jdObjId,
+                            status: jdStatus,
+                            notification
+                        }
+                    }));
                 });
             };
             stompClient.activate();
