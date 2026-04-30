@@ -83,6 +83,21 @@ const JdList = () => {
         fetchRole();
     }, [fetchJdList, fetchRole]);
 
+    // Listen for real-time JD status updates
+    useEffect(() => {
+        const handler = (e) => {
+            try {
+                const { jdId, status } = e.detail || {};
+                if (!jdId) return;
+                setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status } : jd));
+            } catch (err) {
+                console.warn('Error handling jdStatusUpdated', err);
+            }
+        };
+        window.addEventListener('jdStatusUpdated', handler);
+        return () => window.removeEventListener('jdStatusUpdated', handler);
+    }, []);
+
     /* ================= ACTIONS ================= */
 
     const handleLockJd = async (e, jdId) => {
@@ -166,6 +181,7 @@ const JdList = () => {
                     <p className="jd-subtitle">Hệ thống quản lý tin đăng của công ty</p>
                 </div>
 
+
                 <div className="header-actions">
                     {role === 'ADMIN' && (
                         <button className="btn-subscription" onClick={() => navigate('/company/subscriptions')}>
@@ -202,9 +218,7 @@ const JdList = () => {
                 </div>
             </div>
 
-            <div className="result-summary">
-                Đang hiển thị <strong>{visibleCount}</strong> / <strong>{jdList.length}</strong> bài đăng
-            </div>
+
 
             {loading ? (
                 <div className="loader">Đang tải dữ liệu...</div>

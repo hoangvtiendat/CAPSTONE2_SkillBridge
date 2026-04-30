@@ -1,8 +1,11 @@
 package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.dto.response.NotificationResponse;
+import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.entity.Notification;
+import com.skillbridge.backend.entity.NotificationForAI; // Bây giờ nó đóng vai trò là DTO
 import com.skillbridge.backend.entity.User;
+import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.repository.NotificationRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +23,14 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class NotificationService {
+
     NotificationRepository notificationRepository;
     SimpMessagingTemplate messagingTemplate;
     MailService mailService;
 
+
     /**
-     * Hàm tạo thông báo đa kênh: Database, WebSocket và Email (tùy chọn)
+     * Hàm tạo thông báo cho người dùng (Quả chuông 🔔)
      */
     @Transactional(propagation = Propagation.REQUIRED)
     public void createNotification(
@@ -37,7 +42,6 @@ public class NotificationService {
             String link,
             boolean sendEmail
     ) {
-        // 1. Tạo đối tượng và lưu vào Database
         Notification notification = Notification.builder()
                 .user(receiver)
                 .title(subject)
@@ -62,14 +66,56 @@ public class NotificationService {
             log.error("WebSocket failed for user {}: {}", receiver.getId(), e.getMessage());
         }
 
-        // 3. Gửi Email (Nếu tham số sendEmail là true)
+        // 3. Gửi Email
         if (sendEmail) {
             try {
-                // Sử dụng hàm mailService
                 mailService.sendToEmail(senderEmail, receiver.getEmail(), subject, message);
                 log.info("Email queued for user: {}", receiver.getEmail());
             } catch (Exception e) {
                 log.error("Email dispatch failed for user {}: {}", receiver.getEmail(), e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Hàm bắn tín hiệu ngầm cho hệ thống UI đổi trạng thái (Không lưu DB)
+     */
+    public void notificationForAiCheckTrafficLight(
+            User receiver,
+            String senderEmail,
+            String OBJ_id,
+            JobStatus jobStatus,
+            String title,
+            String message,
+            boolean sendEmail,
+            String action
+    ){
+        NotificationForAI notificationForAI = NotificationForAI.builder()
+                .userId(receiver.getId())
+                .title(title)
+                .objId(OBJ_id)
+                .status(jobStatus)
+                .message(message)
+                .action(action)
+                .build();
+
+
+        try {
+            messagingTemplate.convertAndSendToUser(
+                    receiver.getId(),
+                    "/queue/Notification_JD",
+                    notificationForAI
+            );
+            log.info("Notification for AI traffic light sent via WebSocket for user: {}", receiver.getId());
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi tín hiệu UI: {}", e.getMessage());
+        }
+
+        if (sendEmail) {
+            try {
+                mailService.sendToEmail(senderEmail, receiver.getEmail(), title, message);
+            } catch (Exception e) {
+                log.error("Lỗi khi gửi email AI update: {}", e.getMessage());
             }
         }
     }

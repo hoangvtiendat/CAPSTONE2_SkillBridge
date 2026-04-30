@@ -16,7 +16,7 @@ import com.skillbridge.backend.repository.JobRepository;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.service.CandidateService;
-import com.skillbridge.backend.service.JobService;
+import com.skillbridge.backend.service.EmbeddingService;
 import com.skillbridge.backend.service.MailService;
 import com.skillbridge.backend.service.NotificationService;
 import jakarta.transaction.Transactional;
@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 @Service
@@ -51,6 +52,10 @@ public class AIJobService {
     SecurityUtils securityUtils;
     @Autowired
     JDTagRepository jdTagRepository;
+
+    @Autowired
+    EmbeddingService embeddingService;
+
 
     LocalDate date = LocalDate.now();
 
@@ -213,6 +218,7 @@ public class AIJobService {
     @Async
     @Transactional
     public void ai_Check_Approval (String idJD){
+        JobStatus finalStatus = null;
 
         try {
 
@@ -223,7 +229,6 @@ public class AIJobService {
             LocalDate endDate = LocalDate.now().plusDays(job.getPostingDay());
             User receiver = userOptional.get();
             ///  gán thẻ cho bài đăng
-            String tagOfJD = JD_Of_Tag(idJD);
 
 
             JobDetailResponse in4JD = getIn4OfJD(idJD);
@@ -241,42 +246,11 @@ public class AIJobService {
                     in4JD.getDescription()
             );
 
-            ObjectMapper tagChek = new ObjectMapper();
-            JsonNode jsonTag = tagChek.readTree(tagOfJD);
 
-            JsonNode matchedTags = jsonTag.path("matched_tags");
             ///  biến đôi mảng trành String
-            List<String> tags = new ArrayList<>();
-            if (matchedTags.isArray()) {
-                for (JsonNode tag : matchedTags) {
-                    tags.add(tag.asText());
-                }
-            }
 
-            String tagText = String.join(", ", tags);
 
-            System.out.println("tagText: " + tagText);
 
-            Job updateTagOFJD = jobRepository.getReferenceById(idJD);
-            updateTagOFJD.setTagOfJd(tagText);
-            jobRepository.save(updateTagOFJD);
-
-            if (jsonTag.path("has_new_tags").asInt() == 1) {
-                JsonNode newTag = jsonTag.path("new_tags");
-
-                if (newTag.isArray()) {
-                    for (JsonNode tagNode : newTag) {
-                        String tag = tagNode.asText();
-
-                        System.out.println("tag: " + tag);
-
-                        JDTag jd = new JDTag();
-                        jd.setName(tag);
-                        jdTagRepository.save(jd);
-                    }
-                }
-            }
-            System.out.println("ddax chayj tagOfJD");
             /// Ai đánh giá
             String resultOdAI = aiService.Ai_OF_SKILLBRIDGE(dataForAI, 1);
             /// 　String > json
@@ -310,22 +284,22 @@ public class AIJobService {
                                 "Trân trọng,\n" +
                                 "SkillBridge AI Moderator",
                         receiver.getName(),
-                        JobService.getJobPositionName(job),
+                        job.getPosition(),
                         reason,
                         keywordsString
                 );
                 job.setModerationStatus(ModerationStatus.RED);
                 job.setStatus(JobStatus.LOCK);
-
-                notificationService.createNotification(
+                finalStatus = JobStatus.LOCK;
+                notificationService.notificationForAiCheckTrafficLight(
                         receiver,
                         null,
+                        idJD,
+                        finalStatus,
                         subject,
                         messageBody,
-                        "JOB_MODERATION_FAILED",
-                        "/detail-jd/idJD",
-                        true
-
+                        true,
+                        "JOB_MODERATION_FAILED"
                 );
             }
 
@@ -343,12 +317,13 @@ public class AIJobService {
                                     "Trân trọng,\n" +
                                     "SkillBridge AI Moderator",
                             receiver.getName(),
-                            titleText
+                            job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.GREEN);
                     job.setStartDate(date.atStartOfDay());
                     job.setEndDate(endDate.atStartOfDay());
                     job.setStatus(JobStatus.OPEN);
+                    finalStatus = JobStatus.OPEN;
                 }
                 else if(result == 2){
                     messageBody = String.format(
@@ -361,9 +336,10 @@ public class AIJobService {
                                     "Trân trọng,\n" +
                                     "Đội ngũ SkillBridge AI Moderator",
                             receiver.getName(),
-                            titleText
+                            job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.YELLOW);
+                    finalStatus = JobStatus.OPEN;
 
                 }
                 else if (result == 3) {
@@ -377,23 +353,24 @@ public class AIJobService {
                                     "Trân trọng,\n" +
                                     "Đội ngũ SkillBridge",
                             receiver.getName(),
-                            titleText
+                            job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.RED);
                     job.setStatus(JobStatus.PENDING);
-
+                    finalStatus = JobStatus.PENDING;
                 }
                 if (!messageBody.isEmpty()) {
                     jobRepository.save(job);
 
-                    notificationService.createNotification(
+                    notificationService.notificationForAiCheckTrafficLight(
                             receiver,
                             null,
+                            idJD,
+                            finalStatus,
                             subject,
                             messageBody,
-                            "JOB_MODERATION_FAILED",
-                            "/detail-jd/idJD",
-                            true
+                            true,
+                            "JOB_MODERATION_FAILED"
                     );
                 }
             }
@@ -409,21 +386,21 @@ public class AIJobService {
 
     ///  Tìm Job theo ngữ nghĩa
     @Transactional
-    public List<JobSemanticSearchResponse> findJobBySemanticSearch(String requestOfCandidate) {
+    public List<JobSemanticSearchResponse> findJobBySemanticSearch(String requestOfCandidate)
+    {
         ObjectMapper objectMapper = new ObjectMapper();
 
         try {
             String idOfUser = securityUtils.getCurrentUserId();
             UpdateCandidateCvResponse cv = candidateService.getCV_searchsenematic(idOfUser);
-            List<String> listTagName = jdTagRepository.findAllTagNames();
-            ObjectMapper objectListTagName = new ObjectMapper();
-            String jsonTags = objectListTagName.writeValueAsString(listTagName);
 
+
+            System.out.println("CV: " + cv);
 
             List<SkillRequest> skills = new ArrayList<>();
             String candidateCategory = null;
             String candidateLocation = null;
-            Object candidateDegrees = new ArrayList<>();
+            List<DegreeResponse> candidateDegrees = new ArrayList<>();
 
             if (cv != null) {
                 if (cv.getSkills() != null) {
@@ -436,120 +413,191 @@ public class AIJobService {
                 }
                 candidateCategory = cv.getCategory();
                 candidateLocation = cv.getAddress();
-                candidateDegrees = cv.getDegrees() != null ? cv.getDegrees() : new ArrayList<>();
+                if (cv.getDegrees() != null) {
+                    candidateDegrees = cv.getDegrees();
+                }
             }
-
-            System.out.println("SkillList " + skills);
-            List<dataDetailCanDiadateForAIReponse> getImportantDataOfCandidate = new ArrayList<>();
 
             dataDetailCanDiadateForAIReponse data = dataDetailCanDiadateForAIReponse.builder()
                     .category(candidateCategory)
                     .location(candidateLocation)
-                    .degrees((List<DegreeResponse>) candidateDegrees)
+                    .degrees(candidateDegrees)
                     .skills(skills)
                     .build();
 
-            getImportantDataOfCandidate.add(data);
-            /// Lấy dữ liệu danh sách category của hệ thống
-            System.out.println("Hàm lấy Categories");
-            List<CategoryResponse> getAllCategories = categoryRepository.findActiveCategories();
+            List<dataDetailCanDiadateForAIReponse> getImportantDataOfCandidate = Collections.singletonList(data);
 
+            List<CategoryResponse> getAllCategories = categoryRepository.findActiveCategories();
             String jsonStringCategory = objectMapper.writeValueAsString(getAllCategories);
-            /// bóc tách dữ liệu
             String jsonStringCandidate = objectMapper.writeValueAsString(getImportantDataOfCandidate);
+
             String promptTemplate = """
                     Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
-                    ... (Nội dung Prompt của bạn) ...
-                    [DANH SÁCH CATEGORY HỆ THỐNG]: %s
-                    [EXISTING_TAGS]:%s
-                    [DỮ LIỆU CV HIỆN TẠI]: %s
-                    [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
+                    --- BẮT ĐẦU DỮ LIỆU ĐẦU VÀO ---                 
+                    + [DANH SÁCH CATEGORY HỆ THỐNG]: %s  
+                    + [DỮ LIỆU CV HIỆN TẠI]: %s 
+                    + [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"  
                     """;
-            String requstForAI = String.format(promptTemplate,
-                    jsonStringCategory,
-                    jsonTags,
-                    jsonStringCandidate,
-                    requestOfCandidate
-            );
-            String aiResponse = aiService.Ai_OF_SKILLBRIDGE(requstForAI, 3);
-            System.out.println("aiResponse " + aiResponse);
+
+            String requestForAI = String.format(promptTemplate, jsonStringCategory, jsonStringCandidate, requestOfCandidate);
+            String aiResponse = aiService.Ai_OF_SKILLBRIDGE(requestForAI, 3);
+            System.out.println("aiResponse: " + aiResponse);
+
             JsonNode rootNode = objectMapper.readTree(aiResponse);
-
-            String categoryName, city;
-            Long salaryExpect;
-
-
-            int type = rootNode.get("typeTraVe").asInt();
-
-
-            categoryName = (rootNode.has("category_name") && !rootNode.get("category_name").asText().isEmpty())
+            // LẤY CATEGORY
+            String categoryName = (rootNode.has("category_name") && !rootNode.get("category_name").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("category_name").asText()))
                     ? rootNode.get("category_name").asText() : null;
 
-            city = (rootNode.has("city") && !rootNode.get("city").asText().isEmpty())
+            // LẤY CITY
+            String cityRaw = (rootNode.has("city") && !rootNode.get("city").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("city").asText()))
                     ? rootNode.get("city").asText() : null;
 
-            List<String> skillsName = new ArrayList<>();
-            JsonNode skillsNode = rootNode.get("skill_names");
-            if (skillsNode != null && skillsNode.isArray()) {
-                for (JsonNode skill : skillsNode) {
-                    String s = skill.asText();
-                    if (!s.isEmpty()) skillsName.add(s);
+            String loc1 = null;
+            String loc2 = null;
+            String loc3 = null;
+
+            if (cityRaw != null) {
+                String[] parts = cityRaw.split(",");
+                if (parts.length > 0 && !parts[0].trim().isEmpty()) {
+                    loc1 = parts[0].trim();
+                }
+                if (parts.length > 1 && !parts[1].trim().isEmpty()) {
+                    loc2 = parts[1].trim();
+                }
+                if (parts.length > 2 && !parts[2].trim().isEmpty()) {
+                    loc3 = parts[2].trim();
                 }
             }
-            List<String> tagList = new ArrayList<>();
-            JsonNode tagsNode = rootNode.get("matched_tags");
-            for (JsonNode tag : tagsNode) {
-                String s = tag.asText();
-                if (!s.isEmpty()) tagList.add(s);
-            }
-            boolean hasTags = tagList != null && !tagList.isEmpty();
-            String tagPattern = hasTags ? String.join("|", tagList) : "";
 
-            boolean hasSkills = !skillsName.isEmpty();
-            salaryExpect = rootNode.path("salary_expect").isNull()
-                    ? null
-                    : rootNode.path("salary_expect").asLong();
+            // LẤY MỨC LƯƠNG
+            Long salaryExpect = rootNode.path("salary_expect").isNull() ? null : rootNode.path("salary_expect").asLong();
 
-            List<Job> jobsFromDb = new ArrayList<>();
-            List<String> querySkills = hasSkills ? skillsName : Collections.singletonList("");
-
-            if (type == 0) {
-                System.out.println("querySkills " + querySkills);
-                System.out.println("hasSkills " + hasSkills);
-                System.out.println("skillsName " + skillsName);
-                System.out.println("salaryExpect " + salaryExpect);
-                System.out.println();
-                jobsFromDb = jobRepository.findJobsByRequirements(
-                        JobStatus.OPEN.name(),
-                        city,
-                        categoryName,
-                        querySkills,
-                        hasSkills,
-                        salaryExpect,
-                        tagPattern,
-                        hasTags
-                );
-            } else if (type == 1) {
-                jobsFromDb = jobRepository.findJobsByRequirements_Not_sameCategory(
-                        JobStatus.OPEN.name(),
-                        city,
-                        categoryName,
-                        querySkills,
-                        hasSkills,
-                        salaryExpect,
-                        tagPattern,
-                        hasTags
-                );
-            } else if (type == 2) {
-                System.out.println("AI không tìm thấy ngành phù hợp.");
-                return new ArrayList<>();
+            // LẤY VECTOR QUERY
+            String getQueryEmbedding = rootNode.path("search_query").asText("");
+            // Lấy position
+            String getPosition = (rootNode.has("job_position") && !rootNode.get("job_position").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("job_position").asText()))
+                    ? rootNode.get("job_position").asText() : null;
+            // Lấy search_query
+            String StringOfsearch_query = rootNode.path("search_query").asText("");
+            if (getPosition != null) {
+                getPosition = getPosition.toLowerCase().replace(" ", "").replace("-", "").replace("_", "");
             }
 
-            System.out.println("Kết quả tìm kiếm: " + jobsFromDb.size() + " jobs found từ DB.");
+
+            // GỌI REPOSITORY
+            List<Job> jobsFromDb = jobRepository.findJobsByRequirements(
+                    JobStatus.OPEN.name(),
+                    loc1,
+                    loc2,
+                    loc3,
+                    categoryName,
+                    salaryExpect,
+                    getPosition
+            );
+            System.out.println("jobsFromDb: " + jobsFromDb);
+            System.out.println("--> ẢI 1 (SQL): " + jobsFromDb.size() + " jobs lọt qua.");
+
+
+            List<Job> ListJDFlowVector;
+            if (!jobsFromDb.isEmpty() && !getQueryEmbedding.isBlank()) {
+                try {
+                    float[] queryVector = embeddingService.createEmbedding(getQueryEmbedding);
+                    Map<Job, Double> jobScores = new HashMap<>();
+
+                    for (Job job : jobsFromDb) {
+                        float[] jobVector = job.getVectorEmbedding();
+
+                        if (jobVector != null && jobVector.length > 0) {
+                            System.out.println("jobVector dđã chạy");
+                            double score = calculateCosineSimilarityForSemanticSearch(queryVector, jobVector);
+
+                            if (score > 0.2) {
+                                jobScores.put(job, score);
+                            }
+                        }
+                    }
+                    ///  Dùng AI đọc LẠI List JD
+                    ListJDFlowVector = jobScores.entrySet().stream()
+                            .sorted(Map.Entry.<Job, Double>comparingByValue().reversed())
+                            .limit(8)
+                            .peek(entry -> System.out.println("   + Job: " + entry.getKey().getTitle() + " - Score-Final: " + entry.getValue()))
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toList());
+
+                    final List<Job> finalListForLambda = ListJDFlowVector;
+
+                    ///  Chuyen lai sang Sitrng + Gán ID
+                    String JDListString = IntStream.range(0, finalListForLambda.size())
+                            .mapToObj(i -> {
+                                Job job = finalListForLambda.get(i);
+                                int displayID = i + 1;
+                                return String.format(
+                                        "[%d] Công ty: %s | Vị trí: %s | Ngành: %s | Lương: %s-%s | Mô tả: %s",
+                                        displayID,
+                                        job.getCompany().getName().toUpperCase(),
+                                        job.getTitle(),
+                                        job.getCategory() != null ? job.getCategory().getName() : "N/A",
+                                        job.getSalaryMin(),
+                                        job.getSalaryMax(),
+
+                                        job.getDescription()
+                                );
+                            })
+                            .collect(Collectors.joining("\n"));
+                    String promptTemplate2 = """
+                            Bạn là hệ thống AI phân tích dữ liệu nhân sự cốt lõi của ứng dụng SkillBridge. 
+                            ... (Nội dung Prompt của bạn) ...
+                            [Danh sách các JD ]: %s
+                            [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
+                            """;
+                    String promptAIChekRequest = String.format(promptTemplate2, JDListString, StringOfsearch_query);
+                    System.out.println("promptAICpromptAIChekRequesthekRequest" + promptAIChekRequest);
+                    String aiFinalReSpond = aiService.Ai_OF_SKILLBRIDGE(promptAIChekRequest, 4);
+                    System.out.println("aiFinalReSpond: " + aiFinalReSpond);
+                    /// --- Khu vực bóc tách ID Ảo của AI trả về ---
+                    try {
+                        JsonNode aiResultNode = objectMapper.readTree(aiFinalReSpond);
+
+                        if (aiResultNode.has("selected_ids") && aiResultNode.get("selected_ids").isArray()) {
+                            Set<Integer> selectedDisplayIds = new HashSet<>();
+                            for (JsonNode idNode : aiResultNode.get("selected_ids")) {
+                                selectedDisplayIds.add(idNode.asInt());
+                            }
+
+                            System.out.println("--> AI selected_ids: " + selectedDisplayIds);
+
+                            List<Job> filteredByAI = new ArrayList<>();
+                            for (int i = 0; i < ListJDFlowVector.size(); i++) {
+                                if (selectedDisplayIds.contains(i + 1)) {
+                                    filteredByAI.add(ListJDFlowVector.get(i));
+                                }
+                            }
+
+                            System.out.println("--> Sau AI filter: " + filteredByAI.size() + " jobs được giữ lại.");
+                            ListJDFlowVector = filteredByAI;
+
+                        } else {
+                            System.out.println("--> AI không trả về selected_ids → giữ nguyên " + ListJDFlowVector.size() + " jobs.");
+                        }
+
+                    } catch (Exception parseEx) {
+                        System.out.println("--> Lỗi parse aiFinalReSpond → fallback giữ nguyên danh sách.");
+                        parseEx.printStackTrace();
+                    }
+                ///  ---- End Boc tách
+                } catch (Exception e) {
+                    System.out.println("Lỗi tạo vector hoặc so sánh Cosine");
+                    e.printStackTrace();
+                    throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+                }
+            } else {
+                ListJDFlowVector = jobsFromDb;
+            }
+
+            System.out.println("--> ẢI 2 (Vector): " + ListJDFlowVector.size() + " jobs được chọn.");
 
             List<JobSemanticSearchResponse> resultList = new ArrayList<>();
-            // lấy from của cty
-            for (Job job : jobsFromDb) {
+            for (Job job : ListJDFlowVector) {
                 JobResponse.CompanyDTO companyDTO = null;
                 if (job.getCompany() != null) {
                     companyDTO = JobResponse.CompanyDTO.builder()
@@ -558,7 +606,7 @@ public class AIJobService {
                             .logoUrl(job.getCompany().getImageUrl())
                             .build();
                 }
-                // lấy category
+
                 JobResponse.CategoryDTO categoryDTO = null;
                 if (job.getCategory() != null) {
                     categoryDTO = JobResponse.CategoryDTO.builder()
@@ -566,17 +614,16 @@ public class AIJobService {
                             .name(job.getCategory().getName())
                             .build();
                 }
-                // Lấy skill của Job
+
                 List<JobResponse.JobSkillDTO> skillDTOList = new ArrayList<>();
-                if(job.getJobSkills() != null) {
-                    job.getJobSkills().forEach(jobSkill ->{
-                        JobResponse.JobSkillDTO skillDTO = JobResponse.JobSkillDTO.builder()
+                if (job.getJobSkills() != null) {
+                    job.getJobSkills().forEach(jobSkill -> {
+                        skillDTOList.add(JobResponse.JobSkillDTO.builder()
                                 .name(jobSkill.getSkill().getName())
-                                .build();
-                        skillDTOList.add(skillDTO);
+                                .build());
                     });
                 }
-                // xuất kết quả trả về
+
                 JobSemanticSearchResponse dto = JobSemanticSearchResponse.builder()
                         .id(job.getId())
                         .position(job.getPosition())
@@ -593,55 +640,35 @@ public class AIJobService {
 
                 resultList.add(dto);
             }
-            System.out.println("resultListSIZE " + resultList.size());
+
+            System.out.println("--> CHỐT: Trả về Client " + resultList.size() + " jobs.");
             return resultList;
 
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("AI error", e);
         } finally {
-            System.out.println("findJobBySemanticSearch đã chạy xong");
+            System.out.println("--- findJobBySemanticSearch KẾT THÚC ---");
         }
     }
-    ///  Thêm || update thẻ JD
-    @Async
-    @Transactional
-    public String JD_Of_Tag(String idJD) {
-        try {
-            JobDetailResponse in4JD = getIn4OfJD(idJD);
-            String titleText = in4JD.getTitle() != null ? in4JD.getTitle().toString() : "N/A";
-            String skillsText = in4JD.getSkills() != null ? String.join(", ", in4JD.getSkills()) : "";
-            String dataForAI = String.format(
-                    "Position: %s\nTitle: %s\nCategory: %s\nSkills: %s\nSalary: %s - %s\nLocation: %s\nDescription: %s",
-                    in4JD.getPosition(),
-                    titleText,
-                    in4JD.getCategoryName(),
-                    skillsText,
-                    in4JD.getSalaryMin(),
-                    in4JD.getSalaryMax(),
-                    in4JD.getLocation(),
-                    in4JD.getDescription()
-            );
-
-
-            List<String> listTagName = jdTagRepository.findAllTagNames();
-            ObjectMapper objectMapper = new ObjectMapper();
-            String jsonTags = objectMapper.writeValueAsString(listTagName);
-
-            String dataRequstAI ="1.Dữ Liệu JD" + dataForAI + "\n2.Các dữ thẻ tag hiện đang có trong bảng:" + jsonTags;
-            System.out.println("dataRequstAI " + dataRequstAI);
-            String result = aiService.addTagJD(dataForAI, jsonTags);
-            System.out.println("result_Tag " + result);
-
-            return result;
+    private double calculateCosineSimilarityForSemanticSearch(float[] vectorA, float[] vectorB) {
+        if (vectorA == null || vectorB == null || vectorA.length != vectorB.length) {
+            return 0.0; // Hoặc throw Exception tuỳ logic của bạn
         }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("JD_Of_Tag Error: " + e.getMessage());
+
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+
+        for (int i = 0; i < vectorA.length; i++) {
+            dotProduct += vectorA[i] * vectorB[i];
+            normA += Math.pow(vectorA[i], 2);
+            normB += Math.pow(vectorB[i], 2);
         }
-        finally {
-            System.out.println("Đã chạy xong chức năng Tạo TAG cho JD");
-        }
-        return null;
+
+        if (normA == 0.0 || normB == 0.0) return 0.0;
+
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
+
 }

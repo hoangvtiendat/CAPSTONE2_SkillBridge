@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef} from 'react';
 import { useNavigate } from 'react-router-dom';
 import subscriptionService from '../../services/api/subscriptionService';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { ca } from 'date-fns/locale';
 const SubscriptionManagerOfCompany = () => {
     const { token } = useAuth();
     const navigate = useNavigate();
+    const hasProcessedUrl = useRef(false);
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -84,8 +85,11 @@ const getListSubscriptionOfCompany = async () => {
 
             const pendingPaymentId = sessionStorage.getItem('pendingPayment');
 
-            if (returnFromPayment) {
+            if (returnFromPayment && !hasProcessedUrl.current) {
+                hasProcessedUrl.current = true;
+                
                 window.history.replaceState({}, '', window.location.pathname);
+                console.log("Safari Safety: URL Cleaned");
             }
 
             const data = await subscriptionService.listSubcriftionOfCompany(token);
@@ -127,6 +131,7 @@ const getListSubscriptionOfCompany = async () => {
             if (returnFromPayment && paymentStatus === '1') {
                 sessionStorage.removeItem('pendingPayment');
             }
+            
 
             // Không tự động hủy giao dịch chỉ vì thiếu tham số return URL.
             // Nhiều cổng thanh toán dùng key khác, và giao dịch pending vẫn cần hiển thị để người dùng thao tác.
@@ -161,12 +166,22 @@ const handleDeleteSubscription = async (id, options = {}) => {
         skipConfirm = false,
         silent = false,
         refreshAfterDelete = true,
+        optimistic = false,
     } = options;
 
     console.log(' Attempting to delete subscription:', id);
     console.log('delete options:', options);
 
     if (!skipConfirm && !window.confirm('Bạn có chắc muốn xóa gói đăng ký này?')) return;
+
+    const previousPendingTransaction = pendingTransaction;
+    const previousCountdown = countdown;
+
+    if (optimistic && pendingTransaction && pendingTransaction.id === id) {
+        setPendingTransaction(null);
+        setCountdown(0);
+        setShowNotification(false);
+    }
 
     try {
         console.log(' Calling API to delete subscription:', id);
@@ -192,6 +207,11 @@ const handleDeleteSubscription = async (id, options = {}) => {
         console.error('Error response:', error.response);
         console.error('Error data:', error.response?.data);
 
+        if (optimistic && previousPendingTransaction && previousPendingTransaction.id === id) {
+            setPendingTransaction(previousPendingTransaction);
+            setCountdown(previousCountdown);
+        }
+
         if (!silent) {
             const errorMessage = error.response?.data?.message || 'Không thể xóa gói đăng ký';
             toast.error("Lỗi xóa", { description: errorMessage });
@@ -214,6 +234,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
             if (openDropdownId && !isClickInsideDropdown && !isClickOnRow && !isClickOnNotification) {
                 setOpenDropdownId(null);
             }
+            if (hasProcessedUrl.current) return; // Đã xử lý URL callback, không làm lại
 
             if (showNotification && !isClickOnNotification) {
                 setShowNotification(false);
@@ -320,6 +341,25 @@ const handleDeleteSubscription = async (id, options = {}) => {
         return true;
     });
     const premiumPkg = systemPackages.length > 0 ? systemPackages[0] : null;
+
+    const hasPartialUsage = !!currentSubscription && (
+        (Number(currentSubscription.currentJobCount || 0) > 0 && Number(currentSubscription.currentJobCount || 0) < Number(currentSubscription.jobLimit || 0)) ||
+        (Number(currentSubscription.currentViewCount || 0) > 0 && Number(currentSubscription.currentViewCount || 0) < Number(currentSubscription.candidateViewLimit || 0))
+    );
+
+    const handleOpenUpgradeModal = () => {
+        if (hasPartialUsage) {
+            const confirmed = window.confirm(
+                'Hiện tại Tin đăng + Săn nhân tài mới dùng một chút. Bạn có chắc là muốn thay đổi không?'
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        setShowUpgradeModal(true);
+    };
     return (
         <div className="sub-manager-container">
             {pendingTransaction && countdown > 0 && (
@@ -391,6 +431,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
                                             skipConfirm: true,
                                             silent: false,
                                             refreshAfterDelete: true,
+                                            optimistic: true,
                                         });
                                     }}
                                 >
@@ -510,7 +551,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
                 <div className="sub-actions mt-4">
                     <button
                         className="btn-sub-yellow"
-                        onClick={() => setShowUpgradeModal(true)}
+                        onClick={handleOpenUpgradeModal}
                     >
                         Nâng cấp ngay
                     </button>

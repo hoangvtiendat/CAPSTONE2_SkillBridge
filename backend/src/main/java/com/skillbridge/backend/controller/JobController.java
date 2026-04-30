@@ -8,6 +8,7 @@ import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.JobService;
+import com.skillbridge.backend.entity.provinces;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 @RestController
 @RequiredArgsConstructor
@@ -270,5 +272,21 @@ public class JobController {
                 .message("Lấy danh sách công việc đã ứng tuyển thành công")
                 .build();
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/ListProvinces")
+    public ResponseEntity<ApiResponse<List<provinces>>>  getAllProvinces() {
+        List<provinces> result = jobService.getALlProvinces();
+        ApiResponse<List<provinces>> response = ApiResponse.<List<provinces>>builder()
+                .result(result)
+                .message("Lấy danh sách tỉnh thành, thành công")
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/Update-provinces/{id}")
+    public provinces updateProvince(@PathVariable String id, @RequestBody provinces provinces) {
+        provinces updateProvinces = jobService.updateProvince(id, provinces);
+        return updateProvinces;
     }
 }

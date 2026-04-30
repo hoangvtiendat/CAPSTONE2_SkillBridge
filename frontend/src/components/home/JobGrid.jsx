@@ -6,22 +6,36 @@ import jobService from '../../services/api/jobService';
 import aiService from '../../services/api/aiService';
 import './JobGrid.css';
 
+const JOB_GRID_STATE_KEY = 'job-grid-state';
+
+const readSavedJobGridState = () => {
+  try {
+    const rawValue = sessionStorage.getItem(JOB_GRID_STATE_KEY);
+    return rawValue ? JSON.parse(rawValue) : null;
+  } catch (error) {
+    return null;
+  }
+};
+
 const JobGrid = () => {
   const { token } = useAuth();
 
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const savedState = useMemo(() => readSavedJobGridState(), []);
+
+  const [jobs, setJobs] = useState(() => savedState?.jobs || []);
+  const [loading, setLoading] = useState(() => !(savedState?.jobs?.length > 0));
 
   const [pagination, setPagination] = useState({
-    page: 0,
-    size: 6,
-    totalElements: 0,
-    totalPages: 0
+    page: savedState?.pagination?.page ?? 0,
+    size: savedState?.pagination?.size ?? 8
+    ,
+    totalElements: savedState?.pagination?.totalElements ?? 0,
+    totalPages: savedState?.pagination?.totalPages ?? 0
   });
 
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchMode, setSearchMode] = useState('keyword'); // keyword | semantic
+  const [searchInput, setSearchInput] = useState(() => savedState?.searchInput || '');
+  const [searchTerm, setSearchTerm] = useState(() => savedState?.searchTerm || '');
+  const [searchMode, setSearchMode] = useState(() => savedState?.searchMode || 'keyword'); // keyword | semantic
 
   /* ================= FETCH JOB ================= */
   const fetchJobs = useCallback(async (page = 0) => {
@@ -49,8 +63,23 @@ const JobGrid = () => {
   }, [pagination.size]);
 
   useEffect(() => {
-    fetchJobs(0);
-  }, [fetchJobs]);
+    if (savedState?.jobs?.length > 0 && savedState.searchMode === 'semantic') {
+      setLoading(false);
+      return;
+    }
+
+    fetchJobs(pagination.page || 0);
+  }, [fetchJobs, pagination.page, savedState]);
+
+  useEffect(() => {
+    sessionStorage.setItem(JOB_GRID_STATE_KEY, JSON.stringify({
+      jobs,
+      pagination,
+      searchInput,
+      searchTerm,
+      searchMode
+    }));
+  }, [jobs, pagination, searchInput, searchTerm, searchMode]);
 
   /* ================= PAGINATION ================= */
   const handlePageChange = (page) => {
@@ -109,6 +138,12 @@ const JobGrid = () => {
     setSearchInput('');
     setSearchTerm('');
     setSearchMode('keyword');
+    setPagination(prev => ({
+      ...prev,
+      page: 0,
+      totalElements: 0,
+      totalPages: 0
+    }));
     fetchJobs(0);
   };
 

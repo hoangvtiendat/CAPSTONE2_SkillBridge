@@ -19,9 +19,13 @@ import {
 import '../../components/recruiter/Recruiter.css';
 import analyticsService from '../../services/api/analyticsService';
 import jobService from '../../services/api/jobService';
+import useCompanyDeactivationCheck from '../../hooks/useCompanyDeactivationCheck';
 import { toast } from 'sonner';
 
 const RecruiterDashboardPage = () => {
+    // Check if company is deactivated and prevent access
+    useCompanyDeactivationCheck(['/recruiter/settings', '/recruiter/analytics']);
+
     const [loading, setLoading] = useState(true);
     const [statsData, setStatsData] = useState(null);
     const [jobs, setJobs] = useState([]);

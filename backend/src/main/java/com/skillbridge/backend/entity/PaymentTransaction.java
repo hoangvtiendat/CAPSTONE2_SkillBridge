@@ -3,8 +3,6 @@ package com.skillbridge.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Getter
 @Setter
 @Builder
@@ -25,6 +23,8 @@ public class PaymentTransaction extends BaseEntity {
 
     @Column(nullable = false)
     private int type;
+    @Column(name = "id_of_subscriftion", nullable = true) /// Lấy ID của gói cơ bản - CusTom thi null
+    private String idOfSubscription;
 
 //    // Gợi ý thêm các trường quan trọng để đối soát
 //    @Column(precision = 19, scale = 2)
