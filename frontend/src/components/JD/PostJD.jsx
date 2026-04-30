@@ -234,7 +234,6 @@ const PostJD = () => {
 
             <header className="jd-board-header">
                 <div className="jd-header-copy">
-                    <p className="eyebrow">Job Posting Studio</p>
                     <h2>Tạo Bài Tuyển Dụng Mới</h2>
                 </div>
 

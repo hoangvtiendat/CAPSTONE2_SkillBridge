@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, MapPin, Calendar, Info, CheckCircle, ArrowLeft, Loader2, ExternalLink, FileText, Briefcase, X, UserMinus } from 'lucide-react';
+import { Clock, MapPin, Calendar, Info, CheckCircle, ArrowLeft, Loader2, ExternalLink, FileText, Briefcase, X, UserMinus, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import interviewService from '../../services/api/interviewService';
 import './InterviewBookingPage.css';
@@ -12,12 +12,15 @@ const InterviewBookingPage = () => {
     const navigate = useNavigate();
     const [slots, setSlots] = useState([]);
     const [myInterview, setMyInterview] = useState(null);
+    const [isRescheduling, setIsRescheduling] = useState(false);
+    const isReschedulingRef = useRef(isRescheduling);
+    const [tempOldInterview, setTempOldInterview] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [expandedSlot, setExpandedSlot] = useState(null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const stompClientRef = useRef(null);
-
+    const [oldSlotId, setOldSlotId] = useState(null);
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         return () => clearInterval(timer);
@@ -29,6 +32,9 @@ const InterviewBookingPage = () => {
             return String(idInRecord) === String(targetJobId);
         });
     };
+    useEffect(() => {
+        isReschedulingRef.current = isRescheduling;
+    }, [isRescheduling]);
 
     const loadData = useCallback(async (isSilent = false) => {
         if (!isSilent) setLoading(true);
@@ -38,8 +44,10 @@ const InterviewBookingPage = () => {
                 interviewService.getMyInterviews()
             ]);
             setSlots(slotData.result || []);
-            const existing = findExistingInterview(myInterviewsResponse.result, jobId);
-            setMyInterview(existing);
+            setMyInterview(() => {
+                if (isReschedulingRef.current) return null;
+                return findExistingInterview(myInterviewsResponse.result, jobId);
+            });
         } catch (err) {
             console.error("Lỗi cập nhật dữ liệu:", err);
         } finally {
@@ -83,19 +91,70 @@ const InterviewBookingPage = () => {
         };
     }, [jobId, loadData]);
 
-    const handleBookSlot = async (slotId) => {
-        if (myInterview) {
-            toast.warning("Bạn đã đặt lịch cho công việc này rồi!");
+    const handleCancelInterview = async () => {
+        if (!myInterview) return;
+
+        const startTime = new Date(myInterview.startTime);
+        const diffInHours = (startTime - currentTime) / (1000 * 60 * 60);
+
+        if (diffInHours < 24) {
+            toast.error("Chỉ có thể hủy lịch trước thời gian bắt đầu ít nhất 24 giờ.");
             return;
         }
+
+        if (!window.confirm("Bạn có chắc chắn muốn hủy lịch phỏng vấn này không?")) return;
+
         setSubmitting(true);
         try {
-            await interviewService.bookInterview(slotId);
-            toast.success("Đặt lịch thành công!");
+            await interviewService.cancelInterview(myInterview.id);
+            toast.success("Đã hủy lịch phỏng vấn thành công.");
             await loadData(false);
         } catch (err) {
-            const errorMsg = err.response?.data?.message || "Lỗi khi đặt lịch.";
-            toast.error(errorMsg);
+            toast.error(err.response?.data?.message || "Lỗi khi hủy lịch.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleRescheduleMode = () => {
+        const startTime = new Date(myInterview.startTime);
+        const diffInHours = (startTime - currentTime) / (1000 * 60 * 60);
+
+        if (diffInHours < 24) {
+            toast.error("Chỉ có thể đổi lịch trước thời gian bắt đầu ít nhất 24 giờ.");
+            return;
+        }
+        const cId = myInterview.slotId;
+        if (!cId) {
+            toast.error("Không tìm thấy thông tin lịch cũ.");
+            return;
+        }
+
+        setOldSlotId(String(cId));
+        setTempOldInterview(myInterview);
+
+        setIsRescheduling(true);
+
+        setMyInterview(null);
+        toast.info("Vui lòng chọn một khung giờ mới.");
+    };
+
+    const handleBookSlot = async (slotId) => {
+        setSubmitting(true);
+        try {
+            if (isRescheduling && tempOldInterview) {
+                await interviewService.rescheduleInterview(tempOldInterview.id, slotId);
+                toast.success("Đổi lịch thành công!");
+            } else {
+                await interviewService.bookInterview(slotId);
+                toast.success("Đặt lịch thành công!");
+            }
+
+            setIsRescheduling(false);
+            setTempOldInterview(null);
+            await loadData(false);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Lỗi khi thao tác.");
         } finally {
             setSubmitting(false);
         }
@@ -155,7 +214,6 @@ const InterviewBookingPage = () => {
                                 </div>
                             </div>
                         </div>
-
                         <div className="location-section-v3">
                             <div className="loc-card-v3">
                                 <div className="loc-head-v3">
@@ -182,11 +240,28 @@ const InterviewBookingPage = () => {
                                 <p>{myInterview.description || "Không có ghi chú thêm cho buổi phỏng vấn này."}</p>
                             </div>
                         </div>
+                        <div className="booking-footer-actions">
+                            <button className="btn-reschedule" onClick={handleRescheduleMode} disabled={submitting}>
+                                <RotateCcw size={18} /> Đổi lịch
+                            </button>
+                            <button className="btn-cancel-booking" onClick={handleCancelInterview} disabled={submitting}>
+                                {submitting ? <Loader2 className="animate-spin" size={18} /> : <X size={18} />}
+                                Hủy lịch
+                            </button>
+                        </div>
+                        <p className="booking-policy-note">* Lưu ý: Chỉ được hủy/đổi lịch trước 24 giờ.</p>
                     </div>
                 </div>
             ) : (
                 <div className="slots-grid">
                     {slots.map((slot) => {
+                        const isCurrentOldSlot = isRescheduling &&
+                            oldSlotId === String(slot.id);
+
+                        // Log này sẽ chạy chuẩn vì oldSlotId giờ là state
+                        if(isRescheduling) {
+                            console.log(`Đang check Slot: ${slot.id} | Slot cũ: ${oldSlotId} | Match: ${isCurrentOldSlot}`);
+                        }
                         const isFull = slot.currentOccupancy >= slot.capacity;
                         const isLocked = slot.status === 'LOCKED';
                         const isExpired = new Date(slot.startTime) < currentTime;
@@ -200,6 +275,7 @@ const InterviewBookingPage = () => {
                                     ${isLocked ? 'locked-slot' : ''}
                                     ${isExpired ? 'expired-slot' : ''}
                                     ${isEmpty && !isExpired ? 'empty-slot' : ''}
+                                    ${isCurrentOldSlot ? 'is-current-old' : ''}
                                     ${isExpanded ? 'active' : ''}`}
                                 >
                                     <div className="slot-main-content">
@@ -227,10 +303,13 @@ const InterviewBookingPage = () => {
                                             </button>
                                             <button
                                                 className="book-btn-v3"
-                                                disabled={isFull || isExpired || submitting || isLocked}
+                                                disabled={isFull || isExpired || submitting || isLocked || isCurrentOldSlot}
                                                 onClick={() => handleBookSlot(slot.id)}
                                             >
-                                                {isExpired ? 'Hết hạn' : isFull ? 'Đã đầy' : isLocked ? 'Đã chốt' : 'Đặt lịch'}
+                                                {isCurrentOldSlot ? 'Lịch hiện tại' :
+                                                    isExpired ? 'Hết hạn' :
+                                                        isFull ? 'Đã đầy' :
+                                                            isLocked ? 'Đã chốt' : 'Đặt lịch'}
                                             </button>
                                         </div>
                                     </div>

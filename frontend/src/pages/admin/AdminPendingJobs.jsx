@@ -146,7 +146,7 @@ const AdminJobPending = () => {
                                     <button className="btn-action-approve"
                                             onClick={(e) => handleApprove(e, job.jobId || job.id)}>
                                         <CheckCircle size={14}/>
-npm                                     </button>
+                                     </button>
                                     <button className="btn-action-reject"
                                             onClick={(e) => handleReject(e, job.jobId || job.id)}>
                                         <XCircle size={20}/>

@@ -106,6 +106,28 @@ const interviewService = {
             throw error;
         }
     },
+
+    cancelInterview: async (interviewId) => {
+        try {
+            const response = await api.delete(`/interviews/${interviewId}/cancel`);
+            return response.data;
+        } catch (error) {
+            console.error(`Lỗi khi hủy lịch phỏng vấn ${interviewId}:`, error);
+            throw error;
+        }
+    },
+
+    rescheduleInterview: async (interviewId, newSlotId) => {
+        try {
+            const response = await api.put(`/interviews/${interviewId}/reschedule`, null, {
+                params: { newSlotId }
+            });
+            return response.data;
+        } catch (error) {
+            console.error(`Lỗi khi đổi lịch phỏng vấn ${interviewId}:`, error);
+            throw error;
+        }
+    },
 };
 
 export default interviewService;
