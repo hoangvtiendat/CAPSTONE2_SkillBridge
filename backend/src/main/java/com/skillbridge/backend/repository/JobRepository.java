@@ -39,11 +39,11 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     /** Truy vấn nhanh tên các kỹ năng yêu cầu của danh sách công việc */
     @Query("""
-        SELECT js.job.id, s.name
-        FROM JobSkill js
-        LEFT JOIN js.skill s
-        WHERE js.job.id IN :jobIds
-      """)
+    SELECT js.job.id, s.name
+    FROM JobSkill js
+    LEFT JOIN js.skill s
+    WHERE js.job.id IN :jobIds
+  """)
     List<Object[]> findSkillNamesByJobIds(@Param("jobIds") List<String> jobIds);
 
     /** Cập nhật trạng thái hàng loạt cho công việc của một công ty (Ví dụ: Khóa công ty -> Đóng bài đăng) */
@@ -54,7 +54,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SET j.status = :newStatus
         WHERE j.company.id = :companyId
         AND j.status = :oldStatus
-        """)
+    """)
     void updateStatusByCompanyIdAndCurrentStatus(
             @Param("companyId") String companyId,
             @Param("oldStatus") JobStatus oldStatus,
@@ -63,15 +63,15 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     /** Thống kê số lượng bài đăng mới trong 6 tháng gần nhất để vẽ biểu đồ tăng trưởng */
     @Query("""
-                SELECT new com.skillbridge.backend.dto.MonthlyJobDTO(
-                    MONTH(j.createdAt),
-                    COUNT(j)
-                )
-                FROM Job j
-                WHERE j.createdAt >= :fromDate
-                GROUP BY MONTH(j.createdAt)
-                ORDER BY MONTH(j.createdAt)
-            """)
+        SELECT new com.skillbridge.backend.dto.MonthlyJobDTO(
+            MONTH(j.createdAt),
+            COUNT(j)
+        )
+        FROM Job j
+        WHERE j.createdAt >= :fromDate
+        GROUP BY MONTH(j.createdAt)
+        ORDER BY MONTH(j.createdAt)
+    """)
     List<MonthlyJobDTO> jobGrowthLast6Months(@Param("fromDate") LocalDateTime fromDate);
 
     /** Cập nhật thời hạn hiển thị (postingDay) cho các bài đăng cũ khi công ty gia hạn gói cước */
@@ -84,18 +84,18 @@ public interface JobRepository extends JpaRepository<Job, String> {
         AND j.status IN :statuses
     """)
     int updateDurationForOldJobs(
-            @Param("companyId") String companyId,
-            @Param("days") int days,
-            @Param("statuses") List<JobStatus> statuses
+        @Param("companyId") String companyId,
+        @Param("days") int days,
+        @Param("statuses") List<JobStatus> statuses
     );
 
     /** Cập nhật trạng thái đồng loạt cho tất cả các bài đăng tuyển dụng của một công ty cụ thể */
     @Modifying
     @Transactional
     @Query("""
-            UPDATE Job j
-            SET j.status = :status
-            WHERE j.company.id = :companyId
+        UPDATE Job j
+        SET j.status = :status
+        WHERE j.company.id = :companyId
     """)
     void updateStatusByCompanyId(@Param("companyId") String companyId, @Param("status") JobStatus status);
 
@@ -126,11 +126,11 @@ public interface JobRepository extends JpaRepository<Job, String> {
         ORDER BY j.createdAt DESC
     """)
     Page<JobFeedItemResponse> getJobFeedFiltered(
-            @Param("status") JobStatus status,
-            @Param("categoryId") String categoryId,
-            @Param("location") String location,
-            @Param("salary") Double salary,
-            Pageable pageable
+        @Param("status") JobStatus status,
+        @Param("categoryId") String categoryId,
+        @Param("location") String location,
+        @Param("salary") Double salary,
+        Pageable pageable
     );
 
     @Query("""
@@ -161,7 +161,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
-            cs.name, cat.name, j.status, j.moderationStatus
+            soc.name, cat.name, j.status, j.moderationStatus
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -183,7 +183,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
-            cs.name, cat.name, j.status, j.moderationStatus
+            soc.name, cat.name, j.status, j.moderationStatus
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -202,13 +202,13 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     /// Lấy dạnh sách VECTOR từng JD của cty đó
     @Query(value = """
-    SELECT j.id, j.vector_embedding
-    FROM jobs j
-    WHERE j.company_id = :companyId
-      AND j.id != :excludeJobId
-      AND j.vector_embedding IS NOT NULL
-      AND j.is_deleted = false
-        AND j.status = :status
+        SELECT j.id, j.vector_embedding
+        FROM jobs j
+        WHERE j.company_id = :companyId
+          AND j.id != :excludeJobId
+          AND j.vector_embedding IS NOT NULL
+          AND j.is_deleted = false
+          AND j.status = :status
     """, nativeQuery = true)
     List<Object[]> listAllVectorsByCompanyIdExceptCurrent(
             @Param("companyId") String companyId,
@@ -225,7 +225,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
     LIMIT 1
     """, nativeQuery = true)
     Optional<Job> findJobByExactVector(
-            @Param("vectorString") String vectorString, // Chú ý: Nên đổi thành String
+            @Param("vectorString") String vectorString,
             @Param("companyId") String companyId,
             @Param("status") String status
     );
@@ -259,14 +259,14 @@ public interface JobRepository extends JpaRepository<Job, String> {
           j.created_at DESC
         """, nativeQuery = true)
     List<Job> findJobsByRequirements(
-                                      @Param("status") String status,
-                                      @Param("city") String city,
-                                      @Param("categoryName") String categoryName,
-                                      @Param("skillNames") List<String> skillNames,
-                                      @Param("hasSkills") boolean hasSkills,
-                                      @Param("salaryExpect") Long salaryExpect,
-                                      @Param("tagPattern") String tagPattern,
-                                      @Param("hasTags") boolean hasTags
+        @Param("status") String status,
+        @Param("city") String city,
+        @Param("categoryName") String categoryName,
+        @Param("skillNames") List<String> skillNames,
+        @Param("hasSkills") boolean hasSkills,
+        @Param("salaryExpect") Long salaryExpect,
+        @Param("tagPattern") String tagPattern,
+        @Param("hasTags") boolean hasTags
     );
     /// lệnh truy vấn theo nhu cầy của người dùng (lấy trheo khác chuyên ngành ) --   type: 1
     @Query(value = """
@@ -285,32 +285,32 @@ public interface JobRepository extends JpaRepository<Job, String> {
         ORDER BY
           CASE WHEN :hasSkills = true THEN COUNT(s.id) ELSE 0 END DESC,
           j.created_at DESC
-        """, nativeQuery = true)
+    """, nativeQuery = true)
     List<Job> findJobsByRequirements_Not_sameCategory(
-            @Param("status") String status,
-            @Param("city") String city,
-            @Param("categoryName") String categoryName,
-            @Param("skillNames") List<String> skillNames,
-            @Param("hasSkills") boolean hasSkills,
-            @Param("salaryExpect") Long salaryExpect,
-            @Param("tagPattern") String tagPattern,
-            @Param("hasTags") boolean hasTags
+        @Param("status") String status,
+        @Param("city") String city,
+        @Param("categoryName") String categoryName,
+        @Param("skillNames") List<String> skillNames,
+        @Param("hasSkills") boolean hasSkills,
+        @Param("salaryExpect") Long salaryExpect,
+        @Param("tagPattern") String tagPattern,
+        @Param("hasTags") boolean hasTags
     );
 
 
 
     @Query(value = """
-            SELECT JSON_OBJECT(
-                'title', j.title,
-                'description', j.description,
-                'location', j.location,
-                'salaryMin', j.salary_min,
-                'salaryMax', j.salary_max,
-                'viewCount', j.view_count,
-                'position', j.position
-            )
-            FROM jobs j
-            WHERE j.id = :jobId
-            """, nativeQuery = true)
+        SELECT JSON_OBJECT(
+            'title', j.title,
+            'description', j.description,
+            'location', j.location,
+            'salaryMin', j.salary_min,
+            'salaryMax', j.salary_max,
+            'viewCount', j.view_count,
+            'position', j.position
+        )
+        FROM jobs j
+        WHERE j.id = :jobId
+    """, nativeQuery = true)
     String getJobAsJson(@Param("jobId") String jobId);
 }

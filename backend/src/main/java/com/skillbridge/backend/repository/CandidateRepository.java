@@ -26,6 +26,9 @@ public interface CandidateRepository extends JpaRepository<Candidate, String>, J
         ORDER BY COUNT(s.id) DESC
     """)
     List<Candidate> findCandidatesBySkillMatch(
-            @Param("skillNames") List<String> skillNames,
-            @Param("jobId") String jobId);
+        @Param("skillNames") List<String> skillNames,
+        @Param("jobId") String jobId);
+
+    @Query("SELECT c FROM Candidate c WHERE c.vectorEmbedding IS NOT NULL")
+    List<Candidate> findAllWithVector();
 }

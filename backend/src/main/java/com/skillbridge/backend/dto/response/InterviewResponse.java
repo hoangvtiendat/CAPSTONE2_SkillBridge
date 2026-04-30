@@ -13,6 +13,7 @@ public class InterviewResponse {
     String id;
     String jobId;
     String candidateId;
+    String slotId;
     String jobPosition;
     LocalDateTime startTime;
     String locationLink;

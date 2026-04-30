@@ -32,18 +32,17 @@ public interface CompanyMemberRepository extends JpaRepository<CompanyMember, St
 
     /** Lấy danh sách thành viên của công ty mà người dùng hiện tại đang tham gia */
     @Query("""
-           SELECT new com.skillbridge.backend.dto.response.CompanyMemberResponse(
-                cm.id, c.id, c.name, c.description, c.websiteUrl,
-                u.id, cm.role, u.name, u.status, u.address,
-                u.email, u.phoneNumber
-           )
-           FROM CompanyMember cm
-           JOIN cm.company c
-           JOIN cm.user u
-           WHERE cm.isDeleted = false
-           AND c.id = (SELECT cm2.company.id FROM CompanyMember cm2 WHERE cm2.user.id = :userId)
-           ORDER BY cm.createdAt DESC
-        """
-    )
+       SELECT new com.skillbridge.backend.dto.response.CompanyMemberResponse(
+            cm.id, c.id, c.name, c.description, c.websiteUrl,
+            u.id, cm.role, u.name, u.status, u.address,
+            u.email, u.phoneNumber
+       )
+       FROM CompanyMember cm
+       JOIN cm.company c
+       JOIN cm.user u
+       WHERE cm.isDeleted = false
+       AND c.id = (SELECT cm2.company.id FROM CompanyMember cm2 WHERE cm2.user.id = :userId)
+       ORDER BY cm.createdAt DESC
+    """)
     List<CompanyMemberResponse> getMembers(@Param("userId") String userId);
 }

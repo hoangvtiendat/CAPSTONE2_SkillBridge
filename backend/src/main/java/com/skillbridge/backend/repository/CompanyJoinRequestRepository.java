@@ -1,12 +1,9 @@
 package com.skillbridge.backend.repository;
 
-import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyMemberResponse;
-import com.skillbridge.backend.enums.CompanyStatus;
-import com.skillbridge.backend.enums.JoinRequestStatus;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.skillbridge.backend.entity.CompanyJoinRequest;
+import com.skillbridge.backend.enums.JoinRequestStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -45,6 +42,6 @@ public interface CompanyJoinRequestRepository extends JpaRepository<CompanyJoinR
         ORDER BY cjr.createdAt ASC
     """)
     List<CompanyMemberResponse> getJoinRequestOfMyCompany(
-            @Param("userId") String userId)
+        @Param("userId") String userId)
     ;
 }

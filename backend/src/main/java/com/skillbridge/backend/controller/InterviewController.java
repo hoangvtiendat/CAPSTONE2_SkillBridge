@@ -134,4 +134,26 @@ public class InterviewController {
             .message("Lấy danh sách ứng viên trong khung giờ thành công.")
             .build());
     }
+    @DeleteMapping("/{interviewId}/cancel")
+    public ResponseEntity<ApiResponse<Void>> cancelInterview(@PathVariable String interviewId) {
+        interviewService.cancelInterview(interviewId);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Hủy lịch phỏng vấn thành công.")
+                .build());
+    }
+
+    /**
+     * API dành cho Ứng viên đổi lịch phỏng vấn sang một khung giờ khác.
+     */
+    @PutMapping("/{interviewId}/reschedule")
+    public ResponseEntity<ApiResponse<InterviewResponse>> rescheduleInterview(
+            @PathVariable String interviewId,
+            @RequestParam String newSlotId) {
+
+        InterviewResponse result = interviewService.rescheduleInterview(interviewId, newSlotId);
+        return ResponseEntity.ok(ApiResponse.<InterviewResponse>builder()
+                .result(result)
+                .message("Đổi lịch phỏng vấn thành công.")
+                .build());
+    }
 }

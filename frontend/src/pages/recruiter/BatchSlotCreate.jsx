@@ -119,7 +119,7 @@ const BatchSlotCreate = () => {
         const now = new Date();
         const start = new Date(startTime);
         const diffInHours = (start - now) / (1000 * 60 * 60);
-        return diffInHours >= 12;
+        return diffInHours >= 24;
     };
 
     const calculateEndTime = (startTime, dur) => {
@@ -132,7 +132,7 @@ const BatchSlotCreate = () => {
 
     const getRoundedNow = () => {
         const now = new Date();
-        now.setHours(now.getHours() + 12);
+        now.setHours(now.getHours() + 24);
         const roundedMinutes = Math.ceil(now.getMinutes() / 15) * 15;
         now.setMinutes(roundedMinutes);
         now.setSeconds(0);
@@ -278,8 +278,12 @@ const BatchSlotCreate = () => {
     const handleUpdateSlot = async () => {
         const slotId = editData.interviewSlotId || editData.id;
         const fullStartTime = `${editData.date}T${editData.time}:00`;
+        if (selectedSlot.currentOccupancy > 0) {
+            toast.error("Không thể chỉnh sửa khung giờ đã có ứng viên đăng ký!");
+            return;
+        }
         if (!isActionAllowed(fullStartTime)) {
-            toast.error("Không thể chỉnh sửa vì khung giờ bắt đầu trong vòng 12h tới!");
+            toast.error("Không thể chỉnh sửa vì khung giờ bắt đầu trong vòng 24h tới!");
             return;
         }
 
@@ -322,7 +326,7 @@ const BatchSlotCreate = () => {
             return;
         }
         if (!isActionAllowed(selectedSlot.startTime)) {
-            toast.error("Chỉ được xóa lịch cách hiện tại ít nhất 12 tiếng!");
+            toast.error("Chỉ được xóa lịch cách hiện tại ít nhất 24 tiếng!");
             return;
         }
 
@@ -563,9 +567,25 @@ const BatchSlotCreate = () => {
                                 </div>
                             </div>
 
-                            {!isActionAllowed(selectedSlot.startTime) && (
-                                <div className="time-alert" style={{ marginTop: '10px', color: '#d93025', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px' }}>
-                                    <AlertCircle size={14} /> Đã khóa (Chỉ sửa/xóa trước 12h bắt đầu)
+                            {(selectedSlot.currentOccupancy > 0 || !isActionAllowed(selectedSlot.startTime)) && (
+                                <div className="time-alert" style={{
+                                    marginTop: '15px',
+                                    color: '#d93025',
+                                    background: '#fce8e6',
+                                    padding: '10px',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '13px',
+                                    border: '1px solid #f5c2c7'
+                                }}>
+                                    <AlertCircle size={16} />
+                                    <span style={{ fontWeight: '500' }}>
+                                        {selectedSlot.currentOccupancy > 0
+                                            ? "Đã có ứng viên đăng ký: Không thể sửa hoặc xóa khung giờ này."
+                                            : "Sát giờ phỏng vấn: Chỉ có thể sửa hoặc xóa trước khi bắt đầu 24h."}
+                                    </span>
                                 </div>
                             )}
 
@@ -654,27 +674,32 @@ const BatchSlotCreate = () => {
                             </div>
                         </div>
 
-                        <div className="modal-footer">
-                            <button
-                                className="btn-delete"
-                                onClick={handleDeleteSlot}
-                                disabled={!isActionAllowed(selectedSlot.startTime) || selectedSlot.currentOccupancy > 0}
-                            >
-                                <Trash2 size={16} /> Xóa Slot
-                            </button>
+                        <div className="modal-footer-actions">
+                            {selectedSlot.currentOccupancy === 0 && isActionAllowed(selectedSlot.startTime) ? (
+                                <>
+                                    <button
+                                        onClick={() => editMode ? handleUpdateSlot() : setEditMode(true)}
+                                        className="btn-primary-custom"
+                                    >
+                                        {editMode ? <><Save size={18} /> Lưu thay đổi</> : <><Edit3 size={18} /> Chỉnh sửa</>}
+                                    </button>
 
-                            {editMode ? (
-                                <button className="btn-save" onClick={handleUpdateSlot}>
-                                    <Save size={16} /> Lưu
-                                </button>
+                                    {editMode && (
+                                        <button onClick={() => setEditMode(false)} className="btn-secondary-custom">
+                                            Hủy
+                                        </button>
+                                    )}
+
+                                    {!editMode && (
+                                        <button onClick={handleDeleteSlot} className="btn-danger-custom" title="Xóa khung giờ">
+                                            <Trash2 size={20} />
+                                        </button>
+                                    )}
+                                </>
                             ) : (
-                                <button
-                                    className="btn-edit"
-                                    onClick={() => setEditMode(true)}
-                                    disabled={!isActionAllowed(selectedSlot.startTime)}
-                                >
-                                    <Edit3 size={16} /> Chỉnh sửa
-                                </button>
+                                <p style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <Lock size={14} /> Slot này đã có ngừoi đăng ký
+                                </p>
                             )}
                         </div>
                     </div>

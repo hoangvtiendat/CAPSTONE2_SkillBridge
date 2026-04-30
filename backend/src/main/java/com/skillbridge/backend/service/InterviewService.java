@@ -21,10 +21,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -116,7 +120,7 @@ public class InterviewService {
                 .orElseThrow(() -> new AppException(ErrorCode.SLOT_NOT_FOUND));
 
         // Logic chặn sửa nếu sát 12h
-        if (slot.getStartTime().isBefore(LocalDateTime.now().plusHours(12))) {
+        if (slot.getStartTime().isBefore(LocalDateTime.now().plusHours(24))) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
@@ -191,7 +195,7 @@ public class InterviewService {
             throw new AppException(ErrorCode.INVALID_KEY);
         }
 
-        if (slot.getStartTime().isBefore(LocalDateTime.now().plusHours(12))) {
+        if (slot.getStartTime().isBefore(LocalDateTime.now().plusHours(24))) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
@@ -239,9 +243,13 @@ public class InterviewService {
                 .build();
 
         Interview savedInterview = interviewRepository.save(interview);
-
-        messagingTemplate.convertAndSend("/topic/job-slots/" + slot.getJob().getId(), "UPDATE");
-
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messagingTemplate.convertAndSend("/topic/job-slots/" + slot.getJob().getId(), "UPDATE");
+            }
+        });
+//        messagingTemplate.convertAndSend("/topic/job-slots/" + slot.getJob().getId(), "UPDATE");
         notificationService.createNotification(
                 app.getCandidate().getUser(),
                 null,
@@ -268,12 +276,97 @@ public class InterviewService {
                 .toList();
     }
 
+    @Transactional
+    public void cancelInterview(String interviewId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        Interview interview = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+
+        InterviewSlot slot = interview.getSlot();
+
+        if (slot.getStartTime().isBefore(LocalDateTime.now().plusHours(24))) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        slot.setCurrentOccupancy(Math.max(0, slot.getCurrentOccupancy() - 1));
+        if (slot.getStatus() == SlotStatus.FULL) {
+            slot.setStatus(SlotStatus.AVAILABLE);
+        }
+        slotRepository.save(slot);
+
+        interviewRepository.delete(interview);
+
+        messagingTemplate.convertAndSend("/topic/job-slots/" + slot.getJob().getId(), "UPDATE");
+
+        logService.info(currentUser, "Ứng viên đã hủy lịch phỏng vấn tại slot: " + slot.getStartTime());
+    }
+    @Transactional
+    public InterviewResponse rescheduleInterview(String interviewId, String newSlotId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+
+        // 1. Lấy thông tin cuộc phỏng vấn cũ
+        Interview currentInterview = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+
+        InterviewSlot oldSlot = currentInterview.getSlot();
+
+        // Kiểm tra điều kiện 24h cho slot cũ
+        if (oldSlot.getStartTime().isBefore(LocalDateTime.now().plusHours(24))) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 2. Kiểm tra Slot mới
+        InterviewSlot newSlot = slotRepository.findById(newSlotId)
+                .orElseThrow(() -> new AppException(ErrorCode.SLOT_NOT_FOUND));
+
+        if (newSlot.getCurrentOccupancy() >= newSlot.getCapacity() || newSlot.getStatus() == SlotStatus.LOCKED) {
+            throw new AppException(ErrorCode.SLOT_ALREADY_BOOKED);
+        }
+
+        if (newSlot.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new AppException(ErrorCode.SLOT_EXPIRED);
+        }
+        oldSlot.setCurrentOccupancy(Math.max(0, oldSlot.getCurrentOccupancy() - 1));
+        if (oldSlot.getStatus() == SlotStatus.FULL) oldSlot.setStatus(SlotStatus.AVAILABLE);
+
+        // - Tăng occupancy slot mới
+        newSlot.setCurrentOccupancy(newSlot.getCurrentOccupancy() + 1);
+        if (newSlot.getCurrentOccupancy() >= newSlot.getCapacity()) {
+            newSlot.setStatus(SlotStatus.FULL);
+        }
+
+        slotRepository.save(oldSlot);
+        slotRepository.save(newSlot);
+
+        currentInterview.setSlot(newSlot);
+        currentInterview.setLocationLink(newSlot.getLocationLink());
+        Interview updatedInterview = interviewRepository.save(currentInterview);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messagingTemplate.convertAndSend("/topic/job-slots/" + oldSlot.getJob().getId(), "UPDATE");
+            }
+        });
+        notificationService.createNotification(
+                currentInterview.getApplication().getCandidate().getUser(),
+                null,
+                "Đổi lịch phỏng vấn thành công",
+                "Lịch phỏng vấn mới của bạn là: " + newSlot.getStartTime(),
+                "INTERVIEW_RESCHEDULED",
+                "/candidate/my-interviews",
+                true
+        );
+
+        return mapToInterviewResponse(updatedInterview);
+    }
     // --- MAPPERS ---
     private InterviewResponse mapToInterviewResponse(Interview interview) {
         return InterviewResponse.builder()
                 .id(interview.getId())
                 .jobId(interview.getSlot().getJob().getId())
                 .candidateId(interview.getApplication().getCandidate().getId())
+                .slotId(interview.getSlot().getId())
                 .jobPosition(interview.getSlot().getJob().getPosition())
                 .startTime(interview.getSlot().getStartTime())
                 .locationLink(interview.getSlot().getLocationLink())
@@ -288,15 +381,53 @@ public class InterviewService {
             status = "EXPIRED";
         }
         return InterviewSlotResponse.builder()
-                .id(slot.getId())
-                .jobId(slot.getJob().getId())
-                .startTime(slot.getStartTime())
-                .endTime(slot.getEndTime())
-                .capacity(slot.getCapacity())
-                .currentOccupancy(slot.getCurrentOccupancy())
-                .locationLink(slot.getLocationLink())
-                .description(slot.getDescription())
-                .status(status)
-                .build();
+            .id(slot.getId())
+            .jobId(slot.getJob().getId())
+            .startTime(slot.getStartTime())
+            .endTime(slot.getEndTime())
+            .capacity(slot.getCapacity())
+            .currentOccupancy(slot.getCurrentOccupancy())
+            .locationLink(slot.getLocationLink())
+            .description(slot.getDescription())
+            .status(status)
+            .build();
+    }
+
+    @Scheduled(cron = "0 0 * * * *")
+    @Transactional(readOnly = true)
+    public void checkAndSendReminders() {
+        log.info("Reminder Scheduler: Bắt đầu kiểm tra lịch phỏng vấn sắp diễn ra...");
+        LocalDateTime startWindow = LocalDateTime.now().plusHours(23);
+        LocalDateTime endWindow = LocalDateTime.now().plusHours(24);
+
+        List<Interview> upcomingInterviews = interviewRepository
+                .findAllBySlot_StartTimeBetween(startWindow, endWindow);
+
+        if (upcomingInterviews.isEmpty()) {
+            log.info("Reminder Scheduler: Không có lịch nào cần nhắc nhở trong khung giờ này.");
+            return;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+
+        for (Interview interview : upcomingInterviews) {
+            String timeStr = interview.getSlot().getStartTime().format(formatter);
+            String position = interview.getSlot().getJob().getPosition();
+            String companyName = interview.getSlot().getJob().getCompany().getName();
+
+            notificationService.createNotification(
+                    interview.getApplication().getCandidate().getUser(),
+                    "system@skillbridge.com",
+                    "Nhắc nhở: Lịch phỏng vấn sắp tới",
+                    String.format("Bạn có lịch phỏng vấn cho vị trí %s tại %s vào lúc %s. Đừng quên tham gia đúng giờ nhé!",
+                            position, companyName, timeStr),
+                    "INTERVIEW_REMINDER",
+                    "/candidate/my-interviews",
+                    true
+            );
+
+            log.info("Đã gửi nhắc nhở cho ứng viên {} của vị trí {}",
+                    interview.getApplication().getFullName(), position);
+        }
     }
 }

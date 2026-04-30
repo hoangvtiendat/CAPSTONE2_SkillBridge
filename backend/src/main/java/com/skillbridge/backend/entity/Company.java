@@ -44,9 +44,6 @@ public class Company extends BaseEntity {
     @Column(name = "business_license_url")
     private String businessLicenseUrl;
 
-    @Column(name = "posting_duration")
-    private int postingDuration;
-
     @Column(name = "image_url")
     private String imageUrl;
 

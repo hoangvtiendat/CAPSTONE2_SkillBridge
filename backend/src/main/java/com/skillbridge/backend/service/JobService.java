@@ -13,6 +13,7 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.service.AI_Service_File.AIJobService;
+import com.skillbridge.backend.utils.CosineSimilarityUtils;
 import com.skillbridge.backend.utils.SecurityUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -72,7 +73,7 @@ public class JobService {
     AIJobService aiJobService;
     MailServiceImpl mailService;
     JobInvitationRepository jobInvitationRepository;
-
+    CosineSimilarityUtils cosineSimilarityUtils;
     LocalDate date = LocalDate.now();
 
     @NonFinal
@@ -995,6 +996,7 @@ public class JobService {
         if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
             throw new AppException(ErrorCode.ALREADY_APPLIED);
         }
+
         String qualificationsSnapshot = null;
         try {
             qualificationsSnapshot = objectMapper.writeValueAsString(candidate.getDegree());
@@ -1006,21 +1008,33 @@ public class JobService {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String json = objectMapper.writeValueAsString(request.getParsedContent());
-        System.out.println("json: " + json);
+        float matchingScore = 0.0f;
+        float[] jobVector = job.getVectorEmbedding();
+
+        try {
+            float[] currentCvVector = embeddingService.createEmbedding(json);
+
+            if (jobVector != null && currentCvVector != null) {
+                double similarity = cosineSimilarityUtils.cosineSimilarity(jobVector, currentCvVector);
+                matchingScore = Math.max(0, (float) similarity * 100);
+            }
+        } catch (Exception e) {
+            log.error("Không thể tạo vector hoặc tính điểm cho CV mới: {}", e.getMessage());
+        }
 
         Application application = Application.builder()
-                .job(job)
-                .candidate(candidate)
-                .fullName(request.getName())
-                .email(request.getEmail())
-                .phoneNumber(request.getNumberPhone())
-                .cvUrl(cvUrl)
-                .recommendationLetter(request.getRecommendationLetter())
-                .qualifications(qualificationsSnapshot)
-                .status(ApplicationStatus.PENDING)
-                .aiMatchingScore(0.0f)
-                .parsedContentJson(json)
-                .build();
+            .job(job)
+            .candidate(candidate)
+            .fullName(request.getName())
+            .email(request.getEmail())
+            .phoneNumber(request.getNumberPhone())
+            .cvUrl(cvUrl)
+            .recommendationLetter(request.getRecommendationLetter())
+            .qualifications(qualificationsSnapshot)
+            .status(ApplicationStatus.PENDING)
+            .aiMatchingScore(matchingScore)
+            .parsedContentJson(json)
+            .build();
 
         Application savedApp = applicationRepository.saveAndFlush(application);
 
@@ -1177,6 +1191,4 @@ public class JobService {
                 .build())
             .collect(Collectors.toList());
     }
-
-
 }

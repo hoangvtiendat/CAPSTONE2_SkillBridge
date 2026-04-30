@@ -84,7 +84,9 @@ public class SecurityConfig {
                                 "/jobs/apply/**",
                                 "/evaluate-self/{id}",
                                 "/jobs/applied",
-                                "/interviews/my-interviews"
+                                "/interviews/my-interviews",
+                                "/interviews/{interviewId}/cancel",
+                                "/interviews/{interviewId}/reschedule"
                         ).hasRole("CANDIDATE")
 
                         .requestMatchers(

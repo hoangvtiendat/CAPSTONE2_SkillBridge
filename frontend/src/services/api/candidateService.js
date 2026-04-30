@@ -69,13 +69,13 @@ const candidateService = {
         const response = await api.patch(`/candidates/open-to-work?isOpenToWork=${status}`);
         return response.data;
     },
-    getPotentialCandidates: async (jobId) => {
-        const response = await api.get(`/candidates/potential/${jobId}`);
+
+    getPotentialCandidates: async (jobId, page = 0, limit = 15) => {
+        const response = await api.get(`/candidates/potential/${jobId}?page=${page}&limit=${limit}`);
         return response.data;
     },
     inviteCandidate: async (jobId, candidateId) => {
         try {
-            // Sử dụng path variable cho jobId và body cho candidateId như backend yêu cầu
             const response = await api.post(`/jobs/${jobId}/invite`, {
                 candidateId: candidateId
             });

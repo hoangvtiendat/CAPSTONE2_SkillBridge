@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -126,17 +127,21 @@ public class CandidateController {
      * URL: GET /candidates/potential/{jobId}
      */
     @GetMapping("/potential/{jobId}")
-    public ResponseEntity<ApiResponse<List<CandidateResponse>>> findPotentialCandidates(
-            @PathVariable String jobId
+    public ResponseEntity<ApiResponse<Map<String, Object>>> findPotentialCandidates(
+            @PathVariable String jobId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "limit", defaultValue = "15") int limit
     ) {
-        List<CandidateResponse> result = candidateService.findPotentialCandidates(jobId);
-        return ResponseEntity.ok(ApiResponse.<List<CandidateResponse>>builder()
+        Map<String, Object> result = candidateService.findPotentialCandidates(jobId, page, limit);
+
+        List<?> candidates = (List<?>) result.get("candidates");
+
+        return ResponseEntity.ok(ApiResponse.<Map<String, Object>>builder()
                 .code(HttpStatus.OK.value())
-                .message("Tìm được " + result.size() + " ứng viên tiềm năng")
+                .message("Tìm thấy " + result.get("totalElements") + " nhân tài phù hợp")
                 .result(result)
                 .build());
     }
-
     /**
      * 3. Nhà tuyển dụng thực hiện đánh giá một ứng viên cụ thể
      * URL: GET /candidates/evaluate-by-recruiter/{candidateId}/{jobId}

@@ -89,7 +89,18 @@
     opacity: 0.6;
     filter: grayscale(1);
 }
+.slot-card-v2.is-current-old {
+    opacity: 0.5; /* Làm mờ 50% */
+    filter: grayscale(0.8); /* Chuyển gần về màu xám */
+    pointer-events: none; /* Không cho click vào card */
+    border: 2px dashed #999 !important; /* Viền nét đứt để phân biệt */
+    cursor: not-allowed;
+}
 
+.slot-card-v2.is-current-old .book-btn-v3 {
+    background-color: #6c757d !important; /* Màu xám cho nút */
+    color: white !important;
+}
 .slot-main-content { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
 
 .date-circle-v3 {
@@ -226,3 +237,72 @@
 }
 
 .booking-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 15px; color: var(--text-sub); }
+/* --- ACTIONS FOR BOOKED INTERVIEW --- */
+.booking-footer-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid var(--border);
+}
+
+.btn-reschedule {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #f1f5f9;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-reschedule:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+}
+
+.btn-cancel-booking {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #fff1f2;
+    color: var(--danger);
+    border: 1px solid #fecdd3;
+    padding: 14px 25px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel-booking:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+    transform: translateY(-2px);
+}
+
+.booking-policy-note {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-sub);
+    font-style: italic;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 600px) {
+    .booking-footer-actions {
+        flex-direction: column;
+    }
+    .btn-cancel-booking {
+        order: 2;
+    }
+}

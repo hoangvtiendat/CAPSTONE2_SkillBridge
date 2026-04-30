@@ -25,15 +25,15 @@ public interface SubscriptionOfCompanyRepository extends JpaRepository<Subscript
 
     /** Thống kê doanh thu theo từng tháng kể từ một mốc thời gian cụ thể */
     @Query("""
-                SELECT new com.skillbridge.backend.dto.MonthlyRevenueDTO(
-                    MONTH(cs.startDate),
-                    SUM(cs.price)
-                )
-                FROM SubscriptionOfCompany cs
-                WHERE cs.startDate >= :fromDate
-                GROUP BY MONTH(cs.startDate)
-                ORDER BY MONTH(cs.startDate)
-            """)
+        SELECT new com.skillbridge.backend.dto.MonthlyRevenueDTO(
+            MONTH(cs.startDate),
+            SUM(cs.price)
+        )
+        FROM SubscriptionOfCompany cs
+        WHERE cs.startDate >= :fromDate
+        GROUP BY MONTH(cs.startDate)
+        ORDER BY MONTH(cs.startDate)
+    """)
     List<MonthlyRevenueDTO> revenueLast6Months(@Param("fromDate") LocalDateTime fromDate);
 
     /** Tính tổng doanh thu phát sinh trong một khoảng thời gian xác định */

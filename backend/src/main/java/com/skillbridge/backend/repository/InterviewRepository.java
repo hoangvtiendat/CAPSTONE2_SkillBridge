@@ -7,6 +7,7 @@ import com.skillbridge.backend.enums.SlotStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -24,4 +25,6 @@ public interface InterviewRepository extends JpaRepository<Interview, String> {
     List<Interview> findAllBySlotId(String slotId);
 
     List<Interview> findAllBySlot(InterviewSlot interviewSlot);
+
+    List<Interview> findAllBySlot_StartTimeBetween(LocalDateTime start, LocalDateTime end);
 }
