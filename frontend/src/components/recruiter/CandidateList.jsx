@@ -30,7 +30,7 @@ const CandidateList = () => {
     const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     const API_BASE_URL = "http://localhost:8081/identity";
-    const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.default.jpg`;
+    const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.jpg`;
 
     const getImageUrl = (path) => {
         if (!path || path === "" || path === "null") return DEFAULT_AVATAR;

@@ -3,8 +3,6 @@ package com.skillbridge.backend.repository;
 import com.skillbridge.backend.dto.MonthlyJobDTO;
 import com.skillbridge.backend.dto.response.AdminJobFeedItemResponse;
 import com.skillbridge.backend.dto.response.JobFeedItemResponse;
-import com.skillbridge.backend.dto.response.JobResponse;
-import com.skillbridge.backend.dto.response.JobSemanticSearchResponse;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.JobStatus;
@@ -17,8 +15,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -165,13 +161,14 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
-            cs.name, cat.name, j.status, j.moderationStatus
+            soc.name, cat.name, j.status, j.moderationStatus
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN SubscriptionOfCompany soc ON soc.company.id = c.id
         WHERE j.isDeleted = false
+        AND soc.status = com.skillbridge.backend.enums.SubscriptionOfCompanyStatus.OPEN
         AND (:status IS NULL OR j.status = :status)
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
         ORDER BY j.createdAt DESC
@@ -186,13 +183,14 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
-            cs.name, cat.name, j.status, j.moderationStatus
+            soc.name, cat.name, j.status, j.moderationStatus
         )
         FROM Job j
         LEFT JOIN j.company c
         LEFT JOIN j.category cat
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN SubscriptionOfCompany soc ON soc.company.id = c.id
         WHERE j.isDeleted = false
+        AND soc.status = com.skillbridge.backend.enums.SubscriptionOfCompanyStatus.OPEN
         AND j.status = com.skillbridge.backend.enums.JobStatus.PENDING
         AND (:modStatus IS NULL OR j.moderationStatus = :modStatus)
         ORDER BY j.createdAt ASC
@@ -204,11 +202,11 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     /// Lấy dạnh sách VECTOR từng JD của cty đó
     @Query(value = """
-    SELECT j.id, j.vector_embedding 
-    FROM jobs j 
-    WHERE j.company_id = :companyId 
+    SELECT j.id, j.vector_embedding
+    FROM jobs j
+    WHERE j.company_id = :companyId
       AND j.id != :excludeJobId
-      AND j.vector_embedding IS NOT NULL 
+      AND j.vector_embedding IS NOT NULL
       AND j.is_deleted = false
         AND j.status = :status
     """, nativeQuery = true)
@@ -219,10 +217,10 @@ public interface JobRepository extends JpaRepository<Job, String> {
     );
     ///  So sánh Vector chức năng đăng lại bài
     @Query(value = """
-    SELECT * FROM jobs j 
-    WHERE j.company_id = :companyId 
-      AND j.status = :status 
-      AND j.vector_embedding = CAST(:vectorString AS JSON) 
+    SELECT * FROM jobs j
+    WHERE j.company_id = :companyId
+      AND j.status = :status
+      AND j.vector_embedding = CAST(:vectorString AS JSON)
       AND j.is_deleted = false
     LIMIT 1
     """, nativeQuery = true)
@@ -290,6 +288,4 @@ public interface JobRepository extends JpaRepository<Job, String> {
             WHERE j.id = :jobId
             """, nativeQuery = true)
     String getJobAsJson(@Param("jobId") String jobId);
-
 }
-
