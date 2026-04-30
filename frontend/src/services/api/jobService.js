@@ -2,13 +2,13 @@ import api from '../../config/axiosConfig';
 
 const getAuthHeader = () => {
     const token = localStorage.getItem('accessToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    return token ? {Authorization: `Bearer ${token}`} : {};
 };
 
 const jobService = {
     getFeed: async (params = {}) => {
         try {
-            const { page = 0, limit = 6, categoryId, location, salary } = params;
+            const {page = 0, limit = 6, categoryId, location, salary} = params;
             const queryParams = new URLSearchParams();
             queryParams.append('page', page);
             queryParams.append('limit', limit);
@@ -46,7 +46,7 @@ const jobService = {
 
     getJobsByCompany: async (companyId, params = {}) => {
         try {
-            const { page = 0, limit = 6, categoryIds } = params;
+            const {page = 0, limit = 6, categoryIds} = params;
             const queryParams = new URLSearchParams();
             queryParams.append('page', page);
             queryParams.append('limit', limit);
@@ -108,9 +108,9 @@ const jobService = {
         }
     },
     closedJd: async (jdId) => {
-        try{
+        try {
             await api.put(`/jobs/my-company/update-Status-JD/${jdId}/${2}/closed`);
-        }catch(error){
+        } catch (error) {
             console.error('Error closing JD:', error);
             throw error;
         }
@@ -167,9 +167,9 @@ const jobService = {
 
     getAdminJobs: async (params = {}) => {
         try {
-            const { page = 0, limit = 10, status, modStatus } = params;
+            const {page = 0, limit = 10, status, modStatus} = params;
             const response = await api.get(`/jobs/feedAdmin`, {
-                params: { page, limit, status, modStatus }
+                params: {page, limit, status, modStatus}
             });
 
             const result = response.data.result;
@@ -199,9 +199,9 @@ const jobService = {
 
     getPendingJobs: async (params = {}) => {
         try {
-            const { page = 0, limit = 10, modStatus } = params;
+            const {page = 0, limit = 10, modStatus} = params;
             const response = await api.get(`/jobs/feedAdminPending`, {
-                params: { page, limit, modStatus }
+                params: {page, limit, modStatus}
             });
             const result = response.data.result;
             return {
@@ -245,30 +245,30 @@ const jobService = {
 
     changeModerationStatus: async (jobId, status) => {
         const response = await api.patch(`/jobs/feedAdmin/${jobId}/moderation`, null, {
-            params: { status }
+            params: {status}
         });
         return response.data;
     },
 
     changeStatus: async (jobId, status) => {
         const response = await api.patch(`/jobs/feedAdmin/${jobId}/status`, null, {
-            params: { status }
+            params: {status}
         });
         return response.data;
     },
     repostJob: async (jobId) => {
-    try {
-        const response = await api.post(`/jobs/report-Job/${jobId}`);
-        
-        if (!response) {
-            throw new Error("Không nhận được phản hồi từ server");
+        try {
+            const response = await api.post(`/jobs/report-Job/${jobId}`);
+
+            if (!response) {
+                throw new Error("Không nhận được phản hồi từ server");
+            }
+            return response.data;
+        } catch (error) {
+            console.error('Lỗi khi đăng lại bài:', error);
+            throw error;
         }
-        return response.data;
-    } catch (error) {
-        console.error('Lỗi khi đăng lại bài:', error);
-        throw error;
-    }
-},
+    },
 
     getAppliedJobs: async () => {
         try {
@@ -279,9 +279,11 @@ const jobService = {
             throw error;
         }
     },
-    withdrawApplication: async (applicationId) => {
+    withdrawApplication: async (applicationId, reason = null) => {
         try {
-            const response = await api.post(`/applications/${applicationId}/withdraw`);
+            const response = await api.post(`/applications/${applicationId}/withdraw`, {
+                reason: reason
+            });
             return response.data;
         } catch (error) {
             console.error("Error withdrawing application:", error);

@@ -32,22 +32,37 @@ const Sidebar = ({onScrollToSection}) => {
             // Chỉ gọi API nếu user đã đăng nhập
             if (user) {
                 try {
-                    // Lấy token từ localStorage (hoặc từ context của bạn) để xác thực
                     const token = localStorage.getItem('accessToken');
 
-                    const response = await axios.get('http://localhost:8081/identity/candidates/my-invitations', {
-                        headers: {
-                            Authorization: `Bearer ${token}`
+                    const response = await axios.get(
+                        'http://localhost:8081/identity/candidates/my-invitations',
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
                         }
-                    });
+                    );
 
-                    // Kiểm tra nếu dữ liệu trả về là một mảng
+                    let invitations = [];
+
                     if (Array.isArray(response.data)) {
-                        setInvitationCount(response.data.length);
+                        invitations = response.data;
                     } else if (response.data.result && Array.isArray(response.data.result)) {
-                        // Trường hợp API bọc kết quả trong một object "result"
-                        setInvitationCount(response.data.result.length);
+                        invitations = response.data.result;
                     }
+
+                    // 🔥 FILTER CHỈ LẤY CÒN HẠN
+                    const now = new Date();
+
+                    const validInvitations = invitations.filter(invitation => {
+                        if (!invitation.expiresAt) return false;
+
+                        const expireTime = new Date(invitation.expiresAt);
+                        console.log("expireTime: ", expireTime, "\nnow: ", now)
+                        return expireTime > now;
+                    });
+                    console.log("validInvitations.length: ", validInvitations.length)
+                    setInvitationCount(validInvitations.length);
                 } catch (error) {
                     console.error("Lỗi khi lấy danh sách lời mời:", error);
                 }

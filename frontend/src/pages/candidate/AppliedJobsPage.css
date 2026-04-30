@@ -229,3 +229,142 @@
 .job-card-actions {
     display: none;
 }
+
+/* =========================================
+   WITHDRAW MODAL STYLES (ĐỒNG BỘ UI)
+   ========================================= */
+
+.withdraw-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.6); /* Màu nền tối dựa trên #0f172a */
+    backdrop-filter: blur(4px); /* Thêm hiệu ứng mờ nhẹ cho sang trọng */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.withdraw-modal-content {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 30px;
+    border-radius: 12px; /* Đồng bộ bo góc với job-card-item */
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Inter', sans-serif;
+}
+
+.withdraw-modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.25rem;
+    font-weight: 800; /* Đồng bộ font-weight với applied-title */
+    color: #1e293b;
+}
+
+.withdraw-modal-content p {
+    color: #64748b; /* Đồng bộ màu chữ với applied-subtitle */
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.withdraw-reason-container {
+    margin-bottom: 24px;
+}
+
+.withdraw-reason-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #0f172a;
+}
+
+.withdraw-reason-container textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #e2e8f0; /* Đồng bộ màu viền hệ thống */
+    border-radius: 10px; /* Đồng bộ bo góc với nút icon */
+    resize: vertical;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: #1e293b;
+    background: #f8fafc;
+    outline: none;
+    transition: all 0.2s ease;
+    min-height: 100px;
+}
+
+.withdraw-reason-container textarea::placeholder {
+    color: #94a3b8;
+}
+
+.withdraw-reason-container textarea:focus {
+    background: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* Hiệu ứng focus màu xanh của hệ thống */
+}
+
+.withdraw-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.withdraw-modal-actions button {
+    padding: 10px 20px;
+    border-radius: 10px; /* Đồng bộ với các nút trong hệ thống */
+    font-weight: 600;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.withdraw-modal-actions .btn-cancel {
+    background-color: #ffffff;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.withdraw-modal-actions .btn-cancel:hover {
+    background-color: #f8fafc;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.withdraw-modal-actions .btn-confirm {
+    background-color: #ef4444; /* Giữ màu đỏ báo hiệu hành động cảnh báo */
+    color: #ffffff;
+    border: 1px solid #ef4444;
+}
+
+.withdraw-modal-actions .btn-confirm:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
+    transform: translateY(-2px); /* Hiệu ứng nhấc lên nhẹ khi hover */
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* Hiệu ứng xuất hiện mượt mà cho Modal */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}

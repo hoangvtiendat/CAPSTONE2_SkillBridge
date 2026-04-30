@@ -1,6 +1,7 @@
 package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.request.RespondToApplicationRequest;
+import com.skillbridge.backend.dto.request.WithdrawRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.entity.Application;
 import com.skillbridge.backend.exception.AppException;
@@ -113,14 +114,22 @@ public class ApplicationController {
     @PostMapping("/{id}/withdraw")
     public ResponseEntity<ApiResponse<String>> withDrawApplication(
             @PathVariable String id,
+            @RequestBody(required = false) WithdrawRequest request,
             @Valid @RequestHeader(value = "Authorization") String token
     ) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
-            String jwt = token.substring(7);
-            String rs = applicationService.withDrawApplication(id);
+
+            String DEFAULT_REASON = "Ứng viên rút hồ sơ không nêu lý do cụ thể.";
+            String withdrawReason = DEFAULT_REASON;
+
+            if (request != null && request.getReason() != null && !request.getReason().trim().isEmpty()) {
+                withdrawReason = request.getReason();
+            }
+
+            String rs = applicationService.withDrawApplication(id, withdrawReason);
             ApiResponse<String> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Rút đơn ứng tuyển thành công", rs
             );

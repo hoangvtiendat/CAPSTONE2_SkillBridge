@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, {useState, useEffect} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
 import {
     Building2,
     MapPin,
@@ -16,11 +16,12 @@ import jobService from '../../services/api/jobService';
 import categoryJDService from '../../services/api/categoryJD';
 import JobCard from '../../components/home/JobCard';
 import './CompanyDetailPage.css';
+import Sidebar from "../../components/home/Sidebar";
 
 const API_BASE_URL = "http://localhost:8081/identity";
 
 const CompanyDetailPage = () => {
-    const { id } = useParams();
+    const {id} = useParams();
     const navigate = useNavigate();
 
     const [company, setCompany] = useState(null);
@@ -116,14 +117,14 @@ const CompanyDetailPage = () => {
         fetchCompanyJobs(newPage);
         const element = document.getElementById('company-jobs-section');
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
+            element.scrollIntoView({behavior: 'smooth'});
         }
     };
 
     if (loadingCompany) {
         return (
             <div className="company-detail-loading">
-                <Loader2 className="animate-spin" size={48} />
+                <Loader2 className="animate-spin" size={48}/>
                 <p>Đang tải thông tin công ty...</p>
             </div>
         );
@@ -132,11 +133,11 @@ const CompanyDetailPage = () => {
     if (!company) {
         return (
             <div className="company-detail-error">
-                <Building2 size={64} style={{ opacity: 0.5, marginBottom: '16px' }} />
+                <Building2 size={64} style={{opacity: 0.5, marginBottom: '16px'}}/>
                 <h3>Không tìm thấy công ty</h3>
                 <p>Công ty này có thể không tồn tại hoặc đã bị xóa.</p>
                 <button onClick={() => navigate(-1)} className="btn-back">
-                    <ChevronLeft size={20} />
+                    <ChevronLeft size={20}/>
                     Quay lại
                 </button>
             </div>
@@ -145,55 +146,55 @@ const CompanyDetailPage = () => {
 
     return (
         <div className="company-detail-page animate-fade-in">
+
             <div className="company-header-banner">
                 <div className="company-banner-inner">
                     <button onClick={() => navigate(-1)} className="btn-banner-back">
-                        <ChevronLeft size={16} /> Quay lại
+                        <ChevronLeft size={16}/> Quay lại
                     </button>
 
                     <div className="company-banner-content">
                         <div className="company-banner-logo">
                             {company.imageUrl ? (
-                               <img src={getImageUrl(company.imageUrl)} alt="logo"/>
+                                <img src={getImageUrl(company.imageUrl)} alt="logo"/>
                             ) : (
                                 <span>{company.name ? company.name.charAt(0).toUpperCase() : 'C'}</span>
                             )}
                         </div>
 
 
-
                         <div className="company-banner-text">
                             <h1 className="company-banner-title">
                                 {company.name}
                                 {company.status === 'ACTIVE' && (
-                                    <CheckCircle2 size={24} className="company-verified-icon-white" />
+                                    <CheckCircle2 size={24} className="company-verified-icon-white"/>
                                 )}
                             </h1>
                             <div className="company-banner-tags">
                                 <span className="banner-tag">Tập đoàn đa ngành</span>
-                                <span className="banner-tag"><Calendar size={14} /> Thành lập 1993</span>
+                                <span className="banner-tag"><Calendar size={14}/> Thành lập 1993</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div className="company-detail-container">
                 <div className="company-info-cards-row">
                     <div className="info-card-modern">
-                        <div className="info-card-header"><MapPin size={16} className="info-icon blue" /> Địa điểm</div>
+                        <div className="info-card-header"><MapPin size={16} className="info-icon blue"/> Địa điểm</div>
                         <div className="info-card-value">{company.address || "Chưa cập nhật"}</div>
                     </div>
 
                     <div className="info-card-modern">
-                        <div className="info-card-header"><Building2 size={16} className="info-icon blue" /> Quy mô</div>
+                        <div className="info-card-header"><Building2 size={16} className="info-icon blue"/> Quy mô</div>
                         <div className="info-card-value">50,000+ nhân viên</div>
                     </div>
 
                     <div className="info-card-modern">
-                        <div className="info-card-header"><Globe size={16} className="info-icon blue" /> Website</div>
+                        <div className="info-card-header"><Globe size={16} className="info-icon blue"/> Website</div>
                         {company.websiteUrl ? (
-                            <a href={company.websiteUrl.startsWith('http') ? company.websiteUrl : `https://${company.websiteUrl}`} target="_blank" rel="noopener noreferrer" className="info-card-value link">
+                            <a href={company.websiteUrl.startsWith('http') ? company.websiteUrl : `https://${company.websiteUrl}`}
+                               target="_blank" rel="noopener noreferrer" className="info-card-value link">
                                 {company.websiteUrl.replace(/^https?:\/\//, '')}
                             </a>
                         ) : (
@@ -208,7 +209,7 @@ const CompanyDetailPage = () => {
                             <h2 className="section-title">Giới thiệu công ty</h2>
                             <div className="company-description-html">
                                 {company.description ? (
-                                    <div dangerouslySetInnerHTML={{ __html: company.description }} />
+                                    <div dangerouslySetInnerHTML={{__html: company.description}}/>
                                 ) : (
                                     <p className="empty-text">Chưa có thông tin giới thiệu.</p>
                                 )}
@@ -217,7 +218,8 @@ const CompanyDetailPage = () => {
 
                         <div className="company-section" id="company-jobs-section">
                             <h2 className="section-title">
-                                <Briefcase size={20} className="section-icon blue" /> Vị trí đang tuyển ({pagination.totalElements})
+                                <Briefcase size={20} className="section-icon blue"/> Vị trí đang tuyển
+                                ({pagination.totalElements})
                             </h2>
 
                             <div className="company-jobs-layout">
@@ -247,14 +249,14 @@ const CompanyDetailPage = () => {
                                 <div className="company-jobs-content">
                                     {loadingJobs ? (
                                         <div className="jobs-loading">
-                                            <Loader2 className="animate-spin" size={32} />
+                                            <Loader2 className="animate-spin" size={32}/>
                                             <p>Đang tải danh sách việc làm...</p>
                                         </div>
                                     ) : jobs.length > 0 ? (
                                         <>
                                             <div className="company-jobs-grid">
                                                 {jobs.map(job => (
-                                                    <JobCard key={job.id} job={job} />
+                                                    <JobCard key={job.id} job={job}/>
                                                 ))}
                                             </div>
 
@@ -265,7 +267,7 @@ const CompanyDetailPage = () => {
                                                         onClick={() => handlePageChange(pagination.page - 1)}
                                                         className="job-page-btn"
                                                     >
-                                                        <ChevronLeft size={20} />
+                                                        <ChevronLeft size={20}/>
                                                     </button>
 
                                                     {[...Array(pagination.totalPages)].map((_, index) => {
@@ -287,7 +289,8 @@ const CompanyDetailPage = () => {
                                                             index === pagination.page - 2 ||
                                                             index === pagination.page + 2
                                                         ) {
-                                                            return <span key={index} className="pagination-ellipsis">...</span>;
+                                                            return <span key={index}
+                                                                         className="pagination-ellipsis">...</span>;
                                                         }
                                                         return null;
                                                     })}
@@ -297,14 +300,14 @@ const CompanyDetailPage = () => {
                                                         onClick={() => handlePageChange(pagination.page + 1)}
                                                         className="job-page-btn"
                                                     >
-                                                        <ChevronRight size={20} />
+                                                        <ChevronRight size={20}/>
                                                     </button>
                                                 </div>
                                             )}
                                         </>
                                     ) : (
                                         <div className="empty-state">
-                                            <Briefcase size={48} className="empty-icon" />
+                                            <Briefcase size={48} className="empty-icon"/>
                                             <p>Công ty hiện chưa có việc làm nào đang mở.</p>
                                         </div>
                                     )}

@@ -129,7 +129,7 @@ public class ApplicationService {
                 title,
                 messageBody,
                 "APPLICATION_STATUS",
-                "/candidate/applications/" + id,
+                "my-applied-jobs",
                 true
         );
         return "Phản hồi ứng viên thành công!";
@@ -146,19 +146,48 @@ public class ApplicationService {
         };
     }
 
-    public String withDrawApplication(String id) {
+    @Transactional(rollbackFor = Exception.class)
+    public String withDrawApplication(String id, String withdrawReason) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
-        System.out.println("candidate id: " + application.getCandidate().getId());
-        System.out.println("user id: " + currentUser.getUserId());
+
         if(!application.getCandidate().getId().equals(currentUser.getUserId())) {
             throw new AppException(ErrorCode.NOT_MY_APPLICATION);
         }
 
+        Job job = application.getJob();
+        String companyId = job.getCompany().getId();
+        String jobDisplayName = JobService.getJobPositionName(job);
 
+        // --- 1. XỬ LÝ THÔNG BÁO CHO NHÀ TUYỂN DỤNG ---
+        String title = "Ứng viên rút hồ sơ: " + jobDisplayName;
+        String messageBody = String.format(
+                "Chào bộ phận tuyển dụng,\n\nỨng viên %s vừa rút đơn ứng tuyển cho vị trí %s.\nLý do: %s",
+                application.getFullName(), jobDisplayName, withdrawReason
+        );
 
+        // Lấy danh sách các thành viên (HR/Nhà tuyển dụng) của công ty để gửi thông báo
+        // Giả định bạn có hàm findByCompany_Id trong CompanyMemberRepository trả về List<CompanyMember>
+        var companyMembers = companyMemberRepository.findByCompany_Id(companyId);
+
+        if (companyMembers != null && !companyMembers.isEmpty()) {
+            for (var member : companyMembers) {
+                notificationService.createNotification(
+                        member.getUser(),
+                        currentUser.getEmail(),
+                        title,
+                        messageBody,
+                        "APPLICATION_WITHDRAWN",
+                        "/recruiter/jobs/" + job.getId() + "/applications",
+                        true
+                );
+            }
+        }
+
+        // --- 2. XÓA HỒ SƠ ---
         applicationRepository.deleteById(id);
+
         return "Rút hồ sơ ứng tuyển thành công";
     }
 }

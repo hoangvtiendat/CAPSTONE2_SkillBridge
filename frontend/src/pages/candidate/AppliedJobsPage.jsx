@@ -1,15 +1,20 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import jobService from '../../services/api/jobService';
-import {MapPin, DollarSign, Calendar, Building2, Video, UserX} from 'lucide-react';
-import {useNavigate} from 'react-router-dom';
+import { MapPin, DollarSign, Calendar, Building2, Video, UserX } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './AppliedJobsPage.css';
-import {toast} from 'sonner';
+import { toast } from 'sonner';
 
 const AppliedJobsPage = () => {
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
 
+    // State cho Modal Rút hồ sơ
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState(null);
+    const [withdrawReason, setWithdrawReason] = useState("");
+
+    const navigate = useNavigate();
     const API_IMAGE_BASE = "http://localhost:8081/identity";
 
     useEffect(() => {
@@ -43,31 +48,46 @@ const AppliedJobsPage = () => {
         navigate(`/interviews/book/${jobId}`);
     };
 
+    // Mở Modal
+    const handleOpenWithdrawModal = (e, applicationId) => {
+        e.stopPropagation(); // Ngăn sự kiện click vào card (chuyển trang)
+        setSelectedApplicationId(applicationId);
+        setWithdrawReason(""); // Reset lại lý do
+        setIsModalOpen(true);
+    };
+
+    // Đóng Modal
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedApplicationId(null);
+        setWithdrawReason("");
+    };
+
+    // Xử lý khi xác nhận rút hồ sơ trong Modal
+    const handleConfirmWithdraw = async () => {
+        if (!selectedApplicationId) return;
+
+        try {
+            // Truyền thêm withdrawReason vào hàm withdrawApplication
+            const response = await jobService.withdrawApplication(selectedApplicationId, withdrawReason);
+            if (response.code === 200) {
+                toast.success(response.result || "Rút hồ sơ thành công!");
+                // Cập nhật lại UI bằng cách lọc bỏ hồ sơ đã rút
+                setAppliedJobs(prev => prev.filter(item => item.applicationId !== selectedApplicationId));
+                handleCloseModal(); // Đóng Modal
+            }
+        } catch (err) {
+            toast.error("Không thể rút hồ sơ. Vui lòng thử lại!");
+            console.error("Lỗi rút hồ sơ:", err);
+        }
+    };
+
     if (loading) return (
         <div className="applied-loading">
             <div className="spinner"></div>
             <p>Đang tải dữ liệu...</p>
         </div>
     );
-
-    const handleWithdraw = async (e, applicationId) => {
-        e.stopPropagation(); // Ngăn sự kiện click vào card (chuyển trang)
-
-        if (!window.confirm("Bạn có chắc chắn muốn rút hồ sơ ứng tuyển này không?")) {
-            return;
-        }
-
-        try {
-            const response = await jobService.withdrawApplication(applicationId);
-            if (response.code === 200) {
-                toast.success(response.result || "Rút hồ sơ thành công");
-                // Cập nhật lại UI bằng cách lọc bỏ hồ sơ đã rút
-                setAppliedJobs(prev => prev.filter(item => item.applicationId !== applicationId));
-            }
-        } catch (err) {
-            toast.error("Không thể rút hồ sơ. Vui lòng thử lại!");
-        }
-    };
 
     return (
         <div className="applied-container">
@@ -89,23 +109,22 @@ const AppliedJobsPage = () => {
                                 {item.status}
                             </span>
                             <div className="action">
-                                {item.status === 'PENDING' && (
-                                    <button
-                                        className="btn-withdraw-icon"
-                                        onClick={(e) => handleWithdraw(e, item.applicationId)}
-                                        title="Rút hồ sơ"
-                                        style={{color: '#ef4444'}} // Màu đỏ minimalist
-                                    >
-                                        <UserX size={14}/>
-                                    </button>
-                                )}
+                                {/* ĐÃ BỎ ĐIỀU KIỆN item.status === 'PENDING' */}
+                                <button
+                                    className="btn-withdraw-icon"
+                                    onClick={(e) => handleOpenWithdrawModal(e, item.applicationId)}
+                                    title="Rút hồ sơ"
+                                    style={{ color: '#ef4444' }} // Màu đỏ minimalist
+                                >
+                                    <UserX size={14} />
+                                </button>
 
                                 <button
                                     className="btn-book-icon-v3"
                                     onClick={(e) => handleGoToBooking(e, item.jobId)}
                                     title="Đặt lịch phỏng vấn"
                                 >
-                                    <Video size={14}/>
+                                    <Video size={14} />
                                 </button>
                             </div>
                         </div>
@@ -126,20 +145,20 @@ const AppliedJobsPage = () => {
                             </h3>
 
                             <div className="job-company-v2 text-truncate">
-                                <Building2 size={14}/>
+                                <Building2 size={14} />
                                 <span>{item.companyName}</span>
                             </div>
 
                             <div className="job-meta-v2">
                                 <div className="meta-row">
-                                    <MapPin size={14}/> <span>{item.location}</span>
+                                    <MapPin size={14} /> <span>{item.location}</span>
                                 </div>
                                 <div className="meta-row salary">
-                                    <DollarSign size={14}/>
+                                    <DollarSign size={14} />
                                     <span>{item.salaryMin.toLocaleString()} - {item.salaryMax.toLocaleString()}</span>
                                 </div>
                                 <div className="meta-row date">
-                                    <Calendar size={14}/>
+                                    <Calendar size={14} />
                                     <span>{new Date(item.appliedAt).toLocaleDateString('vi-VN')}</span>
                                 </div>
                             </div>
@@ -147,6 +166,36 @@ const AppliedJobsPage = () => {
                     </div>
                 ))}
             </div>
+
+            {/* OVERLAY MODAL RÚT HỒ SƠ */}
+            {isModalOpen && (
+                <div className="withdraw-modal-overlay" onClick={handleCloseModal}>
+                    <div className="withdraw-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Rút hồ sơ ứng tuyển</h3>
+                        <p>Bạn có chắc chắn muốn rút hồ sơ này không?</p>
+
+                        <div className="withdraw-reason-container">
+                            <label htmlFor="reason">Lý do rút hồ sơ (Không bắt buộc):</label>
+                            <textarea
+                                id="reason"
+                                rows={4}
+                                placeholder="Nhập lý do của bạn để nhà tuyển dụng có thể hiểu rõ hơn..."
+                                value={withdrawReason}
+                                onChange={(e) => setWithdrawReason(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="withdraw-modal-actions">
+                            <button className="btn-cancel" onClick={handleCloseModal}>
+                                Hủy bỏ
+                            </button>
+                            <button className="btn-confirm" onClick={handleConfirmWithdraw}>
+                                Xác nhận rút
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

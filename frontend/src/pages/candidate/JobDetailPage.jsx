@@ -13,6 +13,7 @@ import {
 import './JobDetail.css';
 import {toast, Toaster} from 'sonner';
 import {useAuth} from '../../context/AuthContext';
+import Sidebar from "../../components/home/Sidebar";
 
 const API_BASE_URL = "http://localhost:8081/identity";
 
@@ -405,6 +406,7 @@ const JobDetailPage = () => {
     return (
         <div className="candidate-job-detail-wrapper">
             <Toaster position="top-right" richColors/>
+            <Sidebar/>
             <div className="container">
                 <button className="btn-back-nav" onClick={() => navigate(-1)}><ChevronLeft size={20}/> Quay lại</button>
 
