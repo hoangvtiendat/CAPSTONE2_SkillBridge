@@ -372,6 +372,7 @@
     cursor: pointer;
     box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
     transition: 0.3s;
+    margin-top: 10px;
 }
 
 .btn-sub-yellow:hover { transform: scale(1.05); filter: brightness(1.1); }

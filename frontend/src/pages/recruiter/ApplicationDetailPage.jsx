@@ -1,46 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, {useEffect, useState} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
 import applicationService from '../../services/api/applicationService';
-import { FileText, User, Briefcase, CheckCircle, XCircle, ChevronLeft, Loader2, MapPin, Calendar, Award } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+    FileText,
+    User,
+    Briefcase,
+    CheckCircle,
+    XCircle,
+    ChevronLeft,
+    Loader2,
+    MapPin,
+    Calendar,
+    Award
+} from 'lucide-react';
+import {toast, Toaster} from 'sonner';
 import './ApplicationDetailPage.css';
 
 const ApplicationDetailPage = () => {
-    const { id } = useParams();
+    const {id} = useParams();
     const navigate = useNavigate();
     const [app, setApp] = useState(null);
     const [loading, setLoading] = useState(true);
     const [cvBlobUrl, setCvBlobUrl] = useState(null);
     const [cvError, setCvError] = useState(false);
 
+    // --- Thêm state quản lý Modal Từ Chối ---
+    const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+    const [rejectReason, setRejectReason] = useState("");
+
     useEffect(() => {
         let currentBlobUrl = null;
 
         const fetchData = async () => {
             try {
-                // 1. Lấy thông tin chi tiết từ Backend
                 const res = await applicationService.getApplicationDetail(id);
                 const appData = res.result;
                 setApp(appData);
 
-                // 2. Tải CV bằng Token để đảm bảo bảo mật
                 if (appData.cvUrl) {
                     const token = localStorage.getItem('accessToken');
                     const cleanPath = appData.cvUrl.startsWith('/') ? appData.cvUrl : `/${appData.cvUrl}`;
-
-                    // FIX 1: Bọc cleanPath trong encodeURI để xử lý các khoảng trắng trong tên file
                     const fullUrl = `http://localhost:8081/identity${encodeURI(cleanPath)}`;
 
                     const response = await fetch(fullUrl, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                        headers: {'Authorization': `Bearer ${token}`}
                     });
 
                     if (response.ok) {
                         const rawBlob = await response.blob();
-
-                        // FIX 2: Ép kiểu file tải về thành PDF một cách tường minh
-                        const pdfBlob = new Blob([rawBlob], { type: 'application/pdf' });
-
+                        const pdfBlob = new Blob([rawBlob], {type: 'application/pdf'});
                         currentBlobUrl = URL.createObjectURL(pdfBlob);
                         setCvBlobUrl(currentBlobUrl);
                     } else {
@@ -63,11 +71,19 @@ const ApplicationDetailPage = () => {
         };
     }, [id]);
 
-    const handleRespond = async (status) => {
+    // Cập nhật hàm handleRespond nhận thêm tham số reason
+    const handleRespond = async (status, reason = "") => {
         try {
-            await applicationService.respondToApplication(id, status);
+            // Lưu ý: Cần truyền 1 object chứa cả status và reason xuống service
+            await applicationService.respondToApplication(id, {status, reason});
+
             toast.success(status === 'INTERVIEW' ? "Đã chấp nhận hồ sơ!" : "Đã từ chối hồ sơ!");
-            setApp({ ...app, status });
+            setApp({...app, status});
+
+            if (status === 'REJECTED') {
+                setIsRejectModalOpen(false); // Đóng modal nếu là từ chối
+            }
+
             setTimeout(() => navigate(`/recruiter/jobs/${app?.job?.id}/applications`), 1500);
         } catch (err) {
             toast.error("Thao tác thất bại!");
@@ -76,19 +92,18 @@ const ApplicationDetailPage = () => {
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-screen">
-            <Loader2 className="animate-spin text-blue-600 mb-2" size={40} />
+            <Loader2 className="animate-spin text-blue-600 mb-2" size={40}/>
             <p className="font-medium text-gray-600">Đang phân tích hồ sơ ứng viên...</p>
         </div>
     );
 
     if (!app) return <div className="p-10 text-center text-gray-500">Không tìm thấy dữ liệu ứng viên.</div>;
 
-    // Parse các dữ liệu JSON từ BE
     const qualifications = JSON.parse(app.qualifications || "[]");
     const aiParsed = app.parsedContentJson ? JSON.parse(app.parsedContentJson) : null;
 
     return (
-        <div className="apd-wrapper bg-gray-50 min-h-screen p-6">
+        <div className="apd-wrapper bg-gray-50 min-h-screen p-6 relative">
             <button
                 onClick={() => window.history.back()}
                 className="apd-btn-back flex items-center gap-2 text-gray-600 hover:text-blue-600 transition mb-6"
@@ -97,20 +112,15 @@ const ApplicationDetailPage = () => {
             </button>
 
             <div className="apd-grid grid grid-cols-1 lg:grid-cols-12 gap-6">
-
                 {/* SIDEBAR */}
                 <div className="lg:col-span-4 space-y-6">
-
                     <div className="apd-sidebar-card p-6">
                         <div className="apd-profile text-center">
-
                             <div className="apd-avatar">
                                 <User size={48}/>
                             </div>
-
                             <h3 className="apd-name">{app.fullName}</h3>
                             <p className="apd-role">{aiParsed?.category || "Ứng viên"}</p>
-
                             <div className="apd-contact">
                                 <p>📧 {app.email}</p>
                                 <p>📞 {app.phoneNumber}</p>
@@ -126,7 +136,11 @@ const ApplicationDetailPage = () => {
                             <button onClick={() => handleRespond('INTERVIEW')} className="apd-btn-primary">
                                 Chấp nhận hồ sơ
                             </button>
-                            <button onClick={() => handleRespond('REJECTED')} className="apd-btn-danger">
+                            {/* Đổi onClick mở Modal thay vì gọi API ngay lập tức */}
+                            <button onClick={() => {
+                                setRejectReason("");
+                                setIsRejectModalOpen(true);
+                            }} className="apd-btn-danger">
                                 Từ chối hồ sơ
                             </button>
                         </div>
@@ -137,7 +151,6 @@ const ApplicationDetailPage = () => {
                         <h4 className="apd-section-title">
                             <Award size={18}/> Học vấn & Chứng chỉ
                         </h4>
-
                         <div className="apd-timeline">
                             {qualifications.map((q, idx) => (
                                 <div key={idx} className="apd-timeline-item">
@@ -152,9 +165,7 @@ const ApplicationDetailPage = () => {
 
                 {/* CONTENT */}
                 <div className="lg:col-span-8 space-y-6">
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                         <div className="apd-card p-6">
                             <h4 className="apd-card-title">
                                 <FileText size={18}/> Thư giới thiệu
@@ -163,12 +174,10 @@ const ApplicationDetailPage = () => {
                                 "{app.recommendationLetter || "Ứng viên không gửi thư giới thiệu."}"
                             </p>
                         </div>
-
                         <div className="apd-card p-6">
                             <h4 className="apd-card-title">
                                 <CheckCircle size={18}/> Kỹ năng nổi bật
                             </h4>
-
                             <div className="apd-skill-list">
                                 {aiParsed?.skills?.map((s, i) => (
                                     <span key={i} className="apd-skill">{s}</span>
@@ -182,15 +191,14 @@ const ApplicationDetailPage = () => {
                         <h4 className="apd-card-title apd-border">
                             <Briefcase size={18}/> Kinh nghiệm làm việc
                         </h4>
-
                         <div className="apd-exp-list">
                             {aiParsed?.experience?.map((exp, idx) => (
                                 <div key={idx} className="apd-exp-item">
                                     <div className="apd-exp-head">
                                         <h5>Vị trí #{idx + 1}</h5>
                                         <span className="apd-exp-date">
-                                    <Calendar size={12}/> {exp.startDate} - {exp.endDate || 'Hiện tại'}
-                                </span>
+                                            <Calendar size={12}/> {exp.startDate} - {exp.endDate || 'Hiện tại'}
+                                        </span>
                                     </div>
                                     <p className="apd-text">{exp.description}</p>
                                 </div>
@@ -203,14 +211,12 @@ const ApplicationDetailPage = () => {
                         <div className="apd-cv-header">
                             <FileText size={20}/>
                             <span>Bản gốc CV</span>
-
                             {cvBlobUrl && (
                                 <a href={cvBlobUrl} download={`${app.fullName}_CV.pdf`} className="apd-download">
                                     Tải PDF
                                 </a>
                             )}
                         </div>
-
                         <div className="apd-cv-body">
                             {cvBlobUrl ? (
                                 <iframe src={`${cvBlobUrl}#toolbar=0`} title="CV"/>
@@ -229,6 +235,46 @@ const ApplicationDetailPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* OVERLAY MODAL TỪ CHỐI HỒ SƠ */}
+            {isRejectModalOpen && (
+                <div className="apd-modal-overlay" onClick={() => setIsRejectModalOpen(false)}>
+                    <div className="apd-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="apd-modal-title">Từ chối ứng viên</h3>
+                        <p className="apd-modal-desc">
+                            Nhập lý do từ chối để giúp ứng viên hiểu rõ hơn và cải thiện trong tương lai.<br/>
+                            <span style={{color: '#94a3b8', fontStyle: 'italic'}}>(Không bắt buộc)</span>
+                        </p>
+
+                        <div className="apd-modal-form-group">
+                            <label htmlFor="rejectReason" className="apd-modal-label">Lý do cụ thể</label>
+                            <textarea
+                                id="rejectReason"
+                                className="apd-modal-textarea"
+                                rows={4}
+                                placeholder="Ví dụ: Kỹ năng chưa hoàn toàn phù hợp với định hướng dự án..."
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="apd-modal-actions">
+                            <button
+                                className="apd-btn-cancel"
+                                onClick={() => setIsRejectModalOpen(false)}
+                            >
+                                Hủy bỏ
+                            </button>
+                            <button
+                                className="apd-btn-danger"
+                                onClick={() => handleRespond('REJECTED', rejectReason)}
+                            >
+                                Xác nhận từ chối
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

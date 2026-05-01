@@ -290,9 +290,9 @@ const IndustryManagementPage = () => {
                     onClick={(e) => {
                         if (e.target === e.currentTarget) setIsModalOpen(false);
                     }}>
-                    <div className="modern-card" style={{ width: '100%', maxWidth: '450px', padding: 0, borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }} onClick={e => e.stopPropagation()}>
-                        <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fcfcfd' }}>
-                            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>
+                    <div className="modern-card" style={{background: "rgba(255, 255, 255, 0.4)", width: '100%', maxWidth: '450px', padding: 0, borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ padding: '24px 32px', borderBottom: '1px solid rgb(124 124 124)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#000000' }}>
                                 {editingCategory ? 'Chỉnh sửa ngành nghề' : 'Thêm ngành nghề mới'}
                             </h2>
                             <button
@@ -305,20 +305,20 @@ const IndustryManagementPage = () => {
                         </div>
                         <form onSubmit={handleSubmit} style={{ padding: '32px' }}>
                             <div style={{ marginBottom: '32px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '800', color: '#475569', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: '800', color: '#000000', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     Tên ngành nghề
                                 </label>
                                 <input
                                     autoFocus
                                     type="text"
                                     className="modern-input"
-                                    style={{ paddingLeft: '20px' }}
+                                    style={{ paddingLeft: '20px'}}
                                     placeholder="Vd: Công nghệ thông tin, Kế toán..."
                                     value={categoryName}
                                     onChange={(e) => setCategoryName(e.target.value)}
                                     required
                                 />
-                                <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '10px' }}>
+                                <p style={{ fontSize: '13px', color: '#202020', marginTop: '10px' }}>
                                     Nhập tên ngành nghề chính xác để hiển thị cho người dùng và nhà tuyển dụng.
                                 </p>
                             </div>

@@ -416,6 +416,11 @@ const JobDetailPage = () => {
 
     if (loading) return <div className="candidate-loader-container"><div className="loader-spinner"></div></div>;
 
+    const handleCreateNewEvaluation = () => {
+        setShowAIModal(false);       // Đóng modal kết quả hiện tại
+        setShowAIOptionsModal(true); // Mở modal yêu cầu chọn/tải CV
+    };
+
     return (
         <div className="candidate-job-detail-wrapper">
             <div className="container">
@@ -660,9 +665,9 @@ const JobDetailPage = () => {
             {/* --- MODAL KẾT QUẢ ĐÁNH GIÁ AI --- */}
             {showAIModal && (
                 <div className="apply-modal-overlay">
-                    <div className="ai-modal-content animate-in">
+                    <div className="ai-modal-content animate-in liquid-glass scrollable-modal">
                         <div className="ai-modal-header">
-                            <h2>Đánh giá AI</h2>
+                            <h2>Kết quả Đánh giá AI</h2>
                             <button className="close-x" onClick={() => setShowAIModal(false)}><X /></button>
                         </div>
 
@@ -715,6 +720,30 @@ const JobDetailPage = () => {
                                 ))}
                             </div>
                         </div>
+
+                        {/* --- THÊM PHẦN FOOTER TẠI ĐÂY --- */}
+                        <div className="ai-modal-footer" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '15px', marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '13px', color: '#64748b' }}>Bạn đã có kỹ năng mới hoặc muốn thử với CV khác?</span>
+                            <button
+                                onClick={handleCreateNewEvaluation}
+                                style={{
+                                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '10px 20px',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <Upload size={16} /> ĐÁNH GIÁ LẠI
+                            </button>
+                        </div>
+                        {/* ------------------------------- */}
+
                     </div>
                 </div>
             )}

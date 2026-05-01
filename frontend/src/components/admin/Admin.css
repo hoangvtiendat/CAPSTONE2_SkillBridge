@@ -20,6 +20,9 @@
     background-color: var(--admin-bg);
 }
 
+.modern-card{
+    background: rgba(255, 255, 255, 0.4);
+}
 .admin-main {
     flex: 1;
     min-height: 100vh;

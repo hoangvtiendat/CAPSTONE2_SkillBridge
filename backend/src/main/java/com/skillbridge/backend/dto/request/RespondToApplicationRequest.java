@@ -1,5 +1,6 @@
 package com.skillbridge.backend.dto.request;
 
+import com.skillbridge.backend.enums.ApplicationStatus;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -13,4 +14,5 @@ public class RespondToApplicationRequest {
 
     @NotBlank(message = "INVALID_APPLICATION_STATUS")
     String status;
+    String reason;
 }

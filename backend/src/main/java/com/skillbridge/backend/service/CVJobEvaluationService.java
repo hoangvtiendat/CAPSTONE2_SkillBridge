@@ -18,6 +18,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +45,7 @@ public class CVJobEvaluationService {
         return response;
     }
 
-    public CVJobEvaluationResponse candidate_self_Evaluation(String jobId,CVJobEvaluationRequest request){
+    public CVJobEvaluationResponse candidate_self_Evaluation(String jobId, CVJobEvaluationRequest request) {
         System.out.println("request: " + request);
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -53,7 +54,8 @@ public class CVJobEvaluationService {
         return createCVJobEvaluation(jobId, request, candidate);
     }
 
-    public CVJobEvaluationResponse createCVJobEvaluation(String jobId, CVJobEvaluationRequest request,Candidate candidate) {
+    @Transactional(rollbackFor = Exception.class)
+    public CVJobEvaluationResponse createCVJobEvaluation(String jobId, CVJobEvaluationRequest request, Candidate candidate) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -61,10 +63,12 @@ public class CVJobEvaluationService {
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
         //Kiểm tra xem đã tạo trước đó hay chưa
-//        var existingEval = cvJobEvaluationRepository.findByJobAndCandidateAndCreateByUserId(job, candidate, user.getRole());
-//        if (existingEval.isPresent()) {
-//            return mapToResponse(existingEval.get(), candidate, job);
-//        }
+        var existingEval = cvJobEvaluationRepository.findByJobAndCandidateAndCreateByUserId(job, candidate, user.getRole());
+        existingEval.ifPresent(cvJobEvaluation -> {
+            cvJobEvaluationRepository.delete(cvJobEvaluation);
+            // Có thể thêm log ở đây để biết đã xoá thành công
+            System.out.println("Đã xoá bản đánh giá cũ của candidate: " + candidate.getId() + " cho job: " + jobId);
+        });
 
         String candidateInformation = candidate.getParsedContentJson();
         String jobInformation = jobRepository.getJobAsJson(jobId);
@@ -239,7 +243,7 @@ public class CVJobEvaluationService {
 
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-         
+
         CVJobEvaluation eval = cvJobEvaluationRepository.findByJobAndCandidateAndCreateByUserId(job, candidate, user.getRole())
                 .orElseThrow(() -> new AppException(ErrorCode.EVALUATION_NOT_FOUND));
 

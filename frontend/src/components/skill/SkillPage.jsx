@@ -128,7 +128,7 @@ export function SkillPage() {
 
             <div className="modern-card">
                 {/* Search and Integrated Actions Bar */}
-                <div className="filters-bar" style={{ background: 'white' }}>
+                <div className="filters-bar">
                     <div className="search-wrapper" style={{ maxWidth: '400px' }}>
                         <Search className="search-icon" size={18} />
                         <input

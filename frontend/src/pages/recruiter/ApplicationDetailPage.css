@@ -5,12 +5,6 @@
     position: relative;
     font-family: 'Inter', sans-serif;
     color: var(--lg-text);
-    z-index: 1;
-    /*background:*/
-    /*        radial-gradient(circle at top left, rgba(96,165,250,0.18), transparent 28%),*/
-    /*        radial-gradient(circle at top right, rgba(236,72,153,0.12), transparent 26%),*/
-    /*        radial-gradient(circle at bottom center, rgba(59,130,246,0.10), transparent 30%),*/
-    /*        linear-gradient(180deg, var(--lg-bg-1) 0%, var(--lg-bg-2) 55%, var(--lg-bg-3) 100%);*/
 }
 
 .apd-profile{
@@ -404,5 +398,129 @@
 @media (max-width: 1024px) {
     .apd-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+.apd-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4); /* Nền tối mờ */
+    backdrop-filter: blur(8px); /* Hiệu ứng kính mờ xịn xò */
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+    opacity: 0;
+    animation: modalFadeIn 0.3s forwards ease-out;
+}
+
+.apd-modal-content {
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 24px; /* Bo góc đồng bộ với các card */
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.2) inset;
+    transform: translateY(20px) scale(0.95);
+    animation: modalSlideUp 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apd-modal-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.apd-modal-desc {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.apd-modal-form-group {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.apd-modal-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.apd-modal-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1e293b;
+    background: #f8fafc;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.apd-modal-textarea:focus {
+    background: #ffffff;
+    border-color: #ef4444; /* Border chuyển đỏ khi focus */
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.apd-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.apd-btn-cancel {
+    background: white;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    height: 45px;
+    padding: 0 24px;
+    border-radius: 48px; /* Đồng bộ với apd-btn-danger */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.apd-btn-cancel:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+/* Fix padding cho nút danger khi nằm trong modal */
+.apd-modal-actions .apd-btn-danger {
+    padding: 0 24px;
+    cursor: pointer;
+}
+
+/* Animations */
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }

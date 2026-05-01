@@ -86,7 +86,7 @@ public class ApplicationController {
             if (token == null || !token.startsWith("Bearer ")) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
-            String jwt = token.substring(7);
+
             String rs = applicationService.respondToApplication(id, request);
             ApiResponse<String> response = new ApiResponse<>(
                     HttpStatus.OK.value(), "Phản hồi đơn ứng tuyển thành công", rs

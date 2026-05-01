@@ -59,11 +59,11 @@ public class ApplicationService {
 
     public List<Application> getApplicationsByCompanyId(String companyId) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
-        
+
         // Verify user is member of the company
         companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
-        
+
         return applicationRepository.findByJob_Company_Id(companyId);
     }
 
@@ -72,17 +72,24 @@ public class ApplicationService {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
-        
+
         // Verify recruiter belongs to the company that owns the job
         companyMemberRepository.findByCompany_IdAndUser_Id(application.getJob().getCompany().getId(), currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
-        
+
         applicationRepository.delete(application);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public String respondToApplication(String id, RespondToApplicationRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
+
+        String DEFAULT_REASON = "Nhà tuyển dụng không đưa ra lý do cụ thể.";
+        String reason = DEFAULT_REASON;
+
+        if (request != null && request.getReason() != null && !request.getReason().trim().isEmpty()) {
+            reason = request.getReason();
+        }
 
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
@@ -114,12 +121,21 @@ public class ApplicationService {
 
         // Chuyển Enum status sang tiếng Việt cho thân thiện (Tùy chọn)
         String statusVi = translateStatus(newStatus);
+        String messageBody = "";
+        if (request.getStatus().equals("REJECTED")) {
+            messageBody = String.format(
+                    "Chào %s,\n\nCông ty %s đã cập nhật trạng thái hồ sơ của bạn cho vị trí %s thành: %s.\n" +
+                            "Lý do từ chối: %s\nVui lòng truy cập hệ thống để xem chi tiết.",
+                    application.getFullName(), companyName, jobDisplayName, statusVi, reason
+            );
+        } else if (request.getStatus().equals("INTERVIEW")) {
+            messageBody = String.format(
+                    "Chào %s,\n\nCông ty %s đã cập nhật trạng thái hồ sơ của bạn cho vị trí %s thành: %s.\n" +
+                            "Vui lòng truy cập hệ thống để xem chi tiết.",
+                    application.getFullName(), companyName, jobDisplayName, statusVi
+            );
+        }
 
-        String messageBody = String.format(
-                "Chào %s,\n\nCông ty %s đã cập nhật trạng thái hồ sơ của bạn cho vị trí %s thành: %s.\n" +
-                        "Vui lòng truy cập hệ thống để xem chi tiết.",
-                application.getFullName(), companyName, jobDisplayName, statusVi
-        );
 
         // --- THỰC HIỆN LUỒNG THÔNG BÁO ---
 
@@ -152,7 +168,7 @@ public class ApplicationService {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
 
-        if(!application.getCandidate().getId().equals(currentUser.getUserId())) {
+        if (!application.getCandidate().getId().equals(currentUser.getUserId())) {
             throw new AppException(ErrorCode.NOT_MY_APPLICATION);
         }
 

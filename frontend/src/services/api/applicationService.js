@@ -14,8 +14,9 @@ const applicationService = {
     },
 
     // Phản hồi ứng viên (Thay đổi trạng thái)
-    respondToApplication: async (id, status) => {
-        const response = await api.post(`/applications/${id}/respond`, { status });
+    respondToApplication: async (id, payload) => {
+        // payload ở đây sẽ là 1 object dạng: { status: 'REJECTED', reason: 'Lý do...' }
+        const response = await api.post(`/applications/${id}/respond`, payload);
         return response.data;
     },
 
