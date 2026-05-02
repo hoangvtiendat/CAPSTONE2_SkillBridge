@@ -4,10 +4,7 @@ import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.SemanticSearchRequest;
 import com.skillbridge.backend.dto.request.SkillRequest;
 import com.skillbridge.backend.dto.response.*;
-import com.skillbridge.backend.entity.Candidate;
-import com.skillbridge.backend.entity.JDTag;
-import com.skillbridge.backend.entity.Job;
-import com.skillbridge.backend.entity.User;
+import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CategoryRepository;
@@ -15,6 +12,7 @@ import com.skillbridge.backend.repository.JDTagRepository;
 import com.skillbridge.backend.repository.JobRepository;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.enums.JobStatus;
+import com.skillbridge.backend.repository.JobSkillRepository;
 import com.skillbridge.backend.service.CandidateService;
 import com.skillbridge.backend.service.EmbeddingService;
 import com.skillbridge.backend.service.MailService;
@@ -55,6 +53,9 @@ public class AIJobService {
 
     @Autowired
     EmbeddingService embeddingService;
+
+    @Autowired
+    JobSkillRepository jobSkillRepository;
 
 
     LocalDate date = LocalDate.now();
@@ -142,9 +143,9 @@ public class AIJobService {
 
             }
             System.out.println("maxSimilarity" + maxSimilarity);
-            if (maxSimilarity == 0.6)
+            if (maxSimilarity >=  0.5 && maxSimilarity < 0.75)
             {return 2;}
-            if (maxSimilarity > 0.6){
+            if (maxSimilarity >= 0.75){
             ///  Lây detail của JD mới
             String detailNewJD = getJobComparisonResponse(idOfJob);
             ///  Lấy detail cảu JD cũ
@@ -525,22 +526,26 @@ public class AIJobService {
                             .collect(Collectors.toList());
 
                     final List<Job> finalListForLambda = ListJDFlowVector;
-
                     ///  Chuyen lai sang Sitrng + Gán ID
                     String JDListString = IntStream.range(0, finalListForLambda.size())
                             .mapToObj(i -> {
                                 Job job = finalListForLambda.get(i);
                                 int displayID = i + 1;
+                                ///  Lấy kỹ năng
+                            String Skill_Names ="";
+                            if(job.getJobSkills() != null && !job.getJobSkills().isEmpty()) {
+                                Skill_Names = job.getJobSkills().stream()
+                                        .map(jobSkill -> jobSkill.getSkill().getName())
+                                        .collect(Collectors.joining(","));
+                            }
+
                                 return String.format(
-                                        "[%d] Công ty: %s | Vị trí: %s | Ngành: %s | Lương: %s-%s | Mô tả: %s",
+                                        "[%d] Công ty: %s | Mô tả: %s |Hạng mục: %s | Kỹ Năng: %s",
                                         displayID,
                                         job.getCompany().getName().toUpperCase(),
+                                        job.getDescription(),
                                         job.getTitle(),
-                                        job.getCategory() != null ? job.getCategory().getName() : "N/A",
-                                        job.getSalaryMin(),
-                                        job.getSalaryMax(),
-
-                                        job.getDescription()
+                                        Skill_Names
                                 );
                             })
                             .collect(Collectors.joining("\n"));

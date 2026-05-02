@@ -439,96 +439,96 @@ public class CandidateService {
 
             List<Category> categories = categoryRepository.findAll();
             List<Skill> allSkills = skillRepository.findAll();
-            LLMResumeResponse llmRes = geminiService.callGemini(
-                    buildPrompt(rawText, categories, allSkills),
-                    LLMResumeResponse.class
-            );
-
-            if (llmRes.getCategoryId() != null && !llmRes.getCategoryId().isBlank()) {
-                categoryRepository.findById(llmRes.getCategoryId()).ifPresent(cat -> {
-                    llmRes.setCategoryName(cat.getName());
-                });
-            }
-
-            if (llmRes.getSkills() != null) {
-                final String identifiedCatId = llmRes.getCategoryId();
-
-                for (CandidateSkillResponse sr : llmRes.getSkills()) {
-                    if (sr != null && sr.getSkillName() != null) {
-                        String nameToMatch = sr.getSkillName().trim();
-
-                        // 1. Try to find by ID if provided and valid
-                        if (sr.getSkillId() != null && !sr.getSkillId().isEmpty() && !sr.getSkillId().contains("ID_")) {
-                             Skill foundById = allSkills.stream()
-                                     .filter(s -> s.getId().equals(sr.getSkillId()))
-                                     .findFirst().orElse(null);
-                             if (foundById != null) {
-                                 sr.setSkillId(foundById.getId());
-                                 sr.setSkillName(foundById.getName());
-                                 continue;
-                             }
-                        }
-
-                        // 2. Try exact match (case-insensitive) within the identified category first
-                        Skill matched = null;
-                        if (identifiedCatId != null) {
-                            matched = allSkills.stream()
-                                    .filter(sk -> sk.getCategory() != null && sk.getCategory().getId().equals(identifiedCatId))
-                                    .filter(sk -> sk.getName() != null && sk.getName().equalsIgnoreCase(nameToMatch))
-                                    .findFirst()
-                                    .orElse(null);
-                        }
-
-                        // 3. If no match in category, search globally (exact match)
-                        if (matched == null) {
-                            matched = allSkills.stream()
-                                    .filter(sk -> sk.getName() != null && sk.getName().equalsIgnoreCase(nameToMatch))
-                                    .findFirst()
-                                    .orElse(null);
-                        }
-
-                        // 4. Try "Contains" match if still nothing
-                        if (matched == null) {
-                             matched = allSkills.stream()
-                                    .filter(sk -> sk.getName() != null && (
-                                            sk.getName().equalsIgnoreCase(nameToMatch) ||
-                                            nameToMatch.toLowerCase().contains(sk.getName().toLowerCase()) ||
-                                            sk.getName().toLowerCase().contains(nameToMatch.toLowerCase())
-                                    ))
-                                    .findFirst()
-                                    .orElse(null);
-                        }
-
-                        if (matched != null) {
-                            sr.setSkillId(matched.getId());
-                            sr.setSkillName(matched.getName());
-                        } else {
-                            sr.setSkillId(null);
-                            // Keep the original name for display, but it will have No ID
-                        }
-                    }
-                }
-            }
+//            LLMResumeResponse llmRes = geminiService.callGemini(
+//                    buildPrompt(rawText, categories, allSkills),
+//                    LLMResumeResponse.class
+//            );
+//
+//            if (llmRes.getCategoryId() != null && !llmRes.getCategoryId().isBlank()) {
+//                categoryRepository.findById(llmRes.getCategoryId()).ifPresent(cat -> {
+//                    llmRes.setCategoryName(cat.getName());
+//                });
+//            }
+//
+//            if (llmRes.getSkills() != null) {
+//                final String identifiedCatId = llmRes.getCategoryId();
+//
+//                for (CandidateSkillResponse sr : llmRes.getSkills()) {
+//                    if (sr != null && sr.getSkillName() != null) {
+//                        String nameToMatch = sr.getSkillName().trim();
+//
+//                        // 1. Try to find by ID if provided and valid
+//                        if (sr.getSkillId() != null && !sr.getSkillId().isEmpty() && !sr.getSkillId().contains("ID_")) {
+//                             Skill foundById = allSkills.stream()
+//                                     .filter(s -> s.getId().equals(sr.getSkillId()))
+//                                     .findFirst().orElse(null);
+//                             if (foundById != null) {
+//                                 sr.setSkillId(foundById.getId());
+//                                 sr.setSkillName(foundById.getName());
+//                                 continue;
+//                             }
+//                        }
+//
+//                        // 2. Try exact match (case-insensitive) within the identified category first
+//                        Skill matched = null;
+//                        if (identifiedCatId != null) {
+//                            matched = allSkills.stream()
+//                                    .filter(sk -> sk.getCategory() != null && sk.getCategory().getId().equals(identifiedCatId))
+//                                    .filter(sk -> sk.getName() != null && sk.getName().equalsIgnoreCase(nameToMatch))
+//                                    .findFirst()
+//                                    .orElse(null);
+//                        }
+//
+//                        // 3. If no match in category, search globally (exact match)
+//                        if (matched == null) {
+//                            matched = allSkills.stream()
+//                                    .filter(sk -> sk.getName() != null && sk.getName().equalsIgnoreCase(nameToMatch))
+//                                    .findFirst()
+//                                    .orElse(null);
+//                        }
+//
+//                        // 4. Try "Contains" match if still nothing
+//                        if (matched == null) {
+//                             matched = allSkills.stream()
+//                                    .filter(sk -> sk.getName() != null && (
+//                                            sk.getName().equalsIgnoreCase(nameToMatch) ||
+//                                            nameToMatch.toLowerCase().contains(sk.getName().toLowerCase()) ||
+//                                            sk.getName().toLowerCase().contains(nameToMatch.toLowerCase())
+//                                    ))
+//                                    .findFirst()
+//                                    .orElse(null);
+//                        }
+//
+//                        if (matched != null) {
+//                            sr.setSkillId(matched.getId());
+//                            sr.setSkillName(matched.getName());
+//                        } else {
+//                            sr.setSkillId(null);
+//                            // Keep the original name for display, but it will have No ID
+//                        }
+//                    }
+//                }
+//            }
 //              --------------- ---------------- ---------------- ------
-//            systemLog.info(currentUser, "AI đã phân tích thành công CV tải lên");
-//            String dataParsing = aiService.parsingCV_AI(rawText);
-//            log.info("[AI_PARSING] Dữ liệu nhận được: {}", dataParsing);
-//
-//            if (dataParsing != null && dataParsing.contains("```")) {
-//                dataParsing = dataParsing.replaceAll("```json|```", "").trim();
-//            }
-//
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            ///  check lỗi dữ liệu data
-//            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-//            ///  register ngày cho objmapper
-//            objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
-//
-//            LLMResumeResponse llmRes = objectMapper.readValue(dataParsing, LLMResumeResponse.class);
-//
-//            if (llmRes == null) {
-//                throw new AppException(ErrorCode.AI_PARSING_FAILED);
-//            }
+            systemLog.info(currentUser, "AI đã phân tích thành công CV tải lên");
+            String dataParsing = aiService.parsingCV_AI(rawText);
+            log.info("[AI_PARSING] Dữ liệu nhận được: {}", dataParsing);
+
+            if (dataParsing != null && dataParsing.contains("```")) {
+                dataParsing = dataParsing.replaceAll("```json|```", "").trim();
+            }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            ///  check lỗi dữ liệu data
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            ///  register ngày cho objmapper
+            objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+
+            LLMResumeResponse llmRes = objectMapper.readValue(dataParsing, LLMResumeResponse.class);
+
+            if (llmRes == null) {
+                throw new AppException(ErrorCode.AI_PARSING_FAILED);
+            }
 
             return llmRes;
 

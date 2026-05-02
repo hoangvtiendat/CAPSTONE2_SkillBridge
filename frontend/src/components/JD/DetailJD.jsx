@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { toast, Toaster } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Plus, Search, Trash2, X, Users } from 'lucide-react';
+import { Plus, Search, Trash2, Users } from 'lucide-react';
 
 import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons"
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 import applicationService from '../../services/api/applicationService';
+import vietnamAdministrativeLegacy from '../../data/vietnamAdministrativeLegacy.json';
 import { useParams, useNavigate } from 'react-router-dom';
 import './DetailJD.css';
 
@@ -54,6 +55,11 @@ const normalizeFormForCompare = (form = {}) => ({
 const hasInvalidLeadingTrailingWhitespace = (value) => {
     if (typeof value !== 'string') return false;
     return value !== value.trim();
+};
+
+const isProvinceActive = (province) => {
+    const deletedValue = province?.isDeleted ?? province?.is_delete ?? province?.isDelete ?? 0;
+    return Number(deletedValue) === 0;
 };
 
 const dedupeSkills = (skills = []) => {
@@ -105,6 +111,11 @@ const DetailJD = () => {
     const [skillsList, setSkillsList] = useState([]);
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
     const [hasAppliedCandidate, setHasAppliedCandidate] = useState(false);
+    const [provinces] = useState(vietnamAdministrativeLegacy);
+    const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
+    const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
+    const [selectedWardCode, setSelectedWardCode] = useState("");
+    const [specificAddress, setSpecificAddress] = useState("");
 
     const fetchJdDetail = useCallback(async () => {
         try {
@@ -226,6 +237,51 @@ const DetailJD = () => {
         const titlesForEdit = cloneTitles(initialTitles);
         const formForEdit = { ...formObj, skills: [...formObj.skills] };
 
+        const locationParts = String(jdDetail.location || '')
+            .split(',')
+            .map((part) => part.trim())
+            .filter(Boolean);
+
+        let provinceCode = '';
+        let districtCode = '';
+        let wardCode = '';
+        let parsedSpecificAddress = '';
+
+        if (locationParts.length > 0) {
+            const provinceName = locationParts[locationParts.length - 1];
+            const foundProvince = provinces
+                .filter(isProvinceActive)
+                .find((province) => province.name === provinceName);
+
+            if (foundProvince) {
+                provinceCode = String(foundProvince.code);
+
+                const districtName = locationParts[locationParts.length - 2];
+                const foundDistrict = foundProvince.districts?.find((district) => district.name === districtName);
+                if (foundDistrict) {
+                    districtCode = String(foundDistrict.code);
+
+                    const wardName = locationParts[locationParts.length - 3];
+                    const foundWard = foundDistrict.wards?.find((ward) => ward.name === wardName);
+                    if (foundWard) {
+                        wardCode = String(foundWard.code);
+                    }
+                }
+
+                const parsedPartCount = wardCode ? 3 : districtCode ? 2 : 1;
+                parsedSpecificAddress = locationParts
+                    .slice(0, Math.max(0, locationParts.length - parsedPartCount))
+                    .join(', ');
+            } else {
+                parsedSpecificAddress = String(jdDetail.location || '');
+            }
+        }
+
+        setSelectedProvinceCode(provinceCode);
+        setSelectedDistrictCode(districtCode);
+        setSelectedWardCode(wardCode);
+        setSpecificAddress(parsedSpecificAddress);
+
         setDynamicTitles(titlesForEdit);
         setEditForm(formForEdit);
         setInitialFormState({
@@ -240,6 +296,10 @@ const DetailJD = () => {
         setEditForm(null);
         setInitialFormState(null);
         setSkillSearchTerm("");
+        setSelectedProvinceCode("");
+        setSelectedDistrictCode("");
+        setSelectedWardCode("");
+        setSpecificAddress("");
     };
 
     const handleChange = (e) => {
@@ -282,10 +342,19 @@ const DetailJD = () => {
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
 
+        const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+        const selectedDistrict = selectedProvince?.districts?.find((district) => String(district.code) === selectedDistrictCode);
+        const selectedWard = selectedDistrict?.wards?.find((ward) => String(ward.code) === selectedWardCode);
+        const finalLocation = [
+            specificAddress.trim(),
+            selectedWard?.name,
+            selectedDistrict?.name,
+            selectedProvince?.name
+        ].filter(Boolean).join(', ');
+
         const textFieldConfig = [
             { key: 'position', label: 'Vị trí công việc' },
-            { key: 'description', label: 'Mô tả công việc' },
-            { key: 'location', label: 'Địa điểm làm việc' }
+            { key: 'description', label: 'Mô tả công việc' }
         ];
 
         const invalidTextField = textFieldConfig.find(({ key }) => hasInvalidLeadingTrailingWhitespace(editForm[key]));
@@ -311,6 +380,22 @@ const DetailJD = () => {
         const hasEmptyDynamicTitles = dynamicTitles.some(item => item.key.trim() === "" || item.value.trim() === "");
         if (hasEmptyDynamicTitles) {
             toast.error("Lỗi nhập liệu", { description: "Vui lòng điền đầy đủ Tiêu đề và Mô tả", style: toastStyles.warning });
+            return;
+        }
+
+        if (!selectedProvinceCode || !selectedDistrictCode || !selectedWardCode || !specificAddress.trim()) {
+            toast.error("Lỗi nhập liệu", {
+                description: "Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện, Xã/Phường và nhập địa chỉ cụ thể",
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        if (hasInvalidLeadingTrailingWhitespace(specificAddress)) {
+            toast.error('Lỗi nhập liệu', {
+                description: 'Địa chỉ cụ thể không được có khoảng trắng ở đầu hoặc cuối',
+                style: toastStyles.warning
+            });
             return;
         }
 
@@ -351,7 +436,7 @@ const DetailJD = () => {
             categoryId: String(editForm.categoryId || '').trim(),
             position: trimText(editForm.position),
             description: trimText(editForm.description),
-            location: trimText(editForm.location),
+            location: finalLocation,
             title: titleObject,
             skills: dedupedCleanSkills
         };
@@ -369,17 +454,34 @@ const DetailJD = () => {
         }
     };
 
-    const isFormChanged = Boolean(initialFormState) && (() => {
-        const normalizedCurrentForm = normalizeFormForCompare(editForm || {});
-        const normalizedCurrentTitles = cloneTitles(dynamicTitles).map(item => ({ key: trimText(item.key), value: trimText(item.value) }));
-        return JSON.stringify(initialFormState.editForm) !== JSON.stringify(normalizedCurrentForm)
-            || JSON.stringify(initialFormState.dynamicTitles) !== JSON.stringify(normalizedCurrentTitles);
-    })();
-
     const filteredSkillsList = skillsList.filter(skill => {
         const skillName = String(skill.name || skill.skillName || skill.title || "").toLowerCase();
         return skillName.includes(skillSearchTerm.toLowerCase());
     });
+
+    const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+    const districtOptions = selectedProvince?.districts || [];
+    const selectedDistrict = districtOptions.find((district) => String(district.code) === selectedDistrictCode);
+    const wardOptions = selectedDistrict?.wards || [];
+
+    const locationPreview = [
+        specificAddress.trim(),
+        wardOptions.find((ward) => String(ward.code) === selectedWardCode)?.name,
+        selectedDistrict?.name,
+        selectedProvince?.name
+    ].filter(Boolean).join(', ');
+
+    const compareLocationValue = locationPreview || trimText(editForm?.location);
+
+    const isFormChanged = Boolean(initialFormState) && (() => {
+        const normalizedCurrentForm = normalizeFormForCompare({
+            ...(editForm || {}),
+            location: compareLocationValue
+        });
+        const normalizedCurrentTitles = cloneTitles(dynamicTitles).map(item => ({ key: trimText(item.key), value: trimText(item.value) }));
+        return JSON.stringify(initialFormState.editForm) !== JSON.stringify(normalizedCurrentForm)
+            || JSON.stringify(initialFormState.dynamicTitles) !== JSON.stringify(normalizedCurrentTitles);
+    })();
 
     if (loading) return <div className="loading-container"><div className="spinner"></div><p>Đang tải dữ liệu...</p></div>;
     if (!jdDetail) return <div className="error-container">Không tìm thấy thông tin JD</div>;
@@ -525,180 +627,310 @@ const DetailJD = () => {
 
 
             {isModalOpen && editForm && (
-                <div className="modal-overlay-modern">
-                    <div className="modal-container-modern">
+                <div className="update-jd-full-page">
+                    <header className="jd-board-header">
+                        <div className="jd-header-copy">
+                            <h2>Cập Nhật Mô Tả Công Việc</h2>
+                        </div>
+                        <div className="header-controls">
+                            <button 
+                                type="button" 
+                                onClick={handleCloseModal} 
+                                className="btn-secondary"
+                            >
+                                Hủy bỏ
+                            </button>
+                            {isFormChanged && (
+                                <button
+                                    type="submit"
+                                    form="update-jd-form"
+                                    disabled={isUpdating}
+                                    className="btn-primary-large btn-header-submit"
+                                >
+                                    {isUpdating ? 'Đang Xử Lý...' : 'Xác Nhận Cập Nhật'}
+                                </button>
+                            )}
+                        </div>
+                    </header>
 
-                        <div className="modal-header-modern">
-                            <h2>Cập nhật mô tả công việc (JD)</h2>
-                            <button onClick={handleCloseModal} className="btn-close-icon"><X size={24} /></button>
+                    <form id="update-jd-form" onSubmit={handleUpdateSubmit} className="jd-board-layout">
+                        
+                        <div className="layout-main-column">
+                            <section className="form-card scroll-card">
+                                <h3 className="card-title">Thông Tin Cơ Bản</h3>
+                                <div className="input-group-grid">
+                                    <div className="input-item">
+                                        <label>Vị Trí Công Việc</label>
+                                        <input
+                                            type="text"
+                                            name="position"
+                                            value={editForm.position}
+                                            onChange={handleChange}
+                                            required
+                                            placeholder="VD: Nhân viên Marketing..."
+                                        />
+                                    </div>
+                                    <div className="input-item">
+                                        <label>Danh Mục Kỹ Năng</label>
+                                        <select
+                                            className="category-select"
+                                            value={editForm.categoryId}
+                                            onChange={handleCategoryChange}
+                                            required
+                                        >
+                                            <option value="">-- Chọn danh mục --</option>
+                                            {categories.map(cat => (
+                                                <option key={cat.id || cat._id} value={cat.id || cat._id}>
+                                                    {cat.name || cat.categoryName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="card-section-divider" />
+
+                                <h3 className="card-title">Chi Tiết Công Việc</h3>
+                                <div className="input-item full-width">
+                                    <label>Mô tả công việc</label>
+                                    <textarea
+                                        name="description"
+                                        value={editForm.description}
+                                        onChange={handleChange}
+                                        required
+                                        rows="3"
+                                        placeholder="Mô tả chi tiết về vị trí, trách nhiệm và môi trường làm việc..."
+                                    ></textarea>
+                                </div>
+
+                                <div className="dynamic-section">
+                                    <div className="dynamic-header">
+                                        <label>Các mục tiêu đề & Chi tiết</label>
+                                        <button type="button" onClick={addDynamicTitle} className="btn-add-outline">
+                                            <Plus size={14} /> Thêm mục
+                                        </button>
+                                    </div>
+
+                                    <div className="dynamic-body job-feed">
+                                        {dynamicTitles.map((item, index) => (
+                                            <div key={index} className="dynamic-row">
+                                                <input
+                                                    type="text"
+                                                    value={item.key}
+                                                    onChange={(e) => handleDynamicTitleChange(index, "key", e.target.value)}
+                                                    placeholder="Ví dụ: Quyền lợi, Yêu cầu..."
+                                                    className="dynamic-input-key"
+                                                />
+                                                <textarea
+                                                    value={item.value}
+                                                    onChange={(e) => handleDynamicTitleChange(index, "value", e.target.value)}
+                                                    placeholder="Nhập chi tiết cho mục này..."
+                                                    rows="2"
+                                                    className="dynamic-input-value"
+                                                />
+                                                {dynamicTitles.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeDynamicTitle(index)}
+                                                        className="btn-delete-icon"
+                                                        title="Xóa mục này"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
                         </div>
 
-                        <form onSubmit={handleUpdateSubmit} className="modal-body-scroll">
-                            <div className="jd-board-layout" style={{ gap: '20px' }}>
+                        <div className="layout-sidebar">
+                            <section className="form-card sidebar-card scroll-card">
+                                <h3 className="card-title">Địa Điểm & Mức Lương</h3>
+                                <div className="input-item full-width location-input-shell">
+                                    <div className="location-field-group">
 
-                                {/* Cột Trái Modal */}
-                                <div className="layout-main-column">
-                                    <div className="form-card">
-                                        <h3 className="card-title">Thông tin cơ bản</h3>
-                                        <div className="input-group-grid">
-                                            <div className="input-item">
-                                                <label>Vị trí công việc</label>
-                                                <input type="text" name="position" value={editForm.position} onChange={handleChange} required />
-                                            </div>
-                                            <div className="input-item">
-                                                <label>Lĩnh vực / Danh mục</label>
-                                                <select value={editForm.categoryId} onChange={handleCategoryChange} required>
-                                                    <option value="">-- Chọn --</option>
-                                                    {categories.map(cat => (
-                                                        <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name || cat.categoryName}</option>
+                                        <div className="location-grid">
+                                            <div className="location-select-wrap location-field-half">
+                                                <label className="location-mini-label">Tỉnh/Thành Phố</label>
+                                                <select
+                                                    className="location-select"
+                                                    value={selectedProvinceCode}
+                                                    onChange={(e) => {
+                                                        setSelectedProvinceCode(e.target.value);
+                                                        setSelectedDistrictCode("");
+                                                        setSelectedWardCode("");
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="">-- Chọn tỉnh/thành phố --</option>
+                                                    {provinces.filter(isProvinceActive).map((province) => (
+                                                        <option key={province.code} value={province.code}>
+                                                            {province.name}
+                                                        </option>
                                                     ))}
                                                 </select>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    <div className="form-card">
-                                        <h3 className="card-title">Chi tiết công việc</h3>
-                                        <div className="input-item full-width">
-                                            <label>Mô tả công việc</label>
-                                            <textarea name="description" value={editForm.description} onChange={handleChange} required rows="3"></textarea>
+                                            <div className="location-select-wrap location-field-half">
+                                                <label className="location-mini-label">Quận/Huyện</label>
+                                                <select
+                                                    className="location-select"
+                                                    value={selectedDistrictCode}
+                                                    onChange={(e) => {
+                                                        setSelectedDistrictCode(e.target.value);
+                                                        setSelectedWardCode("");
+                                                    }}
+                                                    required
+                                                    disabled={!selectedProvinceCode}
+                                                >
+                                                    <option value="">-- Chọn quận/huyện --</option>
+                                                    {districtOptions.map((district) => (
+                                                        <option key={district.code} value={district.code}>
+                                                            {district.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="location-select-wrap location-field-full">
+                                                <label className="location-mini-label">Xã/Phường</label>
+                                                <select
+                                                    className="location-select"
+                                                    value={selectedWardCode}
+                                                    onChange={(e) => setSelectedWardCode(e.target.value)}
+                                                    required
+                                                    disabled={!selectedDistrictCode}
+                                                >
+                                                    <option value="">-- Chọn xã/phường --</option>
+                                                    {wardOptions.map((ward) => (
+                                                        <option key={ward.code} value={ward.code}>
+                                                            {ward.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="location-detail-wrap location-field-full">
+                                                <label className="location-mini-label">Địa Chỉ Cụ Thể</label>
+                                                <input
+                                                    type="text"
+                                                    value={specificAddress}
+                                                    onChange={(e) => setSpecificAddress(e.target.value)}
+                                                    placeholder="VD: Số 12 Nguyễn Huệ"
+                                                    required
+                                                />
+                                            </div>
                                         </div>
 
-                                        <div className="dynamic-section">
-                                            <div className="dynamic-header">
-                                                <label>Các mục Tiêu đề & Chi tiết</label>
-                                                <button type="button" onClick={addDynamicTitle} className="btn-add-outline">
-                                                    <Plus size={16} /> Thêm mục
-                                                </button>
+                                        {locationPreview && (
+                                            <div className="location-preview">
+                                                <span>Địa Chỉ Đã Chọn</span>
+                                                <strong>{locationPreview}</strong>
                                             </div>
-                                            <div className="dynamic-body">
-                                                {dynamicTitles.map((item, index) => (
-                                                    <div key={index} className="dynamic-row">
-                                                        <input
-                                                            type="text"
-                                                            value={item.key}
-                                                            onChange={(e) => handleDynamicTitleChange(index, "key", e.target.value)}
-                                                            placeholder="Tiêu đề (Ví dụ: Quyền lợi)"
-                                                            className="dynamic-input-key"
-                                                        />
-                                                        <textarea
-                                                            value={item.value}
-                                                            onChange={(e) => handleDynamicTitleChange(index, "value", e.target.value)}
-                                                            placeholder="Mô tả chi tiết..."
-                                                            rows="2"
-                                                            className="dynamic-input-value"
-                                                        />
-                                                        {dynamicTitles.length > 1 && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeDynamicTitle(index)}
-                                                                className="btn-delete-icon"
-                                                                title="Xóa mục này"
-                                                            >
-                                                                <Trash2 size={18} />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div className="layout-sidebar">
-                                    <div className="form-card sidebar-card">
-                                        <h3 className="card-title">Yêu cầu & Lương</h3>
-                                        <div className="input-item full-width">
-                                            <label>Địa điểm làm việc</label>
-                                            <input type="text" name="location" value={editForm.location} onChange={handleChange} required />
-                                        </div>
-                                        <div className="salary-group">
-                                            <div className="input-item">
-                                                <label>Lương Tối thiểu</label>
-                                                <input
-                                                    type="text"
-                                                    name="salaryMin"
-                                                    value={editForm.salaryMin ? Number(editForm.salaryMin).toLocaleString('vi-VN') : ''}
-                                                    onChange={(e) => {
-                                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
-                                                        const numValue = rawValue ? Number(rawValue) : 0;
-                                                        setEditForm(prev => ({ ...prev, salaryMin: numValue }));
-                                                    }}
-                                                    required
-                                                    className="form-control"
-                                                    placeholder="Ví dụ: 1.000.000"
-                                                />
-                                            </div>
-                                            <div className="input-item">
-                                                <label>Lương Tối đa</label>
-                                                <input
-                                                    type="text"
-                                                    name="salaryMax"
-                                                    value={editForm.salaryMax ? Number(editForm.salaryMax).toLocaleString('vi-VN') : ''}
-                                                    onChange={(e) => {
-                                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
-                                                        const numValue = rawValue ? Number(rawValue) : 0;
-                                                        setEditForm(prev => ({ ...prev, salaryMax: numValue }));
-                                                    }}
-                                                    required
-                                                    className="form-control"
-                                                    placeholder="Ví dụ: 1.000.000"
-                                                />
-                                            </div>
-                                        </div>
+                                <div className="salary-group">
+                                    <div className="input-item">
+                                        <label>Lương Tối Thiểu</label>
+                                        <input
+                                            type="text"
+                                            name="salaryMin"
+                                            value={editForm.salaryMin ? Number(editForm.salaryMin).toLocaleString('vi-VN') : ''}
+                                            onChange={(e) => {
+                                                const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                                const numValue = rawValue ? Number(rawValue) : '';
+                                                setEditForm(prev => ({ ...prev, salaryMin: numValue }));
+                                            }}
+                                            required
+                                            placeholder="VD: 10.000.000"
+                                        />
                                     </div>
+                                    <div className="input-item">
+                                        <label>Lương Tối Đa</label>
+                                        <input
+                                            type="text"
+                                            name="salaryMax"
+                                            value={editForm.salaryMax ? Number(editForm.salaryMax).toLocaleString('vi-VN') : ''}
+                                            onChange={(e) => {
+                                                const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                                const numValue = rawValue ? Number(rawValue) : '';
+                                                setEditForm(prev => ({ ...prev, salaryMax: numValue }));
+                                            }}
+                                            required
+                                            placeholder="VD: 20.000.000"
+                                        />
+                                    </div>
+                                </div>
 
-                                    <div className="form-card sidebar-card skills-card" style={{ maxHeight: '400px' }}>
-                                        <div className="skills-header">
-                                            <h3 className="card-title">Kỹ năng yêu cầu</h3>
-                                            <div className="search-box">
-                                                <Search size={16} />
-                                                <input type="text" placeholder="Tìm nhanh..." value={skillSearchTerm} onChange={(e) => setSkillSearchTerm(e.target.value)} />
-                                            </div>
+                                <div className="skills-header">
+                                    <h3 className="card-title">Kỹ năng Yêu Cầu</h3>
+                                    {skillsList.length > 0 && (
+                                        <div className="search-box">
+                                            <Search size={16} />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Tìm kiếm..."
+                                                value={skillSearchTerm}
+                                                onChange={(e) => setSkillSearchTerm(e.target.value)}
+                                            />
                                         </div>
-                                        <div className="skills-content">
-                                            {filteredSkillsList.length > 0 ? (
-                                                <div className="skills-list-compact">
-                                                    {filteredSkillsList.map(skill => {
-                                                        const listSkillId = String(skill.id || skill._id || skill.skillId || "");
-                                                        const listSkillName = String(skill.name || skill.skillName || skill.title || "").trim().toLowerCase();
-                                                        const selectedSkill = editForm.skills.find(s => (s.skillId && s.skillId === listSkillId) || (s.name && s.name === listSkillName));
-                                                        const isSelected = !!selectedSkill;
+                                    )}
+                                </div>
 
-                                                        return (
-                                                            <div key={listSkillId} className={`compact-skill-item ${isSelected ? 'active' : ''}`}>
-                                                                <label className="checkbox-main">
-                                                                    <input type="checkbox" checked={isSelected} onChange={() => handleSkillToggle(listSkillId, listSkillName)} />
-                                                                    <span>{skill.name || skill.skillName || skill.title}</span>
+                                <div className="skills-content">
+                                    {skillsList.length > 0 ? (
+                                        <div className="skills-list-compact">
+                                            {filteredSkillsList.length > 0 ? (
+                                                filteredSkillsList.map(skill => {
+                                                    const skillId = skill.id || skill._id;
+                                                    const skillName = skill.name || skill.skillName || skill.title;
+                                                    const selectedSkill = editForm.skills.find(s => s.skillId === skillId || (s.name && s.name === normalizeSkillName(skillName)));
+                                                    const isSelected = !!selectedSkill;
+
+                                                    return (
+                                                        <div key={skillId} className={`compact-skill-item ${isSelected ? 'active' : ''}`}>
+                                                            <label className="checkbox-main">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isSelected}
+                                                                    onChange={() => handleSkillToggle(skillId, normalizeSkillName(skillName))}
+                                                                />
+                                                                <span>{skillName}</span>
+                                                            </label>
+
+                                                            {isSelected && (
+                                                                <label className="checkbox-sub">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedSkill.isRequired}
+                                                                        onChange={(e) => handleSkillRequiredToggle(skillId, normalizeSkillName(skillName), e.target.checked)}
+                                                                    />
+                                                                    Yêu cầu bắt buộc
                                                                 </label>
-                                                                {isSelected && (
-                                                                    <label className="checkbox-sub">
-                                                                        <input type="checkbox" checked={selectedSkill.isRequired} onChange={(e) => handleSkillRequiredToggle(listSkillId, listSkillName, e.target.checked)} />
-                                                                        Bắt buộc?
-                                                                    </label>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })
                                             ) : (
-                                                <p className="empty-text">Không tìm thấy kỹ năng.</p>
+                                                <p className="empty-text">Không tìm thấy kỹ năng phù hợp</p>
                                             )}
                                         </div>
-                                    </div>
+                                    ) : editForm.categoryId ? (
+                                        <p className="empty-text">Đang tải danh sách kỹ năng...</p>
+                                    ) : (
+                                        <p className="empty-text">Vui lòng chọn danh mục để xem kỹ năng</p>
+                                    )}
                                 </div>
-                            </div>
 
-                            <div className="modal-footer-modern">
-                                <button type="button" className="btn-secondary" onClick={handleCloseModal}>Hủy bỏ</button>
-                                {isFormChanged && (
-                                    <button type="submit" className="btn-primary" disabled={isUpdating}>
-                                        {isUpdating ? 'Đang lưu...' : 'Lưu thay đổi'}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
+                            </section>
+                        </div>
+                    </form>
+
+                    <div className="update-jd-overlay" onClick={handleCloseModal}></div>
                 </div>
             )}
         </div>

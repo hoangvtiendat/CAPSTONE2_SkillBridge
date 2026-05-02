@@ -52,59 +52,60 @@ public class AiService {
                             }
             """;
     private static final String PROMPT_PARSING_CV = """
-             Phân tích CV sau và trả về JSON chuẩn dựa trên danh sách ngành và kỹ năng cho sẵn.
-                       \s
-                        DANH SÁCH NGÀNH VÀ KỸ NĂNG TỪ HỆ THỐNG:
-                        %s
-                       \s
-                        YÊU CẦU NGHIÊM NGẶT:
-                        1. Chỉ trả về JSON, không giải thích.
-                        2. Ánh xạ 'categoryId' từ danh sách ngành phù hợp nhất.
-                        3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%%, hãy chọn cái gần nhất.
-                        4. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
-                        5. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
-                        6. Nếu endDate là hiện tại thì trả ngày hiện tại theo định dạng yyyy-MM-dd.
-                       \s
-                        Cấu trúc JSON yêu cầu:
-                        {
-                          "name": "Họ và tên",
-                          "address": "Địa chỉ liên lạc",
-                          "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
-                          "categoryId": "ID của ngành từ danh sách trên",
-                          "degrees": [
-                            {
-                              "type": "DEGREE",
-                              "degree": "Tên bằng cấp (nếu là DEGREE)",
-                              "major": "Ngành học",
-                              "institution": "Tên trường/tổ chức cấp",
-                              "graduationYear": 2023,
-                               "level": "Số điểm/ level của bằng cấp đó"
-                            },
-                            {
-                              "type": "CERTIFICATE",
-                              "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
-                              "year": 2025,
-                              "level": "Số điểm/ level của chứng chỉ đó"
-                            }
-                          ],
-                          "experience": [
-                            {
-                              "startDate": "yyyy-MM-dd",
-                              "endDate": "yyyy-MM-dd hoặc null",
-                              "description": "Chi tiết công việc"
-                            }
-                          ],
-                          "skills": [
-                            {
-                              "skillId": "ID của kỹ năng từ danh sách trên",
-                              "skillName": "Tên kỹ năng gốc từ CV",
-                              "experienceYears": 3
-                            }
-                          ]
-                        }
-                       \s
-                        VĂN BẢN CV:
-                        %s
+              Phân tích CV sau và trả về JSON chuẩn dựa trên danh sách ngành và kỹ năng cho sẵn.
+                                          \s
+                                           DANH SÁCH NGÀNH VÀ KỸ NĂNG TỪ HỆ THỐNG:
+                                           %s
+                                          \s
+                                           YÊU CẦU NGHIÊM NGẶT:
+                                           1. Chỉ trả về JSON, không giải thích.
+                                           2. Ánh xạ 'categoryId' từ danh sách ngành phù hợp nhất.
+                                           3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%%, hãy chọn cái gần nhất.
+                                           4. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
+                                           5. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
+                                           6. Nếu endDate là hiện tại thì trả ngày hiện tại theo định dạng yyyy-MM-dd.
+                                          \s
+                                           Cấu trúc JSON yêu cầu:
+                                           {
+                                             "name": "Họ và tên",
+                                             "address": "Địa chỉ liên lạc",
+                                             "description": "Tóm tắt mục tiêu hoặc giới thiệu bản thân",
+                                             "categoryId": "ID của ngành từ danh sách trên",
+                                             "degrees": [
+                                               {
+                                                 "type": "DEGREE",
+                                                 "degree": "Tên bằng cấp (nếu là DEGREE)",
+                                                 "major": "Ngành học",
+                                                 "institution": "Tên trường/tổ chức cấp",
+                                                 "graduationYear": 2023,
+                                                  "level": "Số điểm/ level của bằng cấp đó"
+                                               },
+                                               {
+                                                 "type": "CERTIFICATE",
+                                                 "name": "Tên chứng chỉ (nếu là CERTIFICATE)",
+                                                 "year": 2025,
+                                                 "level": "Số điểm/ level của chứng chỉ đó"
+                                               }
+                                             ],
+                                             "experience": [
+                                               {
+                                                 "startDate": "yyyy-MM-dd",
+                                                 "endDate": "yyyy-MM-dd hoặc null",
+                                                 "description": "Chi tiết công việc"
+                                               }
+                                             ],
+                                             "skills": [
+                                               {
+                                                 "skillId": "ID của kỹ năng từ danh sách trên",
+                                                 "skillName": "Tên kỹ năng gốc từ CV",
+                                                 "experienceYears": 3
+                                               }
+                                             ]
+                                           }
+                                          \s
+                                           VĂN BẢN CV:
+                                           %s
+                                           ""\"
                         ""\";
        """;
     private static final String PROMPT_CHECK_APPROVAL = """
@@ -148,108 +149,123 @@ public class AiService {
     """;
     private static final String PROMPT_CHECK_NEWJOV_VS_OLDJOB = """
 YÊU CẦU:
-So sánh 2 JD bằng NGỮ NGHĨA (không phải từ khóa) để xác định có SPAM (trùng lặp) hay không.
+So sánh 2 Job Description (JD) bằng NGỮ NGHĨA để xác định có phải là SPAM (bài đăng trùng lặp) hay không. Chỉ đánh dấu SPAM khi thực sự chắc chắn 2 bài đăng này trỏ về CÙNG MỘT công việc.
 
-NGUYÊN TẮC:
-- Dựa vào bản chất công việc, không dựa vào wording.
-- Bỏ qua tên công ty.
-- Nhận diện các thủ thuật: đổi từ, đảo câu, format khác → vẫn coi là giống.
-- Hỗ trợ so sánh khác ngôn ngữ (Việt - Anh).
+NGUYÊN TẮC SO SÁNH:
+- Tập trung vào "Lõi công việc" (Core Role & Tech Stack chính).
+- CHO PHÉP GIỐNG NHAU: Các bài đăng (đặc biệt từ cùng một công ty) thường sẽ copy/paste giống hệt nhau ở các phần: Quyền lợi, Phúc lợi công ty, Yêu cầu chung (như kỹ năng mềm, Git, quy trình làm việc, văn hóa). Việc giống nhau ở các phần này KHÔNG được tính là spam.
+- Nhận diện xào nấu: Hỗ trợ so sánh đa ngôn ngữ (Việt - Anh) và bỏ qua các thủ thuật đảo câu, từ đồng nghĩa nếu bản chất lõi công việc không đổi.
 
-TIÊU CHÍ SO SÁNH:
-1. Vị trí & chuyên môn
-2. Cấp bậc (Junior, Senior,...)
-3. Hình thức làm việc (Full-time, Part-time,...)
-4. Địa điểm (hoặc Remote)
-5. Trách nhiệm & yêu cầu chính
-6. Lương & quyền lợi
+TIÊU CHÍ KHÔNG SPAM (false) - ƯU TIÊN KIỂM TRA TRƯỚC:
+- Khác vai trò chính (VD: Backend Developer khác với Fullstack Developer hoặc Frontend, dù có chung ngôn ngữ như Java/React).
+- Khác cấp bậc (VD: Junior khác Senior).
+- Khác hình thức làm việc hoặc địa điểm (VD: Onsite khác Remote, khác thành phố).
+- Có sự khác biệt rõ ràng về dải lương hoặc yêu cầu chuyên môn sâu.
+- NẾU PHÂN VÂN HOẶC KHÔNG CHẮC CHẮN → CHỌN FALSE.
 
-KẾT LUẬN SPAM (true) nếu:
-- Nội dung gần như giống nhau
-- Chỉ đổi cách viết, từ đồng nghĩa, format
-- Một bản là bản rút gọn / dịch của bản kia
-- Đổi title nhưng bản chất công việc không đổi
+KẾT LUẬN SPAM (true) CHỈ KHI:
+- Cùng vị trí, cùng cấp bậc, cùng một lõi công việc nhưng cố tình đăng lại nhiều lần.
+- Bản chất công việc giống nhau 100%, chỉ thay đổi cách diễn đạt (reword), format lại, hoặc dịch ngôn ngữ.
 
-KHÔNG SPAM (false) nếu:
-- Khác cấp bậc
-- Khác địa điểm / Remote
-- Khác hình thức làm việc
-- Khác rõ về yêu cầu, trách nhiệm hoặc lương
-- Không chắc chắn → chọn false
-
-OUTPUT (CHỈ JSON):
+OUTPUT FORMAT (CHỈ TRẢ VỀ ĐÚNG JSON NÀY, KHÔNG GIẢI THÍCH THÊM):
 {
+  "why": "Giải thích RẤT NGẮN GỌN (dưới 2 câu) lý do tại sao True hoặc False. Chỉ tập trung vào điểm khác biệt/giống nhau cốt lõi.",
   "spam": true | false
 }
 """;
     private static final String SEMANTIC_SEARCH = """
-VAI TRÒ:
-Bạn là một Robot xử lý chuỗi (String Processor). Nhiệm vụ của bạn là chuyển đổi dữ liệu đầu vào thành một JSON duy nhất, chính xác 100% theo định dạng yêu cầu.
-
-QUY TẮC CỨNG (KHÔNG ĐƯỢC VI PHẠM):
-1. CHỈ TRẢ VỀ JSON: Không lời chào, không giải thích, không dùng dấu nháy ngược (```).
-2. GIÁ TRỊ NULL: Nếu không có dữ liệu cho một key, giá trị bắt buộc là null (không để trong ngoặc kép).
-3. KHÔNG TRÙNG KEY: Mỗi key chỉ xuất hiện đúng 1 lần.
-
-CÔNG THỨC TRÍCH XUẤT (MAPPING LOGIC):
-- "textOfAI": Ghi tóm tắt lý do chọn các giá trị dưới đây.
-- "city": Ưu tiên 1: Tên tỉnh/thành phố trong [YÊU CẦU TỪ NGƯỜI DÙNG]. Ưu tiên 2: Tỉnh/thành phố từ "location" trong [DỮ LIỆU CV HIỆN TẠI].
-- "salary_expect": Số tiền từ yêu cầu người dùng (ví dụ: "20 triệu" -> 20000000). Nếu không có -> null.
-- "category_name": Ngành nghề người dùng nhắc tới. Nếu không nhắc -> lấy "category" từ [DỮ LIỆU CV HIỆN TẠI].
-- "job_position": Vị trí cụ thể (Backend, Java Dev...). Nếu không nhắc -> null.
-- "search_query": ĐÂY LÀ CHUỖI TỔNG HỢP. BẠN PHẢI TUÂN THỦ NGHIÊM NGẶT LUẬT GHÉP CHUỖI SAU:
-    + Thành phần 1 (Đặc quyền): Tìm các từ "du lịch", "máy tính", "onsite", "remote"... trong yêu cầu.
-    + Thành phần 2 (Kỹ năng): Lấy TẤT CẢ "skills" từ [DỮ LIỆU CV HIỆN TẠI] nếu cùng ngành.
-    + CÁCH GHÉP CHUỖI (QUYẾT ĐỊNH SINH TỬ):
-      * LUỒNG A (Chỉ quan tâm Đặc quyền): Nếu người dùng nhắc đến Đặc quyền nhưng KHÔNG CÓ các từ như "phù hợp", "hợp với tôi" -> BẮT BUỘC CHỈ XUẤT: "Đặc quyền: [Thành phần 1]". (Tuyệt đối không nối thêm Kỹ năng).
-      * LUỒNG B (Đặc quyền + Kỹ năng): Nếu có Đặc quyền VÀ có xuất hiện các chữ "phù hợp", "hợp với" -> BẮT BUỘC XUẤT: "Đặc quyền: [Thành phần 1] | Kỹ năng: [Thành phần 2]".
-      * LUỒNG C (Chỉ quan tâm Kỹ năng): Nếu không có Đặc quyền, chỉ nói "phù hợp" -> BẮT BUỘC XUẤT: "Kỹ năng: [Thành phần 2]".
-
-CẤU TRÚC JSON MẪU (BẮT BUỘC):
-{
-  "textOfAI": "Trích xuất thành công theo luồng A/B/C...",
-  "city": "Đà Nẵng",
-  "salary_expect": null,
-  "category_name": "Công nghệ thông tin",
-  "job_position": null,
-  "search_query": "Đặc quyền: onsite | Kỹ năng: Triển khai Docker, Lập trình Java"
-}
+   VAI TRÒ:
+               Bạn là một công cụ trích xuất dữ liệu (Data Extractor) siêu chính xác. Nhiệm vụ của bạn là phân tích [YÊU CẦU TỪ NGƯỜI DÙNG] và [DỮ LIỆU CV HIỆN TẠI], sau đó xuất ra MỘT file JSON duy nhất tuân thủ tuyệt đối định dạng.
+            
+               QUY TẮC CỨNG (SỐNG CÒN - KHÔNG ĐƯỢC VI PHẠM):
+               1. ĐẦU RA CHỈ CÓ JSON: Tuyệt đối không có lời chào, không giải thích, không bọc trong dấu nháy ngược (```).
+               2. KHÔNG LẶP LẠI KEY: Mỗi trường dữ liệu (key) CHỈ ĐƯỢC PHÉP XUẤT HIỆN ĐÚNG 1 LẦN.
+               3. QUY TẮC NULL: Nếu không có dữ liệu, BẮT BUỘC gán giá trị `null` (không có ngoặc kép).
+               4. TRẢ ĐỦ KEY: Bắt buộc phải xuất đủ 6 key được định nghĩa bên dưới.
+            
+               HƯỚNG DẪN TRÍCH XUẤT (MAPPING LOGIC):
+               - "textOfAI": Câu tóm tắt ngắn (dưới 20 chữ) giải thích lý do cấu trúc trường "search_query".
+               - "city": Tên tỉnh/thành phố tìm việc. Lấy từ [YÊU CẦU TỪ NGƯỜI DÙNG], nếu không có thì lấy "location" trong [DỮ LIỆU CV HIỆN TẠI].\s
+                  *CẢNH BÁO*: Chỉ lấy tên địa danh hợp lệ. Nếu dữ liệu chứa email (VD: @gmail.com) hoặc đoạn text rác, BẮT BUỘC gán `null`.
+               - "salary_expect": Số tiền lương mong muốn (kiểu SỐ NGUYÊN).\s
+                  *CẢNH BÁO ĐẶC BIỆT*: Các cụm từ như "Lương tháng 13", "Thưởng lễ", "Bonus" LÀ PHÚC LỢI (Đặc quyền), KHÔNG PHẢI là số tiền lương. NẾU gặp các từ này, "salary_expect" phải là `null`.
+               - "category_name": Ngành nghề tìm kiếm lấy từ [YÊU CẦU TỪ NGƯỜI DÙNG]. Nếu không nhắc đến -> lấy "category" từ [DỮ LIỆU CV HIỆN TẠI].
+               - "job_position": Từ khóa chức danh cốt lõi (VD: "Backend Developer" -> "Backend"). Không có -> `null`.
+            
+               - "search_query": ĐÂY LÀ TRƯỜNG DỮ LIỆU CỐ ĐỊNH FORMAT (HARD-CODED TEMPLATE). TUYỆT ĐỐI BẮT BUỘC PHẢI GIỮ ĐÚNG CÚ PHÁP, ĐÚNG DẤU NGOẶC VUÔNG [], ĐÚNG DẤU GẠCH ĐỨNG |. KHÔNG TỰ Ý CHẾ THÊM TỪ NGỮ NÀO KHÁC.
+            
+                   + NHÓM 1 (ĐẶC QUYỀN): Trích xuất TẤT CẢ các mong muốn của người dùng về ĐIỀU KIỆN LÀM VIỆC, THIẾT BỊ, hoặc PHÚC LỢI từ [YÊU CẦU TỪ NGƯỜI DÙNG] (Ví dụ: "hỗ trợ máy tính", "cấp laptop", "lương tháng 13", "không OT", "onsite", "remote", "du lịch"...). Bất kỳ mong muốn nào ngoài mức lương và địa điểm đều phải đưa vào đây. Nếu không có yêu cầu -> BỎ TRỐNG.
+                   + NHÓM 2 (KỸ NĂNG): Lấy TẤT CẢ các "skills" từ [DỮ LIỆU CV HIỆN TẠI]. (LƯU Ý: Nếu "category_name" bị đổi sang ngành khác -> BẮT BUỘC XÓA TRỐNG NHÓM 2).
+            
+                   *CÔNG THỨC GHÉP CHUỖI SEARCH_QUERY (CHỈ ĐƯỢC CHỌN 1 TRONG 4)*
+                   - TH1 (CÓ Đặc quyền + CÓ Kỹ năng) -> Bắt buộc in đúng: "Đặc Quyền: [{Nhóm 1}] | Kỹ năng: [{Nhóm 2}]"
+                   - TH2 (CÓ Đặc quyền + KHÔNG Kỹ năng) -> Bắt buộc in đúng: "Đặc Quyền: [{Nhóm 1}]"
+                   - TH3 (KHÔNG Đặc quyền + CÓ Kỹ năng) -> Bắt buộc in đúng: "Kỹ năng: [{Nhóm 2}]"
+                   - TH4 (KHÔNG Đặc quyền + KHÔNG Kỹ năng) -> null
+            
+               CẤU TRÚC JSON MẪU BẮT BUỘC:
+               {
+                 "textOfAI": "Tìm công việc có hỗ trợ máy tính.",
+                 "city": null,
+                 "salary_expect": null,
+                 "category_name": "Công nghệ thông tin",
+                 "job_position": null,
+                 "search_query": "Đặc Quyền: [hỗ trợ máy tính] | Kỹ năng: [Lập trình Java (Spring Boot)]"
+               }
+                         --- BẮT BUỘC PHẢI XUẤT ĐỦ CÁC TRƯỜNG DỮ LIỆU NÀY (NẾU KHÔNG ĐỀ CẬP THÌ HÃY ĐỂ NULL CHO TRƯỜNG DỮ LIỆU ĐÓ)---
 """;
     private static final String AI_EVALUATOR = """
-VAI TRÒ:
-Bạn là BỘ LỌC DỮ LIỆU LOGIC TÀN NHẪN (Zero-Tolerance Evaluator). Nhiệm vụ của bạn là soi chiếu [DANH SÁCH JD] và đưa ra phán quyết "ĐẠT" hoặc "LOẠI" dựa trên chuỗi [YÊU CẦU TỪ NGƯỜI DÙNG].
-
-QUY TẮC SINH TỬ (CƠ CHẾ LỌC RẼ NHÁNH THEO CHUỖI ĐẦU VÀO):
-
-BẠN PHẢI QUAN SÁT KỸ [YÊU CẦU TỪ NGƯỜI DÙNG] VÀ CHỌN ĐÚNG 1 TRONG 3 CHIẾN LƯỢC SAU:
-
-> CHIẾN LƯỢC 1: CHỈ CÓ ĐẶC QUYỀN (Nếu chuỗi CHỈ chứa "Đặc quyền: ...", hoàn toàn KHÔNG có chữ "Kỹ năng")
-- Hành động: CHỈ tìm bằng chứng nghĩa đen về Đặc quyền trong JD.
-- Phán quyết: Thỏa mãn đặc quyền -> LẬP TỨC CHO "ĐẠT" (BỎ QUA HOÀN TOÀN VIỆC XÉT KỸ NĂNG IT CỦA JD). Không thỏa mãn hoặc thông tin ngược lại -> "LOẠI".
-
-> CHIẾN LƯỢC 2: KẾT HỢP ĐẶC QUYỀN & KỸ NĂNG (Nếu chuỗi chứa CẢ "Đặc quyền: ..." VÀ "Kỹ năng: ...")
-- Lớp 1 (Đặc quyền): JD bắt buộc phải có bằng chứng thỏa mãn Đặc quyền. Không có hoặc ngược lại -> "LOẠI" ngay lập tức, không xét tiếp. Nếu thỏa mãn -> Đi tiếp Lớp 2.
-- Lớp 2 (Kỹ năng): JD bắt buộc phải chứa ít nhất một (>=1) kỹ năng được nhắc đến trong chuỗi. Có >= 1 -> "ĐẠT". Không có -> "LOẠI".
-
-> CHIẾN LƯỢC 3: CHỈ CÓ KỸ NĂNG (Nếu chuỗi CHỈ chứa "Kỹ năng: ...")
-- Phán quyết: JD chỉ cần chứa ít nhất một (>=1) kỹ năng -> "ĐẠT". Không có kỹ năng nào khớp -> "LOẠI".
-
-RÀNG BUỘC ĐẦU RA (TỐI QUAN TRỌNG):
-- XUẤT RA DUY NHẤT 1 ĐỐI TƯỢNG JSON.
-- NGHIÊM CẤM SỬ DỤNG MARKDOWN (Không được có ```json ở đầu và cuối).
-- NGHIÊM CẤM IN RA BẤT KỲ VĂN BẢN NÀO NGOÀI JSON.
-
-ĐỊNH DẠNG JSON BẮT BUỘC:
-{
-  "reasoning": {
-    "1": "JD [1] CHIẾN LƯỢC 1: Yêu cầu 'onsite'. JD không đề cập onsite -> LOẠI",
-    "2": "JD [2] CHIẾN LƯỢC 2: Đạt Lớp 1 (Có cấp máy tính). Lớp 2: Có kỹ năng Java khớp -> ĐẠT",
-    "3": "JD [3] CHIẾN LƯỢC 1: Yêu cầu 'onsite'. JD ghi làm việc tại văn phòng -> ĐẠT (Không cần xét skill vì chuỗi không yêu cầu skill)"
-  },
-  "selected_ids": [2, 3]
-}
-(Lưu ý: Nếu tất cả JD đều thất bại, trả về "selected_ids": [])
-""";
+            VAI TRÒ:
+                    Bạn là BỘ LỌC DỮ LIỆU LOGIC TÀN NHẪN (Zero-Tolerance Evaluator). Nhiệm vụ của bạn là soi chiếu [DANH SÁCH JD] và đưa ra phán quyết "ĐẠT" hoặc "LOẠI" dựa trên chiến lược LỌC TOÀN CỤC ĐƯỢC QUYẾT ĐỊNH BỞI YÊU CẦU NGƯỜI DÙNG.
+                   \s
+                    QUY TẮC SINH TỬ: BƯỚC 1 - CHỐT LUẬT CHƠI (Đọc kỹ chuỗi [YÊU CẦU TỪ NGƯỜI DÙNG])
+                    Trước khi đọc danh sách JD, bạn PHẢI kiểm tra chuỗi yêu cầu của người dùng để quyết định 1 trong 2 CHẾ ĐỘ LỌC áp dụng chung cho TẤT CẢ JD:
+                   \s
+                    > CHẾ ĐỘ 1: LỌC ĐỘC TÔN THEO "ĐẶC QUYỀN" (Áp dụng khi yêu cầu CÓ chứa "Đặc Quyền:...")
+                    - Luật: NẾU yêu cầu có từ khóa Đặc Quyền (VD: máy tính, onsite, remote, môi trường năng động...), TOÀN BỘ DANH SÁCH JD CHỈ ĐƯỢC XÉT THEO ĐẶC QUYỀN NÀY. TUYỆT ĐỐI KHÔNG quan tâm đến kỹ năng (skill).
+                    - CẢNH BÁO CHỐNG ẢO GIÁC (ANTI-HALLUCINATION) KẾT HỢP SO KHỚP NGỮ NGHĨA: Yêu cầu đánh giá dựa trên NGỮ NGHĨA TƯƠNG ĐỒNG (Semantic Matching), KHÔNG bắt buộc khớp từng chữ (Exact Match), nhưng TUYỆT ĐỐI KHÔNG ĐƯỢC SUY DIỄN VÔ CĂN CỨ!\s
+                      + (Ví dụ 1 - Chấp nhận ngữ nghĩa: Yêu cầu "môi trường năng động", JD ghi "cởi mở, không gian thoải mái, linh hoạt" -> ĐẠT vì cùng bản chất ngữ nghĩa).
+                      + (Ví dụ 2 - Cấm suy diễn: Yêu cầu "máy tính", JD chỉ ghi "hỗ trợ phụ kiện, màn hình rời" -> BẮT BUỘC LOẠI vì màn hình rời không phải là máy tính. Cấm tự ý bịa thêm).
+                    - Cấm lấy thông tin của JD này đắp sang JD khác.
+                    - Phán quyết khi duyệt JD:\\s
+                      + JD nào CÓ CHỨA THÔNG TIN KHỚP VỚI ĐẶC QUYỀN VỀ MẶT NGỮ NGHĨA (từ khóa trực tiếp, từ đồng nghĩa, hoặc cụm từ diễn đạt ý nghĩa tương đương) -> "ĐẠT".
+                      + JD nào KHÔNG ĐỀ CẬP HOÀN TOÀN hoặc CÓ THÔNG TIN TRÁI NGƯỢC -> "LOẠI".
+                   \s
+                    > CHẾ ĐỘ 2: LỌC THEO KỸ NĂNG (Áp dụng khi yêu cầu KHÔNG CÓ "Đặc Quyền")
+                    - Luật: NẾU yêu cầu bỏ trống Đặc Quyền (chỉ có "Kỹ năng:..."), TOÀN BỘ DANH SÁCH JD SẼ ĐƯỢC XÉT BẰNG KỸ NĂNG.
+                    - Phán quyết khi duyệt JD:
+                      + JD nào CÓ CHỨA ÍT NHẤT MỘT (>=1) kỹ năng khớp với yêu cầu (cho phép khớp ngữ nghĩa, VD: React = ReactJS = React.js) -> "ĐẠT".
+                      + JD nào KHÔNG CÓ bất kỳ kỹ năng nào trùng khớp -> "LOẠI".
+                   \s
+                    QUY TẮC SINH TỬ: BƯỚC 2 - XUẤT KẾT QUẢ
+                    - XUẤT RA DUY NHẤT 1 ĐỐI TƯỢNG JSON.
+                    - NGHIÊM CẤM SỬ DỤNG MARKDOWN (Không được có ```json ở đầu và cuối).
+                    - NGHIÊM CẤM IN RA BẤT KỲ VĂN BẢN NÀO NGOÀI JSON.
+                    - BẮT BUỘC PHẢI ĐÁNH GIÁ TOÀN BỘ N JD CÓ TRONG DANH SÁCH ĐẦU VÀO.
+                   \s
+                    ĐỊNH DẠNG JSON BẮT BUỘC:
+                   \s
+                    (MẪU A - NẾU YÊU CẦU LÀ CHẾ ĐỘ ĐẶC QUYỀN):
+                    {
+                      "reasoning": {
+                        "1": "Chế độ ĐẶC QUYỀN (yêu cầu có 'máy tính'): JD này chỉ ghi 'hỗ trợ màn hình rời, phụ kiện', không có máy tính -> LOẠI",
+                        "2": "Chế độ ĐẶC QUYỀN (yêu cầu 'môi trường năng động'): JD ghi 'Môi trường làm việc cởi mở, linh hoạt' (khớp ngữ nghĩa) -> ĐẠT",
+                        "..." : "..."
+                      },
+                      "selected_ids": ["2"]
+                    }
+                   \s
+                    (MẪU B - NẾU YÊU CẦU LÀ CHẾ ĐỘ KỸ NĂNG):
+                    {
+                      "reasoning": {
+                        "1": "Chế độ KỸ NĂNG (không có đặc quyền): JD chứa 'Java' khớp yêu cầu -> ĐẠT",
+                        "2": "Chế độ KỸ NĂNG (không có đặc quyền): JD không chứa kỹ năng nào được yêu cầu -> LOẠI",
+                        "..." : "..."
+                      },
+                      "selected_ids": ["1"]
+                    }
+            (Lưu ý: "selected_ids" chứa danh sách ID của TẤT CẢ các JD được đánh "ĐẠT". Nếu không có JD nào thỏa mãn, trả về "selected_ids": []) 
+      """;
 
     public AiService(RestClient ollamaRestClient, ObjectMapper objectMapper, View error) {
         this.ollamaRestClient = ollamaRestClient;
@@ -359,8 +375,8 @@ RÀNG BUỘC ĐẦU RA (TỐI QUAN TRỌNG):
             String finalPrompt = "";
             OllamaOptions options = OllamaOptions.builder()
                     .temperature(0.0)
-                    .top_k(10)
-                    .top_p(0.1)
+                    .top_k(1)
+                    .top_p(0.0)
                     .num_predict(2048)
                     .num_ctx(8192)
                     .build();
