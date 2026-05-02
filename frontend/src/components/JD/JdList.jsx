@@ -105,43 +105,80 @@ const JdList = () => {
 
     const handleLockJd = async (e, jdId) => {
         e.stopPropagation();
-        if (!window.confirm('Bạn có chắc muốn khoá JD này?')) return;
-        try {
-            await jobService.deleteJd(jdId);
-            setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'LOCK' } : jd));
-            emitJdEvent('jd:locked', jdId, 'LOCK');
-            toast.success("Đã khoá JD thành công");
-        } catch {
-            toast.error("Không thể khoá JD");
-        }
+        toast(
+            'Bạn có chắc muốn khoá JD này?',
+            {
+                action: {
+                    label: 'Xác nhận',
+                    onClick: async () => {
+                        try {
+                            await jobService.deleteJd(jdId);
+                            setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'LOCK' } : jd));
+                            emitJdEvent('jd:locked', jdId, 'LOCK');
+                            // Show success with undo option (best-effort reopen)
+                            toast.success('Đã khoá JD', {
+                                action: {
+                                    label: 'Hoàn tác',
+                                    onClick: async () => {
+                                        try {
+                                            // Try to reopen using repostJob (may not be supported for LOCK state)
+                                            await jobService.repostJob(jdId);
+                                            setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'OPEN' } : jd));
+                                            emitJdEvent('jd:reposted', jdId, 'OPEN');
+                                            toast.success('Đã mở lại JD');
+                                        } catch (err) {
+                                            toast.error('Không thể mở lại (chưa có API mở khóa)');
+                                        }
+                                    }
+                                }
+                            });
+                        } catch (err) {
+                            toast.error('Không thể khoá JD');
+                        }
+                    }
+                }
+            }
+        );
     };
 
     const handleCloseJd = async (e, jdId) => {
         e.stopPropagation();
-        if (!window.confirm('Bạn có chắc muốn đóng bài đăng này?')) return;
-        try {
-            await jobService.closedJd(jdId);
-            setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'CLOSED' } : jd));
-            emitJdEvent('jd:closed', jdId, 'CLOSED');
-            toast.success('Đã đóng JD thành công');
-        } catch {
-            toast.error('Không thể đóng JD');
-        }
+        toast('Bạn có chắc muốn đóng bài đăng này?', {
+            action: {
+                label: 'Xác nhận',
+                onClick: async () => {
+                    try {
+                        await jobService.closedJd(jdId);
+                        setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'CLOSED' } : jd));
+                        emitJdEvent('jd:closed', jdId, 'CLOSED');
+                        toast.success('Đã đóng JD thành công');
+                    } catch {
+                        toast.error('Không thể đóng JD');
+                    }
+                }
+            }
+        });
     };
 
     const handleReopenJd = async (e, jdId) => {
         e.stopPropagation();
-        if (!window.confirm('Bạn có chắc muốn đăng lại bài đăng này?')) return;
-        try {
-            await jobService.repostJob(jdId);
-            setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'OPEN' } : jd));
-            emitJdEvent('jd:reposted', jdId, 'OPEN');
-            setActiveMenu(null);
-            await fetchJdList();
-            toast.success('Đã đăng lại bài đăng thành công');
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Không thể đăng lại bài đăng');
-        }
+        toast('Bạn có chắc muốn đăng lại bài đăng này?', {
+            action: {
+                label: 'Xác nhận',
+                onClick: async () => {
+                    try {
+                        await jobService.repostJob(jdId);
+                        setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'OPEN' } : jd));
+                        emitJdEvent('jd:reposted', jdId, 'OPEN');
+                        setActiveMenu(null);
+                        await fetchJdList();
+                        toast.success('Đã đăng lại bài đăng thành công');
+                    } catch (error) {
+                        toast.error(error.response?.data?.message || 'Không thể đăng lại bài đăng');
+                    }
+                }
+            }
+        });
     };
 
     /* ================= FILTER & PAGINATION ================= */
