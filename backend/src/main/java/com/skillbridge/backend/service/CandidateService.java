@@ -302,14 +302,6 @@ public class CandidateService {
             UpdateCandidateCvResponse response = getCv(userId);
             messagingTemplate.convertAndSend("/topic/candidate/" + userId + "/cv-update", response);
             systemLog.info(currentUser, "Cập nhật hồ sơ cá nhân thành công");
-
-            List<Application> applications = applicationRepository.findAllByCandidate(candidate);
-
-            for (Application app : applications) {
-                interviewRepository.deleteByApplication(app); // xoá con trước
-            }
-
-            applicationRepository.deleteByCandidate(candidate); // xoá
             return response;
         } catch (AppException e) {
             log.warn("[CV_UPDATE] Lỗi nghiệp vụ khi cập nhật hồ sơ cho {}: {}", userId, e.getErrorCode().getMessage());
@@ -543,17 +535,24 @@ public class CandidateService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
+        List<String> invitedIds = jobInvitationRepository.findCandidateIdsByJobId(jobId);
+        List<String> appliedIds = applicationRepository.findCandidateIdsByJobId(jobId);
+        Set<String> excludedCandidateIds = new HashSet<>();
+        excludedCandidateIds.addAll(invitedIds);
+        excludedCandidateIds.addAll(appliedIds);
+
         float[] jobVector = job.getVectorEmbedding();
         if (jobVector == null) {
             return Map.of("candidates", List.of(), "totalPages", 0, "totalElements", 0, "currentPage", page);
         }
 
-        List<String> requiredSkillNames = job.getJobSkills().stream()
-                .map(jobSkill -> jobSkill.getSkill().getName())
-                .collect(Collectors.toList());
         List<Candidate> allCandidates = candidateRepository.findAllWithVector();
+
         List<CandidateResponse> allSorted = allCandidates.stream()
                 .filter(c -> c.getVectorEmbedding() != null && c.getVectorEmbedding().length == jobVector.length)
+
+                .filter(c -> !excludedCandidateIds.contains(c.getId()))
+
                 .map(candidate -> {
                     double score = cosineSimilarityUtils.cosineSimilarity(jobVector, candidate.getVectorEmbedding());
                     CandidateResponse res = this.mapToCandidateResponse(candidate);
@@ -562,21 +561,22 @@ public class CandidateService {
                 })
                 .sorted(Comparator.comparingDouble(CandidateResponse::getAiMatchingScore).reversed())
                 .collect(Collectors.toList());
+
         int totalElements = allSorted.size();
         int totalPages = (int) Math.ceil((double) totalElements / limit);
         int start = page * limit;
         int end = Math.min(start + limit, totalElements);
 
-        List<CandidateResponse> pagedContent = new ArrayList<>();
-        if (start < totalElements && start >= 0) {
-            pagedContent = allSorted.subList(start, end);
-        }
-        Map<String, Object> response = new HashMap<>();
-        response.put("candidates", pagedContent);
-        response.put("totalPages", totalPages);
-        response.put("totalElements", totalElements);
-        response.put("currentPage", page);
-        return response;
+        List<CandidateResponse> pagedContent = (start < totalElements && start >= 0)
+                ? allSorted.subList(start, end)
+                : new ArrayList<>();
+
+        return Map.of(
+                "candidates", pagedContent,
+                "totalPages", totalPages,
+                "totalElements", totalElements,
+                "currentPage", page
+        );
     }
 
     /**
