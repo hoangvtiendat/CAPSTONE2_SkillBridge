@@ -7,6 +7,7 @@ import com.skillbridge.backend.entity.NotificationForAI; // Bây giờ nó đón
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.JobStatus;
 import com.skillbridge.backend.repository.NotificationRepository;
+import com.skillbridge.backend.repository.NotificationForAIReporitory;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -27,11 +28,8 @@ public class NotificationService {
     NotificationRepository notificationRepository;
     SimpMessagingTemplate messagingTemplate;
     MailService mailService;
+    NotificationForAIReporitory notificationForAIReporitory;
 
-
-    /**
-     * Hàm tạo thông báo cho người dùng (Quả chuông 🔔)
-     */
     @Transactional(propagation = Propagation.REQUIRED)
     public void createNotification(
             User receiver,
@@ -77,9 +75,7 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Hàm bắn tín hiệu ngầm cho hệ thống UI đổi trạng thái (Không lưu DB)
-     */
+
     public void notificationForAiCheckTrafficLight(
             User receiver,
             String senderEmail,
@@ -88,7 +84,8 @@ public class NotificationService {
             String title,
             String message,
             boolean sendEmail,
-            String action
+            String action,
+            String company
     ){
         NotificationForAI notificationForAI = NotificationForAI.builder()
                 .userId(receiver.getId())
@@ -97,9 +94,10 @@ public class NotificationService {
                 .status(jobStatus)
                 .message(message)
                 .action(action)
+                .company(company)
                 .build();
-
-
+        NotificationForAI addedNotificationForAI = notificationForAIReporitory.save(notificationForAI);
+        System.out.println("addedNotificationForAI" + addedNotificationForAI);
         try {
             messagingTemplate.convertAndSendToUser(
                     receiver.getId(),
@@ -151,5 +149,11 @@ public class NotificationService {
                 .link(notification.getLink())
                 .createdAt(notification.getCreatedAt())
                 .build();
+    }
+    ///  Lấy Notification cho JDAI
+    public List<NotificationForAI> getNotificationsByAI(String company_id) {
+        System.out.println("đang chạy chức năng lấy thông báo từ AI ");
+        List<NotificationForAI> notificationsForAI = notificationForAIReporitory.findByCompanyID(company_id);
+        return notificationsForAI;
     }
 }

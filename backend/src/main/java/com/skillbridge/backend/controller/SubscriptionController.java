@@ -70,4 +70,9 @@ public class SubscriptionController {
     public ResponseEntity<List<SubscriptionOfCompany>> getAllSubscriptionPlans() {
         return ResponseEntity.ok(subscriptionService.getMyCompanySubscriptions());
     }
+
+    @GetMapping("/posting-duration/{id}")
+    public ResponseEntity<Integer> getPostingDuration(@PathVariable String id) {
+        return ResponseEntity.ok(subscriptionService.getJobDay(id));
+    }
 }

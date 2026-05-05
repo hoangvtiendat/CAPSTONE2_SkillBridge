@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { toast } from 'sonner';
+import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import jobService from '../../services/api/jobService';
 import companyMemberService from '../../services/api/companyMemberService';
@@ -7,17 +9,79 @@ import './JdList.css';
 import { useAuth } from '../../context/AuthContext';
 import {
     Zap, Users, Search, Info, Lock, Target, Plus,
-    CalendarPlus, MoreVertical, XCircle, RefreshCcw
+    CalendarPlus, MoreVertical, XCircle, RefreshCcw, AlertTriangle
 } from 'lucide-react';
 
 const API_BASE_URL = "http://localhost:8081/identity";
 
 const STATUS_LABELS = {
     ALL: 'Tất cả',
+    NOT_STARTED: 'Sắp bắt đầu',
     OPEN: 'Đang mở',
     PENDING: 'Chờ duyệt',
     LOCK: 'Đã khoá',
     CLOSED: 'Đã đóng'
+};
+
+const normalizeId = (value) => String(value ?? '').trim().toLowerCase();
+
+const formatSalary = (amount) => {
+    if (!amount && amount !== 0) return 'Thỏa thuận';
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
+};
+
+const buildSpamRows = (compareData) => {
+    if (!compareData?.targetJD || !compareData?.jdSpam) return [];
+
+    const targetJD = compareData.targetJD;
+    const spamJD = compareData.jdSpam;
+
+    return [
+        { label: 'Vị trí', target: targetJD.position, spam: spamJD.position },
+        { label: 'Công ty', target: targetJD.company?.name, spam: spamJD.company?.name },
+        { label: 'Danh mục', target: targetJD.category?.name, spam: spamJD.category?.name },
+        { label: 'Địa điểm', target: targetJD.location, spam: spamJD.location },
+        {
+            label: 'Mức lương',
+            target: `${formatSalary(targetJD.salaryMin)} - ${formatSalary(targetJD.salaryMax)}`,
+            spam: `${formatSalary(spamJD.salaryMin)} - ${formatSalary(spamJD.salaryMax)}`
+        },
+        {
+            label: 'Kỹ năng',
+            target: (targetJD.skills || []).map(skill => skill.name || skill.skillName || skill).join(', ') || 'Không có dữ liệu',
+            spam: (spamJD.skills || []).map(skill => skill.name || skill.skillName || skill).join(', ') || 'Không có dữ liệu'
+        },
+        { label: 'Mô tả', target: targetJD.description || 'Không có dữ liệu', spam: spamJD.description || 'Không có dữ liệu' },
+        {
+            label: 'Các thông tin khác',
+            target: Object.entries(targetJD.title || {}).map(([key, value]) => `${key}: ${value}`).join(' | ') || 'Không có dữ liệu',
+            spam: Object.entries(spamJD.title || {}).map(([key, value]) => `${key}: ${value}`).join(' | ') || 'Không có dữ liệu'
+        }
+    ];
+};
+
+const extractJdIds = (jd) => {
+    if (!jd || typeof jd !== 'object') return [];
+
+    const directCandidates = [
+        jd.id,
+        jd._id,
+        jd.jobId,
+        jd.jdId,
+        jd._jobId,
+        jd.postId,
+        jd.recruitmentId,
+        jd.job?.id,
+        jd.job?.jobId
+    ];
+
+    const dynamicCandidates = Object.entries(jd)
+        .filter(([key, value]) => /id/i.test(key) && (typeof value === 'string' || typeof value === 'number'))
+        .map(([, value]) => value);
+
+    return [...new Set([...directCandidates, ...dynamicCandidates]
+        .map(normalizeId)
+        .filter(Boolean))];
 };
 
 const JdList = () => {
@@ -31,6 +95,10 @@ const JdList = () => {
     const [role, setRole] = useState(null);
     const [activeMenu, setActiveMenu] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [spamIds, setSpamIds] = useState(new Set());
+    const [spamCompare, setSpamCompare] = useState(null);
+    const [showSpamTable, setShowSpamTable] = useState(false);
+    const [spamLoading, setSpamLoading] = useState(false);
 
     const navigate = useNavigate();
     const hasShownError = useRef(false);
@@ -81,6 +149,34 @@ const JdList = () => {
     useEffect(() => {
         fetchJdList();
         fetchRole();
+        const fetchSpam = async () => {
+            try {
+                const res = await jobService.listJDSpam();
+                console.log('📌 Spam API response:', res);
+                console.log('📌 Is array?', Array.isArray(res));
+                
+                if (Array.isArray(res)) {
+                    // Handle both string IDs and object IDs
+                    const normalized = res.map(item => {
+                        // If it's an object, try to extract ID
+                        if (typeof item === 'object' && item !== null) {
+                            const id = item.id || item._id || item.jobId || item.jdId;
+                            return normalizeId(id);
+                        }
+                        // If it's a string, normalize it directly
+                        return normalizeId(item);
+                    }).filter(Boolean);
+                    
+                    console.log('📌 Normalized spam IDs:', normalized);
+                    setSpamIds(new Set(normalized));
+                } else {
+                    console.warn('📌 Spam response is not an array:', res);
+                }
+            } catch (err) {
+                console.error('📌 Could not load spam list:', err);
+            }
+        };
+        fetchSpam();
     }, [fetchJdList, fetchRole]);
 
     // Listen for real-time JD status updates
@@ -101,84 +197,168 @@ const JdList = () => {
         return () => window.removeEventListener('jdStatusUpdated', handler);
     }, []);
 
-    /* ================= ACTIONS ================= */
 
     const handleLockJd = async (e, jdId) => {
         e.stopPropagation();
-        toast(
-            'Bạn có chắc muốn khoá JD này?',
-            {
-                action: {
-                    label: 'Xác nhận',
-                    onClick: async () => {
-                        try {
-                            await jobService.deleteJd(jdId);
-                            setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'LOCK' } : jd));
-                            emitJdEvent('jd:locked', jdId, 'LOCK');
-                            // Show success with undo option (best-effort reopen)
-                            toast.success('Đã khoá JD', {
-                                action: {
-                                    label: 'Hoàn tác',
-                                    onClick: async () => {
-                                        try {
-                                            // Try to reopen using repostJob (may not be supported for LOCK state)
-                                            await jobService.repostJob(jdId);
-                                            setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'OPEN' } : jd));
-                                            emitJdEvent('jd:reposted', jdId, 'OPEN');
-                                            toast.success('Đã mở lại JD');
-                                        } catch (err) {
-                                            toast.error('Không thể mở lại (chưa có API mở khóa)');
-                                        }
-                                    }
-                                }
-                            });
-                        } catch (err) {
-                            toast.error('Không thể khoá JD');
-                        }
-                    }
-                }
+        const result = await Swal.fire({
+            title: 'Xác nhận khóa bài đăng?',
+            text: 'Bạn có chắc muốn khóa bài đăng này? Hành động này không thể hoàn tác.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f85757',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Khóa ngay',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                popup: 'premium-swal-popup',
+                title: 'premium-swal-title',
+                confirmButton: 'premium-swal-confirm',
+                cancelButton: 'premium-swal-cancel'
             }
-        );
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await jobService.deleteJd(jdId);
+                setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'LOCK' } : jd));
+                emitJdEvent('jd:locked', jdId, 'LOCK');
+                toast.success('Đã khóa bài đăng thành công');
+            } catch (error) {
+                toast.error('Không thể khóa bài đăng');
+            }
+        }
     };
 
     const handleCloseJd = async (e, jdId) => {
         e.stopPropagation();
-        toast('Bạn có chắc muốn đóng bài đăng này?', {
-            action: {
-                label: 'Xác nhận',
-                onClick: async () => {
-                    try {
-                        await jobService.closedJd(jdId);
-                        setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'CLOSED' } : jd));
-                        emitJdEvent('jd:closed', jdId, 'CLOSED');
-                        toast.success('Đã đóng JD thành công');
-                    } catch {
-                        toast.error('Không thể đóng JD');
-                    }
-                }
+        const result = await Swal.fire({
+            title: 'Xác nhận đóng bài đăng?',
+            text: 'Bạn có chắc muốn đóng bài đăng này?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f85757',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Đóng ngay',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                popup: 'premium-swal-popup',
+                title: 'premium-swal-title',
+                confirmButton: 'premium-swal-confirm',
+                cancelButton: 'premium-swal-cancel'
             }
         });
+
+        if (result.isConfirmed) {
+            try {
+                await jobService.closedJd(jdId);
+                setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'CLOSED' } : jd));
+                emitJdEvent('jd:closed', jdId, 'CLOSED');
+                toast.success('Đã đóng bài đăng thành công');
+            } catch (error) {
+                toast.error('Không thể đóng bài đăng');
+            }
+        }
     };
 
     const handleReopenJd = async (e, jdId) => {
         e.stopPropagation();
-        toast('Bạn có chắc muốn đăng lại bài đăng này?', {
-            action: {
-                label: 'Xác nhận',
-                onClick: async () => {
-                    try {
-                        await jobService.repostJob(jdId);
-                        setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'OPEN' } : jd));
-                        emitJdEvent('jd:reposted', jdId, 'OPEN');
-                        setActiveMenu(null);
-                        await fetchJdList();
-                        toast.success('Đã đăng lại bài đăng thành công');
-                    } catch (error) {
-                        toast.error(error.response?.data?.message || 'Không thể đăng lại bài đăng');
-                    }
-                }
+        const result = await Swal.fire({
+            title: 'Xác nhận đăng lại bài đăng?',
+            text: 'Bạn có chắc muốn đăng lại bài đăng này?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f85757',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Đăng lại ngay',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                popup: 'premium-swal-popup',
+                title: 'premium-swal-title',
+                confirmButton: 'premium-swal-confirm',
+                cancelButton: 'premium-swal-cancel'
             }
         });
+
+        if (result.isConfirmed) {
+            try {
+                await jobService.repostJob(jdId);
+                setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'OPEN' } : jd));
+                emitJdEvent('jd:reposted', jdId, 'OPEN');
+                setActiveMenu(null);
+                await fetchJdList();
+                toast.success('Đã đăng lại bài đăng thành công');
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Không thể đăng lại bài đăng');
+            }
+        }
+    };
+
+    const handleSpamBadgeClick = async (e, jd) => {
+        e.stopPropagation();
+        const jdId = jd?.id || jd?.jobId || jd?.jdId || jd?._id;
+        if (!jdId) {
+            toast.error('Không tìm thấy ID bài đăng');
+            return;
+        }
+
+        const toastId = toast.loading('Đang tải so sánh spam...');
+        setSpamLoading(true);
+
+        try {
+            const data = await jobService.jdSpam(jdId);
+            if (!data?.targetJD || !data?.jdSpam) {
+                toast.error('Không có dữ liệu so sánh spam', { id: toastId });
+                return;
+            }
+            setSpamCompare(data);
+            setShowSpamTable(true);
+            toast.success('Đã tải dữ liệu spam', { id: toastId });
+        } catch (error) {
+            toast.error('Không thể tải dữ liệu spam', { id: toastId });
+        } finally {
+            setSpamLoading(false);
+        }
+    };
+
+    const SpamCompareModal = ({ show, compare, onClose }) => {
+        if (!show || !compare) return null;
+        const rows = buildSpamRows(compare);
+
+        return ReactDOM.createPortal(
+            <div className="jd-spam-modal-overlay" onClick={onClose}>
+                <div className="jd-spam-modal-window" onClick={(e) => e.stopPropagation()}>
+                    <div className="jd-spam-modal-header">
+                        <div>
+                            <h3>Lý do spam</h3>
+                            <p>Bảng so sánh Bài có nội dung tương tự và bài spam</p>
+                        </div>
+                        <button className="jd-spam-close-btn" onClick={onClose}>Đóng</button>
+                    </div>
+
+                    <div className="jd-spam-modal-table-shell">
+                        <table className="jd-spam-modal-table">
+                            <thead>
+                                <tr>
+                                    <th>Trường</th>
+                                    <th>Bài có nội dung tương tự</th>
+                                    <th>Bài spam</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rows.map((row) => (
+                                    <tr key={row.label}>
+                                        <td className="jd-spam-field-name">{row.label}</td>
+                                        <td>{row.target}</td>
+                                        <td>{row.spam}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>,
+            document.body
+        );
     };
 
     /* ================= FILTER & PAGINATION ================= */
@@ -196,6 +376,7 @@ const JdList = () => {
     const visibleCount = filteredJdList.length;
     const statusCounts = {
         ALL: jdList.length,
+        NOT_STARTED: jdList.filter(jd => jd.status === 'NOT_STARTED').length,
         OPEN: jdList.filter(jd => jd.status === 'OPEN').length,
         PENDING: jdList.filter(jd => jd.status === 'PENDING').length,
         LOCK: jdList.filter(jd => jd.status === 'LOCK').length,
@@ -265,8 +446,19 @@ const JdList = () => {
             ) : (
                 <>
                     <div className="jd-grid">
-                        {paginatedJdList.map(jd => (
-                            <div key={jd.id} className={`jd-card status-${jd.status?.toLowerCase()}`}>
+                        {paginatedJdList.map(jd => {
+                            const cardIds = extractJdIds(jd);
+                            const isSpamJob = cardIds.some(id => spamIds.has(id));
+                            
+                            if (cardIds.length > 0) {
+                                console.log(`JD "${jd.position}" - IDs: ${cardIds.join(', ')} | Is Spam: ${isSpamJob}`);
+                            }
+
+                            return (
+                            <div
+                                key={jd.id}
+                                className={`jd-card status-${String(jd.status || '').toLowerCase().replace(/_/g, '-') } ${isSpamJob ? 'spam-card' : ''}`}
+                            >
                                 <div className="jd-card-body" onClick={() => navigate(`/detail-jd/${jd.id}`)}>
                                     <div className="jd-card-top">
                                         <div className="logo-box">
@@ -277,8 +469,25 @@ const JdList = () => {
                                             />
                                         </div>
                                         <div className="title-box">
-                                            <h2 className="position-title">{jd.position}</h2>
-                                            <span className={`status-badge ${jd.status}`}>{STATUS_LABELS[jd.status] || jd.status}</span>
+                                            <h2 className="position-title">{jd.position}
+                                                {isSpamJob ? <AlertTriangle size={16} className="spam-flag" title="Bài bị đánh dấu là spam" /> : null}
+                                            </h2>
+                                            <div className="title-badges">
+                                                <span className={`status-badge ${jd.status}`}>
+                                                    {STATUS_LABELS[jd.status] || jd.status}
+                                                </span>
+                                                {isSpamJob && (
+                                                    <button
+                                                        type="button"
+                                                        className="spam-badge"
+                                                        onClick={(e) => handleSpamBadgeClick(e, jd)}
+                                                        disabled={spamLoading}
+                                                        aria-label="Bài đăng được đánh dấu spam"
+                                                    >
+                                                        {spamLoading ? 'ĐANG TẢI' : 'SPAM'}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="jd-meta">
@@ -374,8 +583,15 @@ const JdList = () => {
                                     )}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
+
+                    <SpamCompareModal
+                        show={showSpamTable}
+                        compare={spamCompare}
+                        onClose={() => setShowSpamTable(false)}
+                    />
 
                     {totalPages > 1 && (
                         <div className="jd-pagination">
@@ -384,7 +600,7 @@ const JdList = () => {
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 disabled={currentPage === 1}
                             >
-                                Trước
+                                ←
                             </button>
 
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -402,7 +618,7 @@ const JdList = () => {
                                 onClick={() => handlePageChange(currentPage + 1)}
                                 disabled={currentPage === totalPages}
                             >
-                                Sau
+                                →
                             </button>
                         </div>
                     )}

@@ -67,6 +67,28 @@
     gap: 8px;
 }
 
+.jd-company-id-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--pjd-border);
+    background: var(--pjd-surface);
+    color: var(--pjd-text-2);
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: var(--pjd-shadow-soft);
+}
+
+.jd-company-id-badge strong {
+    color: var(--pjd-accent);
+    font-weight: 700;
+    font-family: var(--pjd-mono);
+    letter-spacing: 0.02em;
+}
+
 .eyebrow {
     margin: 0;
     font-family: var(--pjd-mono);
@@ -105,7 +127,7 @@
     max-width: 1400px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
     gap: 32px;
     align-items: start;
 }
@@ -405,6 +427,51 @@
     font-size: 13px;
     font-weight: 600;
     word-break: break-word;
+}
+
+.posting-date-group {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: var(--pjd-radius-lg);
+    border: 1.5px solid var(--pjd-border);
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    box-shadow: var(--pjd-shadow-soft);
+}
+
+.posting-date-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+    align-items: start;
+}
+
+.posting-date-row .input-item label {
+    margin-bottom: 0;
+}
+
+.posting-date-row .input-item input[type='date'] {
+    min-height: 46px;
+}
+
+.posting-duration-note {
+    grid-column: 1 / -1;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 6px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(59, 130, 246, 0.18);
+    background: linear-gradient(180deg, #eff6ff 0%, #f8fbff 100%);
+    color: var(--pjd-text-2);
+    font-size: 13px;
+    line-height: 1.6;
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.08);
+}
+
+.posting-duration-note strong {
+    color: #2563eb;
+    font-weight: 800;
 }
 
 /* Dynamic section */
@@ -746,7 +813,7 @@
 /* Responsive */
 @media (max-width: 1200px) {
     .jd-board-layout {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
         gap: 28px;
     }
 

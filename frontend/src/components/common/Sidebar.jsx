@@ -73,7 +73,6 @@ const AdminSidebar = () => {
         { title: 'Quản lí gói cước', path: '/admin/management/subscriptions', icon: <CreditCard size={18} /> },
         { title: 'Quản lí tin đăng', path: '/admin/jobs', icon: <FileText size={18} /> },
         { title: 'Tra cứu mã số thuế', path: '/admin/tax-lookup', icon: <Search size={18} /> },
-        {title: 'Quản lí địa phương', path: '/admin/management/locations', icon: <LocationEdit size={18} /> }
     ];
 
     const isActive = (path) => location.pathname === path;

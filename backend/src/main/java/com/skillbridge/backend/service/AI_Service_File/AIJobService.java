@@ -1,21 +1,15 @@
 package com.skillbridge.backend.service.AI_Service_File;
 
-import com.skillbridge.backend.config.CustomUserDetails;
-import com.skillbridge.backend.dto.request.SemanticSearchRequest;
 import com.skillbridge.backend.dto.request.SkillRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
-import com.skillbridge.backend.repository.CategoryRepository;
-import com.skillbridge.backend.repository.JDTagRepository;
-import com.skillbridge.backend.repository.JobRepository;
+import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.enums.ModerationStatus;
 import com.skillbridge.backend.enums.JobStatus;
-import com.skillbridge.backend.repository.JobSkillRepository;
 import com.skillbridge.backend.service.CandidateService;
 import com.skillbridge.backend.service.EmbeddingService;
-import com.skillbridge.backend.service.MailService;
 import com.skillbridge.backend.service.NotificationService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +20,8 @@ import tools.jackson.databind.ObjectMapper;
 import com.skillbridge.backend.utils.SecurityUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -48,17 +42,16 @@ public class AIJobService {
     CandidateService candidateService;
     @Autowired
     SecurityUtils securityUtils;
-    @Autowired
-    JDTagRepository jdTagRepository;
+
 
     @Autowired
     EmbeddingService embeddingService;
 
     @Autowired
-    JobSkillRepository jobSkillRepository;
-
+    JD_SimilaritiesRepository jdSimilaritiesRepository;
 
     LocalDate date = LocalDate.now();
+///  ========= Các Hàm dùng để thực hiện chức năng Đánh giá cơ thế đèn giao thông =========
 
     /// Lấy nội dung vector để so sánh
     public String getJobComparisonResponse(String jobId) {
@@ -108,6 +101,73 @@ public class AIJobService {
 
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
+    ///  Hàm lấy ID của SPAMJD
+    public List<String> getListSPamJD() {
+        List<JD_Similarities> jdTargets = jdSimilaritiesRepository.listTargetJobs();
+        System.out.println("da chay getListSPamJD");
+        return jdTargets.stream()
+                .map(job -> job.getTarget_jd_id().getId().toString())
+                .collect(Collectors.toList());
+    }
+    public void createTwoJDOfSpam(Job Source_jd, Job Target_jd, Double CosineSimilarity) {
+        JD_Similarities AddJDSpamAndOldJD = new JD_Similarities();
+        AddJDSpamAndOldJD.setSource_jd_id(Source_jd);
+        AddJDSpamAndOldJD.setTarget_jd_id(Target_jd);
+        AddJDSpamAndOldJD.setSimilarity(CosineSimilarity);
+        jdSimilaritiesRepository.save(AddJDSpamAndOldJD);
+    }
+    ///  Hàm lấy các Danh sách JD bị trùng
+    public Map<String, Object> getJDTarget(String jDSpam_id) {
+        System.out.println("jDSpam_id: " + jDSpam_id);
+        Job jobTarget = jdSimilaritiesRepository.findTargetJobBySourceId(jDSpam_id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy dữ liệu Job trùng lặp cho ID: " + jDSpam_id));
+
+        Job jobSpam = jobRepository.findById(jDSpam_id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy dữ liệu Job gốc (Spam) cho ID: " + jDSpam_id));
+
+        JobResponse jdSpamResponse = mapToJobResponse(jobSpam);
+        JobResponse targetJDResponse = mapToJobResponse(jobTarget);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("targetJD", targetJDResponse);
+        data.put("jdSpam", jdSpamResponse);
+
+        return data;
+    }
+
+    private JobResponse mapToJobResponse(Job job) {
+        return JobResponse.builder()
+                .id(job.getId())
+                .position(job.getPosition())
+                .description(job.getDescription())
+                .location(job.getLocation())
+                .status(job.getStatus().name())
+                .salaryMin(job.getSalaryMin())
+                .salaryMax(job.getSalaryMax())
+                .title(job.getTitle())
+                .startDate(LocalDate.from(job.getStartDate()))
+                .endDate(LocalDate.from(job.getEndDate()))
+                .company(JobResponse.CompanyDTO.builder()
+                        .id(job.getCompany().getId())
+                        .name(job.getCompany().getName())
+                        .logoUrl(job.getCompany().getImageUrl())
+                        .build())
+
+                // Mapping Category
+                .category(job.getCategory() != null ? JobResponse.CategoryDTO.builder()
+                        .id(job.getCategory().getId())
+                        .name(job.getCategory().getName())
+                        .build() : null)
+
+                // Mapping danh sách Skills
+                .skills(job.getJobSkills() != null ? job.getJobSkills().stream()
+                        .map(skill -> JobResponse.JobSkillDTO.builder()
+                                .name(skill.getSkill().getName())
+                                .required(true)
+                                .build())
+                        .toList() : null)
+                .build();
+    }
     /// hàm check bài spam của công ty
     public int checkSpamJd_of_company(String idOfCompany, String idOfJob ,float[] newJobVector) {
         try {
@@ -140,18 +200,26 @@ public class AIJobService {
                     maxSimilarity = similarity;
                     bestMathId = (String) row[0];
                 }
-
             }
+            ///  Lấy ID của JD spam với JD hiện tại
+            Job get_Source_jd_id = jobRepository.getReferenceById(bestMathId);
+            Job get_Target_jd_id = jobRepository.getReferenceById(idOfJob);
+            ///
+
             System.out.println("maxSimilarity" + maxSimilarity);
             if (maxSimilarity >=  0.5 && maxSimilarity < 0.75)
-            {return 2;}
+            {
+               createTwoJDOfSpam(get_Source_jd_id,get_Target_jd_id,maxSimilarity);
+                return 2;
+            }
             if (maxSimilarity >= 0.75){
             ///  Lây detail của JD mới
             String detailNewJD = getJobComparisonResponse(idOfJob);
             ///  Lấy detail cảu JD cũ
             String detailOldJD = getJobComparisonResponse(bestMathId);
             String data = "<JD1>\n" + detailNewJD + "\n</JD1>\n\n" +
-                        "<JD2>\n" + detailOldJD + "\n</JD2>";
+                        "<JD2>\n" + detailOldJD + "\n</JD2>\n\n" +
+                        "<VecTor>\n" + maxSimilarity + "\n<VecTor>";
             String checkSpam = aiService.Ai_OF_SKILLBRIDGE(data, 2);
             System.out.println("checkSpam"+ checkSpam);
             ObjectMapper objectMapper = new ObjectMapper();
@@ -160,6 +228,8 @@ public class AIJobService {
 
             Boolean checkSpamJD = jsonNode.get("spam").asBoolean();
             if(checkSpamJD == true){
+                ///  Lưu các JD Là bài Spam
+                createTwoJDOfSpam(get_Source_jd_id,get_Target_jd_id,maxSimilarity);
                 return 3;
             }
             else {
@@ -227,9 +297,12 @@ public class AIJobService {
                     .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
             String companyId = job.getCompany().getId();
             Optional<User> userOptional = jobRepository.findUserByJobAndCompany(idJD, companyId);
-            LocalDate endDate = LocalDate.now().plusDays(job.getPostingDay());
             User receiver = userOptional.get();
-            ///  gán thẻ cho bài đăng
+            String notificationForCompany = job.getCompany().getId();
+            ///  Lấy Ngày kết thúc && Ngày bắt đầu
+            LocalDate startDate = LocalDate.from(job.getStartDate());
+            LocalDate endDate = LocalDate.from(job.getEndDate());
+            LocalDate today = LocalDate.from(LocalDateTime.now());
 
 
             JobDetailResponse in4JD = getIn4OfJD(idJD);
@@ -300,7 +373,9 @@ public class AIJobService {
                         subject,
                         messageBody,
                         true,
-                        "JOB_MODERATION_FAILED"
+                        "JOB_MODERATION_FAILED",
+                        notificationForCompany
+
                 );
             }
 
@@ -320,12 +395,22 @@ public class AIJobService {
                             receiver.getName(),
                             job.getPosition()
                     );
+                    if (today.isBefore(startDate)) {
+                        System.out.println("ChuaDenNgay");
+                        finalStatus = JobStatus.NOT_STARTED;
+                    } else if (today.isAfter(endDate)) {
+                        System.out.println("DongNgay");
+                        finalStatus = JobStatus.CLOSED;
+                    } else {
+                        System.out.println("MoNgay");
+                        finalStatus = JobStatus.OPEN;
+                    }
+
+                    job.setStatus(finalStatus);
                     job.setModerationStatus(ModerationStatus.GREEN);
-                    job.setStartDate(date.atStartOfDay());
-                    job.setEndDate(endDate.atStartOfDay());
-                    job.setStatus(JobStatus.OPEN);
-                    finalStatus = JobStatus.OPEN;
                 }
+                /// /////// Return 3 nếu đó là bài SPAM (dùng AI đánh giá ) --- Return 2 nếu đó là bài có độ tương đồng vector (ko liên quan đến AI)
+
                 else if(result == 2){
                     messageBody = String.format(
                             "THÔNG BÁO TRẠNG THÁI BÀI ĐĂNG\n\n" +
@@ -340,25 +425,26 @@ public class AIJobService {
                             job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.YELLOW);
-                    finalStatus = JobStatus.OPEN;
+                    finalStatus = JobStatus.PENDING;
+
 
                 }
                 else if (result == 3) {
-                    messageBody = String.format(
-                            "ĐANG CHỜ XEM XÉT\n\n" +
+                     messageBody = String.format(
+                            "TỪ CHỐI ĐĂNG BÀI - VI PHẠM CHÍNH SÁCH\n\n" +
                                     "Chào %s,\n\n" +
-                                    "Tin tuyển dụng \"%s\" của bạn cần được xem xét thêm bởi đội ngũ quản trị viên.\n\n" +
-                                    "Trạng thái: Chờ phê duyệt thủ công\n" +
-                                    "Hệ thống nhận thấy nội dung này cần được kiểm chứng để đảm bảo chất lượng tốt nhất.\n\n" +
-                                    "Vui lòng kiên nhẫn, chúng tôi sẽ cập nhật trạng thái ngay khi có kết quả.\n\n" +
+                                    "Rất tiếc phải thông báo rằng tin tuyển dụng \"%s\" của bạn đã không được phê duyệt trên hệ thống.\n\n" +
+                                    "Trạng thái: Bị từ chối (Hệ thống phát hiện dấu hiệu Spam / Trùng lặp)\n" +
+                                    "Qua quá trình kiểm duyệt tự động, hệ thống nhận thấy nội dung bài đăng của bạn có dấu hiệu vi phạm tiêu chuẩn cộng đồng hoặc trùng lặp dữ liệu. Để đảm bảo chất lượng của nền tảng, bài đăng này đã bị gỡ bỏ.\n\n" +
+                                    "Nếu bạn cho rằng đây là một sự nhầm lẫn, vui lòng phản hồi lại email này để đội ngũ quản trị viên hỗ trợ kiểm tra lại.\n\n" +
                                     "Trân trọng,\n" +
                                     "Đội ngũ SkillBridge",
                             receiver.getName(),
                             job.getPosition()
                     );
                     job.setModerationStatus(ModerationStatus.RED);
-                    job.setStatus(JobStatus.PENDING);
-                    finalStatus = JobStatus.PENDING;
+                    job.setStatus(JobStatus.LOCK);
+                    finalStatus = JobStatus.LOCK;
                 }
                 if (!messageBody.isEmpty()) {
                     jobRepository.save(job);
@@ -371,7 +457,8 @@ public class AIJobService {
                             subject,
                             messageBody,
                             true,
-                            "JOB_MODERATION_FAILED"
+                            "JOB_MODERATION_FAILED",
+                            notificationForCompany
                     );
                 }
             }
@@ -675,5 +762,6 @@ public class AIJobService {
 
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
+
 
 }

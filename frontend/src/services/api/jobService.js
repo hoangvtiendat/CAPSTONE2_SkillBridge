@@ -289,8 +289,26 @@ const jobService = {
             console.error("Error withdrawing application:", error);
             throw error;
         }
-    }
-
+    },
+    /// Lay thong tin bai dang trung lap
+    jdSpam: async (jdIDSpam) => {
+        try {
+            const response = await api.get(`/jobs/JdSpam/${jdIDSpam}`);
+            return response.data?.result || null;
+        } catch (error) {
+            console.error("Error reporting job as spam:", error);
+            throw error;
+        }
+    },
+    listJDSpam: async () => {
+        try {
+            const response = await api.get(`/jobs/spam`);
+            return Array.isArray(response.data) ? response.data : [];
+        } catch (error) {
+            console.error("Error fetching spam job list:", error);
+            throw error;        
+        }
+    },
 };
 
 export default jobService;

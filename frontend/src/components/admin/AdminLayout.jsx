@@ -48,7 +48,7 @@ const AdminLayout = () => {
                         <div className="flex-between gap-3">
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ fontSize: '12px', fontWeight: '800', margin: 0, color: '#0f172a' }}>{user?.firstName || 'Admin'}</p>
-                                <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{user?.role === 'ADMIN' ? 'Super Admin' : user?.role}</p>
+                                <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{user?.role === 'ADMIN' ? 'Admin' : user?.role}</p>
                             </div>
                             <div className="admin-avatar-container" style={{ position: 'relative', cursor: 'pointer' }}>
                                 <div

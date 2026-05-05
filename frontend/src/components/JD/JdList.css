@@ -141,6 +141,56 @@
     /* Gỡ bỏ overflow: hidden để dropdown menu không bị cắt mất khi hiện lên trên */
 }
 
+.jd-card.status-open {
+    border-color: #bbf7d0;
+    border-left: 4px solid #22c55e;
+    background: linear-gradient(180deg, #f6fff9 0%, #ffffff 100%);
+}
+
+.jd-card.status-pending {
+    border-color: #fde68a;
+    border-left: 4px solid #f59e0b;
+    background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.jd-card.status-not-started {
+    border-color: #bfdbfe;
+    border-left: 4px solid #3b82f6;
+    background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.jd-card.status-lock {
+    border-color: #fecdd3;
+    border-left: 4px solid #ef4444;
+    background: linear-gradient(180deg, #fff6f7 0%, #ffffff 100%);
+}
+
+.jd-card.status-closed {
+    border-color: #cbd5e1;
+    border-left: 4px solid #64748b;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.jd-card.spam-card {
+    border: 1px solid #f8bbd0;
+    border-left: 4px solid #e11d48;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    background: linear-gradient(180deg, #fff7fa 0%, #ffffff 100%);
+    cursor: pointer;
+}
+
+.jd-card.spam-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.12);
+    border-color: #f472b6;
+    background: linear-gradient(180deg, #fff4f8 0%, #ffffff 100%);
+}
+
+.jd-card.spam-card:active {
+    transform: translateY(-1px) scale(0.995);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+}
+
 .jd-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 30px rgba(0,0,0,0.08);
@@ -150,6 +200,11 @@
     padding: 20px;
     flex-grow: 1;
     cursor: pointer;
+}
+
+.jd-card.spam-card .jd-card-body,
+.jd-card.spam-card .jd-card-actions {
+    position: static;
 }
 
 .jd-card-top {
@@ -177,6 +232,14 @@
     overflow: hidden;
 }
 
+.title-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
 .position-title {
     font-size: 1.1rem;
     font-weight: 800;
@@ -185,6 +248,49 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* spam flag icon next to locked job titles */
+.spam-flag {
+    color: #e11d48;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.spam-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: linear-gradient(180deg,#ef4444 0%, #dc2626 100%);
+        color: #ffffff;
+        border: none;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        cursor: pointer;
+        transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.12s ease;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        z-index: 48;
+}
+
+.spam-badge:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+}
+
+.spam-badge:focus-visible {
+        outline: 2px solid rgba(255,255,255,0.12);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(239,68,68,0.08);
+}
+
+.jd-card.spam-card .status-badge {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid rgba(225, 29, 72, 0.2);
 }
 
 .status-badge {
@@ -196,7 +302,62 @@
 }
 
 .status-badge.OPEN { background: #dcfce7; color: #166534; }
+.status-badge.NOT_STARTED { background: #dbeafe; color: #1d4ed8; }
+.status-badge.PENDING { background: #fef3c7; color: #92400e; }
 .status-badge.LOCK { background: #fee2e2; color: #991b1b; }
+.status-badge.CLOSED { background: #e2e8f0; color: #334155; }
+.status-badge.SPAM {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fbcfe8;
+}
+
+.jd-id-line {
+    margin: 6px 0 0;
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spam-id-line {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: #be123c;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spam-id-box {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    border: 1px dashed #f9a8c5;
+    background: #fff8fb;
+}
+
+.spam-id-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #be123c;
+}
+
+.spam-id-value {
+    font-size: 11px;
+    color: #9f1239;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .description-preview {
     font-size: 13px;
@@ -369,6 +530,107 @@
     border-color: #2563eb;
     color: #ffffff;
     box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
+}
+
+/* --- SPAM COMPARE MODAL --- */
+.jd-spam-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.jd-spam-modal-window {
+    width: min(1080px, 100%);
+    max-height: 88vh;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.28);
+}
+
+.jd-spam-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.jd-spam-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+.jd-spam-modal-header p {
+    margin: 3px 0 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.jd-spam-close-btn {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #334155;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.jd-spam-close-btn:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.jd-spam-modal-table-shell {
+    padding: 12px;
+    max-height: calc(88vh - 86px);
+    overflow: auto;
+}
+
+.jd-spam-modal-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+
+.jd-spam-modal-table thead th {
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    z-index: 1;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    padding: 10px 12px;
+    color: #1e293b;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
+.jd-spam-modal-table td {
+    vertical-align: top;
+    border-bottom: 1px solid #eef2f7;
+    padding: 10px 12px;
+    color: #334155;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.jd-spam-field-name {
+    font-weight: 650;
+    color: #475569;
+    width: 180px;
 }
 
 .jd-pagination .pagination-btn:disabled {

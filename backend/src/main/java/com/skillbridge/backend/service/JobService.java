@@ -71,8 +71,8 @@ public class JobService {
     CVJobEvaluationRepository cvJobEvaluationRepository;
     AIJobService aiJobService;
     MailServiceImpl mailService;
-    provincesRepository provincesRepository;
     JobInvitationRepository jobInvitationRepository;
+    JD_SimilaritiesRepository jdSimilaritiesRepository;
 
     LocalDate date = LocalDate.now();
 
@@ -446,17 +446,30 @@ public class JobService {
             String subject = "";
             String color = "";
 
+            LocalDate today = LocalDate.now();
+            LocalDate startDate = job.getStartDate() != null ? LocalDate.from(job.getStartDate()) : today;
+            LocalDate endDate = job.getEndDate() != null ? LocalDate.from(job.getEndDate()) : today.plusDays(job.getPostingDay());
+
             if ("OPEN".equals(status)) {
                 job.setModerationStatus(ModerationStatus.GREEN);
-                job.setStatus(JobStatus.OPEN);
-                job.setStartDate(date.atStartOfDay());
-                LocalDate endDate = LocalDate.now().plusDays(job.getPostingDay());
-                job.setEndDate(endDate.atStartOfDay());
+
+                if (today.isBefore(startDate)) {
+                    job.setStatus(JobStatus.NOT_STARTED);
+                } else if (today.isAfter(endDate)) {
+                    job.setStatus(JobStatus.CLOSED);
+                } else {
+                    job.setStatus(JobStatus.OPEN);
+                }
+
+
 
                 actionDescription = "đã được PHÊ DUYỆT và hiển thị công khai";
                 subject = "Tin tuyển dụng của bạn đã được phê duyệt";
                 color = "#10b981";
+
             } else {
+                job.setModerationStatus(ModerationStatus.RED);
+
                 job.setStatus(JobStatus.LOCK);
 
                 actionDescription = "đã bị TỪ CHỐI bởi quản trị viên";
@@ -530,6 +543,8 @@ public class JobService {
         Job savedJob = jobRepository.save(job);
         job.setViewCount(0);
         job.setModerationScore(0f);
+        job.setStartDate(request.getStartDate());
+        job.setEndDate(request.getEndDate());
 
         for (JobSkillRequest skillRequest : request.getSkills()) {
             Skill skill = skillRepository.findById(skillRequest.getSkillId())
@@ -674,7 +689,8 @@ public class JobService {
             .status(job.getStatus() != null ? job.getStatus().name() : null)
             .salaryMin(job.getSalaryMin())
             .salaryMax(job.getSalaryMax())
-
+                .startDate(job.getStartDate() != null ? LocalDate.from(job.getStartDate()) : null)
+                .endDate(job.getEndDate() != null ? LocalDate.from(job.getEndDate()) : null)
             .category(job.getCategory() != null ?
                 JobResponse.CategoryDTO.builder()
                     .id(job.getCategory().getId())
@@ -800,6 +816,16 @@ public class JobService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
+        Boolean checkSpam = false;
+        checkSpam = jdSimilaritiesRepository.existsByTarget_jd_id(jobId);
+        System.out.println("checkSpam" + checkSpam);
+        if(checkSpam == true){
+            System.out.println("JOOB" + jobId);
+            System.out.println("Ddang cahy xoa");
+            jdSimilaritiesRepository.deleteTargetJobBySourceId(jobId);
+
+        }
+
         var category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -813,6 +839,8 @@ public class JobService {
         job.setStatus(JobStatus.PENDING);
         job.setModerationStatus(ModerationStatus.YELLOW);
         job.setModerationScore(0f);
+        job.setStartDate(request.getStartDate());
+        job.setEndDate(request.getEndDate());
 
         job.getJobSkills().clear();
 
@@ -1178,28 +1206,40 @@ public class JobService {
                 .build())
             .collect(Collectors.toList());
     }
+    @Scheduled(cron = "0 0 0 * * ?") //// dùng cho chạy dự án làm mới khi tới 00H
+  /// @Scheduled(fixedRate = 60000) ///  test chạy ngâm 6s
+    @Transactional
+    public void autoUpdateJobStatuses() {
+        LocalDateTime now = LocalDateTime.now();
+        log.info("Bắt đầu chạy CronJob kiểm tra trạng thái Job lúc: {}", now);
 
-    ///  Lấy danh sách địa phương
-    public List<provinces> getALlProvinces() {
-        return provincesRepository.findAllProvincesCustom();
-    }
-    public provinces deleteProvince(String id) {
-        provinces deleteProvince = provincesRepository.findById(id).orElse(null);
-        deleteProvince.setIsDeleted(!deleteProvince.getIsDeleted());
+        try {
+            List<Job> jobsToOpen = jobRepository.findByStatusAndStartDateLessThanEqual(JobStatus.NOT_STARTED, now);
+            if (!jobsToOpen.isEmpty()) {
+                for (Job job : jobsToOpen) {
+                    job.setStatus(JobStatus.OPEN);
+                }
+                jobRepository.saveAll(jobsToOpen);
+                log.info("Đã tự động MỞ (OPEN) {} bài tuyển dụng.", jobsToOpen.size());
+            }
 
-        return provincesRepository.save(deleteProvince);
-    }
-    public provinces updateProvince(String id, provinces request) {
-        provinces existingProvince = provincesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tỉnh thành với ID: " + id));
+            List<Job> jobsToClose = jobRepository.findByStatusAndEndDateLessThanEqual(JobStatus.OPEN, now);
+            if (!jobsToClose.isEmpty()) {
+                for (Job job : jobsToClose) {
+                    job.setStatus(JobStatus.CLOSED);
+                }
+                jobRepository.saveAll(jobsToClose);
+                log.info("Đã tự động ĐÓNG (CLOSED) {} bài tuyển dụng.", jobsToClose.size());
+            }
 
-        if (request.getName() != null) {
-            existingProvince.setName(request.getName());
+        } catch (Exception e) {
+            log.error("Lỗi khi chạy CronJob cập nhật trạng thái Job: {}", e.getMessage());
         }
-   if (request.getIsDeleted() != null) {
-            existingProvince.setIsDeleted(request.getIsDeleted());
-        }
-    return provincesRepository.save(existingProvince);
+
+        log.info("Kết thúc CronJob kiểm tra trạng thái Job.");
     }
+
+
+
 
 }

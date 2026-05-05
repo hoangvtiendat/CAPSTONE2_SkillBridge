@@ -156,6 +156,15 @@
     line-height: 1.4;
 }
 
+.notif-subtitle {
+    margin: 0 0 6px 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    padding-left: 4px;
+    border-left: 3px solid #ef4444;
+}
+
 .notif-text {
     margin: 0 0 6px 0;
     font-size: 13px;

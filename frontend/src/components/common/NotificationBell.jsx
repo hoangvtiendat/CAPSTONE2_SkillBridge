@@ -31,10 +31,28 @@ const NotificationBell = () => {
             setNotifications(prev => [newNotif, ...prev]);
         };
 
+        // Lắng nghe sự kiện thông báo AI mới
+        const handleNewAINotification = (event) => {
+            const aiNotif = event.detail;
+            const transformedNotif = {
+                id: aiNotif.id,
+                title: aiNotif.title || 'Thông báo kết quả duyệt tin tuyển dụng từ AI',
+                subtitle: 'Thông báo từ SkillBridge AI',
+                content: aiNotif.message || '',
+                type: aiNotif.action === 'JOB_MODERATION_FAILED' ? 'APPLICATION_STATUS' : 'NEW_JOB',
+                link: aiNotif.objId ? `/detail-jd/${aiNotif.objId}` : null,
+                createdAt: aiNotif.createdAt || new Date().toISOString(),
+                read: false
+            };
+            setNotifications(prev => [transformedNotif, ...prev]);
+        };
+
         window.addEventListener('NEW_NOTIFICATION', handleNewNotification);
+        window.addEventListener('NEW_AI_NOTIFICATION', handleNewAINotification);
 
         return () => {
             window.removeEventListener('NEW_NOTIFICATION', handleNewNotification);
+            window.removeEventListener('NEW_AI_NOTIFICATION', handleNewAINotification);
         };
     }, [user]);
 
@@ -50,10 +68,51 @@ const NotificationBell = () => {
 
     const fetchNotifications = async () => {
         try {
-            const response = await notificationService.getNotifications();
-            if (response && response.result) {
-                setNotifications(response.result);
-            }
+            const [regularRes, aiRes] = await Promise.all([
+                notificationService.getNotifications().catch(() => ({ result: [] })),
+                notificationService.notificationByAI().catch(() => ({ result: [] }))
+            ]);
+
+            console.debug('Regular notifications API response:', regularRes);
+            console.debug('AI notifications API response:', aiRes);
+
+            // Transform regular notifications with standardized format
+            const regularNotifications = (regularRes?.result || []).map(notif => ({
+                id: notif.id,
+                title: 'Thông báo kết quả duyệt tin tuyển dụng',
+                subtitle: 'Thông báo từ SkillBridge',
+                content: notif.content,
+                type: notif.type || 'APPLICATION_STATUS',
+                link: notif.link,
+                createdAt: notif.createdAt || new Date().toISOString(),
+                read: notif.read || false
+            }));
+
+            console.debug('Transformed regular notifications:', regularNotifications);
+
+            // Transform AI notifications with standardized format
+            const aiNotifications = (aiRes?.result || []).map(notif => ({
+                id: notif.id,
+                title: notif.title || 'Thông báo kết quả duyệt tin tuyển dụng từ AI',
+                subtitle: 'Thông báo từ SkillBridge AI',
+                content: notif.message || '',
+                type: notif.action === 'JOB_MODERATION_FAILED' ? 'APPLICATION_STATUS' : 'NEW_JOB',
+                link: notif.objId ? `/detail-jd/${notif.objId}` : null,
+                createdAt: notif.createdAt || new Date().toISOString(),
+                read: false
+            }));
+
+            console.debug('Transformed AI notifications:', aiNotifications);
+
+            // Combine both results with regular first, then AI
+            const allNotifications = [...regularNotifications, ...aiNotifications];
+            const uniqueNotifications = Array.from(
+                new Map(allNotifications.map(n => [n.id, n])).values()
+            );
+
+            console.debug('Final combined notifications:', uniqueNotifications);
+
+            setNotifications(uniqueNotifications);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         }
@@ -130,6 +189,9 @@ const NotificationBell = () => {
                                     </div>
                                     <div className="notif-content">
                                         <p className="notif-title">{notif.title}</p>
+                                        {notif.subtitle && (
+                                            <p className="notif-subtitle">{notif.subtitle}</p>
+                                        )}
                                         <p
                                             className="notif-text"
                                             dangerouslySetInnerHTML={{ __html: notif.content }}

@@ -288,4 +288,10 @@ public interface JobRepository extends JpaRepository<Job, String> {
             WHERE j.id = :jobId
             """, nativeQuery = true)
     String getJobAsJson(@Param("jobId") String jobId);
+
+    // Tìm các Job chưa bắt đầu nhưng đã đến (hoặc qua) ngày startDate
+    List<Job> findByStatusAndStartDateLessThanEqual(JobStatus status, LocalDateTime date);
+
+    // Tìm các Job đang mở nhưng đã qua ngày endDate
+    List<Job> findByStatusAndEndDateLessThanEqual(JobStatus status, LocalDateTime date);
 }

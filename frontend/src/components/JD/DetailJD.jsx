@@ -7,9 +7,12 @@ import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@forta
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
+import JDInfoCard from './JDInfoCard';
 import applicationService from '../../services/api/applicationService';
+import subscriptionService from '../../services/api/subscriptionService';
 import vietnamAdministrativeLegacy from '../../data/vietnamAdministrativeLegacy.json';
 import { useParams, useNavigate } from 'react-router-dom';
+import { addDays, format, parse } from 'date-fns';
 import './DetailJD.css';
 
 
@@ -23,6 +26,37 @@ const API_BASE_URL = "http://localhost:8081/identity";
 const normalizeSkillName = (value) => String(value || '').trim().toLowerCase();
 
 const trimText = (value) => String(value || '').trim();
+
+const parseBackendDateTimeToInput = (value) => {
+    if (!value) return '';
+    const text = String(value).trim();
+    const parsed = parse(text, 'dd/MM/yyyy HH:mm:ss', new Date());
+    if (!Number.isNaN(parsed.getTime())) {
+        return format(parsed, 'yyyy-MM-dd');
+    }
+
+    const directDate = new Date(text);
+    if (!Number.isNaN(directDate.getTime())) {
+        return format(directDate, 'yyyy-MM-dd');
+    }
+
+    return '';
+};
+
+const formatDisplayDate = (value) => {
+    const inputDate = parseBackendDateTimeToInput(value);
+    if (!inputDate) return '';
+    const [year, month, day] = inputDate.split('-').map(Number);
+    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+};
+
+const toBackendDateTimeString = (dateString, isEndDate = false) => {
+    if (!dateString) return '';
+    const [year, month, day] = String(dateString).split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    if (Number.isNaN(date.getTime())) return '';
+    return format(date, `dd/MM/yyyy ${isEndDate ? '23:59:59' : '00:00:00'}`);
+};
 
 const cloneTitles = (titles = []) => titles.map(item => ({ key: String(item?.key || ''), value: String(item?.value || '') }));
 
@@ -47,6 +81,8 @@ const normalizeFormForCompare = (form = {}) => ({
     position: trimText(form.position),
     description: trimText(form.description),
     location: trimText(form.location),
+    startDate: trimText(form.startDate),
+    endDate: trimText(form.endDate),
     salaryMin: Number(form.salaryMin || 0),
     salaryMax: Number(form.salaryMax || 0),
     skills: normalizeSkillsForCompare(form.skills || [])
@@ -116,11 +152,14 @@ const DetailJD = () => {
     const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
     const [selectedWardCode, setSelectedWardCode] = useState("");
     const [specificAddress, setSpecificAddress] = useState("");
+    const [postingDuration, setPostingDuration] = useState(null);
 
     const fetchJdDetail = useCallback(async () => {
         try {
             const response = await jobService.getDetailJd(id);
-            setJdDetail(response.result);
+         
+            console.debug('DetailJD API response:', response);
+            setJdDetail(response?.result ?? response);
             setLoading(false);
         } catch (error) {
             toast.error('Lỗi khi tải chi tiết JD', { style: toastStyles.error });
@@ -149,6 +188,29 @@ const DetailJD = () => {
         getListCategories();
         checkAppliedStatus();
     }, [id, fetchJdDetail, checkAppliedStatus]);
+
+    useEffect(() => {
+        const fetchPostingDuration = async () => {
+            const companyId = jdDetail?.company?.id || jdDetail?.company?._id || jdDetail?.companyId || jdDetail?.company?.companyId;
+            if (!companyId) return;
+
+            try {
+                const response = await subscriptionService.postingDuriation(companyId);
+                let duration = response;
+                if (response && typeof response === 'object') {
+                    duration = response?.data ?? response?.result ?? response?.postingDuriation ?? response?.postingDuration ?? null;
+                }
+                if (typeof duration === 'string') duration = Number(duration);
+                if (typeof duration === 'number' && !Number.isNaN(duration)) {
+                    setPostingDuration(duration);
+                }
+            } catch (error) {
+                console.error('Failed to fetch posting duration for DetailJD', error);
+            }
+        };
+
+        fetchPostingDuration();
+    }, [jdDetail?.company?.id, jdDetail?.company?._id, jdDetail?.companyId, jdDetail?.company?.companyId]);
 
     useEffect(() => {
         const handler = (e) => {
@@ -194,6 +256,25 @@ const DetailJD = () => {
         fetchSkills();
     }, [editForm?.categoryId]);
 
+    useEffect(() => {
+        if (!isModalOpen || !editForm) return;
+
+        if (!editForm.startDate && jdDetail?.startDate) {
+            setEditForm(prev => ({ ...prev, startDate: parseBackendDateTimeToInput(jdDetail.startDate) }));
+        }
+
+        if (!editForm.endDate && jdDetail?.endDate) {
+            setEditForm(prev => ({ ...prev, endDate: parseBackendDateTimeToInput(jdDetail.endDate) }));
+        }
+
+        if (postingDuration && editForm.startDate && !editForm.endDate) {
+            setEditForm(prev => ({
+                ...prev,
+                endDate: format(addDays(new Date(prev.startDate), postingDuration - 1), 'yyyy-MM-dd')
+            }));
+        }
+    }, [isModalOpen, editForm, jdDetail?.startDate, jdDetail?.endDate, postingDuration]);
+
     const handleOpenModal = () => {
         if (hasAppliedCandidate) {
             toast.warning('Không thể chỉnh sửa JD', {
@@ -229,6 +310,8 @@ const DetailJD = () => {
             position: jdDetail.position || "",
             description: jdDetail.description || "",
             location: jdDetail.location || "",
+            startDate: parseBackendDateTimeToInput(jdDetail.startDate),
+            endDate: parseBackendDateTimeToInput(jdDetail.endDate),
             salaryMin: jdDetail.salaryMin || "",
             salaryMax: jdDetail.salaryMax || "",
             skills: dedupeSkills(mappedSkills)
@@ -399,6 +482,44 @@ const DetailJD = () => {
             return;
         }
 
+        if (!editForm.startDate || !editForm.endDate) {
+            toast.error('Lỗi nhập liệu', {
+                description: 'Vui lòng chọn ngày bắt đầu và ngày kết thúc',
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        const startDateValue = new Date(editForm.startDate);
+        const endDateValue = new Date(editForm.endDate);
+        if (Number.isNaN(startDateValue.getTime()) || Number.isNaN(endDateValue.getTime())) {
+            toast.error('Lỗi nhập liệu', {
+                description: 'Ngày bắt đầu hoặc ngày kết thúc không hợp lệ',
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        if (endDateValue < startDateValue) {
+            toast.error('Lỗi nhập liệu', {
+                description: 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu',
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        if (postingDuration) {
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const inclusiveDays = Math.floor((endDateValue - startDateValue) / msPerDay) + 1;
+            if (inclusiveDays > postingDuration) {
+                toast.error('Lỗi nhập liệu', {
+                    description: `Khoảng thời gian đăng tin không thể vượt quá ${postingDuration} ngày`,
+                    style: toastStyles.warning
+                });
+                return;
+            }
+        }
+
         if (Number(editForm.salaryMax) < Number(editForm.salaryMin)) {
             toast.error("Lỗi nhập liệu", { description: "Lương tối đa phải lớn hơn hoặc bằng tối thiểu", style: toastStyles.warning });
             return;
@@ -438,6 +559,8 @@ const DetailJD = () => {
             description: trimText(editForm.description),
             location: finalLocation,
             title: titleObject,
+            startDate: toBackendDateTimeString(editForm.startDate),
+            endDate: toBackendDateTimeString(editForm.endDate, true),
             skills: dedupedCleanSkills
         };
 
@@ -490,6 +613,7 @@ const DetailJD = () => {
     const getStatusClass = (status) => {
         if (!status) return 'status-pending';
         switch(status.toUpperCase()) {
+            case 'NOT_STARTED': return 'status-not-started';
             case 'OPEN': return 'status-open';
             case 'CLOSED': return 'status-closed';
             case 'LOCK': return 'status-closed';
@@ -501,6 +625,7 @@ const DetailJD = () => {
     const getStatusText = (status) => {
         if (!status) return 'Đang chờ';
         switch(status.toUpperCase()) {
+            case 'NOT_STARTED': return 'Sắp bắt đầu';
             case 'OPEN': return 'Đang mở';
             case 'CLOSED': return 'Đã đóng';
             case 'LOCK': return 'Đã khóa';
@@ -582,46 +707,7 @@ const DetailJD = () => {
                 </div>
 
                 <div className="layout-sidebar">
-                    <section className="form-card sidebar-card">
-                        <h3 className="card-title">Thông tin chung</h3>
-                        <div className="info-list">
-                            <div className="info-item-modern">
-                                <div className="icon-box"><FontAwesomeIcon icon={faMapMarkerAlt} /></div>
-                                <div>
-                                    <span className="info-label">Địa điểm</span>
-                                    <span className="info-value">{jdDetail.location}</span>
-                                </div>
-                            </div>
-                            <div className="info-item-modern">
-                                <div className="icon-box green"><FontAwesomeIcon icon={faMoneyBillWave} /></div>
-                                <div>
-                                    <span className="info-label">Mức lương</span>
-                                    <span className="info-value highlight">
-                                        {Number(jdDetail.salaryMin).toLocaleString()} - {Number(jdDetail.salaryMax).toLocaleString()} VND
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="info-item-modern">
-                                <div className="icon-box blue"><FontAwesomeIcon icon={faBriefcase} /></div>
-                                <div>
-                                    <span className="info-label">Danh mục</span>
-                                    <span className="info-value">{jdDetail.category?.name || jdDetail.category?.categoryName || "Chưa có"}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="form-card sidebar-card">
-                        <h3 className="card-title">Kỹ năng yêu cầu</h3>
-                        <div className="skills-tags-container">
-                            {jdDetail.skills?.map((skill, index) => (
-                                <span key={index} className={`skill-tag-modern ${skill.required ? 'required' : ''}`}>
-                                    {skill.name || skill.skillName || skill.title}
-                                    {skill.required && <span className="star-req">*</span>}
-                                </span>
-                            ))}
-                        </div>
-                    </section>
+                    <JDInfoCard jdDetail={jdDetail} />
                 </div>
             </div>
 
@@ -830,6 +916,42 @@ const DetailJD = () => {
                                                 <strong>{locationPreview}</strong>
                                             </div>
                                         )}
+
+                                        <div className="posting-date-group modal-posting-date-group">
+                                            <label className="location-mini-label">Thời Gian Đăng Tin</label>
+                                            <div className="posting-date-row">
+                                                <div className="input-item">
+                                                    <label>Ngày Bắt Đầu</label>
+                                                    <input
+                                                        type="date"
+                                                        name="startDate"
+                                                        value={editForm.startDate || ''}
+                                                        onChange={handleChange}
+                                                        required
+                                                        min={format(new Date(), 'yyyy-MM-dd')}
+                                                        max={postingDuration && editForm.endDate ? format(addDays(new Date(editForm.endDate), 0), 'yyyy-MM-dd') : undefined}
+                                                    />
+                                                </div>
+
+                                                <div className="input-item">
+                                                    <label>Ngày Kết Thúc</label>
+                                                    <input
+                                                        type="date"
+                                                        name="endDate"
+                                                        value={editForm.endDate || ''}
+                                                        onChange={handleChange}
+                                                        required
+                                                        min={editForm.startDate || format(new Date(), 'yyyy-MM-dd')}
+                                                        max={postingDuration && editForm.startDate ? format(addDays(new Date(editForm.startDate), postingDuration - 1), 'yyyy-MM-dd') : undefined}
+                                                    />
+                                                </div>
+                                            </div>
+                                            {postingDuration && (
+                                                <div className="posting-duration-note">
+                                                    Gói hiện tại cho phép đăng tối đa <strong>{postingDuration} ngày</strong> kể từ ngày bắt đầu.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 

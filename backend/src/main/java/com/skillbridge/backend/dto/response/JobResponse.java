@@ -5,7 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Data
@@ -20,7 +22,9 @@ public class JobResponse {
     private String status;
     private BigDecimal salaryMin;
     private BigDecimal salaryMax;
-
+    private LocalDate startDate;
+    private LocalDate endDate;
+    
     private CategoryDTO category;
 
     private CompanyDTO company;

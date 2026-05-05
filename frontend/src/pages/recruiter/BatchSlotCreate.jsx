@@ -10,6 +10,7 @@ import './BatchSlotCreate.css';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import vietnamAdministrativeLegacy from '../../data/vietnamAdministrativeLegacy.json';
 
 const BatchSlotCreate = () => {
     const API_BASE_URL = "http://localhost:8081/identity";
@@ -34,7 +35,11 @@ const BatchSlotCreate = () => {
     const [duration, setDuration] = useState(30);
 
     const [description, setDescription] = useState('');
-    const [locationLink, setLocationLink] = useState('');
+    const [provinces] = useState(vietnamAdministrativeLegacy);
+    const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
+    const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
+    const [selectedWardCode, setSelectedWardCode] = useState("");
+    const [specificAddress, setSpecificAddress] = useState("");
     const [defaultCapacity, setDefaultCapacity] = useState(1);
 
     const [activeExpand, setActiveExpand] = useState(null);
@@ -130,6 +135,11 @@ const BatchSlotCreate = () => {
         return dateObj.toTimeString().slice(0, 5);
     };
 
+    const isProvinceActive = (province) => {
+        const deletedValue = province?.isDeleted ?? province?.is_delete ?? province?.isDelete ?? 0;
+        return Number(deletedValue) === 0;
+    };
+
     const getRoundedNow = () => {
         const now = new Date();
         now.setHours(now.getHours() + 12);
@@ -150,15 +160,32 @@ const BatchSlotCreate = () => {
             targetDate.setHours(hours, minutes, 0, 0);
         }
 
+        const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+        const selectedDistrict = selectedProvince?.districts?.find(
+            (district) => String(district.code) === selectedDistrictCode
+        );
+        const selectedWard = selectedDistrict?.wards?.find((ward) => String(ward.code) === selectedWardCode);
+
+        const finalLocation = [
+            specificAddress.trim(),
+            selectedWard?.name,
+            selectedDistrict?.name,
+            selectedProvince?.name
+        ].filter(Boolean).join(', ');
+
         return {
             date: targetDate.toLocaleDateString('en-CA'),
             startTime: targetDate.toTimeString().slice(0, 5),
             endTime: calculateEndTime(targetDate.toTimeString().slice(0, 5), duration),
             capacity: freezeData ? defaultCapacity : '',
-            location: freezeData ? locationLink : '',
-            note: freezeData ? description : ''
+            location: freezeData ? finalLocation : '',
+            note: freezeData ? description : '',
+            provinceCode: freezeData ? selectedProvinceCode : '',
+            districtCode: freezeData ? selectedDistrictCode : '',
+            wardCode: freezeData ? selectedWardCode : '',
+            address: freezeData ? specificAddress : ''
         };
-    }, [duration, defaultCapacity, locationLink, description]);
+    }, [duration, defaultCapacity, selectedProvinceCode, selectedDistrictCode, selectedWardCode, specificAddress, description, provinces]);
 
     const [slots, setSlots] = useState([createNewSlot()]);
 
@@ -182,19 +209,54 @@ const BatchSlotCreate = () => {
 
     const addTimeSlot = () => {
         const lastSlot = slots[slots.length - 1];
+        const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+        const selectedDistrict = selectedProvince?.districts?.find(
+            (district) => String(district.code) === selectedDistrictCode
+        );
+        const selectedWard = selectedDistrict?.wards?.find((ward) => String(ward.code) === selectedWardCode);
+
+        const finalLocation = [
+            specificAddress.trim(),
+            selectedWard?.name,
+            selectedDistrict?.name,
+            selectedProvince?.name
+        ].filter(Boolean).join(', ');
+
         const frozenExistingSlots = slots.map(s => ({
             ...s,
             capacity: s.capacity === '' ? defaultCapacity : s.capacity,
-            location: s.location === '' ? locationLink : s.location,
-            note: s.note === '' ? description : s.note
+            location: s.location === '' ? finalLocation : s.location,
+            note: s.note === '' ? description : s.note,
+            provinceCode: s.provinceCode || selectedProvinceCode,
+            districtCode: s.districtCode || selectedDistrictCode,
+            wardCode: s.wardCode || selectedWardCode,
+            address: s.address || specificAddress
         }));
 
         const nextSlot = createNewSlot(lastSlot.endTime, true);
+        nextSlot.provinceCode = selectedProvinceCode;
+        nextSlot.districtCode = selectedDistrictCode;
+        nextSlot.wardCode = selectedWardCode;
+        nextSlot.address = specificAddress;
+        
         setSlots([...frozenExistingSlots, nextSlot]);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+        const selectedDistrict = selectedProvince?.districts?.find(
+            (district) => String(district.code) === selectedDistrictCode
+        );
+        const selectedWard = selectedDistrict?.wards?.find((ward) => String(ward.code) === selectedWardCode);
+
+        const finalLocation = [
+            specificAddress.trim(),
+            selectedWard?.name,
+            selectedDistrict?.name,
+            selectedProvince?.name
+        ].filter(Boolean).join(', ');
 
         for (let i = 0; i < slots.length; i++) {
             const slotStartStr = `${slots[i].date}T${slots[i].startTime}:00`;
@@ -210,21 +272,41 @@ const BatchSlotCreate = () => {
             const payload = {
                 jobId,
                 description: description || null,
-                locationLink: locationLink || null,
+                locationLink: finalLocation || null,
                 defaultCapacity: parseInt(defaultCapacity),
-                slots: slots.map(s => ({
-                    startTime: `${s.date}T${s.startTime}:00`,
-                    endTime: `${s.date}T${s.endTime}:00`,
-                    capacity: (s.capacity !== '' && s.capacity !== null) ? parseInt(s.capacity) : parseInt(defaultCapacity),
-                    locationLink: (s.location && s.location.trim() !== '') ? s.location : (locationLink || null),
-                    description: (s.note && s.note.trim() !== '') ? s.note : (description || null)
-                }))
+                slots: slots.map(s => {
+                    let slotLocation = finalLocation;
+                    if (s.provinceCode && s.districtCode && s.wardCode && s.address) {
+                        const slotProvince = provinces.find((province) => String(province.code) === s.provinceCode);
+                        const slotDistrict = slotProvince?.districts?.find(
+                            (district) => String(district.code) === s.districtCode
+                        );
+                        const slotWard = slotDistrict?.wards?.find((ward) => String(ward.code) === s.wardCode);
+                        slotLocation = [
+                            s.address.trim(),
+                            slotWard?.name,
+                            slotDistrict?.name,
+                            slotProvince?.name
+                        ].filter(Boolean).join(', ');
+                    }
+
+                    return {
+                        startTime: `${s.date}T${s.startTime}:00`,
+                        endTime: `${s.date}T${s.endTime}:00`,
+                        capacity: (s.capacity !== '' && s.capacity !== null) ? parseInt(s.capacity) : parseInt(defaultCapacity),
+                        locationLink: slotLocation || finalLocation || null,
+                        description: (s.note && s.note.trim() !== '') ? s.note : (description || null)
+                    };
+                })
             };
 
             await interviewService.createBatchSlots(payload);
             toast.success("Đã tạo lịch thành công!", { id: toastId });
             setDescription('');
-            setLocationLink('');
+            setSelectedProvinceCode('');
+            setSelectedDistrictCode('');
+            setSelectedWardCode('');
+            setSpecificAddress('');
             setDefaultCapacity(1);
             setSlots([createNewSlot()]);
             setActiveExpand(null);
@@ -374,13 +456,104 @@ const BatchSlotCreate = () => {
                             </div>
                             <div className="input-field-group capacity-fixed-width">
                                 <label><Users size={14} /> Số người</label>
-                                <input type="number" min="1" value={defaultCapacity} onChange={(e) => setDefaultCapacity(e.target.value)} />
+                                <input type="number" min="0" value={defaultCapacity} onChange={(e) => setDefaultCapacity(e.target.value)} />
                             </div>
                         </div>
 
                         <div className="input-field-group" style={{ marginTop: '12px' }}>
                             <label><MapPin size={14} /> Địa điểm</label>
-                            <input type="text" value={locationLink} onChange={(e) => setLocationLink(e.target.value)} placeholder="Địa điểm mặc định..." />
+                            <div className="location-field-group" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div className="location-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <div className="location-select-wrap" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="location-mini-label" style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Tỉnh/Thành Phố</label>
+                                        <select
+                                            className="location-select"
+                                            value={selectedProvinceCode}
+                                            onChange={(e) => {
+                                                setSelectedProvinceCode(e.target.value);
+                                                setSelectedDistrictCode("");
+                                                setSelectedWardCode("");
+                                            }}
+                                            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+                                        >
+                                            <option value="">-- Chọn tỉnh/thành phố --</option>
+                                            {provinces.filter(isProvinceActive).map((province) => (
+                                                <option key={province.code} value={province.code}>
+                                                    {province.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="location-select-wrap">
+                                        <label className="location-mini-label" style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Quận/Huyện</label>
+                                        <select
+                                            className="location-select"
+                                            value={selectedDistrictCode}
+                                            onChange={(e) => {
+                                                setSelectedDistrictCode(e.target.value);
+                                                setSelectedWardCode("");
+                                            }}
+                                            disabled={!selectedProvinceCode}
+                                            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+                                        >
+                                            <option value="">-- Chọn quận/huyện --</option>
+                                            {(provinces.find((province) => String(province.code) === selectedProvinceCode)?.districts || []).map((district) => (
+                                                <option key={district.code} value={district.code}>
+                                                    {district.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="location-select-wrap">
+                                        <label className="location-mini-label" style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Xã/Phường</label>
+                                        <select
+                                            className="location-select"
+                                            value={selectedWardCode}
+                                            onChange={(e) => setSelectedWardCode(e.target.value)}
+                                            disabled={!selectedDistrictCode}
+                                            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+                                        >
+                                            <option value="">-- Chọn xã/phường --</option>
+                                            {(provinces.find((province) => String(province.code) === selectedProvinceCode)?.districts?.find((district) => String(district.code) === selectedDistrictCode)?.wards || []).map((ward) => (
+                                                <option key={ward.code} value={ward.code}>
+                                                    {ward.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="location-detail-wrap" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="location-mini-label" style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Địa Chỉ Cụ Thể</label>
+                                        <input
+                                            type="text"
+                                            value={specificAddress}
+                                            onChange={(e) => setSpecificAddress(e.target.value)}
+                                            placeholder="VD: Số 12 Nguyễn Huệ"
+                                            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {(() => {
+                                    const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+                                    const selectedDistrict = selectedProvince?.districts?.find((district) => String(district.code) === selectedDistrictCode);
+                                    const selectedWard = selectedDistrict?.wards?.find((ward) => String(ward.code) === selectedWardCode);
+                                    const locationPreview = [
+                                        specificAddress.trim(),
+                                        selectedWard?.name,
+                                        selectedDistrict?.name,
+                                        selectedProvince?.name
+                                    ].filter(Boolean).join(', ');
+                                    
+                                    return locationPreview && (
+                                        <div style={{ padding: '10px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '6px', fontSize: '13px', color: '#0369a1' }}>
+                                            <strong>Địa Chỉ Đã Chọn:</strong> {locationPreview}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
 
                         <div className="slots-management-table">
@@ -403,6 +576,7 @@ const BatchSlotCreate = () => {
                                             <input
                                                 type="number"
                                                 className="col-cap"
+                                                min="0"
                                                 placeholder={defaultCapacity}
                                                 value={slot.capacity}
                                                 onChange={(e) => handleSlotChange(index, 'capacity', e.target.value)}
@@ -416,10 +590,84 @@ const BatchSlotCreate = () => {
                                         {activeExpand === index && (
                                             <div className="slot-details-expand animated-expand">
                                                 <div className="expand-content">
-                                                    <div className="sub-input">
-                                                        <MapPin size={14} />
-                                                        <input type="text" placeholder={`Địa điểm riêng...`} value={slot.location} onChange={(e) => handleSlotChange(index, 'location', e.target.value)} />
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px' }}>Tỉnh/Thành Phố</label>
+                                                            <select
+                                                                value={slot.provinceCode || ''}
+                                                                onChange={(e) => {
+                                                                    const newSlots = [...slots];
+                                                                    newSlots[index].provinceCode = e.target.value;
+                                                                    newSlots[index].districtCode = '';
+                                                                    newSlots[index].wardCode = '';
+                                                                    setSlots(newSlots);
+                                                                }}
+                                                                style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px' }}
+                                                            >
+                                                                <option value="">-- Chọn --</option>
+                                                                {provinces.filter(isProvinceActive).map((province) => (
+                                                                    <option key={province.code} value={province.code}>
+                                                                        {province.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px' }}>Quận/Huyện</label>
+                                                            <select
+                                                                value={slot.districtCode || ''}
+                                                                onChange={(e) => {
+                                                                    const newSlots = [...slots];
+                                                                    newSlots[index].districtCode = e.target.value;
+                                                                    newSlots[index].wardCode = '';
+                                                                    setSlots(newSlots);
+                                                                }}
+                                                                disabled={!slot.provinceCode}
+                                                                style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px' }}
+                                                            >
+                                                                <option value="">-- Chọn --</option>
+                                                                {(provinces.find((province) => String(province.code) === slot.provinceCode)?.districts || []).map((district) => (
+                                                                    <option key={district.code} value={district.code}>
+                                                                        {district.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px' }}>Xã/Phường</label>
+                                                            <select
+                                                                value={slot.wardCode || ''}
+                                                                onChange={(e) => {
+                                                                    const newSlots = [...slots];
+                                                                    newSlots[index].wardCode = e.target.value;
+                                                                    setSlots(newSlots);
+                                                                }}
+                                                                disabled={!slot.districtCode}
+                                                                style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px' }}
+                                                            >
+                                                                <option value="">-- Chọn --</option>
+                                                                {(provinces.find((province) => String(province.code) === slot.provinceCode)?.districts?.find((district) => String(district.code) === slot.districtCode)?.wards || []).map((ward) => (
+                                                                    <option key={ward.code} value={ward.code}>
+                                                                        {ward.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px' }}>Địa Chỉ Cụ Thể</label>
+                                                            <input
+                                                                type="text"
+                                                                value={slot.address || ''}
+                                                                onChange={(e) => handleSlotChange(index, 'address', e.target.value)}
+                                                                placeholder="Số nhà, tên đường..."
+                                                                style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px' }}
+                                                            />
+                                                        </div>
                                                     </div>
+
                                                     <div className="sub-input">
                                                         <AlertCircle size={14} />
                                                         <input type="text" placeholder={`Ghi chú riêng...`} value={slot.note} onChange={(e) => handleSlotChange(index, 'note', e.target.value)} />
@@ -502,24 +750,50 @@ const BatchSlotCreate = () => {
                                 <Settings2 size={18} />
                                 <h3 style={{ margin: 0 }}>Chi tiết khung giờ</h3>
                             </div>
-                            <div className="modal-header-actions" style={{ display: 'flex', gap: '8px' }}>
+                            <div className="modal-header-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <button
                                     className="btn-lock"
                                     title={selectedSlot.status === 'LOCKED' ? "Mở khóa slot" : "Khóa slot"}
                                     onClick={handleToggleLock}
                                     style={{
-                                        background: 'none',
+                                        background: 'rgba(255,255,255,0.2)',
                                         border: 'none',
-                                        color: selectedSlot.status === 'LOCKED' ? '#ff9800' : '#ccc',
+                                        color: selectedSlot.status === 'LOCKED' ? '#fbbf24' : '#e0e7ff',
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        padding: '4px'
+                                        justifyContent: 'center',
+                                        padding: '8px',
+                                        borderRadius: '8px',
+                                        transition: 'all 0.2s',
+                                        width: '36px',
+                                        height: '36px'
                                     }}
+                                    onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.3)'}
+                                    onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
                                 >
-                                    <Lock size={18} fill={selectedSlot.status === 'LOCKED' ? "#ff9800" : "none"} />
+                                    <Lock size={18} fill={selectedSlot.status === 'LOCKED' ? "#fbbf24" : "none"} />
                                 </button>
-                                <button onClick={() => setShowModal(false)} className="close-btn" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                                <button 
+                                    onClick={() => setShowModal(false)} 
+                                    className="close-btn" 
+                                    style={{ 
+                                        background: 'rgba(255,255,255,0.2)',
+                                        border: 'none', 
+                                        cursor: 'pointer',
+                                        color: '#fff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '8px',
+                                        borderRadius: '8px',
+                                        width: '36px',
+                                        height: '36px',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.3)'}
+                                    onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                                >
                                     <X size={20} />
                                 </button>
                             </div>

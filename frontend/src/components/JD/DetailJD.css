@@ -145,6 +145,11 @@
     color: var(--sf-green);
 }
 
+.status-not-started {
+    background: rgba(59, 130, 246, 0.14);
+    color: #2563eb;
+}
+
 .status-closed {
     background: rgba(255, 59, 48, 0.15);
     color: var(--sf-red);
@@ -575,6 +580,37 @@
     font-size: 13px;
     font-weight: 600;
     word-break: break-word;
+}
+
+.modal-body-scroll .modal-posting-date-group {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1.5px solid #e5e7eb;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.modal-body-scroll .posting-date-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.modal-body-scroll .posting-duration-note {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #374151;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.modal-body-scroll .posting-duration-note strong {
+    color: #2563eb;
 }
 
 .modal-body-scroll .skills-card {

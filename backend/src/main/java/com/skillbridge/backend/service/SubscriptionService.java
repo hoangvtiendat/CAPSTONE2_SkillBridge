@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -68,6 +69,7 @@ public class SubscriptionService {
         plan.setJobLimit(subscriptionPlan.getJobLimit());
         plan.setCandidateViewLimit(subscriptionPlan.getCandidateViewLimit());
         plan.setHasPriorityDisplay(subscriptionPlan.getHasPriorityDisplay());
+        plan.setIsPublic(subscriptionPlan.getIsPublic());
 
         SubscriptionPlan savedPlan = subscriptionRepository.save(plan);
 
@@ -296,5 +298,10 @@ public class SubscriptionService {
             systemLog.danger(currentUser, "Lỗi hệ thống: " + e.getMessage());
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+    ///  Lấy ngày đăng
+    public int getJobDay(String id_company) {
+        return subcriptionOfCompanyRepository.findPostingDuration(id_company, true)
+                .orElse(0);
     }
 }

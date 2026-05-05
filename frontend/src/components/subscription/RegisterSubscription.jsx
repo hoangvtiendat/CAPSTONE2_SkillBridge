@@ -20,7 +20,7 @@ const RegisterSubscription = () => {
     const [customForm, setCustomForm] = useState({
         jobLimit: '',
         candidateViewLimit: '',
-        hasPriorityDisplay: false
+        hasPriorityDisplay: true
     });
 
     const postPayment = async (id, type) => {
@@ -69,6 +69,22 @@ const RegisterSubscription = () => {
 
     const handleCustomFormChange = (e) => {
         const { name, value, type, checked } = e.target;
+
+        if (name === 'jobLimit') {
+            const job = value === '' ? '' : Number(value);
+            setCustomForm(prev => ({
+                ...prev,
+                jobLimit: job,
+                candidateViewLimit: job === '' ? '' : job * 12
+            }));
+            return;
+        }
+
+        if (name === 'hasPriorityDisplay') {
+            setCustomForm(prev => ({ ...prev, hasPriorityDisplay: checked }));
+            return;
+        }
+
         setCustomForm(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : (value === '' ? '' : Number(value))
@@ -151,7 +167,6 @@ const RegisterSubscription = () => {
                                         <li><Check size={18} /> <span><strong>{sub.jobLimit}</strong> Tin đăng / tháng</span></li>
                                         <li><Check size={18} /> <span><strong>{sub.candidateViewLimit}</strong> Lượt xem hồ sơ</span></li>
                                         <li><Check size={18} /> <span>Thời hạn: <strong>{sub.postingDuration || '30'} ngày</strong></span></li>
-                                        <li><Check size={18} /> <span>Ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span></li>
                                     </ul>
                                 </div>
 
@@ -187,17 +202,9 @@ const RegisterSubscription = () => {
                         </div>
 
                         <div className="rs-input-group">
-                            <label>Lượt xem hồ sơ ứng viên *</label>
-                            <input type="number" name="candidateViewLimit" value={customForm.candidateViewLimit} onChange={handleCustomFormChange} min="1" required placeholder="Ví dụ: 50" />
+                            <label>Lượt xem hồ sơ ứng viên</label>
+                            <input type="number" name="candidateViewLimit" value={customForm.candidateViewLimit} readOnly disabled min="1" />
                         </div>
-
-                        <label className="rs-toggle-panel">
-                            <input type="checkbox" name="hasPriorityDisplay" checked={customForm.hasPriorityDisplay} onChange={handleCustomFormChange} />
-                            <div className="rs-toggle-info">
-                                <h5>Duyệt tin ưu tiên</h5>
-                                <span>Hiển thị ở vị trí hàng đầu để thu hút ứng viên nhanh nhất.</span>
-                            </div>
-                        </label>
 
                         <div className="rs-form-actions">
                             <button type="button" className="rs-btn-cancel" onClick={() => navigate(-1)} disabled={submitting}>Hủy bỏ</button>
