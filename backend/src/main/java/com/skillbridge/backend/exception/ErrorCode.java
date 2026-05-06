@@ -138,7 +138,7 @@ public enum ErrorCode {
     CANNOT_DELETE_BOOKED_SLOT(9005, "Không thể xoá khung giờ đã có ứng viên đặt lịch.", HttpStatus.BAD_REQUEST),
     SLOT_EXPIRED(9006, "Khung giờ này đã trôi qua, không thể đặt lịch", HttpStatus.BAD_REQUEST),
     SLOT_IS_LOCKED(9007,"Khung giờ này đã bị khoá", HttpStatus.BAD_REQUEST),
-
+    INTERVIEW_TIME_CONFLICT(9008, "Lịch đang bị trùng, không thể phỏng vấn vào khung giờ này", HttpStatus.BAD_REQUEST),
     //INVIVATION
     INVITATION_ALREADY_SENT(11000,"Bạn đã gửi lời mời cho ứng viên này", HttpStatus.BAD_REQUEST);
     private final int code;

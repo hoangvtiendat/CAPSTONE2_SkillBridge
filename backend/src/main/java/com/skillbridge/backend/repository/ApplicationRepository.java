@@ -32,4 +32,6 @@ public interface ApplicationRepository extends JpaRepository<Application, String
     List<Application> findAllByCandidateIdOrderByCreatedAtDesc(String candidateId);
 
     void deleteByCandidate(@NotNull(message = "Ứng viên không được để trống") Candidate candidate);
+
+    List<Application> findAllByCandidateId(String userId);
 }
