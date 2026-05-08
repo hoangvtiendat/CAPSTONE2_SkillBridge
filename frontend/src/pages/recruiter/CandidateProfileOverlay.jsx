@@ -3,11 +3,15 @@ import './CandidateProfileOverlay.css';
 import candidateService from '../../services/api/candidateService';
 import { toast } from 'sonner';
 
-const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) => {
+const CandidateProfileOverlay = ({ candidateData, jobId, onClose, onInviteSuccess }) => {
     const [evaluation, setEvaluation] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isInviting, setIsInviting] = useState(false);
 
     if (!candidateData) return null;
+
+    // Lấy trạng thái hiện tại từ dữ liệu ứng viên
+    const currentStatus = candidateData.jobStatus; // NONE, INVITED, EXPIRED, APPLIED
 
     const renderSmartText = (text) => {
         if (!text) return null;
@@ -62,20 +66,38 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
         }
     };
 
+    const handleInviteAction = async () => {
+        setIsInviting(true);
+        try {
+            const response = await candidateService.inviteCandidate(jobId, candidateData.id);
+            if (response.code === 200) {
+                toast.success(response.result || "Gửi lời mời thành công!");
+                if (onInviteSuccess) onInviteSuccess(); // Gọi callback để refresh danh sách bên ngoài
+                onClose(); // Đóng overlay sau khi mời thành công
+            }
+        } catch (error) {
+            toast.error("Không thể gửi lời mời.");
+        } finally {
+            setIsInviting(false);
+        }
+    };
+
     const maskInfo = (info, type) => {
         if (!info) return "Chưa cập nhật";
-        if (isInvited) return info;
+        // Chỉ hiện thông tin thật nếu đã mời (INVITED) hoặc đã ứng tuyển (APPLIED)
+        const isAuthorized = currentStatus === 'INVITED' || currentStatus === 'APPLIED';
+        if (isAuthorized) return info;
+
         if (type === 'email') {
             const [name, domain] = info.split('@');
             return `${name[0]}••••@${domain}`;
         }
         if (type === 'phone') return `${info.slice(0, 3)}••••${info.slice(-2)}`;
-        if (type === 'address') return "••••••••••••";
         return "••••••••";
     };
 
-    // Logic tính toán màu sắc điểm số
-    const matchScore = Number(((candidateData.aiMatchingScore || 0) * 100).toFixed(0));
+    const matchScore = Number(((candidateData.aiMatchingScore || 0)).toFixed(0));
+
     const getScoreClass = (score) => {
         if (score < 50) return 'low';
         if (score < 80) return 'medium';
@@ -96,7 +118,6 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                             <p>Kết quả đánh giá từ hệ thống AI</p>
                         </div>
                     </div>
-
                     <div className="eval-content-scroll">
                         <div className="eval-box strength">
                             <h4 className="box-title">
@@ -106,7 +127,7 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                         </div>
                         <div className="eval-box weakness">
                             <h4 className="box-title">
-                                <span className="material-symbols-outlined">thumb_down</span> Điểm yếu & Hạn chế
+                                <span className="material-symbols-outlined">thumb_down</span> Hạn chế
                             </h4>
                             {renderSmartText(evaluation.weaknesses)}
                         </div>
@@ -122,7 +143,6 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                 <div className="bubble-scroll-area">
                     <header className="premium-header">
                         <div className="avatar-section">
-                            {/* Thêm class màu vào viền avatar */}
                             <div className={`main-avatar-ring ${scoreClass}`}>
                                 {candidateData.avatar ?
                                     <img src={candidateData.avatar} alt="Avatar" /> :
@@ -130,7 +150,6 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                                         <span className="material-symbols-outlined" style={{fontSize: '48px', color: '#cbd5e1'}}>person</span>
                                     </div>
                                 }
-                                {/* Thêm class màu vào badge điểm số */}
                                 <div className={`score-float-badge ${scoreClass}`}>{matchScore}%</div>
                             </div>
                         </div>
@@ -138,47 +157,32 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                             <h2>{candidateData.name}</h2>
                             <div className="status-row">
                                 <span className="material-symbols-outlined verified-icon">verified_user</span>
-                                <span className="category-label">Hồ sơ ứng viên</span>
+                                <span className="category-label">
+                                    {currentStatus === 'APPLIED' ? 'Ứng viên đã nộp đơn' : 'Ứng viên tiềm năng'}
+                                </span>
                             </div>
                         </div>
                     </header>
 
                     <div className="modern-info-grid">
                         <div className="contact-item">
-                            <div className="c-icon blue">
-                                <span className="material-symbols-outlined">mail</span>
-                            </div>
-                            <div className="c-text">
-                                <label>Email</label>
-                                <p>{maskInfo(candidateData.email, 'email')}</p>
-                            </div>
+                            <div className="c-icon blue"><span className="material-symbols-outlined">mail</span></div>
+                            <div className="c-text"><label>Email</label><p>{maskInfo(candidateData.email, 'email')}</p></div>
                         </div>
                         <div className="contact-item">
-                            <div className="c-icon green">
-                                <span className="material-symbols-outlined">call</span>
-                            </div>
-                            <div className="c-text">
-                                <label>Điện thoại</label>
-                                <p>{maskInfo(candidateData.phoneNumber, 'phone')}</p>
-                            </div>
+                            <div className="c-icon green"><span className="material-symbols-outlined">call</span></div>
+                            <div className="c-text"><label>Điện thoại</label><p>{maskInfo(candidateData.phoneNumber, 'phone')}</p></div>
                         </div>
                         <div className="contact-item full">
-                            <div className="c-icon orange">
-                                <span className="material-symbols-outlined">location_on</span>
-                            </div>
-                            <div className="c-text">
-                                <label>Địa chỉ</label>
-                                <p>{candidateData.address}</p>
-                            </div>
+                            <div className="c-icon orange"><span className="material-symbols-outlined">location_on</span></div>
+                            <div className="c-text"><label>Địa chỉ</label><p>{candidateData.address}</p></div>
                         </div>
                     </div>
 
                     <div className="content-card">
-                        <h4 className="card-title">
-                            <span className="material-symbols-outlined">work</span> Kinh nghiệm làm việc
-                        </h4>
+                        <h4 className="card-title"><span className="material-symbols-outlined">work</span> Kinh nghiệm</h4>
                         <div className="rich-timeline">
-                            {candidateData.experience && candidateData.experience.length > 0 ? (
+                            {candidateData.experience?.length > 0 ? (
                                 candidateData.experience.map((exp, i) => (
                                     <div key={i} className="experience-item">
                                         <div className="exp-content">
@@ -190,16 +194,12 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                                         </div>
                                     </div>
                                 ))
-                            ) : (
-                                <p className="empty-text-mini">Chưa có dữ liệu kinh nghiệm.</p>
-                            )}
+                            ) : <p className="empty-text-mini">Chưa có dữ liệu kinh nghiệm.</p>}
                         </div>
                     </div>
 
                     <div className="content-card">
-                        <h4 className="card-title">
-                            <span className="material-symbols-outlined">school</span> Học vấn
-                        </h4>
+                        <h4 className="card-title"><span className="material-symbols-outlined">school</span> Học vấn</h4>
                         <div className="education-list">
                             {degreesOnly.map((deg, i) => (
                                 <div key={i} className="edu-card-item">
@@ -210,33 +210,12 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                                     </div>
                                     <div className="edu-footer-tags">
                                         <span className="year-pill">{deg.graduationYear}</span>
-                                        {deg.level && <span className="grade-pill">Điểm: {deg.level}</span>}
+                                        {deg.level && <span className="grade-pill">GPA: {deg.level}</span>}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
-
-                    {certificatesOnly.length > 0 && (
-                        <div className="content-card">
-                            <h4 className="card-title">
-                                <span className="material-symbols-outlined">workspace_premium</span> Chứng chỉ chuyên môn
-                            </h4>
-                            <div className="certificate-grid">
-                                {certificatesOnly.map((cert, i) => (
-                                    <div key={i} className="badge-cert-item">
-                                        <div className="badge-info">
-                                            <h6>{cert.name}</h6>
-                                            <div className="cert-meta-row">
-                                                <span>Năm cấp: {cert.year}</span>
-                                                {cert.level && <span className="cert-level-badge">Cấp độ: {cert.level}</span>}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 <div className="fixed-footer-action dual-actions">
@@ -246,11 +225,23 @@ const CandidateProfileOverlay = ({ candidateData, jobId, isInvited, onClose }) =
                         disabled={isLoading}
                     >
                         <span className="material-symbols-outlined">{isLoading ? 'sync' : 'person_search'}</span>
-                        <span>{isLoading ? 'Đang chấm...' : 'Đánh giá'}</span>
+                        <span>{isLoading ? 'Đang chấm...' : 'Đánh giá AI'}</span>
                     </button>
-                    <button className={`btn-grand-invite ${isInvited ? 'success' : ''}`} disabled={isInvited}>
-                        {isInvited ? 'Đã mời ứng tuyển' : 'Mời ứng tuyển'}
-                    </button>
+
+                    {currentStatus === 'INVITED' ? (
+                        <button className="btn-grand-invite success" disabled>
+                            <span className="material-symbols-outlined">check_circle</span> Đã mời ứng tuyển
+                        </button>
+                    ) : (
+                        <button
+                            className={`btn-grand-invite ${isInviting ? 'is-loading' : ''}`}
+                            onClick={handleInviteAction}
+                            disabled={isInviting || currentStatus === 'APPLIED'}
+                        >
+                            {currentStatus === 'APPLIED' ? 'Đã nộp đơn' :
+                             (currentStatus === 'NONE' ? 'Mời ứng tuyển' : 'Mời lại')}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

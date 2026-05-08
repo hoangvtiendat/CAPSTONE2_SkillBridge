@@ -20,4 +20,5 @@ public class CandidateResponse {
     private Object degrees;
     private Object skills;
     private Object experience;
+    private String jobStatus;
 }

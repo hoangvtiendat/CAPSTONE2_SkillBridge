@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -535,33 +536,54 @@ public class CandidateService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
 
-        List<String> invitedIds = jobInvitationRepository.findCandidateIdsByJobId(jobId);
+        // 1. Lấy danh sách ID đã ứng tuyển
         List<String> appliedIds = applicationRepository.findCandidateIdsByJobId(jobId);
-        Set<String> excludedCandidateIds = new HashSet<>();
-        excludedCandidateIds.addAll(invitedIds);
-        excludedCandidateIds.addAll(appliedIds);
+
+        // 2. Lấy danh sách lời mời và đưa vào Map để tra cứu theo Candidate ID
+        List<JobInvitation> invitations = jobInvitationRepository.findByJobId(jobId);
+        Map<String, JobInvitation> invitationMap = invitations.stream()
+                .collect(Collectors.toMap(
+                        inv -> inv.getCandidate().getId(),
+                        inv -> inv,
+                        (existing, replacement) -> existing // Nếu có nhiều lời mời, lấy cái đầu tiên tìm thấy
+                ));
 
         float[] jobVector = job.getVectorEmbedding();
         if (jobVector == null) {
             return Map.of("candidates", List.of(), "totalPages", 0, "totalElements", 0, "currentPage", page);
         }
 
+        // 3. Lấy tất cả ứng viên và tính toán Matching Score + Trạng thái
         List<Candidate> allCandidates = candidateRepository.findAllWithVector();
+        LocalDateTime now = LocalDateTime.now();
 
         List<CandidateResponse> allSorted = allCandidates.stream()
                 .filter(c -> c.getVectorEmbedding() != null && c.getVectorEmbedding().length == jobVector.length)
-
-                .filter(c -> !excludedCandidateIds.contains(c.getId()))
-
                 .map(candidate -> {
                     double score = cosineSimilarityUtils.cosineSimilarity(jobVector, candidate.getVectorEmbedding());
                     CandidateResponse res = this.mapToCandidateResponse(candidate);
                     res.setAiMatchingScore((float) score * 100);
+
+                    // LOGIC PHÂN LOẠI TRẠNG THÁI:
+                    if (appliedIds.contains(candidate.getId())) {
+                        res.setJobStatus("APPLIED");
+                    } else if (invitationMap.containsKey(candidate.getId())) {
+                        JobInvitation inv = invitationMap.get(candidate.getId());
+                        // Kiểm tra hết hạn dựa trên trường expiresAt trong Entity
+                        if (inv.getExpiresAt() != null && inv.getExpiresAt().isBefore(now)) {
+                            res.setJobStatus("EXPIRED");
+                        } else {
+                            res.setJobStatus("INVITED");
+                        }
+                    } else {
+                        res.setJobStatus("NONE");
+                    }
                     return res;
                 })
                 .sorted(Comparator.comparingDouble(CandidateResponse::getAiMatchingScore).reversed())
                 .collect(Collectors.toList());
 
+        // 4. Phân trang dữ liệu
         int totalElements = allSorted.size();
         int totalPages = (int) Math.ceil((double) totalElements / limit);
         int start = page * limit;

@@ -20,4 +20,7 @@ public interface JobInvitationRepository extends JpaRepository<JobInvitation, St
 
     @Query("SELECT ji.candidate.id FROM JobInvitation ji WHERE ji.job.id = :jobId")
     List<String> findCandidateIdsByJobId(@Param("jobId") String jobId);
+
+    @Query("SELECT ji FROM JobInvitation ji JOIN FETCH ji.candidate WHERE ji.job.id = :jobId")
+    List<JobInvitation> findByJobId(@Param("jobId") String jobId);
 }

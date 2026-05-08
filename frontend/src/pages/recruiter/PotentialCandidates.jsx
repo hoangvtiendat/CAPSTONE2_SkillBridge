@@ -13,7 +13,6 @@ const PotentialCandidates = () => {
     const [candidates, setCandidates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
-    const [invitedIds, setInvitedIds] = useState(new Set());
 
     // States quản lý phân trang
     const [currentPage, setCurrentPage] = useState(0);
@@ -33,10 +32,7 @@ const PotentialCandidates = () => {
     const fetchCandidates = async (page) => {
         setLoading(true);
         try {
-            // Đảm bảo hàm này trong service nhận (jobId, page, limit)
             const response = await candidateService.getPotentialCandidates(jobId, page, limit);
-
-            // Map kết quả từ Map<String, Object> của Backend
             const data = response.result;
             setCandidates(data.candidates || []);
             setTotalPages(data.totalPages || 0);
@@ -67,11 +63,25 @@ const PotentialCandidates = () => {
         try {
             const response = await candidateService.inviteCandidate(jobId, candidateId);
             if (response.code === 200) {
-                setInvitedIds(prev => new Set(prev).add(candidateId));
-                toast.success(response.result || "Mời ứng tuyển thành công!");
+                toast.success(response.result || "Gửi lời mời thành công!");
+                // Refresh dữ liệu để cập nhật trạng thái nút và badge ngay lập tức
+                fetchCandidates(currentPage);
             }
         } catch (error) {
             toast.error("Không thể gửi lời mời. Vui lòng thử lại sau!");
+        }
+    };
+
+    const renderStatusBadge = (status) => {
+        switch (status) {
+            case 'INVITED':
+                return <div className="status-badge invited">Đã mời</div>;
+            case 'EXPIRED':
+                return <div className="status-badge expired">Hết hạn</div>;
+            case 'APPLIED':
+                return <div className="status-badge applied">Đã Apply</div>;
+            default:
+                return null;
         }
     };
 
@@ -84,7 +94,6 @@ const PotentialCandidates = () => {
 
     return (
         <div className="potential-compact-wrapper">
-            {/* Header Section */}
             <div className="header-compact">
                 <button className="btn-back-link" onClick={() => navigate(-1)}>
                     <span className="material-symbols-outlined">arrow_back</span> Quay lại
@@ -95,15 +104,19 @@ const PotentialCandidates = () => {
                 </div>
             </div>
 
-            {/* Grid Section */}
             <div className="candidates-grid-compact">
                 {candidates.length > 0 ? (
                     candidates.map((can) => {
-                        const isInvited = invitedIds.has(can.id);
                         const matchScore = (can.aiMatchingScore || 0).toFixed(0);
+                        const status = can.jobStatus; // NONE, INVITED, EXPIRED, APPLIED
 
                         return (
                             <div key={can.id} className="candidate-card-compact">
+                                {/* Badge trạng thái góc trên bên phải */}
+                                <div className="status-badge-container">
+                                    {renderStatusBadge(status)}
+                                </div>
+
                                 <div className="score-mini">
                                     <svg viewBox="0 0 36 36">
                                         <path className="bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
@@ -135,16 +148,22 @@ const PotentialCandidates = () => {
                                 </div>
 
                                 <div className="actions-mini">
-                                    <button
-                                        className={`btn-inv-mini ${isInvited ? 'invited' : ''}`}
-                                        onClick={() => handleSendInvitation(can.id)}
-                                        disabled={isInvited}
-                                    >
-                                        <span className="material-symbols-outlined">
-                                            {isInvited ? 'check_circle' : 'send'}
-                                        </span>
-                                        {isInvited ? 'Đã mời' : 'Mời ứng tuyển'}
-                                    </button>
+                                    {status === 'INVITED' ? (
+                                        <button className="btn-inv-mini already-invited" disabled>
+                                            <span className="material-symbols-outlined">check_circle</span>
+                                            Đã mời
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="btn-inv-mini"
+                                            onClick={() => handleSendInvitation(can.id)}
+                                        >
+                                            <span className="material-symbols-outlined">
+                                                {status === 'NONE' ? 'send' : 'refresh'}
+                                            </span>
+                                            {status === 'NONE' ? 'Mời ứng tuyển' : 'Mời lại'}
+                                        </button>
+                                    )}
                                     <button className="btn-det-mini" onClick={() => setSelectedCandidate(can)}>
                                         Chi tiết
                                     </button>
@@ -157,7 +176,6 @@ const PotentialCandidates = () => {
                 )}
             </div>
 
-            {/* Pagination Section */}
             {totalPages > 1 && (
                 <div className="pagination-compact">
                     <button
@@ -167,11 +185,9 @@ const PotentialCandidates = () => {
                     >
                         <span className="material-symbols-outlined">chevron_left</span>
                     </button>
-
                     <span className="page-info">
                         Trang <strong>{currentPage + 1}</strong> / {totalPages}
                     </span>
-
                     <button
                         disabled={currentPage === totalPages - 1}
                         onClick={() => handlePageChange(currentPage + 1)}
@@ -182,12 +198,10 @@ const PotentialCandidates = () => {
                 </div>
             )}
 
-            {/* Detail Overlay */}
             {selectedCandidate && (
                 <CandidateProfileOverlay
                     candidateData={selectedCandidate}
                     jobId={jobId}
-                    isInvited={invitedIds.has(selectedCandidate.id)}
                     onClose={() => setSelectedCandidate(null)}
                 />
             )}
