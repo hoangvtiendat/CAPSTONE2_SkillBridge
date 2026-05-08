@@ -449,6 +449,8 @@ const JdList = () => {
                         {paginatedJdList.map(jd => {
                             const cardIds = extractJdIds(jd);
                             const isSpamJob = cardIds.some(id => spamIds.has(id));
+                            // Show spam decorations only when the job status is LOCK.
+                            const isSpamJobVisible = isSpamJob && jd.status === 'LOCK';
                             
                             if (cardIds.length > 0) {
                                 console.log(`JD "${jd.position}" - IDs: ${cardIds.join(', ')} | Is Spam: ${isSpamJob}`);
@@ -457,7 +459,7 @@ const JdList = () => {
                             return (
                             <div
                                 key={jd.id}
-                                className={`jd-card status-${String(jd.status || '').toLowerCase().replace(/_/g, '-') } ${isSpamJob ? 'spam-card' : ''}`}
+                                className={`jd-card status-${String(jd.status || '').toLowerCase().replace(/_/g, '-') } ${isSpamJobVisible ? 'spam-card' : ''}`}
                             >
                                 <div className="jd-card-body" onClick={() => navigate(`/detail-jd/${jd.id}`)}>
                                     <div className="jd-card-top">
@@ -470,13 +472,13 @@ const JdList = () => {
                                         </div>
                                         <div className="title-box">
                                             <h2 className="position-title">{jd.position}
-                                                {isSpamJob ? <AlertTriangle size={16} className="spam-flag" title="Bài bị đánh dấu là spam" /> : null}
+                                                {isSpamJobVisible ? <AlertTriangle size={16} className="spam-flag" title="Bài bị đánh dấu là spam" /> : null}
                                             </h2>
                                             <div className="title-badges">
                                                 <span className={`status-badge ${jd.status}`}>
                                                     {STATUS_LABELS[jd.status] || jd.status}
                                                 </span>
-                                                {isSpamJob && (
+                                                {isSpamJobVisible && (
                                                     <button
                                                         type="button"
                                                         className="spam-badge"

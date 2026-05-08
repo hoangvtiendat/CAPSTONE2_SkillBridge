@@ -32,4 +32,7 @@ public class NotificationForAI {
 
   private String action;
   private String company;
+  @Column(name = "is_read", nullable = false)
+  @Builder.Default
+  private boolean read = false;
 }
