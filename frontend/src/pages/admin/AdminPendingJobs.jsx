@@ -205,6 +205,11 @@ const AdminJobPending = () => {
 
                     <div className="spam-white-table-shell">
                         <table className="spam-white-table">
+                            <colgroup>
+                                <col className="spam-col-label" />
+                                <col className="spam-col-target" />
+                                <col className="spam-col-spam" />
+                            </colgroup>
                             <thead>
                             <tr>
                                 <th>Trường</th>

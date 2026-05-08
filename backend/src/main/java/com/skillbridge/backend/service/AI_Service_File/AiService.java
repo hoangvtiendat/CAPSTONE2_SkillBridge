@@ -149,25 +149,34 @@ public class AiService {
     """;
     private static final String PROMPT_CHECK_NEWJOV_VS_OLDJOB = """
 YÊU CẦU:
-So sánh 2 Job Description (JD) bằng NGỮ NGHĨA và kết quả VECTOR để xác định SPAM (bài đăng trùng lặp).
+Bạn là hệ thống kiểm duyệt tin tuyển dụng. Mọi cặp Job Description (JD) bạn nhận được ĐỀU ĐÃ CÓ độ tương đồng Vector >= 0.75. Nhiệm vụ của bạn là phân tích NGỮ NGHĨA để chốt hạ đây có phải là SPAM (bài đăng trùng lặp/xào nấu) hay không.
 
-NGUYÊN TẮC TRỌNG SỐ (QUAN TRỌNG):
-- Nếu độ tương đồng Vector (Cosine Similarity) >= 0.95: Coi đây là bản sao 100% về nội dung. AI BẮT BUỘC kết luận "spam": true trừ khi có sự khác biệt rõ rệt về "Cấp bậc" hoặc "Địa điểm".
-- Không bị đánh lừa bởi: Thủ thuật đảo câu, thay đổi định dạng (bullet points), hoặc dịch thuật Anh - Việt.
+NGUYÊN TẮC TRỌNG SỐ (VECTOR CÀNG CAO, XÉT DUYỆT CÀNG KHẮT KHE):
+
+1. MỨC >= 0.95 (CỰC KỲ NGHIÊM NGẶT): 
+- Gần như chắc chắn là bản sao. BẮT BUỘC kết luận "spam": true. 
+- CHỈ CHO PHÉP pass ("spam": false) NẾU VÀ CHỈ NẾU có sự đối lập HOÀN TOÀN về "Địa điểm" (VD: Hà Nội vs Đà Nẵng) hoặc "Cấp bậc" (VD: Intern vs Senior). Tuyệt đối phớt lờ mọi khác biệt về từ vựng, cấu trúc câu hay format.
+
+2. MỨC TỪ 0.90 ĐẾN 0.94 (NGHIÊM NGẶT): 
+- Coi là spam nếu bản chất lõi (Tech stack + Role) không đổi. 
+- AI KHÔNG ĐƯỢC phép bị đánh lừa bởi: thủ thuật đảo câu, thêm bớt định dạng (bullet points), thay đổi đại từ, hoặc dịch thuật Anh - Việt.
+
+3. MỨC TỪ 0.75 ĐẾN 0.89 (PHÂN TÍCH KỸ LÕI CÔNG VIỆC): 
+- Ở mức này, độ giống nhau cao thường do sử dụng chung Template Công Ty (chung phần Giới thiệu, Phúc lợi). 
+- AI PHẢI TẬP TRUNG phân tích phần "Yêu cầu" và "Mô tả công việc" để xem Tech Stack hoặc Vai trò có thực sự khác nhau không. (VD: Đều là tuyển Dev, nhưng một bên là Java Spring Boot, một bên là ReactJS thì là KHÔNG SPAM).
 
 KẾT LUẬN SPAM (true) KHI:
-- Điểm Vector Similarity rất cao (>0.90) và bản chất lõi công việc (Tech stack + Role) không đổi.
-- Cùng một công ty đăng lại cùng một vị trí, cùng cấp bậc nhiều lần dù đã thay đổi cách diễn đạt.
+- Cùng công ty đăng lại cùng một vị trí, cùng cấp bậc, cùng địa điểm dù có xào nấu lại cách diễn đạt để lách luật.
 
 TIÊU CHÍ KHÔNG SPAM (false):
-- Khác biệt rõ ràng về vai trò (VD: Backend vs Frontend).
-- Khác biệt rõ ràng về cấp bậc (VD: Junior vs Senior).
-- Khác biệt về địa điểm làm việc (VD: Hà Nội vs Đà Nẵng).
-- NẾU VECTOR CAO NHƯNG CHỌN FALSE: Phải chỉ ra được điểm khác biệt cực kỳ cụ thể về Level hoặc Location.
+- Khác biệt rõ về Vai trò / Tech Stack (VD: Backend vs Frontend).
+- Khác biệt rõ về Cấp bậc.
+- Khác biệt rõ về Địa điểm.
+- LƯU Ý: Nếu Vector >= 0.95 mà chọn False, BẮT BUỘC phải chỉ ra được điểm khác biệt cực kỳ cụ thể, không thể chối cãi về Level hoặc Location.
 
 OUTPUT FORMAT (CHỈ TRẢ VỀ ĐÚNG JSON NÀY, KHÔNG GIẢI THÍCH THÊM):
 {
-  "why": "Giải thích RẤT NGẮN GỌN lý do. Nếu Vector cao mà False phải nêu rõ khác biệt Level/Location.",
+  "why": "Giải thích RẤT NGẮN GỌN lý do. Nếu Vector >= 0.95 mà False phải nêu đích danh điểm khác biệt.",
   "spam": true | false
 }
 """;

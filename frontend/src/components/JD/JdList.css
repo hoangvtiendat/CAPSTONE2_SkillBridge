@@ -598,9 +598,19 @@
 
 .jd-spam-modal-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 14px;
+}
+
+.jd-spam-col-label {
+    width: 18%;
+}
+
+.jd-spam-col-target,
+.jd-spam-col-spam {
+    width: 41%;
 }
 
 .jd-spam-modal-table thead th {
@@ -625,6 +635,7 @@
     color: #334155;
     line-height: 1.45;
     word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .jd-spam-field-name {

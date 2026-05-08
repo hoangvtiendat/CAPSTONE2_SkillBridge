@@ -280,8 +280,18 @@
 
 .spam-white-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     background: white;
+}
+
+.spam-col-label {
+    width: 18%;
+}
+
+.spam-col-target,
+.spam-col-spam {
+    width: 41%;
 }
 
 .spam-white-table th,
@@ -308,6 +318,11 @@
     font-weight: 650;
     color: #475569;
     white-space: nowrap;
+}
+
+.spam-white-table td {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 /* Modal overlay for singleton spam compare */
