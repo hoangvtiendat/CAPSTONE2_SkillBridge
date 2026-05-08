@@ -186,24 +186,29 @@ useEffect(() => {
                                 </div>
 
                                 <div className="actions-mini">
-                                    {status === 'INVITED' ? (
-                                        <button className="btn-inv-mini already-invited" disabled>
-                                            <span className="material-symbols-outlined">check_circle</span>
-                                            Đã mời
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="btn-inv-mini"
-                                            onClick={() => handleSendInvitation(can.id)}
-                                        >
-                                            <span className="material-symbols-outlined">
-                                                {status === 'NONE' ? 'send' : 'refresh'}
-                                            </span>
-                                            {status === 'NONE' ? 'Mời ứng tuyển' : 'Mời lại'}
-                                        </button>
-                                    )}
+                                    {status === 'INVITED' || status === 'APPLIED' ? (
+                                         <button
+                                             className={`btn-inv-mini already-invited ${status === 'APPLIED' ? 'applied-btn' : ''}`}
+                                             disabled
+                                         >
+                                             <span className="material-symbols-outlined">
+                                                 {status === 'APPLIED' ? 'person_check' : 'check_circle'}
+                                             </span>
+                                             {status === 'APPLIED' ? 'Đã ứng tuyển' : 'Đã mời'}
+                                         </button>
+                                     ) : (
+                                         <button
+                                             className="btn-inv-mini"
+                                             onClick={() => handleSendInvitation(can.id)}
+                                         >
+                                             <span className="material-symbols-outlined">
+                                                 {status === 'NONE' ? 'send' : 'refresh'}
+                                             </span>
+                                             {status === 'NONE' ? 'Mời ứng tuyển' : 'Mời lại'}
+                                         </button>
+                                     )}
                                     <button className="btn-det-mini" onClick={() => setSelectedCandidate(can)}>
-                                        Chi tiết
+                                         Chi tiết
                                     </button>
                                 </div>
                             </div>

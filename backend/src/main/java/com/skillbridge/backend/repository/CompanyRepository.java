@@ -58,12 +58,14 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, soc.name,
+            c.description, c.address, c.websiteUrl,u.email, u.phoneNumber, c.status, soc.name,
             c.createdAt,
             (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
         )
         FROM Company c
         LEFT JOIN SubscriptionOfCompany soc ON soc.company.id = c.id AND soc.status = :subOpenStatus
+        LEFT JOIN c.members m ON m.role = com.skillbridge.backend.enums.CompanyRole.ADMIN
+        LEFT JOIN m.user u
         WHERE c.isDeleted = false
         AND (:status IS NULL OR c.status = :status)
         ORDER BY c.createdAt DESC
@@ -77,11 +79,13 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, cs.name,
+            c.description, c.address, c.websiteUrl,u.email, u.phoneNumber, c.status, cs.name,
             c.createdAt,(SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
         )
         FROM Company c
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
+        LEFT JOIN c.members m ON m.role = com.skillbridge.backend.enums.CompanyRole.ADMIN
+        LEFT JOIN m.user u
         WHERE (:status IS NULL OR c.status = :status)
         AND c.isDeleted = false
         AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -104,10 +108,12 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, cs.name,c.createdAt,
+            c.description, c.address, c.websiteUrl, u.email, u.phoneNumber, c.status, cs.name,c.createdAt,
             (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.isDeleted = false AND j.status = JobStatus.OPEN)
         )
         FROM Company c
+        LEFT JOIN c.members m ON m.role = com.skillbridge.backend.enums.CompanyRole.ADMIN
+        LEFT JOIN m.user u
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
         WHERE c.status = CompanyStatus.PENDING
         ORDER BY c.createdAt ASC

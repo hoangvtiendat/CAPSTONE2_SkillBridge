@@ -22,6 +22,8 @@ public class CompanyFeedItemResponse {
     String description;
     String address;
     String websiteUrl;
+    String email;
+    String phoneNumber;
     CompanyStatus status;
     SubscriptionPlanStatus subscriptionPlanName;
     LocalDateTime createdAt;
