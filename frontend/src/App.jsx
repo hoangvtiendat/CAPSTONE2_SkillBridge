@@ -150,6 +150,15 @@ function App() {
                             notification
                         }
                     }));
+
+                    // Push AI moderation notifications to the bell in real time.
+                    window.dispatchEvent(new CustomEvent('NEW_AI_NOTIFICATION', {
+                        detail: {
+                            ...notification,
+                            objId: jdObjId,
+                            status: jdStatus
+                        }
+                    }));
                 });
             };
             stompClient.activate();

@@ -3,6 +3,7 @@ package com.skillbridge.backend.controller;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.InviteRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
+import com.skillbridge.backend.dto.request.repostJDDayRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.Job;
 import com.skillbridge.backend.exception.AppException;
@@ -217,8 +218,8 @@ public class JobController {
         }
 ///  đăng lại bài
     @PostMapping("/report-Job/{id}")
-    public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
-        Job rePost = jobService.repostJD(id);
+    public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id, @RequestBody repostJDDayRequest request) {
+        Job rePost = jobService.repostJD(id, request);
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Đăng lại bài đăng thành ", rePost)
         );

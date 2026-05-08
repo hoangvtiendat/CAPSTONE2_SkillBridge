@@ -76,6 +76,7 @@ public class NotificationService {
     }
 
 
+    @Transactional(propagation = Propagation.REQUIRED)
     public void notificationForAiCheckTrafficLight(
             User receiver,
             String senderEmail,
@@ -87,22 +88,26 @@ public class NotificationService {
             String action,
             String company
     ){
-        NotificationForAI notificationForAI = NotificationForAI.builder()
-                .userId(receiver.getId())
+        Notification notification = Notification.builder()
+                .user(receiver)
                 .title(title)
+                .content(message)
+                .read(false)
+                .type("JD_AI_ALERT")
                 .objId(OBJ_id)
-                .status(jobStatus)
-                .message(message)
+                .jobStatus(jobStatus)
                 .action(action)
                 .company(company)
                 .build();
-        NotificationForAI addedNotificationForAI = notificationForAIReporitory.save(notificationForAI);
-        System.out.println("addedNotificationForAI" + addedNotificationForAI);
+
+        notificationRepository.save(notification);
+        log.info("AI Notification saved to DB for user: {}", receiver.getId());
+
         try {
             messagingTemplate.convertAndSendToUser(
                     receiver.getId(),
                     "/queue/Notification_JD",
-                    notificationForAI
+                    mapToResponse(notification)
             );
             log.info("Notification for AI traffic light sent via WebSocket for user: {}", receiver.getId());
         } catch (Exception e) {
@@ -148,6 +153,10 @@ public class NotificationService {
                 .type(notification.getType())
                 .link(notification.getLink())
                 .createdAt(notification.getCreatedAt())
+                .objId(notification.getObjId())
+                .jobStatus(notification.getJobStatus())
+                .action(notification.getAction())
+                .company(notification.getCompany())
                 .build();
     }
     ///  Lấy Notification cho JDAI

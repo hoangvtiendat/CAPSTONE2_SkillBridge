@@ -256,9 +256,13 @@ const jobService = {
         });
         return response.data;
     },
-    repostJob: async (jobId) => {
+    repostJob: async (jobId, dateParams = {}) => {
         try {
-            const response = await api.post(`/jobs/report-Job/${jobId}`);
+            const payload = dateParams && Object.keys(dateParams).length > 0 
+                ? dateParams 
+                : {};
+            
+            const response = await api.post(`/jobs/report-Job/${jobId}`, payload);
 
             if (!response) {
                 throw new Error("Không nhận được phản hồi từ server");

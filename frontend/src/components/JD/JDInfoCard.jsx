@@ -56,7 +56,7 @@ const JDInfoCard = ({ jdDetail }) => {
                     <div className="info-item-modern">
                         <div className="icon-box"><FontAwesomeIcon icon={faCalendarDays} /></div>
                         <div>
-                            <span className="info-label">Ngày đăng</span>
+                            <span className="info-label">Ngày bắt đầu</span>
                             <span className="info-value">{formatDisplayDate(jdDetail.startDate) || 'Chưa có'}</span>
                         </div>
                     </div>

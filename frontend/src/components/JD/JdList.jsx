@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import { addDays, format, parseISO } from 'date-fns';
 import jobService from '../../services/api/jobService';
+import subscriptionService from '../../services/api/subscriptionService';
 import companyMemberService from '../../services/api/companyMemberService';
 import './JdList.css';
 import { useAuth } from '../../context/AuthContext';
@@ -100,8 +102,115 @@ const JdList = () => {
     const [showSpamTable, setShowSpamTable] = useState(false);
     const [spamLoading, setSpamLoading] = useState(false);
 
+    // Repost modal states
+    const [repostModalOpen, setRepostModalOpen] = useState(false);
+    const [repostJdId, setRepostJdId] = useState(null);
+    const [postingDuration, setPostingDuration] = useState(null);
+    const [repostStartDate, setRepostStartDate] = useState("");
+    const [repostEndDate, setRepostEndDate] = useState("");
+    const [isReposting, setIsReposting] = useState(false);
+
     const navigate = useNavigate();
     const hasShownError = useRef(false);
+
+    const formatDateForInput = (d) => {
+        try {
+            return format(typeof d === 'string' ? parseISO(d) : d, 'yyyy-MM-dd');
+        } catch (e) {
+            const dt = new Date(d);
+            if (isNaN(dt)) return '';
+            const yyyy = dt.getFullYear();
+            const mm = String(dt.getMonth() + 1).padStart(2, '0');
+            const dd = String(dt.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+    };
+
+    const toBackendDateTimeString = (dateString, isEndDate = false) => {
+        if (!dateString) return '';
+        const [year, month, day] = dateString.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        if (Number.isNaN(date.getTime())) return '';
+        const dayPart = String(date.getDate()).padStart(2, '0');
+        const monthPart = String(date.getMonth() + 1).padStart(2, '0');
+        const yearPart = date.getFullYear();
+        return `${dayPart}/${monthPart}/${yearPart} ${isEndDate ? '23:59:59' : '00:00:00'}`;
+    };
+
+    const openRepostModal = async (jdId) => {
+        try {
+            const resp = await subscriptionService.postingDuriation(user?.companyId, token);
+            let dur = resp;
+            if (resp && typeof resp === 'object') {
+                dur = resp?.data ?? resp?.result ?? resp?.postingDuriation ?? resp?.postingDuration ?? null;
+            }
+            if (typeof dur === 'string') dur = Number(dur);
+            if (typeof dur === 'number' && !Number.isNaN(dur)) {
+                setPostingDuration(dur);
+                const today = formatDateForInput(new Date());
+                setRepostStartDate(today);
+                setRepostEndDate(formatDateForInput(addDays(new Date(), dur - 1)));
+            } else {
+                toast.error('Không lấy được thông tin gói cước');
+                return;
+            }
+        } catch (error) {
+            console.error('Failed to fetch posting duration for repost', error);
+            toast.error('Lỗi khi lấy thông tin gói cước');
+            return;
+        }
+        setRepostJdId(jdId);
+        setRepostModalOpen(true);
+    };
+
+    const closeRepostModal = () => {
+        setRepostModalOpen(false);
+        setRepostJdId(null);
+        setPostingDuration(null);
+        setRepostStartDate("");
+        setRepostEndDate("");
+    };
+
+    const handleRepostConfirm = async () => {
+        if (!repostStartDate || !repostEndDate) {
+            toast.error('Vui lòng chọn ngày bắt đầu và kết thúc');
+            return;
+        }
+
+        const startDateValue = new Date(repostStartDate);
+        const endDateValue = new Date(repostEndDate);
+
+        if (endDateValue < startDateValue) {
+            toast.error('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu');
+            return;
+        }
+
+        if (postingDuration) {
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const inclusiveDays = Math.floor((endDateValue - startDateValue) / msPerDay) + 1;
+            if (inclusiveDays > postingDuration) {
+                toast.error(`Khoảng thời gian không thể vượt quá ${postingDuration} ngày`);
+                return;
+            }
+        }
+
+        setIsReposting(true);
+        try {
+            await jobService.repostJob(repostJdId, {
+                startDate: toBackendDateTimeString(repostStartDate),
+                endDate: toBackendDateTimeString(repostEndDate, true)
+            });
+            setJdList(prev => prev.map(jd => jd.id === repostJdId ? { ...jd, status: 'OPEN' } : jd));
+            setActiveMenu(null);
+            await fetchJdList();
+            toast.success('Đã đăng lại tin đăng thành công');
+            closeRepostModal();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Không thể đăng lại tin đăng');
+        } finally {
+            setIsReposting(false);
+        }
+    };
 
     // Đóng menu khi click ra ngoài
     useEffect(() => {
@@ -201,8 +310,8 @@ const JdList = () => {
     const handleLockJd = async (e, jdId) => {
         e.stopPropagation();
         const result = await Swal.fire({
-            title: 'Xác nhận khóa bài đăng?',
-            text: 'Bạn có chắc muốn khóa bài đăng này? Hành động này không thể hoàn tác.',
+            title: 'Xác nhận khóa tin đăng?',
+            text: 'Bạn có chắc muốn khóa tin đăng này? Hành động này không thể hoàn tác.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#f85757',
@@ -222,9 +331,9 @@ const JdList = () => {
                 await jobService.deleteJd(jdId);
                 setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'LOCK' } : jd));
                 emitJdEvent('jd:locked', jdId, 'LOCK');
-                toast.success('Đã khóa bài đăng thành công');
+                toast.success('Đã khóa tin đăng thành công');
             } catch (error) {
-                toast.error('Không thể khóa bài đăng');
+                toast.error('Không thể khóa tin đăng');
             }
         }
     };
@@ -232,8 +341,8 @@ const JdList = () => {
     const handleCloseJd = async (e, jdId) => {
         e.stopPropagation();
         const result = await Swal.fire({
-            title: 'Xác nhận đóng bài đăng?',
-            text: 'Bạn có chắc muốn đóng bài đăng này?',
+            title: 'Xác nhận đóng tin đăng?',
+            text: 'Bạn có chắc muốn đóng tin đăng này?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#f85757',
@@ -253,51 +362,23 @@ const JdList = () => {
                 await jobService.closedJd(jdId);
                 setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'CLOSED' } : jd));
                 emitJdEvent('jd:closed', jdId, 'CLOSED');
-                toast.success('Đã đóng bài đăng thành công');
+                toast.success('Đã đóng tin đăng thành công');
             } catch (error) {
-                toast.error('Không thể đóng bài đăng');
+                toast.error('Không thể đóng tin đăng');
             }
         }
     };
 
     const handleReopenJd = async (e, jdId) => {
         e.stopPropagation();
-        const result = await Swal.fire({
-            title: 'Xác nhận đăng lại bài đăng?',
-            text: 'Bạn có chắc muốn đăng lại bài đăng này?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#f85757',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: 'Đăng lại ngay',
-            cancelButtonText: 'Hủy',
-            customClass: {
-                popup: 'premium-swal-popup',
-                title: 'premium-swal-title',
-                confirmButton: 'premium-swal-confirm',
-                cancelButton: 'premium-swal-cancel'
-            }
-        });
-
-        if (result.isConfirmed) {
-            try {
-                await jobService.repostJob(jdId);
-                setJdList(prev => prev.map(jd => jd.id === jdId ? { ...jd, status: 'OPEN' } : jd));
-                emitJdEvent('jd:reposted', jdId, 'OPEN');
-                setActiveMenu(null);
-                await fetchJdList();
-                toast.success('Đã đăng lại bài đăng thành công');
-            } catch (error) {
-                toast.error(error.response?.data?.message || 'Không thể đăng lại bài đăng');
-            }
-        }
+        await openRepostModal(jdId);
     };
 
     const handleSpamBadgeClick = async (e, jd) => {
         e.stopPropagation();
         const jdId = jd?.id || jd?.jobId || jd?.jdId || jd?._id;
         if (!jdId) {
-            toast.error('Không tìm thấy ID bài đăng');
+            toast.error('Không tìm thấy ID tin đăng');
             return;
         }
 
@@ -330,7 +411,7 @@ const JdList = () => {
                     <div className="jd-spam-modal-header">
                         <div>
                             <h3>Lý do spam</h3>
-                            <p>Bảng so sánh Bài có nội dung tương tự và bài spam</p>
+                            <p>Bảng so sánh tin có nội dung tương tự và tin spam</p>
                         </div>
                         <button className="jd-spam-close-btn" onClick={onClose}>Đóng</button>
                     </div>
@@ -340,8 +421,8 @@ const JdList = () => {
                             <thead>
                                 <tr>
                                     <th>Trường</th>
-                                    <th>Bài có nội dung tương tự</th>
-                                    <th>Bài spam</th>
+                                    <th>tin có nội dung tương tự</th>
+                                    <th>tin spam</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -472,7 +553,7 @@ const JdList = () => {
                                         </div>
                                         <div className="title-box">
                                             <h2 className="position-title">{jd.position}
-                                                {isSpamJobVisible ? <AlertTriangle size={16} className="spam-flag" title="Bài bị đánh dấu là spam" /> : null}
+                                                {isSpamJobVisible ? <AlertTriangle size={16} className="spam-flag" title="tin bị đánh dấu là spam" /> : null}
                                             </h2>
                                             <div className="title-badges">
                                                 <span className={`status-badge ${jd.status}`}>
@@ -484,7 +565,7 @@ const JdList = () => {
                                                         className="spam-badge"
                                                         onClick={(e) => handleSpamBadgeClick(e, jd)}
                                                         disabled={spamLoading}
-                                                        aria-label="Bài đăng được đánh dấu spam"
+                                                        aria-label="tin đăng được đánh dấu spam"
                                                     >
                                                         {spamLoading ? 'ĐANG TẢI' : 'SPAM'}
                                                     </button>
@@ -554,7 +635,7 @@ const JdList = () => {
                                                                 <CalendarPlus size={14} /> Tạo lịch
                                                             </button>
                                                             <button className="text-warning" onClick={(e) => handleCloseJd(e, jd.id)}>
-                                                                <XCircle size={14} /> Đóng bài
+                                                                <XCircle size={14} /> Đóng tin
                                                             </button>
                                                         </>
                                                     )}
@@ -565,7 +646,7 @@ const JdList = () => {
                                                                 <Target size={14} /> Săn nhân tài
                                                             </button>
                                                             <button className="text-success" onClick={(e) => handleReopenJd(e, jd.id)}>
-                                                                <RefreshCcw size={14} /> Đăng lại bài
+                                                                <RefreshCcw size={14} /> Đăng lại tin
                                                             </button>
                                                         </>
                                                     )}
@@ -625,6 +706,60 @@ const JdList = () => {
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Repost Modal */}
+            {repostModalOpen && (
+                <div className="modal-overlay" onClick={closeRepostModal}>
+                    <div className="modal-content repost-modal" onClick={(e) => e.stopPropagation()}>
+                        <h2>Đăng lại tin đăng</h2>
+                        
+                        {postingDuration && (
+                            <p className="posting-duration-info">
+                                Gói hiện tại cho phép đăng tối đa <strong>{postingDuration} ngày</strong>
+                            </p>
+                        )}
+
+                        <div className="posting-date-group">
+                            <div className="posting-date-field">
+                                <label>Ngày bắt đầu</label>
+                                <input
+                                    type="date"
+                                    value={repostStartDate}
+                                    onChange={(e) => setRepostStartDate(e.target.value)}
+                                    min={formatDateForInput(new Date())}
+                                />
+                            </div>
+                            <div className="posting-date-field">
+                                <label>Ngày kết thúc</label>
+                                <input
+                                    type="date"
+                                    value={repostEndDate}
+                                    onChange={(e) => setRepostEndDate(e.target.value)}
+                                    min={repostStartDate}
+                                    max={repostStartDate && postingDuration ? formatDateForInput(addDays(parseISO(repostStartDate), postingDuration - 1)) : undefined}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="modal-actions">
+                            <button 
+                                className="btn btn-secondary" 
+                                onClick={closeRepostModal}
+                                disabled={isReposting}
+                            >
+                                Hủy
+                            </button>
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={handleRepostConfirm}
+                                disabled={isReposting}
+                            >
+                                {isReposting ? 'Đang xử lý...' : 'Xác nhận'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </main>
     );

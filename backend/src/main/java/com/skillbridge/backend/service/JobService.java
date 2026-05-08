@@ -6,6 +6,7 @@ import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
+import com.skillbridge.backend.dto.request.repostJDDayRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.enums.*;
@@ -914,7 +915,7 @@ public class JobService {
     private EntityManager entityManager;
 
     @Transactional(rollbackFor = Exception.class)
-    public Job repostJD(String id) {
+    public Job repostJD(String id, repostJDDayRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();
 
@@ -948,6 +949,22 @@ public class JobService {
             throw new AppException(ErrorCode.EXIT_SUBSCRIPTION);
         }
 
+        LocalDate today = LocalDate.from(LocalDateTime.now());
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
+        JobStatus finalStatus;
+        if (today.isBefore(startDate)) {
+            System.out.println("ChuaDenNgay");
+            finalStatus = JobStatus.NOT_STARTED;
+        } else if (today.isAfter(endDate)) {
+            System.out.println("DongNgay");
+            finalStatus = JobStatus.CLOSED;
+        } else {
+            System.out.println("MoNgay");
+            finalStatus = JobStatus.OPEN;
+        }
+
+
 
 
         float[] vectorToCheck = oldJob.getVectorEmbedding();
@@ -957,7 +974,6 @@ public class JobService {
                 throw new AppException(ErrorCode.SPAM_JD);
             }
         }
-        int postingDay = subscription.getPostingDuration();
 
         Job newJob = Job.builder()
                 .title(oldJob.getTitle() != null ? new HashMap<>(oldJob.getTitle()) : null)
@@ -969,14 +985,14 @@ public class JobService {
                 .salaryMin(oldJob.getSalaryMin())
                 .salaryMax(oldJob.getSalaryMax())
                 .companyMember(recruiter)
-                .status(JobStatus.OPEN)
+                .status(finalStatus)
                 .viewCount(0)
                 .moderationScore(0f)
                 .moderationStatus(ModerationStatus.GREEN)
                 .postingDay(subscription.getPostingDuration())
                 .vectorEmbedding(oldJob.getVectorEmbedding() != null ? oldJob.getVectorEmbedding().clone() : null)
-                .startDate(date.atStartOfDay())
-                .endDate(date.atStartOfDay().plusDays(postingDay))
+                .startDate(startDate.atStartOfDay())
+                .endDate(endDate.atStartOfDay())
                 .build();
 
         Job savedJob = jobRepository.saveAndFlush(newJob);
