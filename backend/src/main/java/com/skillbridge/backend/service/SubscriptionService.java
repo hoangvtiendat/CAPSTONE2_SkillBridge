@@ -184,8 +184,7 @@ public class SubscriptionService {
         return saved;
     }
 
-    public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request)
-    {
+    public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request) {
         SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
@@ -197,23 +196,13 @@ public class SubscriptionService {
             throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
         }
 
-        double requestRatio = (double) request.getCandidateViewLimit() / request.getJobLimit();
 
-        double minRatio = 8.0;
-        double maxRatio = 12.0;
-
-        if (requestRatio < minRatio || requestRatio > maxRatio) {
-            throw new AppException(ErrorCode.UNBALANCED_CUSTOM_PLAN);
-        }
-
-
-        BigDecimal unitJobPrice = premiumPrice.multiply(new BigDecimal("0.70"))
+        BigDecimal unitJobPrice = premiumPrice.multiply(new BigDecimal("0.40"))
                 .divide(new BigDecimal(premJobLimit), 4, RoundingMode.HALF_UP);
 
-        BigDecimal unitViewPrice = premiumPrice.multiply(new BigDecimal("0.25"))
+        BigDecimal unitViewPrice = premiumPrice.multiply(new BigDecimal("0.60"))
                 .divide(new BigDecimal(premViewLimit), 4, RoundingMode.HALF_UP);
 
-        BigDecimal priorityFixedPrice = premiumPrice.multiply(new BigDecimal("0.05"));
 
         BigDecimal customJobCost;
         if (request.getJobLimit() <= premJobLimit) {
@@ -221,6 +210,7 @@ public class SubscriptionService {
         } else {
             BigDecimal baseJobCost = unitJobPrice.multiply(new BigDecimal(premJobLimit));
             int extraJobs = request.getJobLimit() - premJobLimit;
+
             BigDecimal extraJobCost = unitJobPrice.multiply(new BigDecimal("0.90")).multiply(new BigDecimal(extraJobs));
             customJobCost = baseJobCost.add(extraJobCost);
         }
@@ -231,18 +221,13 @@ public class SubscriptionService {
         } else {
             BigDecimal baseViewCost = unitViewPrice.multiply(new BigDecimal(premViewLimit));
             int extraViews = request.getCandidateViewLimit() - premViewLimit;
+
             BigDecimal extraViewCost = unitViewPrice.multiply(new BigDecimal("0.90")).multiply(new BigDecimal(extraViews));
             customViewCost = baseViewCost.add(extraViewCost);
         }
 
-        BigDecimal totalPriorityCost = Boolean.TRUE.equals(request.getHasPriorityDisplay())
-                ? priorityFixedPrice
-                : BigDecimal.ZERO;
-
-        return customJobCost.add(customViewCost).add(totalPriorityCost)
-                .setScale(2, RoundingMode.HALF_UP);
+        return customJobCost.add(customViewCost).setScale(2, RoundingMode.HALF_UP);
     }
-
     /**
      * Xóa (Hủy) gói dịch vụ của công ty
      */

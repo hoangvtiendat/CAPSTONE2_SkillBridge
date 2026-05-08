@@ -74,8 +74,7 @@ const RegisterSubscription = () => {
             const job = value === '' ? '' : Number(value);
             setCustomForm(prev => ({
                 ...prev,
-                jobLimit: job,
-                candidateViewLimit: job === '' ? '' : job * 12
+                jobLimit: job
             }));
             return;
         }
@@ -203,7 +202,7 @@ const RegisterSubscription = () => {
 
                         <div className="rs-input-group">
                             <label>Lượt xem hồ sơ ứng viên</label>
-                            <input type="number" name="candidateViewLimit" value={customForm.candidateViewLimit} readOnly disabled min="1" />
+                            <input type="number" name="candidateViewLimit" value={customForm.candidateViewLimit} onChange={handleCustomFormChange} min="1" required placeholder="Ví dụ: 120" />
                         </div>
 
                         <div className="rs-form-actions">
