@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import candidateService from '../../services/api/candidateService';
 import { toast } from 'sonner';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 import CandidateProfileOverlay from './CandidateProfileOverlay';
 import './PotentialCandidates.css';
 
 const PotentialCandidates = () => {
     const { jobId } = useParams();
     const navigate = useNavigate();
-
+    const stompClientRef = useRef(null);
     // States quản lý dữ liệu
     const [candidates, setCandidates] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -29,8 +31,10 @@ const PotentialCandidates = () => {
         return `${API_BASE_URL}/${cleanPath}?t=${new Date().getTime()}`;
     };
 
-    const fetchCandidates = async (page) => {
-        setLoading(true);
+    const fetchCandidates = useCallback(async (page) => {
+        // Chỉ hiện loading ở lần đầu, các lần update sau update ngầm để tránh giật lag UI
+        if (candidates.length === 0) setLoading(true);
+
         try {
             const response = await candidateService.getPotentialCandidates(jobId, page, limit);
             const data = response.result;
@@ -44,13 +48,47 @@ const PotentialCandidates = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [jobId, limit]);
 
     useEffect(() => {
         if (jobId) {
             fetchCandidates(0);
         }
-    }, [jobId]);
+    }, [jobId, fetchCandidates]);
+
+useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        const client = new Client({
+            webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws-log`),
+            connectHeaders: { Authorization: `Bearer ${token}` },
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+        });
+
+        client.onConnect = (frame) => {
+            console.log('Connected to Invitation WebSocket');
+
+            // Subscribe vào topic mà Backend gửi sau khi commit thành công
+            client.subscribe(`/topic/job-invitations/${jobId}`, (message) => {
+                if (message.body === "UPDATE") {
+                    console.log("Realtime: Nhận tín hiệu cập nhật danh sách mời...");
+                    // Gọi lại API để lấy trạng thái mới nhất (ví dụ: nút đổi sang "Đã mời")
+                    fetchCandidates(currentPage);
+                }
+            });
+        };
+
+        client.activate();
+        stompClientRef.current = client;
+
+        return () => {
+            if (stompClientRef.current) {
+                stompClientRef.current.deactivate();
+            }
+        };
+    }, [jobId, currentPage, fetchCandidates]);
 
     const handlePageChange = (newPage) => {
         if (newPage >= 0 && newPage < totalPages) {
