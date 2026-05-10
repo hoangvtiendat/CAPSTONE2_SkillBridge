@@ -31,7 +31,7 @@ public enum ErrorCode {
     FORBIDDEN(2001, "Bạn không có quyền truy cập chức năng này", HttpStatus.FORBIDDEN),
     TOKEN_EXPIRED(2002, "Token đã hết hạn, vui lòng đăng nhập lại", HttpStatus.UNAUTHORIZED),
     EMAIL_INVALID(2003, "Email không đúng định dạng", HttpStatus.BAD_REQUEST),
-    PASSWORD_INVALID(2004, "Mật khẩu không đủ mạnh hoặc không đúng", HttpStatus.BAD_REQUEST),
+    PASSWORD_INVALID(2004, "Mật khẩu không đủ mạnh", HttpStatus.BAD_REQUEST),
     EMAIL_EXIST(2005, "Email này đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
     EMAIL_ALREADY_REGISTERED_BY_PASSWORD(2006, "Email này đã được đăng ký bằng mật khẩu, vui lòng không dùng mạng xã hội", HttpStatus.BAD_REQUEST),
     INVALID_OTP(2007, "Mã xác thực (OTP) không chính xác", HttpStatus.BAD_REQUEST),
