@@ -84,6 +84,6 @@ public interface SubscriptionOfCompanyRepository extends JpaRepository<Subscript
     /** Tìm kiếm gói đăng ký cụ thể dựa trên ID công ty và tên loại gói */
     Optional<SubscriptionOfCompany> findByCompanyIdAndName(String companyId, SubscriptionPlanStatus name);
     ///  Lấy ngày đăng bài viết
-    @Query("SELECT s.postingDuration FROM SubscriptionOfCompany s WHERE s.company.id = :company_id AND s.isActive = :isActive")
-    Optional<Integer> findPostingDuration(@Param("company_id") String companyId, @Param("isActive") boolean isActive);
+    @Query("SELECT s.postingDuration FROM SubscriptionOfCompany s WHERE s.company.id = :company_id AND s.status = :status")
+    Optional<Integer> findPostingDuration(@Param("company_id") String companyId, @Param("status") SubscriptionOfCompanyStatus status);
 }

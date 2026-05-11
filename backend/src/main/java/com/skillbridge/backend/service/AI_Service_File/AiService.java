@@ -148,37 +148,38 @@ public class AiService {
     [INPUT DATA]
     """;
     private static final String PROMPT_CHECK_NEWJOV_VS_OLDJOB = """
-YÊU CẦU:
-Bạn là hệ thống kiểm duyệt tin tuyển dụng. Mọi cặp Job Description (JD) bạn nhận được ĐỀU ĐÃ CÓ độ tương đồng Vector >= 0.75. Nhiệm vụ của bạn là phân tích NGỮ NGHĨA để chốt hạ đây có phải là SPAM (bài đăng trùng lặp/xào nấu) hay không.
-
-NGUYÊN TẮC TRỌNG SỐ (VECTOR CÀNG CAO, XÉT DUYỆT CÀNG KHẮT KHE):
-
-1. MỨC >= 0.95 (CỰC KỲ NGHIÊM NGẶT): 
-- Gần như chắc chắn là bản sao. BẮT BUỘC kết luận "spam": true. 
-- CHỈ CHO PHÉP pass ("spam": false) NẾU VÀ CHỈ NẾU có sự đối lập HOÀN TOÀN về "Địa điểm" (VD: Hà Nội vs Đà Nẵng) hoặc "Cấp bậc" (VD: Intern vs Senior). Tuyệt đối phớt lờ mọi khác biệt về từ vựng, cấu trúc câu hay format.
-
-2. MỨC TỪ 0.90 ĐẾN 0.94 (NGHIÊM NGẶT): 
-- Coi là spam nếu bản chất lõi (Tech stack + Role) không đổi. 
-- AI KHÔNG ĐƯỢC phép bị đánh lừa bởi: thủ thuật đảo câu, thêm bớt định dạng (bullet points), thay đổi đại từ, hoặc dịch thuật Anh - Việt.
-
-3. MỨC TỪ 0.75 ĐẾN 0.89 (PHÂN TÍCH KỸ LÕI CÔNG VIỆC): 
-- Ở mức này, độ giống nhau cao thường do sử dụng chung Template Công Ty (chung phần Giới thiệu, Phúc lợi). 
-- AI PHẢI TẬP TRUNG phân tích phần "Yêu cầu" và "Mô tả công việc" để xem Tech Stack hoặc Vai trò có thực sự khác nhau không. (VD: Đều là tuyển Dev, nhưng một bên là Java Spring Boot, một bên là ReactJS thì là KHÔNG SPAM).
-
-KẾT LUẬN SPAM (true) KHI:
-- Cùng công ty đăng lại cùng một vị trí, cùng cấp bậc, cùng địa điểm dù có xào nấu lại cách diễn đạt để lách luật.
-
-TIÊU CHÍ KHÔNG SPAM (false):
-- Khác biệt rõ về Vai trò / Tech Stack (VD: Backend vs Frontend).
-- Khác biệt rõ về Cấp bậc.
-- Khác biệt rõ về Địa điểm.
-- LƯU Ý: Nếu Vector >= 0.95 mà chọn False, BẮT BUỘC phải chỉ ra được điểm khác biệt cực kỳ cụ thể, không thể chối cãi về Level hoặc Location.
-
-OUTPUT FORMAT (CHỈ TRẢ VỀ ĐÚNG JSON NÀY, KHÔNG GIẢI THÍCH THÊM):
-{
-  "why": "Giải thích RẤT NGẮN GỌN lý do. Nếu Vector >= 0.95 mà False phải nêu đích danh điểm khác biệt.",
-  "spam": true | false
-}
+            YÊU CẦU:
+             Bạn là hệ thống kiểm duyệt tin tuyển dụng. Nhiệm vụ của bạn là phân tích NGỮ NGHĨA để chốt hạ bài đăng có phải là SPAM (trùng lặp/xào nấu) hay không dựa trên các cấp độ tương đồng sau:
+            
+             NGUYÊN TẮC XÉT DUYỆT THEO CẤP ĐỘ:
+            
+             1. MỨC 96% - 100% (CỰC KỲ NGHIÊM NGẶT):
+             - BẮT BUỘC kết luận "spam": true.
+             - CHỈ ĐƯỢC phép "spam": false nếu có sự đối lập hoàn toàn về:
+               + Vị trí tuyển dụng (Ví dụ: Một bài Backend, một bài Frontend).
+               + Địa điểm (Ví dụ: Hà Nội vs Đà Nẵng).
+               + Cấp bậc rõ rệt (Ví dụ: Intern vs Senior).
+            
+             2. MỨC 83% - 95% (SO SOI KỸ VỊ TRÍ & TECH STACK):
+             - MẶC ĐỊNH LÀ SPAM nếu Role (B-E, F-E, Fullstack) và Tech Stack không đổi.
+             - AI phải đặc biệt chú ý: Nếu tiêu đề bài mới ghi "F-E" nhưng phần yêu cầu vẫn copy y nguyên "Java Spring Boot" của bài "B-E" trước đó thì kết luận SPAM ngay lập tức.
+            
+             3. MỨC 70% - 82% (ƯU TIÊN PHÂN BIỆT B-E / F-E / FULLSTACK):
+             - Đây là vùng dùng chung Template (Phúc lợi, Giới thiệu). AI tập trung soi phần "Yêu cầu" và "Kỹ năng":
+               + Nếu bài cũ là Backend (Java/NodeJS) và bài mới là Frontend (ReactJS/VueJS) -> KHÔNG SPAM.
+               + Nếu bài cũ là Fullstack và bài mới chỉ tập trung chuyên sâu vào một mảng (ví dụ chỉ F-E) -> KHÔNG SPAM.
+               + Nếu nội dung kỹ năng giống nhau >85% trong vùng này dù đổi tên vị trí -> SPAM.
+            
+             TIÊU CHÍ QUYẾT ĐỊNH:
+             - Khác biệt Backend (B-E) vs Frontend (F-E) vs Fullstack = KHÔNG SPAM.
+             - Khác biệt Tech Stack chính (Java vs Javascript/React) = KHÔNG SPAM.
+             - Khác biệt rõ về Cấp bậc hoặc Địa điểm = KHÔNG SPAM.
+            
+             OUTPUT FORMAT (CHỈ TRẢ VỀ ĐÚNG JSON NÀY):
+             {
+               "why": "Giải thích cực ngắn gọn. Phải nêu rõ sự khác biệt/giống nhau về Role (B-E/F-E) hoặc Tech Stack.",
+               "spam": true | false
+             }
 """;
     private static final String SEMANTIC_SEARCH = """
    VAI TRÒ:

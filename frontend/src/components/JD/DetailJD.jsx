@@ -440,26 +440,6 @@ const DetailJD = () => {
             { key: 'description', label: 'Mô tả công việc' }
         ];
 
-        const invalidTextField = textFieldConfig.find(({ key }) => hasInvalidLeadingTrailingWhitespace(editForm[key]));
-        if (invalidTextField) {
-            toast.error('Lỗi nhập liệu', {
-                description: `${invalidTextField.label} không được có khoảng trắng ở đầu hoặc cuối`,
-                style: toastStyles.warning
-            });
-            return;
-        }
-
-        const hasInvalidWhitespaceDynamicTitles = dynamicTitles.some(item =>
-            hasInvalidLeadingTrailingWhitespace(item.key) || hasInvalidLeadingTrailingWhitespace(item.value)
-        );
-        if (hasInvalidWhitespaceDynamicTitles) {
-            toast.error('Lỗi nhập liệu', {
-                description: 'Tiêu đề và mô tả chi tiết không được có khoảng trắng ở đầu hoặc cuối',
-                style: toastStyles.warning
-            });
-            return;
-        }
-
         const hasEmptyDynamicTitles = dynamicTitles.some(item => item.key.trim() === "" || item.value.trim() === "");
         if (hasEmptyDynamicTitles) {
             toast.error("Lỗi nhập liệu", { description: "Vui lòng điền đầy đủ Tiêu đề và Mô tả", style: toastStyles.warning });
@@ -469,14 +449,6 @@ const DetailJD = () => {
         if (!selectedProvinceCode || !selectedDistrictCode || !selectedWardCode || !specificAddress.trim()) {
             toast.error("Lỗi nhập liệu", {
                 description: "Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện, Xã/Phường và nhập địa chỉ cụ thể",
-                style: toastStyles.warning
-            });
-            return;
-        }
-
-        if (hasInvalidLeadingTrailingWhitespace(specificAddress)) {
-            toast.error('Lỗi nhập liệu', {
-                description: 'Địa chỉ cụ thể không được có khoảng trắng ở đầu hoặc cuối',
                 style: toastStyles.warning
             });
             return;

@@ -202,18 +202,18 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     /// Lấy dạnh sách VECTOR từng JD của cty đó
     @Query(value = """
-    SELECT j.id, j.vector_embedding
-    FROM jobs j
-    WHERE j.company_id = :companyId
-      AND j.id != :excludeJobId
-      AND j.vector_embedding IS NOT NULL
-      AND j.is_deleted = false
-        AND j.status = :status
-    """, nativeQuery = true)
+        SELECT j.id, j.vector_embedding
+        FROM jobs j
+        WHERE j.company_id = :companyId
+          AND j.id != :excludeJobId
+          AND j.vector_embedding IS NOT NULL
+          AND j.is_deleted = false
+          AND j.status IN (:statuses) 
+""", nativeQuery = true)
     List<Object[]> listAllVectorsByCompanyIdExceptCurrent(
             @Param("companyId") String companyId,
             @Param("excludeJobId") String excludeJobId,
-            @Param("status") String status
+            @Param("statuses") List<String> statuses // Chuyển thành List
     );
     ///  So sánh Vector chức năng đăng lại bài
     @Query(value = """

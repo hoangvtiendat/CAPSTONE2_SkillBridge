@@ -173,7 +173,13 @@ public class AIJobService {
         try {
             String bestMathId = null;
             double maxSimilarity = 0.0;
-            List<Object[]> rawResults = jobRepository.listAllVectorsByCompanyIdExceptCurrent(idOfCompany,idOfJob, JobStatus.OPEN.name());
+            List<String> statuses = List.of(JobStatus.OPEN.name(), JobStatus.NOT_STARTED.name(), JobStatus.PENDING.name());
+
+            List<Object[]> rawResults = jobRepository.listAllVectorsByCompanyIdExceptCurrent(
+                    idOfCompany,
+                    idOfJob,
+                    statuses
+            );
 
             System.out.println("Size of rawResults: " + (rawResults != null ? rawResults.size() : 0));
             System.out.println("All vector " + rawResults);
@@ -207,12 +213,12 @@ public class AIJobService {
             ///
 
             System.out.println("maxSimilarity" + maxSimilarity);
-            if (maxSimilarity >=  0.5 && maxSimilarity < 0.75)
+            if (maxSimilarity >=  0.5 && maxSimilarity < 0.70)
             {
                createTwoJDOfSpam(get_Source_jd_id,get_Target_jd_id,maxSimilarity);
                 return 2;
             }
-            if (maxSimilarity >= 0.75){
+            if (maxSimilarity >= 0.70){
             ///  Lây detail của JD mới
             String detailNewJD = getJobComparisonResponse(idOfJob);
             ///  Lấy detail cảu JD cũ

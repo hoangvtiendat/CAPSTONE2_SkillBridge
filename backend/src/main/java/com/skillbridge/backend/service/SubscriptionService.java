@@ -267,11 +267,6 @@ public class SubscriptionService {
             var recruiter = companyMemberRepository.findByUser_Id(currentUser.getUserId())
                     .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
-            if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
-                systemLog.danger(currentUser, ErrorCode.EXITS_YOUR_ROLE.getMessage());
-                throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
-            }
-
             List<SubscriptionOfCompany> subscriptions = subcriptionOfCompanyRepository.findByCompanyId(recruiter.getCompany().getId());
 
             return subscriptions;
@@ -286,7 +281,7 @@ public class SubscriptionService {
     }
     ///  Lấy ngày đăng
     public int getJobDay(String id_company) {
-        return subcriptionOfCompanyRepository.findPostingDuration(id_company, true)
+        return subcriptionOfCompanyRepository.findPostingDuration(id_company, SubscriptionOfCompanyStatus.OPEN)
                 .orElse(0);
     }
 }

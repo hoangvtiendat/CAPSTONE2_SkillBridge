@@ -2,15 +2,16 @@ import React, { useState, useEffect, useRef} from 'react';
 import { useNavigate } from 'react-router-dom';
 import subscriptionService from '../../services/api/subscriptionService';
 import { toast } from 'sonner';
-import { Check, Edit, Calendar, Info, Plus, X, MoreVertical, Trash2, CreditCard, Bell, Clock, Package, Sparkles } from 'lucide-react';
+import { Check, Edit, Calendar, Info, Plus, X, MoreVertical, Trash2, CreditCard, Bell, Clock, Package, Sparkles, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import CreateSubscriptionForm from './CreateSubscriptionForm';
 import './SubscriptionManagerOfCompany.css';
 import { ca } from 'date-fns/locale';
 
 const SubscriptionManagerOfCompany = () => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const navigate = useNavigate();
+    const isAdmin = user?.companyRole === 'ADMIN';
     const hasProcessedUrl = useRef(false);
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -155,7 +156,12 @@ const getListSubscriptionOfCompany = async () => {
         } catch (error) {
             console.error("Lỗi khi fetch:", error);
             const errorMessage = error.response?.data?.message || 'Không thể tải danh sách';
-            toast.error("Lỗi dữ liệu", { description: errorMessage });
+            
+            // Chỉ show error toast nếu là admin
+            if (user?.companyRole === 'ADMIN') {
+                toast.error("Lỗi dữ liệu", { description: errorMessage });
+            }
+            
             setSubscriptions([]);
         } finally {
             setLoading(false);
@@ -362,7 +368,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
     };
     return (
         <div className="sub-manager-container">
-            {pendingTransaction && countdown > 0 && (
+            {isAdmin && pendingTransaction && countdown > 0 && (
                 <div className={`pending-notification-fixed ${countdown <= 180 ? 'urgent' : ''}`}
                     onClick={() => setShowNotification(!showNotification)}
                 >
@@ -511,6 +517,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
                 <div className="sub-card-header">
                     <div className="sub-subtitle">
                         <span className="sub-badge badge-yellow">Khuyên dùng</span>
+                        {!isAdmin && <span style={{ marginLeft: '8px', fontSize: '12px', color: '#94a3b8' }}>● Member</span>}
                     </div>
                     <div className="sub-title-row">
                         <h2 className="sub-name">{premiumPkg?.name }</h2>
@@ -549,12 +556,30 @@ const handleDeleteSubscription = async (id, options = {}) => {
                 </ul>
 
                 <div className="sub-actions mt-4">
-                    <button
-                        className="btn-sub-yellow"
-                        onClick={handleOpenUpgradeModal}
-                    >
-                        Nâng cấp ngay
-                    </button>
+                    {isAdmin ? (
+                        <button
+                            className="btn-sub-yellow"
+                            onClick={handleOpenUpgradeModal}
+                        >
+                            Nâng cấp ngay
+                        </button>
+                    ) : (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            padding: '12px',
+                            backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                            borderRadius: '8px',
+                            color: '#64748b',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                        }}>
+                            <Lock size={18} />
+                            <span>Chỉ Admin có thể nâng cấp</span>
+                        </div>
+                    )}
                 </div>
             </div>
             </div>

@@ -817,6 +817,7 @@ public class JobService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
+
         Boolean checkSpam = false;
         checkSpam = jdSimilaritiesRepository.existsByTarget_jd_id(jobId);
         System.out.println("checkSpam" + checkSpam);
@@ -1222,8 +1223,8 @@ public class JobService {
                 .build())
             .collect(Collectors.toList());
     }
-    @Scheduled(cron = "0 0 0 * * ?") //// dùng cho chạy dự án làm mới khi tới 00H
-  /// @Scheduled(fixedRate = 60000) ///  test chạy ngâm 6s
+//    @Scheduled(cron = "0 0 0 * * ?") //// dùng cho chạy dự án làm mới khi tới 00H
+   @Scheduled(fixedRate = 60000) ///  test chạy ngâm 6s
     @Transactional
     public void autoUpdateJobStatuses() {
         LocalDateTime now = LocalDateTime.now();
