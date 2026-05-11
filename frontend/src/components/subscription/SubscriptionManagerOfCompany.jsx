@@ -517,7 +517,6 @@ const handleDeleteSubscription = async (id, options = {}) => {
                 <div className="sub-card-header">
                     <div className="sub-subtitle">
                         <span className="sub-badge badge-yellow">Khuyên dùng</span>
-                        {!isAdmin && <span style={{ marginLeft: '8px', fontSize: '12px', color: '#94a3b8' }}>● Member</span>}
                     </div>
                     <div className="sub-title-row">
                         <h2 className="sub-name">{premiumPkg?.name }</h2>
