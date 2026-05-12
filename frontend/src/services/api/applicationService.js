@@ -7,6 +7,15 @@ const applicationService = {
         return response.data;
     },
 
+    /** So sánh hai đơn ứng tuyển cùng một tin (Gemini) — applicationIdA là "ứng viên thứ nhất" trong kết quả FIRST/SECOND */
+    compareCandidatesForJob: async (jobId, { applicationIdA, applicationIdB }) => {
+        const response = await api.post(`/applications/job/${jobId}/compare`, {
+            applicationIdA,
+            applicationIdB,
+        });
+        return response.data;
+    },
+
     // Lấy chi tiết 1 đơn ứng tuyển
     getApplicationDetail: async (id) => {
         const response = await api.get(`/applications/${id}`);

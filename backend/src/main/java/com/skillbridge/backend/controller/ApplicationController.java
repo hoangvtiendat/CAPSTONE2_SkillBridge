@@ -1,8 +1,10 @@
 package com.skillbridge.backend.controller;
 
+import com.skillbridge.backend.dto.request.CompareCandidatesRequest;
 import com.skillbridge.backend.dto.request.RespondToApplicationRequest;
 import com.skillbridge.backend.dto.request.WithdrawRequest;
 import com.skillbridge.backend.dto.response.ApiResponse;
+import com.skillbridge.backend.dto.response.CandidateComparisonAdviceResponse;
 import com.skillbridge.backend.entity.Application;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
@@ -71,6 +73,26 @@ public class ApplicationController {
             System.out.println("[GET APPLICATION BY COMPANY ID] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
+    }
+
+    /**
+     * So sánh hai ứng viên (hai đơn ứng tuyển) của cùng một tin tuyển dụng — tư vấn bằng Gemini.
+     */
+    @PostMapping("/job/{jobId}/compare")
+    public ResponseEntity<ApiResponse<CandidateComparisonAdviceResponse>> compareCandidatesForJob(
+            @PathVariable String jobId,
+            @Valid @RequestBody CompareCandidatesRequest request
+    ) {
+        CandidateComparisonAdviceResponse result = applicationService.compareTwoApplicationsForJob(
+                jobId,
+                request.getApplicationIdA(),
+                request.getApplicationIdB()
+        );
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "So sánh ứng viên thành công",
+                result
+        ));
     }
 
     /**

@@ -69,6 +69,7 @@ public class JobService {
     SimpMessagingTemplate messagingTemplate;
     SubscriptionOfCompanyRepository subscriptionOfCompanyRepository;
     CVJobEvaluationRepository cvJobEvaluationRepository;
+    ApplicationMatchScoringService applicationMatchScoringService;
     AIJobService aiJobService;
     MailServiceImpl mailService;
     provincesRepository provincesRepository;
@@ -1019,11 +1020,18 @@ public class JobService {
                 .recommendationLetter(request.getRecommendationLetter())
                 .qualifications(qualificationsSnapshot)
                 .status(ApplicationStatus.PENDING)
-                .aiMatchingScore(0.0f)
                 .parsedContentJson(json)
                 .build();
 
         Application savedApp = applicationRepository.saveAndFlush(application);
+
+        try {
+            float matchScore = applicationMatchScoringService.computeMatchScore(job, savedApp, candidate);
+            savedApp.setAiMatchingScore(matchScore);
+            applicationRepository.save(savedApp);
+        } catch (Exception e) {
+            log.warn("[AI_MATCH] Không tính được điểm phù hợp cho application {}: {}", savedApp.getId(), e.getMessage());
+        }
 
         Map<String, Object> jobTitleMap = job.getTitle();
 

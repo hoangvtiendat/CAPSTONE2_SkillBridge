@@ -14,6 +14,9 @@ import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, String>, JpaSpecificationExecutor<Application> {
+
+    @EntityGraph(attributePaths = {"job", "job.company", "job.jobSkills", "job.jobSkills.skill", "candidate", "candidate.user"})
+    Optional<Application> findWithJobContextById(String id);
     /** Kiểm tra xem ứng viên đã nộp đơn vào công việc cụ thể này chưa */
     boolean existsByJobAndCandidate(Job job, Candidate candidate);
 

@@ -2,8 +2,10 @@ package com.skillbridge.backend.service;
 
 import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.RespondToApplicationRequest;
+import com.skillbridge.backend.dto.response.CandidateComparisonAdviceResponse;
 import com.skillbridge.backend.entity.Application;
 import com.skillbridge.backend.entity.Job;
+import com.skillbridge.backend.entity.JobSkill;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.enums.ApplicationStatus;
 import com.skillbridge.backend.exception.AppException;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -33,6 +36,7 @@ public class ApplicationService {
     CompanyMemberRepository companyMemberRepository;
     NotificationService notificationService;
     SecurityUtils securityUtils;
+    GeminiService geminiService;
 
     public Application getApplicationById(String id, String jwt) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
@@ -52,9 +56,7 @@ public class ApplicationService {
 
         companyMemberRepository.findByCompany_IdAndUser_Id(job.getCompany().getId(), currentUser.getUserId()).orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
 
-        List<Application> applications = applicationRepository.findByJob_Id(jobId);
-
-        return applications;
+        return applicationRepository.findByJob_Id(jobId);
     }
 
     public List<Application> getApplicationsByCompanyId(String companyId) {
@@ -207,5 +209,150 @@ public class ApplicationService {
         applicationRepository.deleteById(id);
 
         return "Rút hồ sơ ứng tuyển thành công";
+    }
+
+    /**
+     * So sánh hai hồ sơ ứng tuyển cùng một tin tuyển dụng; gọi Gemini để tư vấn phù hợp hơn.
+     */
+    public CandidateComparisonAdviceResponse compareTwoApplicationsForJob(
+            String jobId,
+            String applicationIdA,
+            String applicationIdB
+    ) {
+        if (applicationIdA.equals(applicationIdB)) {
+            throw new AppException(ErrorCode.INVALID_INPUT);
+        }
+
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
+        companyMemberRepository.findByCompany_IdAndUser_Id(job.getCompany().getId(), currentUser.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+
+        Application appA = applicationRepository.findWithJobContextById(applicationIdA)
+                .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+        Application appB = applicationRepository.findWithJobContextById(applicationIdB)
+                .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+
+        if (!appA.getJob().getId().equals(jobId) || !appB.getJob().getId().equals(jobId)) {
+            throw new AppException(ErrorCode.INVALID_INPUT);
+        }
+
+        String prompt = buildCandidateComparisonPrompt(job, applicationIdA, appA, applicationIdB, appB);
+        return geminiService.callGemini(prompt, CandidateComparisonAdviceResponse.class);
+    }
+
+    private static String truncate(String value, int maxChars) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String trimmed = value.trim();
+        if (trimmed.length() <= maxChars) {
+            return trimmed;
+        }
+        return trimmed.substring(0, maxChars) + "\n...[đã cắt bớt nội dung dài]";
+    }
+
+    private String formatJobSkills(Job job) {
+        if (job.getJobSkills() == null || job.getJobSkills().isEmpty()) {
+            return "(Không có danh sách kỹ năng gắn với tin tuyển dụng)";
+        }
+        return job.getJobSkills().stream()
+                .map(JobSkill::getSkill)
+                .filter(s -> s != null && s.getName() != null)
+                .map(s -> "- " + s.getName())
+                .collect(Collectors.joining("\n"));
+    }
+
+    private String buildCandidateComparisonPrompt(
+            Job job,
+            String applicationIdA,
+            Application appA,
+            String applicationIdB,
+            Application appB
+    ) {
+        String jobTitle = JobService.getJobPositionName(job);
+        String skillsBlock = formatJobSkills(job);
+        String jobDescription = truncate(job.getDescription(), 8000);
+
+        return """
+                Bạn là chuyên gia tuyển dụng. Nhiệm vụ: so sánh hai ứng viên cho CÙNG một vị trí và đưa ra lời khuyên khách quan, dựa trên dữ liệu dưới đây (bao gồm điểm AI và phân tích nếu có).
+                Với mỗi ứng viên, hãy liệt kê điểm mạnh (firstCandidateHighlights / secondCandidateHighlights) VÀ điểm yếu / rủi ro / khoảng trống so với mô tả tin tuyển dụng (firstCandidateWeaknesses / secondCandidateWeaknesses). Điểm yếu phải mang tính xây dựng, dựa trên dữ liệu có sẵn, tránh phán xét cá nhân không có căn cứ.
+                Trả lời bằng tiếng Việt trong các trường văn bản. betterFit CHỈ được là một trong ba giá trị chính xác: FIRST, SECOND, EQUAL.
+                - FIRST: ứng viên tương ứng khối "ỨNG VIÊN THỨ NHẤT" (applicationIdA) phù hợp hơn với tin tuyển dụng.
+                - SECOND: ứng viên "ỨNG VIÊN THỨ HAI" (applicationIdB) phù hợp hơn.
+                - EQUAL: hai ứng viên tương đương hoặc không đủ cơ sở để xếp hạng rõ ràng.
+
+                Chỉ trả về MỘT đối tượng JSON hợp lệ, không markdown, không giải thích ngoài JSON. Cấu trúc JSON:
+                {
+                  "betterFit": "FIRST|SECOND|EQUAL",
+                  "headline": "string",
+                  "comparisonSummary": "string",
+                  "firstCandidateHighlights": ["string"],
+                  "secondCandidateHighlights": ["string"],
+                  "firstCandidateWeaknesses": ["string"],
+                  "secondCandidateWeaknesses": ["string"],
+                  "hiringRecommendation": "string"
+                }
+
+                --- TIN TUYỂN DỤNG ---
+                ID tin: %s
+                Tiêu đề / vị trí: %s
+                Mô tả (có thể rút gọn):
+                %s
+
+                Kỹ năng yêu cầu (từ hệ thống):
+                %s
+
+                --- ỨNG VIÊN THỨ NHẤT (applicationIdA = %s) ---
+                Họ tên: %s
+                Email: %s
+                Điện thoại: %s
+                Trạng thái hồ sơ: %s
+                Điểm AI matching (0-100, có thể null): %s
+                Phân tích AI (nếu có): %s
+                Ghi chú ứng viên/NĐT: %s
+                Thư giới thiệu (rút gọn nếu dài): %s
+                qualifications (JSON/text, rút gọn): %s
+                parsedContentJson (rút gọn): %s
+
+                --- ỨNG VIÊN THỨ HAI (applicationIdB = %s) ---
+                Họ tên: %s
+                Email: %s
+                Điện thoại: %s
+                Trạng thái hồ sơ: %s
+                Điểm AI matching (0-100, có thể null): %s
+                Phân tích AI (nếu có): %s
+                Ghi chú ứng viên/NĐT: %s
+                Thư giới thiệu (rút gọn nếu dài): %s
+                qualifications (JSON/text, rút gọn): %s
+                parsedContentJson (rút gọn): %s
+                """.formatted(
+                job.getId(),
+                jobTitle,
+                jobDescription,
+                skillsBlock,
+                applicationIdA,
+                appA.getFullName(),
+                appA.getEmail(),
+                appA.getPhoneNumber(),
+                appA.getStatus(),
+                appA.getAiMatchingScore(),
+                truncate(appA.getAiAnalysis(), 4000),
+                truncate(appA.getNote(), 1500),
+                truncate(appA.getRecommendationLetter(), 3000),
+                truncate(appA.getQualifications(), 4000),
+                truncate(appA.getParsedContentJson(), 6000),
+                applicationIdB,
+                appB.getFullName(),
+                appB.getEmail(),
+                appB.getPhoneNumber(),
+                appB.getStatus(),
+                appB.getAiMatchingScore(),
+                truncate(appB.getAiAnalysis(), 4000),
+                truncate(appB.getNote(), 1500),
+                truncate(appB.getRecommendationLetter(), 3000),
+                truncate(appB.getQualifications(), 4000),
+                truncate(appB.getParsedContentJson(), 6000)
+        );
     }
 }
