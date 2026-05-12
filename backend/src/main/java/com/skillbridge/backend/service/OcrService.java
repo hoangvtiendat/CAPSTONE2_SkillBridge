@@ -73,7 +73,7 @@ public class OcrService {
             long duration = System.currentTimeMillis() - startTime;
             log.info("OCR completed in {}ms for file {}", duration, file.getOriginalFilename());
 
-            systemLog.info(currentUser, "Thực hiện OCR quét tài liệu: " + file.getOriginalFilename());
+            systemLog.info(currentUser, currentUser.getEmail() + " - Thực hiện OCR quét tài liệu: " + file.getOriginalFilename());
 
             return result;
 

@@ -160,13 +160,14 @@ const CandidateList = () => {
             <div className="candidate-table-container">
                 <table className="candidate-table">
                     <thead>
-                        <tr>
-                            <th>Ứng viên</th>
-                            <th>Vị trí ứng tuyển</th>
-                            <th>Trạng thái</th>
-                            <th>Cập nhật</th>
-                            <th className="text-right">Thao tác</th>
-                        </tr>
+                    <tr>
+                        <th>Ứng viên</th>
+                        <th>Vị trí ứng tuyển</th>
+                        <th>Ghi chú</th>
+                        <th>Trạng thái</th>
+                        <th>Cập nhật</th>
+                        <th className="text-right">Thao tác</th>
+                    </tr>
                     </thead>
                     <tbody>
                         {filteredApps.length > 0 ? filteredApps.map(app => (
@@ -177,28 +178,42 @@ const CandidateList = () => {
                                             <img
                                                 src={getImageUrl(app.candidate?.user?.avatar)}
                                                 alt={app.fullName}
-                                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    borderRadius: '50%',
+                                                    objectFit: 'cover'
+                                                }}
                                             />
                                         </div>
                                         <div className="candidate-text">
                                             <div className="candidate-name">{app.fullName}</div>
                                             <div className="candidate-contact">
-                                                <span><Mail size={12} /> {app.email}</span>
-                                                {app.phoneNumber && <span><Phone size={12} /> {app.phoneNumber}</span>}
+                                                <span><Mail size={12}/> {app.email}</span>
+                                                {app.phoneNumber && <span><Phone size={12}/> {app.phoneNumber}</span>}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div className="job-info">
-                                        <Briefcase size={14} className="text-slate-400" />
+                                        <Briefcase size={14} className="text-slate-400"/>
                                         <span>{app.job?.title?.vi || app.job?.title?.en || app.job?.position}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div className="candidate-note" title={app.note}>
+                                        {app.note ? (
+                                            <span className="note-text">{app.note}</span>
+                                        ) : (
+                                            <span className="text-slate-400 italic">Không có ghi chú</span>
+                                        )}
                                     </div>
                                 </td>
                                 <td>{getStatusBadge(app.status)}</td>
                                 <td>
                                     <div className="date-info">
-                                        <Calendar size={14} className="text-slate-400" />
+                                        <Calendar size={14} className="text-slate-400"/>
                                         <span>{new Date(app.updatedAt).toLocaleDateString('vi-VN')}</span>
                                     </div>
                                 </td>
@@ -210,16 +225,16 @@ const CandidateList = () => {
                                                 title="Thêm lại vào danh sách"
                                                 onClick={() => handleAddBack(app.id)}
                                             >
-                                                <UserPlus size={16} />
+                                                <UserPlus size={16}/>
                                                 <span>Thêm lại</span>
                                             </button>
                                         )}
                                         <button
                                             className="btn-action-delete"
                                             title="Xóa ứng viên"
-                                            onClick={() => setDeleteModal({ show: true, id: app.id })}
+                                            onClick={() => setDeleteModal({show: true, id: app.id})}
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash2 size={16}/>
                                         </button>
                                     </div>
                                 </td>
@@ -227,7 +242,7 @@ const CandidateList = () => {
                         )) : (
                             <tr>
                                 <td colSpan="5" className="empty-state">
-                                    <AlertCircle size={40} className="empty-icon" />
+                                    <AlertCircle size={40} className="empty-icon"/>
                                     <p>Không tìm thấy ứng viên nào phù hợp.</p>
                                 </td>
                             </tr>

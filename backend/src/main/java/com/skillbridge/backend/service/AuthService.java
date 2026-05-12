@@ -198,7 +198,7 @@ public class AuthService {
 
             return new LoginResponse("1", null, null, null);
         }
-        systemLog.info(CustomUserDetails.fromUser(user), "Đăng nhập thành công");
+        systemLog.info(CustomUserDetails.fromUser(user), user.getEmail() + " đăng nhập thành công");
         return issueToken(user);
     }
 
@@ -306,7 +306,7 @@ public class AuthService {
             userRepository.findById(userId).ifPresent(user -> {
                 user.setRefreshToken(null);
                 userRepository.save(user);
-                systemLog.info(CustomUserDetails.fromUser(user), "Người dùng đăng xuất");
+                systemLog.info(CustomUserDetails.fromUser(user), user.getEmail() + " đã đăng xuất");
             });
 
             System.out.println("[LOGOUT] User ID: " + userId + " đã logout thành công.");

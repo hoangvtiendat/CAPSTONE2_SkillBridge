@@ -63,7 +63,8 @@ public class ApplicationService {
         // Verify user is member of the company
         companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
-
+        System.out.println("aaa" + companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER)));
         return applicationRepository.findByJob_Company_Id(companyId);
     }
 
@@ -84,11 +85,11 @@ public class ApplicationService {
     public String respondToApplication(String id, RespondToApplicationRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
 
-        String DEFAULT_REASON = "Nhà tuyển dụng không đưa ra lý do cụ thể.";
+        String DEFAULT_REASON = "Nhà tuyển dụng không có ghi chú gì cho ứng viên.";
         String reason = DEFAULT_REASON;
 
-        if (request != null && request.getReason() != null && !request.getReason().trim().isEmpty()) {
-            reason = request.getReason();
+        if (request != null && request.getNote() != null && !request.getNote().trim().isEmpty()) {
+            reason = request.getNote();
         }
 
         Application application = applicationRepository.findById(id)
@@ -106,6 +107,7 @@ public class ApplicationService {
             throw new AppException(ErrorCode.INVALID_STATUS);
         }
         application.setStatus(newStatus);
+        application.setNote(reason);
         applicationRepository.save(application);
 
         // --- XỬ LÝ CHUẨN HÓA NỘI DUNG THÔNG BÁO ---

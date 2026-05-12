@@ -70,7 +70,7 @@ public class InterviewService {
         ).collect(Collectors.toList());
 
         List<InterviewSlot> savedSlots = slotRepository.saveAll(slots);
-        logService.info(currentUser, "Đã tạo " + savedSlots.size() + " khung giờ cho: " + job.getPosition());
+        logService.info(currentUser, currentUser.getEmail() + " - Đã tạo " + savedSlots.size() + " khung giờ cho: " + job.getPosition());
 
         List<Application> applicants = applicationRepository.findByJob_Id(job.getId());
         List<Application> pendingApplicants = applicants.stream()
@@ -178,7 +178,7 @@ public class InterviewService {
         } else {
             slot.setStatus(slot.getCurrentOccupancy() >= slot.getCapacity()
                     ? SlotStatus.FULL : SlotStatus.AVAILABLE);
-            logService.info(currentUser, "Đã mở khóa khung giờ: " + slot.getStartTime());
+            logService.info(currentUser, currentUser.getEmail() + " - Đã mở khóa khung giờ: " + slot.getStartTime());
         }
 
         InterviewSlot updated = slotRepository.save(slot);

@@ -14,5 +14,5 @@ public class RespondToApplicationRequest {
 
     @NotBlank(message = "INVALID_APPLICATION_STATUS")
     String status;
-    String reason;
+    String note;
 }

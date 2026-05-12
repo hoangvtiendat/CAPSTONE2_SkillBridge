@@ -305,7 +305,7 @@ public class CandidateService {
 
             UpdateCandidateCvResponse response = getCv(userId);
             messagingTemplate.convertAndSend("/topic/candidate/" + userId + "/cv-update", response);
-            systemLog.info(currentUser, "Cập nhật hồ sơ cá nhân thành công");
+            systemLog.info(currentUser, currentUser.getEmail() + " - Cập nhật hồ sơ cá nhân thành công");
 
             List<Application> applications = applicationRepository.findAllByCandidate(candidate);
 
@@ -534,7 +534,7 @@ public class CandidateService {
 
         } catch (Exception e) {
             log.error("[AI_ERROR] Thất bại khi phân tích CV: ", e);
-            systemLog.danger(currentUser, "AI không thể phân tích CV: " + e.getMessage());
+            systemLog.danger(currentUser, currentUser.getEmail() + " - AI không thể phân tích CV: " + e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }

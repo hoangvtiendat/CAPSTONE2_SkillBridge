@@ -47,6 +47,9 @@ public class Application extends BaseEntity {
     @Column(name = "cv_url", nullable = false)
     private String cvUrl;
 
+    @Column(name = "note")
+    private String note;
+
     @Column(name = "recommendation_letter", columnDefinition = "TEXT")
     private String recommendationLetter;
 

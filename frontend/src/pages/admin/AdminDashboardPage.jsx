@@ -5,7 +5,7 @@ import {
     TrendingUp, TrendingDown, Calendar, Filter, ChevronDown
 } from 'lucide-react';
 import {
-    LineChart, Line, BarChart, Bar, XAxis, YAxis,
+    AreaChart, Area, BarChart, Bar, XAxis, YAxis,
     CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import './AdminDashboard.css';
@@ -154,28 +154,84 @@ const AdminDashboard = () => {
 
             {/* 2 & 3. CHARTS */}
             <div className="charts-section">
-                <div className="chart-container">
-                    <h3>Biến động doanh thu</h3>
+                <div className="chart-container glass-morphism">
+                    <div className="chart-header" style={{marginBottom: '20px'}}>
+                        <h3>Biến động doanh thu</h3>
+                    </div>
                     <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={charts.revenueByMonth}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-                            <XAxis dataKey="month" tickFormatter={(v) => `T${v}`}/>
-                            <YAxis tickFormatter={(v) => `${v / 1000000}M`}/>
-                            <Tooltip formatter={(v) => formatCurrency(v)}/>
-                            <Line type="monotone" dataKey="revenue" stroke="#001F3F" strokeWidth={3} dot={{r: 4}}/>
-                        </LineChart>
+                        <AreaChart data={charts.revenueByMonth}>
+                            <defs>
+                                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)"/>
+                            <XAxis
+                                dataKey="month"
+                                tickFormatter={(v) => `T${v}`}
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{fontSize: 12, fill: '#86868b'}}
+                            />
+                            <YAxis
+                                tickFormatter={(v) => `${v / 1000000}M`}
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{fontSize: 12, fill: '#86868b'}}
+                            />
+                            <Tooltip
+                                formatter={(v) => formatCurrency(v)}
+                                contentStyle={{
+                                    borderRadius: '15px',
+                                    border: 'none',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+                                }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="revenue"
+                                stroke="#10b981"
+                                fillOpacity={1}
+                                fill="url(#colorRevenue)"
+                                strokeWidth={3}
+                            />
+                        </AreaChart>
                     </ResponsiveContainer>
                 </div>
 
-                <div className="chart-container">
-                    <h3>Tăng trưởng tin đăng</h3>
+                <div className="chart-container glass-morphism">
+                    <div className="chart-header" style={{marginBottom: '20px'}}>
+                        <h3>Tăng trưởng tin đăng</h3>
+                    </div>
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={charts.jobGrowthByMonth}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-                            <XAxis dataKey="month" tickFormatter={(v) => `T${v}`}/>
-                            <YAxis/>
-                            <Tooltip/>
-                            <Bar dataKey="totalJobs" fill="#6366f1" radius={[4, 4, 0, 0]}/>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)"/>
+                            <XAxis
+                                dataKey="month"
+                                tickFormatter={(v) => `T${v}`}
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{fontSize: 12, fill: '#86868b'}}
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{fontSize: 12, fill: '#86868b'}}
+                            />
+                            <Tooltip
+                                cursor={{fill: 'rgba(0,0,0,0.02)'}}
+                                contentStyle={{
+                                    borderRadius: '15px',
+                                    border: 'none',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+                                }}
+                            />
+                            <Bar
+                                dataKey="totalJobs"
+                                fill="#34c759"
+                                radius={[8, 8, 0, 0]}
+                            />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

@@ -665,6 +665,7 @@
     margin-top: 0;
     color: var(--lg-accent-strong);
     font-size: 16px;
+    border-bottom: 10px;
 }
 .roadmap-item {
     background: rgba(255, 255, 255, 0.6);
@@ -673,6 +674,8 @@
     padding: 16px;
     margin-bottom: 12px;
     transition: all 0.3s ease;
+     border-left: 4px solid #007aff;
+
 }
 .roadmap-item:hover { transform: scale(1.01); border-color: var(--lg-accent); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1); }
 .roadmap-item h5 { margin: 0 0 8px 0; color: var(--lg-text); font-size: 14px;}

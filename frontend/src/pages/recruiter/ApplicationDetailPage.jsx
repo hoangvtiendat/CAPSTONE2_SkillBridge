@@ -24,9 +24,9 @@ const ApplicationDetailPage = () => {
     const [cvBlobUrl, setCvBlobUrl] = useState(null);
     const [cvError, setCvError] = useState(false);
 
-    // --- Thêm state quản lý Modal Từ Chối ---
-    const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-    const [rejectReason, setRejectReason] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [actionType, setActionType] = useState(""); // Lưu trạng thái: 'INTERVIEW' hoặc 'REJECTED'
+    const [noteContent, setNoteContent] = useState("");
 
     useEffect(() => {
         let currentBlobUrl = null;
@@ -71,18 +71,25 @@ const ApplicationDetailPage = () => {
         };
     }, [id]);
 
+    const openModal = (type) => {
+        setActionType(type);
+        setNoteContent(""); // Reset lại text mỗi khi mở
+        setIsModalOpen(true);
+    };
     // Cập nhật hàm handleRespond nhận thêm tham số reason
-    const handleRespond = async (status, reason = "") => {
+    const handleRespond = async () => {
         try {
-            // Lưu ý: Cần truyền 1 object chứa cả status và reason xuống service
-            await applicationService.respondToApplication(id, {status, reason});
+            // Gửi đúng key 'note' như backend yêu cầu
+            const payload = {
+                status: actionType,
+                note: noteContent
+            };
 
-            toast.success(status === 'INTERVIEW' ? "Đã chấp nhận hồ sơ!" : "Đã từ chối hồ sơ!");
-            setApp({...app, status});
+            await applicationService.respondToApplication(id, payload);
 
-            if (status === 'REJECTED') {
-                setIsRejectModalOpen(false); // Đóng modal nếu là từ chối
-            }
+            toast.success(actionType === 'INTERVIEW' ? "Đã chấp nhận hồ sơ!" : "Đã từ chối hồ sơ!");
+            setApp({...app, status: actionType});
+            setIsModalOpen(false); // Đóng modal sau khi thành công
 
             setTimeout(() => navigate(`/recruiter/jobs/${app?.job?.id}/applications`), 1500);
         } catch (err) {
@@ -133,14 +140,10 @@ const ApplicationDetailPage = () => {
                         </div>
 
                         <div className="apd-actions">
-                            <button onClick={() => handleRespond('INTERVIEW')} className="apd-btn-primary">
+                            <button onClick={() => openModal('INTERVIEW')} className="apd-btn-primary">
                                 Chấp nhận hồ sơ
                             </button>
-                            {/* Đổi onClick mở Modal thay vì gọi API ngay lập tức */}
-                            <button onClick={() => {
-                                setRejectReason("");
-                                setIsRejectModalOpen(true);
-                            }} className="apd-btn-danger">
+                            <button onClick={() => openModal('REJECTED')} className="apd-btn-danger">
                                 Từ chối hồ sơ
                             </button>
                         </div>
@@ -237,39 +240,46 @@ const ApplicationDetailPage = () => {
             </div>
 
             {/* OVERLAY MODAL TỪ CHỐI HỒ SƠ */}
-            {isRejectModalOpen && (
-                <div className="apd-modal-overlay" onClick={() => setIsRejectModalOpen(false)}>
+            {isModalOpen && (
+                <div className="apd-modal-overlay" onClick={() => setIsModalOpen(false)}>
                     <div className="apd-modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="apd-modal-title">Từ chối ứng viên</h3>
+                        <h3 className="apd-modal-title">
+                            {actionType === 'INTERVIEW' ? 'Chấp nhận ứng viên' : 'Từ chối ứng viên'}
+                        </h3>
                         <p className="apd-modal-desc">
-                            Nhập lý do từ chối để giúp ứng viên hiểu rõ hơn và cải thiện trong tương lai.<br/>
+                            {actionType === 'INTERVIEW'
+                                ? 'Nhập ghi chú hoặc lời nhắn cho ứng viên (ví dụ: thời gian/địa điểm phỏng vấn, link họp trực tuyến).'
+                                : 'Nhập lý do từ chối để giúp ứng viên hiểu rõ hơn và cải thiện trong tương lai.'}
+                            <br/>
                             <span style={{color: '#94a3b8', fontStyle: 'italic'}}>(Không bắt buộc)</span>
                         </p>
 
                         <div className="apd-modal-form-group">
-                            <label htmlFor="rejectReason" className="apd-modal-label">Lý do cụ thể</label>
+                            <label htmlFor="noteContent" className="apd-modal-label">
+                                {actionType === 'INTERVIEW' ? 'Ghi chú / Lời nhắn' : 'Lý do cụ thể'}
+                            </label>
                             <textarea
-                                id="rejectReason"
+                                id="noteContent"
                                 className="apd-modal-textarea"
                                 rows={4}
-                                placeholder="Ví dụ: Kỹ năng chưa hoàn toàn phù hợp với định hướng dự án..."
-                                value={rejectReason}
-                                onChange={(e) => setRejectReason(e.target.value)}
+                                placeholder={actionType === 'INTERVIEW' ? "Ví dụ: Lịch phỏng vấn lúc 9h sáng thứ 2 tại phòng 302..." : "Ví dụ: Kỹ năng chưa hoàn toàn phù hợp với định hướng dự án..."}
+                                value={noteContent}
+                                onChange={(e) => setNoteContent(e.target.value)}
                             />
                         </div>
 
                         <div className="apd-modal-actions">
                             <button
                                 className="apd-btn-cancel"
-                                onClick={() => setIsRejectModalOpen(false)}
+                                onClick={() => setIsModalOpen(false)}
                             >
                                 Hủy bỏ
                             </button>
                             <button
-                                className="apd-btn-danger"
-                                onClick={() => handleRespond('REJECTED', rejectReason)}
+                                className={actionType === 'INTERVIEW' ? "apd-btn-primary" : "apd-btn-danger"}
+                                onClick={handleRespond}
                             >
-                                Xác nhận từ chối
+                                {actionType === 'INTERVIEW' ? 'Xác nhận chấp nhận' : 'Xác nhận từ chối'}
                             </button>
                         </div>
                     </div>

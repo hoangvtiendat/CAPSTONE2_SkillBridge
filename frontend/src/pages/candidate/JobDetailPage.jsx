@@ -708,7 +708,7 @@ const JobDetailPage = () => {
                             <div className="ai-section">
                                 <h4>Lộ trình cải thiện (Roadmap)</h4>
                                 {aiResults.roadmap?.map((item, index) => (
-                                    <div key={index} className="roadmap-item" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid #6366f1' }}>
+                                    <div key={index} className="roadmap-item" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid #007aff' }}>
                                         <h5 style={{ color: '#1e293b', marginBottom: '5px', fontSize: '15px' }}>
                                             {item.title} <span style={{ fontSize: '12px', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', marginLeft: '5px' }}>{item.priority}</span>
                                         </h5>

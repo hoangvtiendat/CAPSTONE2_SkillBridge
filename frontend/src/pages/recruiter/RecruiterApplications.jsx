@@ -52,6 +52,7 @@ const RecruiterApplications = () => {
                         <th>Trạng thái</th>
                         <th>Ngày nộp</th>
                         <th>AI Matching</th>
+                        <th>Ghi chú</th>
                         <th>Thao tác</th>
                     </tr>
                     </thead>
@@ -60,7 +61,8 @@ const RecruiterApplications = () => {
                         applications.map((app) => (
                             <tr key={app.id}>
                                 <td>
-                                    <div className="candidate-name" onClick={() => navigate(`/recruiter/applications/${app.id}`)}>
+                                    <div className="candidate-name"
+                                         onClick={() => navigate(`/recruiter/applications/${app.id}`)}>
                                         {app.fullName}
                                     </div>
                                     <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
@@ -77,7 +79,16 @@ const RecruiterApplications = () => {
                                 </td>
                                 <td>
                                     <div className="ai-score-tag">
-                                         {app.aiMatchingScore}%
+                                        {app.aiMatchingScore}%
+                                    </div>
+                                </td>
+                                <td>
+                                    <div className="candidate-note" title={app.note}>
+                                        {app.note ? (
+                                            <span className="note-text">{app.note}</span>
+                                        ) : (
+                                            <span className="text-slate-400 italic">Không có ghi chú</span>
+                                        )}
                                     </div>
                                 </td>
                                 <td>
