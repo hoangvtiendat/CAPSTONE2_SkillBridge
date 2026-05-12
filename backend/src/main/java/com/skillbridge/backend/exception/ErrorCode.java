@@ -140,7 +140,8 @@ public enum ErrorCode {
     SLOT_IS_LOCKED(9007,"Khung giờ này đã bị khoá", HttpStatus.BAD_REQUEST),
     INTERVIEW_TIME_CONFLICT(9008, "Lịch đang bị trùng, không thể phỏng vấn vào khung giờ này", HttpStatus.BAD_REQUEST),
     //INVIVATION
-    INVITATION_ALREADY_SENT(11000,"Bạn đã gửi lời mời cho ứng viên này", HttpStatus.BAD_REQUEST);
+    INVITATION_ALREADY_SENT(11000,"Bạn đã gửi lời mời cho ứng viên này", HttpStatus.BAD_REQUEST),
+    EXIT_SUB(11001,"Lỗi tạo gói cước hệ thống", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private final HttpStatus httpStatus;

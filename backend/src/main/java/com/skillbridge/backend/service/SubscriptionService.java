@@ -12,6 +12,7 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.SubscriptionOfCompanyRepository;
+import com.skillbridge.backend.repository.SubscriptionPlanRepository;
 import com.skillbridge.backend.repository.SubscriptionRepository;
 import com.skillbridge.backend.utils.SecurityUtils;
 import lombok.AccessLevel;
@@ -284,4 +285,25 @@ public class SubscriptionService {
         return subcriptionOfCompanyRepository.findPostingDuration(id_company, SubscriptionOfCompanyStatus.OPEN)
                 .orElse(0);
     }
+    ///  Tạo gói cước bắt đầu
+//    public SubscriptionPlan createSubscriptionPlan(SubscriptionPlan subscriptionPlan) {
+//        try {
+//           SubscriptionPlan createSub = new SubscriptionPlan();
+//           createSub.setName(subscriptionPlan.getName());
+//           createSub.setPrice(subscriptionPlan.getPrice());
+//           createSub.setJobLimit(subscriptionPlan.getJobLimit());
+//           createSub.setPostingDuration(subscriptionPlan.getPostingDuration());
+//           createSub.setCandidateViewLimit(subscriptionPlan.getCandidateViewLimit());
+//           createSub.setHasPriorityDisplay(subscriptionPlan.getHasPriorityDisplay());
+//           createSub.setIsPublic(subscriptionPlan.getIsPublic());
+//           subscriptionRepository.save(createSub);
+//           return createSub;
+//       }
+//       catch (Exception e) {
+//           throw new AppException(ErrorCode.EXIT_SUB);
+//       }
+//       finally {
+//           System.out.println("Đã chay chức năng thêm gói cước mới");
+//       }
+//    }
 }

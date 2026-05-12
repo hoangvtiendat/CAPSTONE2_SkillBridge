@@ -97,7 +97,13 @@ const SubscriptionManager = () => {
             setSelectedSubscription(null);
             fetchSubscriptions();
         } catch (error) {
-            toast.error('Cập nhật thất bại', { style: toastStyles.error });
+            console.error('Update subscription error:', error);
+            const backendMessage = error?.response?.data?.message || error?.response?.data?.result || error?.response?.data || error?.message;
+            if (backendMessage) {
+                toast.error('Cập nhật thất bại', { description: String(backendMessage), style: toastStyles.error });
+            } else {
+                toast.error('Cập nhật thất bại', { style: toastStyles.error });
+            }
         } finally {
             setLoading(false);
         }
@@ -175,10 +181,10 @@ const SubscriptionManager = () => {
                                         <span>Hiệu lực tin: <strong>{sub.postingDuration} ngày</strong></span>
                                     </li>
                                 
-                                    <li className={(sub.isPublic ?? sub.is_public) ? "highlight" : "dimmed"}>
+                                    {/* <li className={(sub.isPublic ?? sub.is_public) ? "highlight" : "dimmed"}>
                                         <Check size={18} />
                                         <span>Công khai gói: {(sub.isPublic ?? sub.is_public) ? 'Có' : 'Không'}</span>
-                                    </li>
+                                    </li> */}
                                 </ul>
                             </div>
 
@@ -260,7 +266,7 @@ const SubscriptionManager = () => {
                                 />
                             </div>
 
-                            {!editForm.name?.toUpperCase().includes('FREE') && (
+                            {/* {!editForm.name?.toUpperCase().includes('FREE') && (
                                 <div className="form-group" style={{marginTop: '10px'}}>
                                     <label className="checkbox-wrapper">
                                         <input
@@ -272,7 +278,7 @@ const SubscriptionManager = () => {
                                         <span className="checkbox-text">Hiển thị công khai gói</span>
                                     </label>
                                 </div>
-                            )}
+                            )} */}
 
                             <div className="modal-footer">
                                 <button type="button" className="btn-cancel" onClick={() => setSelectedSubscription(null)}>

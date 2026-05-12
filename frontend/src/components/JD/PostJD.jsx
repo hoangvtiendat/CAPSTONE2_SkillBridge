@@ -39,8 +39,8 @@ const PostJD = () => {
     const [specificAddress, setSpecificAddress] = useState("");
 
     const [dynamicTitles, setDynamicTitles] = useState([
-        { key: "Quyền lợi", value: "" },
-        { key: "Yêu cầu", value: "" }
+        { key: "Yêu cầu", value: "" },
+        { key: "Quyền lợi", value: "" }
     ]);
 
     const [formData, setFormData] = useState({
