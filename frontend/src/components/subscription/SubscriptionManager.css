@@ -1,206 +1,236 @@
-/* --- 1. Gói FREE - Xám Bạc (Frosted Silver) --- */
-.plan-card-FREE {
-    --plan-color: #8e8e93;
-    --plan-glow: rgba(142, 142, 147, 0.3);
-    /* Gradient: Xám nhạt sang trong suốt */
-    background: linear-gradient(135deg, rgba(242, 242, 247, 0.25) 0%, rgba(174, 174, 178, 0.1) 100%) !important;
+.subscription-admin-manager {
+    position: relative;
+    padding: 32px;
+    max-width: calc(100vw - 96px);
+    margin-left: auto;
+    border-radius: 34px;
+    background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.65) 35%, rgba(236, 242, 252, 0.9) 100%),
+        linear-gradient(180deg, rgba(244, 247, 253, 0.95), rgba(230, 238, 248, 0.95));
+    box-shadow: 0 30px 90px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    animation: manager-enter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* --- 2. Gói STANDARD - Xanh Dương (Ocean Blue) --- */
-.plan-card-STANDARD {
-    --plan-color: #007aff;
-    --plan-glow: rgba(0, 122, 255, 0.3);
-    /* Gradient: Xanh biển nhạt tạo độ sâu */
-    background: linear-gradient(135deg, rgba(0, 122, 255, 0.18) 0%, rgba(0, 122, 255, 0.05) 100%) !important;
-}
-
-/* --- 3. Gói PREMIUM - Tím Điện (Electric Purple) --- */
-.plan-card-PREMIUM {
-    /* Màu vàng Gold đậm chất Apple/macOS */
-    --plan-color: #b45309; /* Màu Amber đậm để chữ và icon sắc nét */
-    --plan-glow: rgba(245, 158, 11, 0.4); /* Glow vàng rực rỡ */
-
-    /* Gradient: Vàng nắng (Honey) sang Amber nhạt */
-    background: linear-gradient(
-            135deg,
-            rgba(251, 191, 36, 0.25) 0%,
-            rgba(217, 119, 6, 0.08) 100%
-    ) !important;
-
-    /* Viền kính màu vàng nhạt bắt sáng */
-    border: 1px solid rgba(251, 191, 36, 0.5) !important;
-}
-
-/* Hiệu ứng đặc biệt cho giá tiền gói Gold */
-.plan-card-PREMIUM .price-value {
-    color: #d97706 !important; /* Vàng đậm (Bronze/Gold) */
-    text-shadow: 0 0 25px rgba(251, 191, 36, 0.5);
-    font-weight: 900;
-}
-
-/* --- 4. Gói CUSTOM - Xanh Lá/Teal (Emerald Glass) --- */
-.plan-card-CUSTOM {
-    --plan-color: #34c759;
-    --plan-glow: rgba(52, 199, 89, 0.3);
-    /* Gradient: Xanh lá tươi mát */
-    background: linear-gradient(135deg, rgba(52, 199, 89, 0.18) 0%, rgba(52, 199, 89, 0.05) 100%) !important;
-}
-
-/* --- Tối ưu hóa hiệu ứng khi Hover cho từng loại gói --- */
-.admin-plan-card:hover {
-    /* Tăng độ sáng của gradient khi hover */
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%) !important;
-    border-color: var(--plan-color) !important;
-    box-shadow:
-            0 35px 70px var(--plan-glow),
-            inset 0 1px 2px rgba(255, 255, 255, 0.8) !important;
-}
-
-/* --- Hiệu ứng phụ bổ trợ (Optional) --- */
-/* Thêm một đốm sáng nhỏ ở góc trên bên trái của mỗi card */
-.admin-plan-card::before {
+.subscription-admin-manager::before,
+.subscription-admin-manager::after {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 40%);
+    border-radius: 999px;
     pointer-events: none;
-}
-.subscription-admin-manager {
-    padding: 35px;
-    max-width: calc(100vw - 110px);
-    margin-left: auto;
-    animation: sf-pop-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    filter: blur(8px);
 }
 
-/* --- Header Section (Tấm kính lớn) --- */
+.subscription-admin-manager::before {
+    width: 300px;
+    height: 300px;
+    top: -120px;
+    right: -80px;
+    background: rgba(59, 130, 246, 0.12);
+}
+
+.subscription-admin-manager::after {
+    width: 220px;
+    height: 220px;
+    left: -90px;
+    bottom: -90px;
+    background: rgba(52, 199, 89, 0.12);
+}
+
 .sub-manager-header {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.12));
-    backdrop-filter: blur(30px) saturate(185%);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    border-radius: 28px;
-    padding: 25px 30px;
-    margin-bottom: 30px;
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 20px 40px rgba(0,0,0,0.06);
     position: relative;
     overflow: hidden;
+    margin-bottom: 28px;
+    padding: 26px 28px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 26px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(247, 250, 255, 0.6));
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(18px);
 }
 
 .sub-manager-header::after {
     content: "";
     position: absolute;
-    top: 0; left: -30%; width: 70%; height: 60%;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
-    filter: blur(15px);
-    transform: rotate(-10deg);
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.75), transparent 42%);
+    pointer-events: none;
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
 }
 
 .sub-manager-header h1 {
-    font-size: 30px;
-    font-weight: 850;
-    color: #0f172a;
-    letter-spacing: -0.04em;
     margin: 0;
+    color: #0f172a;
+    font-size: clamp(26px, 2.5vw, 36px);
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: -0.05em;
 }
 
 .sub-manager-header p {
+    margin: 8px 0 0;
     color: #64748b;
+    font-size: 15px;
     font-weight: 600;
-    margin-top: 5px;
 }
 
-/* --- Grid Hệ thống Gói cước --- */
 .admin-plans-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 22px;
+    position: relative;
+    z-index: 1;
 }
 
-/* --- Plan Card (Tấm kính lỏng đa sắc) --- */
 .admin-plan-card {
     position: relative;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-    backdrop-filter: blur(25px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 35px;
-    padding: 30px;
     display: flex;
     flex-direction: column;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6), 0 25px 50px rgba(0, 0, 0, 0.08);
+    min-height: 360px;
+    padding: 26px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.admin-plan-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.62), transparent 35%);
+    pointer-events: none;
 }
 
 .admin-plan-card:hover {
-    transform: translateY(-10px) scale(1.02);
+    transform: translateY(-6px);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
     border-color: var(--plan-color);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 35px 70px var(--plan-glow);
 }
 
-/* Plan Icon & Header */
+.plan-card-FREE {
+    --plan-color: #8e8e93;
+    --plan-glow: rgba(142, 142, 147, 0.22);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(243, 244, 246, 0.72));
+}
+
+.plan-card-STANDARD {
+    --plan-color: #0b76ff;
+    --plan-glow: rgba(11, 118, 255, 0.22);
+    background: linear-gradient(135deg, rgba(240, 247, 255, 0.95), rgba(218, 234, 255, 0.72));
+}
+
+.plan-card-PREMIUM {
+    --plan-color: #d97706;
+    --plan-glow: rgba(217, 119, 6, 0.22);
+    background: linear-gradient(135deg, rgba(255, 249, 237, 0.95), rgba(255, 236, 205, 0.76));
+    border-color: rgba(251, 191, 36, 0.35);
+}
+
+.plan-card-PREMIUM .price-value {
+    color: #d97706;
+}
+
+.plan-card-CUSTOM {
+    --plan-color: #22c55e;
+    --plan-glow: rgba(34, 197, 94, 0.22);
+    background: linear-gradient(135deg, rgba(240, 255, 245, 0.95), rgba(224, 250, 232, 0.72));
+    border-color: rgba(34, 197, 94, 0.32);
+}
+
+.plan-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.plan-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
 .plan-icon-wrapper {
-    width: 54px;
-    height: 54px;
-    background: white;
-    border-radius: 16px;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.94);
     color: var(--plan-color);
-    box-shadow: 0 8px 20px var(--plan-glow);
-    margin-bottom: 20px;
+    box-shadow: 0 10px 24px var(--plan-glow);
 }
 
 .plan-name {
-    font-size: 24px;
-    font-weight: 900;
+    margin: 10px 0 0;
     color: #0f172a;
-    margin-bottom: 10px;
+    font-size: 22px;
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+}
+
+.plan-price-box {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
 .price-value {
-    font-size: 36px;
-    font-weight: 950;
     color: var(--plan-color);
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 950;
+    letter-spacing: -0.05em;
     text-shadow: 0 0 20px var(--plan-glow);
 }
 
 .price-unit {
+    color: #64748b;
     font-size: 14px;
     font-weight: 700;
-    color: #64748b;
-    margin-left: 5px;
 }
 
-/* Features List */
 .plan-body {
-    margin: 25px 0;
-    flex-grow: 1;
+    flex: 1;
+    margin: 22px 0 24px;
 }
 
 .plan-features {
     list-style: none;
-    padding: 0;
     margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
 }
 
 .plan-features li {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
-    margin-bottom: 15px;
+    color: #334155;
     font-size: 14.5px;
     font-weight: 600;
-    color: #334155;
+    line-height: 1.4;
 }
 
 .plan-features li svg {
     color: var(--plan-color);
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 10px;
     padding: 4px;
-    border-radius: 8px;
     flex-shrink: 0;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
 }
 
 .plan-features li strong {
@@ -208,124 +238,129 @@
     font-weight: 800;
 }
 
-/* Footer & Button (Pill Style) */
 .plan-footer {
     margin-top: auto;
 }
 
 .btn-edit-plan {
     width: 100%;
-    height: 50px;
-    background: var(--plan-color);
-    color: white;
-    border: none;
-    border-radius: 100px;
-    font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
+    min-height: 52px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 20px var(--plan-glow);
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--plan-color);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 14px 28px var(--plan-glow);
+    transition: transform 0.22s ease, filter 0.22s ease, box-shadow 0.22s ease;
 }
 
 .btn-edit-plan:hover {
-    filter: brightness(1.1);
-    transform: scale(1.02);
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+    box-shadow: 0 18px 34px var(--plan-glow);
 }
 
-/* --- Modal Overlay & Content --- */
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(20px) saturate(180%);
+    z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2000;
+    padding: 24px;
+    background: rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(18px) saturate(150%);
 }
 
 .modal-content {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.15));
-    backdrop-filter: blur(40px) saturate(210%);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 40px;
     width: 100%;
-    max-width: 580px;
-    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255,255,255,0.7);
-    padding: 30px;
-    animation: sf-pop-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    max-width: 620px;
     max-height: calc(100vh - 48px);
     overflow-y: auto;
+    padding: 28px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+    box-shadow: 0 30px 90px rgba(15, 23, 42, 0.22);
+    animation: manager-enter 0.25s ease-out;
 }
 
 .modal-header {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
 .subscription-admin-manager .modal-header,
 .subscription-admin-manager .modal-footer {
     background: transparent !important;
-    border: none !important;
+    border: 0 !important;
     box-shadow: none !important;
 }
 
 .modal-header h2 {
     margin: 0;
-    font-size: 34px;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
     color: #0f172a;
+    font-size: clamp(22px, 2.4vw, 30px);
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -0.04em;
 }
 
 .text-highlight {
-    color: #007aff;
-    font-weight: 900;
+    color: #0b76ff;
 }
 
 .btn-close {
-    background: rgba(255, 255, 255, 0.4);
-    border: none;
-    border-radius: 50%;
     width: 40px;
     height: 40px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.06);
+    color: #475569;
     cursor: pointer;
-    transition: 0.2s;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .btn-close:hover {
-    background: #ff3b30;
-    color: white;
+    background: #ef4444;
+    color: #fff;
+    transform: rotate(6deg);
 }
 
-/* Form Styling */
-.form-group > label:not(.checkbox-wrapper) {
-    display: block;
-    font-size: 13px;
-    font-weight: 800;
-    color: #64748b;
-    margin-bottom: 8px;
-    padding-left: 5px;
+.plan-lock-note {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(11, 118, 255, 0.08);
+    border: 1px solid rgba(11, 118, 255, 0.12);
+    color: #1d4ed8;
+    font-size: 14px;
+    font-weight: 700;
 }
 
 .modal-body {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
 .form-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
 }
 
@@ -333,126 +368,177 @@
     margin: 0;
 }
 
+.form-group > label:not(.checkbox-wrapper) {
+    display: block;
+    margin-bottom: 8px;
+    padding-left: 4px;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 800;
+}
+
 .form-control {
     width: 100%;
     height: 48px;
-    background: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 0 16px;
     border-radius: 16px;
-    padding: 0 18px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(255, 255, 255, 0.9);
+    color: #0f172a;
     font-size: 15px;
     font-weight: 700;
-    color: #1e293b;
-    transition: all 0.3s;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .form-control:focus {
-    background: rgba(255, 255, 255, 0.8);
-    border-color: #007aff;
-    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+    outline: none;
+    border-color: rgba(11, 118, 255, 0.55);
+    box-shadow: 0 0 0 4px rgba(11, 118, 255, 0.12);
+    background: #fff;
 }
 
-.form-control.readonly {
-    background: rgba(0, 0, 0, 0.04);
+.form-group.is-readonly .form-control,
+.form-control[readonly] {
+    background: rgba(241, 245, 249, 0.95);
+    color: #64748b;
     cursor: not-allowed;
+    border-style: dashed;
 }
 
-.checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.2));
-    padding: 14px 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.65);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.checkbox-wrapper:hover {
-    border-color: rgba(0, 122, 255, 0.45);
-    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.12);
-}
-
-.checkbox-wrapper input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    accent-color: #007aff;
-    flex-shrink: 0;
-}
-
-.checkbox-text {
-    font-size: 13.5px;
-    font-weight: 700;
-    color: #334155;
-    line-height: 1.35;
+.form-group.is-readonly .form-control:focus,
+.form-control[readonly]:focus {
+    box-shadow: none;
+    border-color: rgba(148, 163, 184, 0.32);
 }
 
 .modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 10px;
+    margin-top: 8px;
     padding: 0;
 }
 
-.btn-save {
-    background: #007aff;
-    color: white;
-    padding: 14px 30px;
-    border-radius: 100px;
+.btn-save,
+.btn-cancel {
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 999px;
+    font-size: 14px;
     font-weight: 800;
-    border: none;
-    box-shadow: 0 10px 20px rgba(0, 122, 255, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-save {
+    border: 0;
+    color: #fff;
+    background: linear-gradient(135deg, #0b76ff, #38a5ff);
+    box-shadow: 0 14px 28px rgba(11, 118, 255, 0.24);
+}
+
+.btn-save:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 32px rgba(11, 118, 255, 0.28);
+}
+
+.btn-save:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
 }
 
 .btn-cancel {
-    background: transparent;
-    border: 1px solid #d1d5db;
-    padding: 14px 25px;
-    border-radius: 100px;
-    font-weight: 700;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(255, 255, 255, 0.72);
+    color: #334155;
+}
+
+.btn-cancel:hover {
+    transform: translateY(-1px);
+    border-color: rgba(148, 163, 184, 0.45);
+    background: #fff;
+}
+
+.loading-spinner {
+    padding: 96px 0;
+    text-align: center;
+    color: #475569;
+}
+
+.spinner {
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    border: 4px solid rgba(11, 118, 255, 0.12);
+    border-top-color: #0b76ff;
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes manager-enter {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 1024px) {
+    .subscription-admin-manager {
+        max-width: 100vw;
+        padding: 24px;
+        border-radius: 28px;
+    }
+
+    .admin-plans-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
 }
 
 @media (max-width: 768px) {
-    .modal-content {
-        max-width: calc(100vw - 24px);
-        padding: 20px;
-        border-radius: 24px;
+    .subscription-admin-manager {
+        padding: 18px;
     }
 
-    .modal-header h2 {
-        font-size: 24px;
+    .sub-manager-header,
+    .modal-content,
+    .admin-plan-card {
+        border-radius: 22px;
+    }
+
+    .admin-plan-card {
+        min-height: auto;
     }
 
     .form-row {
         grid-template-columns: 1fr;
     }
-}
 
-/* Animations & Spiner */
-@keyframes sf-pop-up {
-    from { opacity: 0; transform: scale(0.96) translateY(20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-}
+    .modal-overlay {
+        padding: 12px;
+    }
 
-.loading-spinner {
-    text-align: center;
-    padding: 100px 0;
-}
+    .modal-content {
+        max-height: calc(100vh - 24px);
+        padding: 20px;
+    }
 
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(0, 122, 255, 0.1);
-    border-top: 4px solid #007aff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 15px;
-}
+    .modal-footer {
+        flex-direction: column-reverse;
+    }
 
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    .btn-save,
+    .btn-cancel {
+        width: 100%;
+        justify-content: center;
+    }
 }

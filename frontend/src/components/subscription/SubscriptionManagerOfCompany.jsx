@@ -6,7 +6,27 @@ import { Check, Edit, Calendar, Info, Plus, X, MoreVertical, Trash2, CreditCard,
 import { useAuth } from '../../context/AuthContext';
 import CreateSubscriptionForm from './CreateSubscriptionForm';
 import './SubscriptionManagerOfCompany.css';
-import { ca } from 'date-fns/locale';
+
+const SUBSCRIPTION_PLAN_LABELS = {
+    FREE: 'Miễn phí',
+    STANDARD: 'Standard',
+    PREMIUM: 'Premium',
+    CUSTOM: 'Gói tùy chỉnh',
+};
+
+/** Tên hiển thị gói (Custom có subscription_plan_id null trước đây vẫn nhận diện qua enum hoặc giới hạn). */
+function resolveSubscriptionPlanLabel(sub) {
+    if (!sub) return '';
+    const raw = sub.subscriptionPlan?.name ?? sub.name;
+    if (raw != null && raw !== '') {
+        const key = String(raw).toUpperCase();
+        return SUBSCRIPTION_PLAN_LABELS[key] || String(raw);
+    }
+    if (sub.jobLimit != null && sub.candidateViewLimit != null) {
+        return 'Gói tùy chỉnh';
+    }
+    return '';
+}
 
 const SubscriptionManagerOfCompany = () => {
     const { token, user } = useAuth();
@@ -347,7 +367,8 @@ const handleDeleteSubscription = async (id, options = {}) => {
         return true;
     });
     const premiumPkg = systemPackages.length > 0 ? systemPackages[0] : null;
-    const currentSubscriptionName = currentSubscription?.name || currentSubscription?.subscriptionPlan?.name || 'Đang hoạt động';
+    const currentSubscriptionName =
+        resolveSubscriptionPlanLabel(currentSubscription) || 'Gói đang dùng';
 
     const hasPartialUsage = !!currentSubscription && (
         (Number(currentSubscription.currentJobCount || 0) > 0 && Number(currentSubscription.currentJobCount || 0) < Number(currentSubscription.jobLimit || 0)) ||
@@ -620,7 +641,11 @@ const handleDeleteSubscription = async (id, options = {}) => {
                                         <td>{sub.id}</td>
                                         <td>
                                             <span className="badge-history-pkg">
-                                                {sub.name} ({sub.postingDuration || 'N/A'} ngày)
+                                                {(() => {
+                                                    const label = resolveSubscriptionPlanLabel(sub);
+                                                    const dur = sub.postingDuration != null ? ` (${sub.postingDuration} ngày)` : '';
+                                                    return `${label || 'Gói'}${dur}`;
+                                                })()}
                                             </span>
                                         </td>
                                         <td>{new Date(sub.createdAt || sub.startDate || sub.endDate).toLocaleDateString('vi-VN')}</td>

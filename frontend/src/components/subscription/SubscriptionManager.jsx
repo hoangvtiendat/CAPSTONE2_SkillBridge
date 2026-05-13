@@ -79,6 +79,7 @@ const SubscriptionManager = () => {
         try {
             const token = localStorage.getItem('token');
             const submitData = { ...editForm };
+            const isCustom = isCustomPlan(submitData.name);
             
             // Ensure hasPriorityDisplay = true for STANDARD/PREMIUM
             const isStandardOrPremium = submitData.name?.toUpperCase().includes('STANDARD') || submitData.name?.toUpperCase().includes('PREMIUM');
@@ -90,6 +91,12 @@ const SubscriptionManager = () => {
             const isFree = submitData.name?.toUpperCase().includes('FREE');
             if (isFree) {
                 submitData.isPublic = false;
+            }
+
+            if (isCustom && selectedSubscription) {
+                submitData.price = selectedSubscription.price;
+                submitData.jobLimit = selectedSubscription.jobLimit;
+                submitData.candidateViewLimit = selectedSubscription.candidateViewLimit;
             }
             
             await subscriptionService.UpdateSubcription(selectedSubscription.id, submitData, token);
@@ -133,6 +140,13 @@ const SubscriptionManager = () => {
         return `${new Intl.NumberFormat('vi-VN').format(amount)}đ`;
     };
 
+    const isCustomPlan = (planName) => {
+        const name = planName?.toUpperCase() || '';
+        return name.includes('CUSTOM');
+    };
+
+    const isCustomSelected = isCustomPlan(selectedSubscription?.name);
+
     return (
         <div className="subscription-admin-manager animate-in">
             <div className="sub-manager-header">
@@ -158,24 +172,30 @@ const SubscriptionManager = () => {
                                     </div>
                                     <h2 className="plan-name">{sub.name}</h2>
                                 </div>
-                                <div className="plan-price-box">
-                                    <span className="price-value">
-                                        {formatPlanPrice(sub.price)}
-                                    </span>
-                                    {sub.price > 0 && <span className="price-unit">/ tháng</span>}
-                                </div>
+                                {!isCustomPlan(sub.name) && (
+                                    <div className="plan-price-box">
+                                        <span className="price-value">
+                                            {formatPlanPrice(sub.price)}
+                                        </span>
+                                        {sub.price > 0 && <span className="price-unit">/ tháng</span>}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="plan-body">
                                 <ul className="plan-features">
-                                    <li>
-                                        <Check size={18} />
-                                        <span><strong>{sub.jobLimit}</strong> Tin đăng tối đa</span>
-                                    </li>
-                                    <li>
-                                        <Check size={18} />
-                                        <span><strong>{sub.candidateViewLimit}</strong> Lượt xem hồ sơ</span>
-                                    </li>
+                                    {!isCustomPlan(sub.name) && (
+                                        <>
+                                            <li>
+                                                <Check size={18} />
+                                                <span><strong>{sub.jobLimit}</strong> Tin đăng tối đa</span>
+                                            </li>
+                                            <li>
+                                                <Check size={18} />
+                                                <span><strong>{sub.candidateViewLimit}</strong> Lượt xem hồ sơ</span>
+                                            </li>
+                                        </>
+                                    )}
                                     <li>
                                         <Check size={18} />
                                         <span>Hiệu lực tin: <strong>{sub.postingDuration} ngày</strong></span>
@@ -212,47 +232,57 @@ const SubscriptionManager = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleUpdateSubscription} className="modal-body">
-                            {/* Input Giá tiền */}
-                            <div className="form-group">
-                                <label>Giá gói cước (VND)</label>
-                                <input
-                                    type="number"
-                                    name="price"
-                                    min="0"
-                                    step="1000"
-                                    value={editForm.price ?? ''}
-                                    onChange={handleInputChange}
-                                    required
-                                    className="form-control"
-                                    placeholder="Nhập giá tiền..."
-                                />
+                        {isCustomSelected && (
+                            <div className="plan-lock-note">
+                                Gói CUSTOM chỉ cho phép chỉnh sửa thời hạn hiển thị tin.
                             </div>
+                        )}
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Giới hạn bài đăng</label>
-                                    <input
-                                        type="number"
-                                        name="jobLimit"
-                                        value={editForm.jobLimit ?? ''}
-                                        onChange={handleInputChange}
-                                        className="form-control"
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Lượt xem CV</label>
-                                    <input
-                                        type="number"
-                                        name="candidateViewLimit"
-                                        value={editForm.candidateViewLimit ?? ''}
-                                        onChange={handleInputChange}
-                                        className="form-control"
-                                        required
-                                    />
-                                </div>
-                            </div>
+                        <form onSubmit={handleUpdateSubscription} className="modal-body">
+                            {!isCustomSelected && (
+                                <>
+                                    {/* Input Giá tiền */}
+                                    <div className="form-group">
+                                        <label>Giá gói cước (VND)</label>
+                                        <input
+                                            type="number"
+                                            name="price"
+                                            min="0"
+                                            step="1000"
+                                            value={editForm.price ?? ''}
+                                            onChange={handleInputChange}
+                                            required
+                                            className="form-control"
+                                            placeholder="Nhập giá tiền..."
+                                        />
+                                    </div>
+
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Giới hạn bài đăng</label>
+                                            <input
+                                                type="number"
+                                                name="jobLimit"
+                                                value={editForm.jobLimit ?? ''}
+                                                onChange={handleInputChange}
+                                                className="form-control"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Lượt xem CV</label>
+                                            <input
+                                                type="number"
+                                                name="candidateViewLimit"
+                                                value={editForm.candidateViewLimit ?? ''}
+                                                onChange={handleInputChange}
+                                                className="form-control"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
 
                             <div className="form-group">
                                 <label>Thời hạn hiển thị tin (Ngày)</label>
