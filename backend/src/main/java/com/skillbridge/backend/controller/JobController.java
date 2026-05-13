@@ -6,6 +6,7 @@ import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.request.repostJDDayRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.Job;
+import com.skillbridge.backend.entity.JobRejectionLog;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.service.AI_Service_File.AIJobService;
@@ -297,6 +298,15 @@ public class JobController {
             return ResponseEntity.ok(spamList);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Lỗi khi lấy dữ liệu: " + e.getMessage());
+        }
+    }
+    @GetMapping("/Log-JD")
+    public ResponseEntity<?> getLogJDJobs() {
+        try {
+            List<JobRejectionLog> logJob = jobService.getAllRejectedJobs();
+            return ResponseEntity.ok(logJob);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

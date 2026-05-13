@@ -313,6 +313,16 @@ const jobService = {
             throw error;        
         }
     },
+    ListJDLog: async () => {
+        try {
+            const response = await api.get(`/jobs/Log-JD`);
+            const payload = response.data?.result ?? response.data;
+            return Array.isArray(payload) ? payload : [];
+        } catch (error) {
+            console.error("Error fetching job logs:", error);
+            throw error;        
+        }
+    }
 };
 
 export default jobService;

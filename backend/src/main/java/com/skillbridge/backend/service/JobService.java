@@ -74,7 +74,7 @@ public class JobService {
     MailServiceImpl mailService;
     JobInvitationRepository jobInvitationRepository;
     JD_SimilaritiesRepository jdSimilaritiesRepository;
-
+    JobRejectionLogRepository jobRejectionLogRepository;
     LocalDate date = LocalDate.now();
 
     @NonFinal
@@ -1254,6 +1254,9 @@ public class JobService {
         }
 
         log.info("Kết thúc CronJob kiểm tra trạng thái Job.");
+    }
+    public List<JobRejectionLog>getAllRejectedJobs() {
+        return jobRejectionLogRepository.findAll();
     }
 
 

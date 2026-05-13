@@ -50,6 +50,9 @@ public class AIJobService {
     @Autowired
     JD_SimilaritiesRepository jdSimilaritiesRepository;
 
+    @Autowired
+    JobRejectionLogRepository jobRejectionLogRepository;
+
     LocalDate date = LocalDate.now();
 ///  ========= Các Hàm dùng để thực hiện chức năng Đánh giá cơ thế đèn giao thông =========
 
@@ -339,13 +342,29 @@ public class AIJobService {
             /// Bóc tách dữ liệu nèdd
 
             boolean checkResultAI = jsonNode.path("isApproved").asBoolean(false);
+            int count = jobRejectionLogRepository.deleteByJobId(idJD);
+
+            String deletedRows = String.valueOf(count);
+
+            if (!deletedRows.equals("0")) {
+                System.out.println("Đã xóa thành công " + deletedRows + " dữ liệu!");
+            } else {
+                System.out.println("Không có dữ liệu nào khớp với idJD để xóa.");
+            }
             String subject = "Thông báo duyệt bài đăng";
             String messageBody= "";
-
+            String other_possion = jsonNode.path("other_position").asText();
+            System.out.println("resultOdAI" + resultOdAI);
+            job.setOtherPosition(other_possion);
             if (checkResultAI == false) {
                 String reason = jsonNode.get("reason").asText();
                 List<String> flaggedKeywordsList = new ArrayList<>();
                 JsonNode flaggedKeywordsNode = jsonNode.get("flaggedKeywords");
+
+                JobRejectionLog jobRejectionLog = new JobRejectionLog();
+                jobRejectionLog.setJobId(idJD);
+                jobRejectionLog.setMessage(reason);
+                jobRejectionLogRepository.save(jobRejectionLog);
                 if (flaggedKeywordsNode != null && flaggedKeywordsNode.isArray()) {
                     for (JsonNode keyword : flaggedKeywordsNode) {
                         flaggedKeywordsList.add(keyword.asText());
@@ -569,13 +588,43 @@ public class AIJobService {
             // LẤY VECTOR QUERY
             String getQueryEmbedding = rootNode.path("search_query").asText("");
             // Lấy position
-            String getPosition = (rootNode.has("job_position") && !rootNode.get("job_position").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("job_position").asText()))
-                    ? rootNode.get("job_position").asText() : null;
+            String positionVi = null;
+            String positionEn = null;
+
+            JsonNode jobPositionNode = rootNode.get("job_position");
+
+            if (jobPositionNode != null && !jobPositionNode.isNull()) {
+
+                JsonNode viNode = jobPositionNode.get("vi");
+                JsonNode enNode = jobPositionNode.get("en");
+
+                if (viNode != null
+                        && !viNode.isNull()
+                        && !viNode.asText().trim().isEmpty()
+                        && !"null".equalsIgnoreCase(viNode.asText())) {
+
+                    positionVi = viNode.asText()
+                            .toLowerCase()
+                            .replace(" ", "")
+                            .replace("-", "")
+                            .replace("_", "");
+                }
+
+                if (enNode != null
+                        && !enNode.isNull()
+                        && !enNode.asText().trim().isEmpty()
+                        && !"null".equalsIgnoreCase(enNode.asText())) {
+
+                    positionEn = enNode.asText()
+                            .toLowerCase()
+                            .replace(" ", "")
+                            .replace("-", "")
+                            .replace("_", "");
+                }
+            }
             // Lấy search_query
             String StringOfsearch_query = rootNode.path("search_query").asText("");
-            if (getPosition != null) {
-                getPosition = getPosition.toLowerCase().replace(" ", "").replace("-", "").replace("_", "");
-            }
+
 
 
             // GỌI REPOSITORY
@@ -586,7 +635,8 @@ public class AIJobService {
                     loc3,
                     categoryName,
                     salaryExpect,
-                    getPosition
+                    positionVi,
+                    positionEn
             );
             System.out.println("jobsFromDb: " + jobsFromDb);
             System.out.println("--> ẢI 1 (SQL): " + jobsFromDb.size() + " jobs lọt qua.");

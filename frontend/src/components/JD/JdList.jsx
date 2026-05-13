@@ -101,6 +101,9 @@ const JdList = () => {
     const [spamCompare, setSpamCompare] = useState(null);
     const [showSpamTable, setShowSpamTable] = useState(false);
     const [spamLoading, setSpamLoading] = useState(false);
+    const [jobLogs, setJobLogs] = useState([]);
+    const [showLogModal, setShowLogModal] = useState(false);
+    const [currentLogMessages, setCurrentLogMessages] = useState([]);
 
     // Repost modal states
     const [repostModalOpen, setRepostModalOpen] = useState(false);
@@ -286,6 +289,22 @@ const JdList = () => {
             }
         };
         fetchSpam();
+
+        const fetchLogs = async () => {
+            try {
+                const res = await jobService.ListJDLog();
+                console.log('📌 Job logs response:', res);
+                if (Array.isArray(res)) {
+                    // Expect items like { id, jobId, message }
+                    setJobLogs(res);
+                } else {
+                    console.warn('📌 Job logs response is not an array:', res);
+                }
+            } catch (err) {
+                console.error('📌 Could not load job logs:', err);
+            }
+        };
+        fetchLogs();
     }, [fetchJdList, fetchRole]);
 
     // Listen for real-time JD status updates
@@ -401,6 +420,13 @@ const JdList = () => {
         }
     };
 
+    const handleLogBadgeClick = (e, entries) => {
+        e.stopPropagation();
+        const messages = (entries || []).map(it => it.message || it.msg || '').filter(Boolean);
+        setCurrentLogMessages(messages);
+        setShowLogModal(true);
+    };
+
     const SpamCompareModal = ({ show, compare, onClose }) => {
         if (!show || !compare) return null;
         const rows = buildSpamRows(compare);
@@ -435,6 +461,35 @@ const JdList = () => {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>,
+            document.body
+        );
+    };
+
+    const LogModal = ({ show, messages, onClose }) => {
+        if (!show) return null;
+        return ReactDOM.createPortal(
+            <div className="jd-spam-modal-overlay" onClick={onClose}>
+                <div className="jd-spam-modal-window" onClick={(e) => e.stopPropagation()}>
+                    <div className="jd-spam-modal-header">
+                        <div>
+                            <h3>Lý do</h3>
+                            <p>Chi tiết lý do liên quan tới tin đăng</p>
+                        </div>
+                        <button className="jd-spam-close-btn" onClick={onClose}>Đóng</button>
+                    </div>
+                    <div className="jd-spam-modal-table-shell">
+                        <ul className="log-messages-list">
+                            {messages && messages.length > 0 ? (
+                                messages.map((m, i) => (
+                                    <li key={i}>{m}</li>
+                                ))
+                            ) : (
+                                <li>Không có lý do</li>
+                            )}
+                        </ul>
                     </div>
                 </div>
             </div>,
@@ -532,6 +587,8 @@ const JdList = () => {
                             const isSpamJob = cardIds.some(id => spamIds.has(id));
                             // Show spam decorations only when the job status is LOCK.
                             const isSpamJobVisible = isSpamJob && jd.status === 'LOCK';
+                            const logEntries = (jobLogs || []).filter(l => cardIds.includes(normalizeId(l.jobId)));
+                            const hasLog = logEntries.length > 0;
                             
                             if (cardIds.length > 0) {
                                 console.log(`JD "${jd.position}" - IDs: ${cardIds.join(', ')} | Is Spam: ${isSpamJob}`);
@@ -568,6 +625,16 @@ const JdList = () => {
                                                         aria-label="tin đăng được đánh dấu spam"
                                                     >
                                                         {spamLoading ? 'ĐANG TẢI' : 'SPAM'}
+                                                    </button>
+                                                )}
+                                                {hasLog && (
+                                                    <button
+                                                        type="button"
+                                                        className="log-badge"
+                                                        onClick={(e) => handleLogBadgeClick(e, logEntries)}
+                                                        aria-label="Lý do"
+                                                    >
+                                                        Lý Do
                                                     </button>
                                                 )}
                                             </div>
@@ -674,6 +741,12 @@ const JdList = () => {
                         show={showSpamTable}
                         compare={spamCompare}
                         onClose={() => setShowSpamTable(false)}
+                    />
+
+                    <LogModal
+                        show={showLogModal}
+                        messages={currentLogMessages}
+                        onClose={() => setShowLogModal(false)}
                     />
 
                     {totalPages > 1 && (
