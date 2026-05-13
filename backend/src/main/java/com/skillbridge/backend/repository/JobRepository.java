@@ -23,6 +23,7 @@ import java.util.Optional;
 @Repository
 public interface JobRepository extends JpaRepository<Job, String> {
 
+    long countByCompany_IdAndStatusAndIsDeletedFalse(String companyId, JobStatus status);
 
     /** Lấy toàn bộ danh sách thực thể Job thuộc về một công ty */
     @Query("SELECT j FROM Job j WHERE j.company.id = :companyId")

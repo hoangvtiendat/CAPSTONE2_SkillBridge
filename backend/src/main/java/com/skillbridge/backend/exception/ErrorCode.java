@@ -70,6 +70,7 @@ public enum ErrorCode {
     EXITS_YOUR_ROLE(4016, "Bạn đã sở hữu vai trò này rồi", HttpStatus.BAD_REQUEST),
     EXIT_STATUS_COMPANY(4017, "Trạng thái công ty này đã tồn tại", HttpStatus.BAD_REQUEST),
     COMPANY_DEACTIVATED_MEMBER(4018, "Tài khoản của bạn thuộc một công ty đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
+    RECRUITER_BOUND_TO_OTHER_COMPANY(4019, "Tài khoản đã gắn với một doanh nghiệp (đang hoạt động hoặc bạn không phải admin duy nhất của hồ sơ chờ duyệt). Không thể tạo đăng ký doanh nghiệp mới cho đến khi bạn rời công ty hiện tại hoặc hủy hồ sơ chờ duyệt trước đó.", HttpStatus.BAD_REQUEST),
 
     // 5xxx: JOB & SKILL & CATEGORY
     JOB_NOT_FOUND(5000, "Bài đăng tuyển dụng không tồn tại hoặc đã bị xóa", HttpStatus.NOT_FOUND),

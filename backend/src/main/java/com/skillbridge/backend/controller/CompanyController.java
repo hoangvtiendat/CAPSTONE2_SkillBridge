@@ -48,18 +48,10 @@ public class CompanyController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> getCompanyDetail(@PathVariable String id) {
-        CompanyFeedItemResponse result = companyService.getCompanyDetail(id);
-
-        ApiResponse<CompanyFeedItemResponse> response = new ApiResponse<>();
-        response.setCode(HttpStatus.OK.value());
-        response.setResult(result);
-        response.setMessage("Chi tiết công ty");
-
-        return ResponseEntity.ok(response);
-    }
-
+    /**
+     * Các GET path cố định phải đứng trước /{id}, nếu không Spring có thể gọi nhầm getCompanyDetail("feedPending").
+     * Dùng regex UUID cho {id} để tránh lỗi tương tự nếu thứ tự method bị đổi sau này.
+     */
     @GetMapping("/feedPending")
     public ResponseEntity<ApiResponse<CompanyFeedResponse>> getCompanyFeedPending(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -117,6 +109,18 @@ public class CompanyController {
             System.out.println("[GET COMPANY BY TAXCODE] ErrorCode: " + ex.getErrorCode());
             throw ex;
         }
+    }
+
+    @GetMapping("/{id:[0-9a-fA-F-]{36}}")
+    public ResponseEntity<ApiResponse<CompanyFeedItemResponse>> getCompanyDetail(@PathVariable String id) {
+        CompanyFeedItemResponse result = companyService.getCompanyDetail(id);
+
+        ApiResponse<CompanyFeedItemResponse> response = new ApiResponse<>();
+        response.setCode(HttpStatus.OK.value());
+        response.setResult(result);
+        response.setMessage("Chi tiết công ty");
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/identification", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

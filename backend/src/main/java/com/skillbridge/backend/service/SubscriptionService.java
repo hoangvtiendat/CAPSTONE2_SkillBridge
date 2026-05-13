@@ -154,8 +154,10 @@ public class SubscriptionService {
             systemLog.danger(currentUser, "Cố gắng tạo gói đăng ký Custom trái phép");
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
+        SubscriptionPlan custom = subscriptionRepository.findByName(SubscriptionPlanStatus.CUSTOM)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION_PRENIUM));
+        SubscriptionPlan customPlan = subscriptionRepository.findByName(SubscriptionPlanStatus.CUSTOM)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
         Company currentCompany = recruiter.getCompany();
 
@@ -168,11 +170,11 @@ public class SubscriptionService {
         newSubscription.setHasPriorityDisplay(request.getHasPriorityDisplay());
         newSubscription.setPrice(calculatedPrice);
         newSubscription.setStatus(SubscriptionOfCompanyStatus.PENDING_PAYMENT);
-        newSubscription.setPostingDuration(premium.getPostingDuration());
+        newSubscription.setPostingDuration(custom.getPostingDuration());
         newSubscription.setStartDate(LocalDateTime.now());
         newSubscription.setEndDate(LocalDateTime.now().plusDays(30));
         newSubscription.setIsActive(true);
-
+        newSubscription.setSubscriptionPlan(customPlan);
 
         SubscriptionOfCompany saved = subcriptionOfCompanyRepository.save(newSubscription);
 

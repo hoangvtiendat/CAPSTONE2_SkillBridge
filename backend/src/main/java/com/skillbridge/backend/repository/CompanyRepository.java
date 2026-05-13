@@ -105,19 +105,21 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
             Pageable pageable
     );
 
-    @Query("""
-        SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
-            c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, u.email, u.phoneNumber, c.status, cs.subscriptionPlan.name,c.createdAt,
-            (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.isDeleted = false AND j.status = 'OPEN')
-        )
-        FROM Company c
-        LEFT JOIN c.members m ON m.role = com.skillbridge.backend.enums.CompanyRole.ADMIN
-        LEFT JOIN m.user u
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        WHERE c.status = 'PENDING'
-        ORDER BY c.createdAt ASC
-    """)
-    Page<CompanyFeedItemResponse> getCompanyFeedPending(Pageable pageable);
+    /**
+     * Danh sách công ty PENDING cho admin: dùng native SQL để gồm cả bản ghi is_deleted NULL (insert tay / DB cũ).
+     */
+    @Query(value = """
+            SELECT * FROM companies c
+            WHERE c.status = 'PENDING'
+              AND (c.is_deleted IS NULL OR c.is_deleted = 0)
+            ORDER BY c.created_at ASC
+            """,
+            countQuery = """
+            SELECT COUNT(*) FROM companies c
+            WHERE c.status = 'PENDING'
+              AND (c.is_deleted IS NULL OR c.is_deleted = 0)
+            """,
+            nativeQuery = true)
+    Page<Company> findPendingCompaniesForAdmin(Pageable pageable);
 
 }

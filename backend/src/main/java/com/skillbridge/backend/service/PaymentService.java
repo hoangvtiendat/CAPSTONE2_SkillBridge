@@ -9,6 +9,7 @@ import com.skillbridge.backend.entity.SubscriptionOfCompany;
 import com.skillbridge.backend.entity.SubscriptionPlan;
 import com.skillbridge.backend.enums.CompanyRole;
 import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
+import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
 import com.skillbridge.backend.utils.SecurityUtils;
@@ -179,6 +180,11 @@ public class PaymentService {
         customSub.setStatus(SubscriptionOfCompanyStatus.OPEN);
         customSub.setStartDate(LocalDateTime.now());
         customSub.setEndDate(LocalDateTime.now().plusMonths(customSub.getPostingDuration() != null ? customSub.getPostingDuration() : 1));
+
+        if (customSub.getSubscriptionPlan() == null) {
+            subscriptionPlanRepository.findByName(SubscriptionPlanStatus.CUSTOM)
+                    .ifPresent(customSub::setSubscriptionPlan);
+        }
 
         updateJobDurations(transaction.getCompanyId(), customSub.getPostingDuration());
         subscriptionOfCompanyRepository.save(customSub);

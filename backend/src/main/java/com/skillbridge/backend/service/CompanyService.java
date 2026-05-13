@@ -74,22 +74,49 @@ public class CompanyService {
         );
     }
 
+    @Transactional(readOnly = true)
     public CompanyFeedResponse getCompanyPending(int page, int limit){
         try{
             Pageable pageable = PageRequest.of(page, limit);
 
-            Page<CompanyFeedItemResponse> companies = companyRepository.getCompanyFeedPending(pageable);
+            Page<Company> companies = companyRepository.findPendingCompaniesForAdmin(pageable);
 
-            if(companies.isEmpty()){
-                return new CompanyFeedResponse(List.of(), 0, 0, page);
-            }
-            List<CompanyFeedItemResponse> result = companies.getContent();
+            List<CompanyFeedItemResponse> result = companies.getContent().stream()
+                    .map(this::toPendingAdminFeedItem)
+                    .toList();
 
-            return new CompanyFeedResponse(result, companies.getTotalPages(), companies.getTotalElements(), companies.getNumber());
+            return new CompanyFeedResponse(
+                    result,
+                    companies.getTotalPages(),
+                    companies.getTotalElements(),
+                    companies.getNumber());
         }catch(Exception e){
             System.out.println("Loi" + e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
+    }
+
+    private CompanyFeedItemResponse toPendingAdminFeedItem(Company company) {
+        SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
+        User admin = company.getAdmin();
+        String email = admin != null ? admin.getEmail() : null;
+        String phone = admin != null ? admin.getPhoneNumber() : null;
+        long jobCount = jobRepository.countByCompany_IdAndStatusAndIsDeletedFalse(company.getId(), JobStatus.OPEN);
+        return new CompanyFeedItemResponse(
+                company.getId(),
+                company.getName(),
+                company.getTaxId(),
+                company.getBusinessLicenseUrl(),
+                company.getImageUrl(),
+                company.getDescription(),
+                company.getAddress(),
+                company.getWebsiteUrl(),
+                email,
+                phone,
+                company.getStatus(),
+                planName,
+                company.getCreatedAt(),
+                jobCount);
     }
 
 
@@ -195,12 +222,15 @@ public class CompanyService {
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 
         SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
+        User admin = company.getAdmin();
+        String email = admin != null ? admin.getEmail() : null;
+        String phone = admin != null ? admin.getPhoneNumber() : null;
+        long jobCount = jobRepository.countByCompany_IdAndStatusAndIsDeletedFalse(company.getId(), JobStatus.OPEN);
         return new CompanyFeedItemResponse(
                 company.getId(), company.getName(), company.getTaxId(),
                 company.getBusinessLicenseUrl(), company.getImageUrl(),
                 company.getDescription(), company.getAddress(),
-                company.getWebsiteUrl(), company.getAdmin().getEmail(),
-                company.getAdmin().getPhoneNumber(), company.getStatus(),planName,company.getCreatedAt(),0
+                company.getWebsiteUrl(), email, phone, company.getStatus(), planName, company.getCreatedAt(), jobCount
         );
     }
 
@@ -297,17 +327,21 @@ public class CompanyService {
         if (companyOpt.isPresent()) {
             Company company = companyOpt.get();
             SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
+            User admin = company.getAdmin();
+            String email = admin != null ? admin.getEmail() : null;
+            String phone = admin != null ? admin.getPhoneNumber() : null;
+            long jobCount = jobRepository.countByCompany_IdAndStatusAndIsDeletedFalse(company.getId(), JobStatus.OPEN);
             return new CompanyFeedItemResponse(
                     company.getId(), company.getName(),
                     company.getTaxId(), company.getBusinessLicenseUrl(),
                     company.getImageUrl(), company.getDescription(),
-                    company.getAddress(), company.getWebsiteUrl(),company.getAdmin().getEmail(),
-                    company.getAdmin().getPhoneNumber(),
-                    company.getStatus(), planName,company.getCreatedAt(),0);
+                    company.getAddress(), company.getWebsiteUrl(), email, phone,
+                    company.getStatus(), planName, company.getCreatedAt(), jobCount);
         }
         throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
     }
 
+    @Transactional
     public CompanyFeedItemResponse identifyCompany(CompanyIdentificationRequest request,
                                                    MultipartFile logo,
                                                    MultipartFile license) throws IOException {
@@ -322,6 +356,8 @@ public class CompanyService {
             systemLogService.warn(currentUser, "Đăng ký trùng MST: " + request.getTaxcode());
             throw new AppException(ErrorCode.COMPANY_EXIST);
         }
+
+        releasePendingSoleAdminRegistrationIfPresent(user);
 
         String logoUrl = fileStorageService.saveFile(logo, "logos");
         String licenseUrl = fileStorageService.saveFile(license, "licenses");
@@ -356,13 +392,35 @@ public class CompanyService {
         messagingTemplate.convertAndSend("/topic/admin-notifications", (Object) adminPayload);
 
         SubscriptionPlanStatus planName = company.getCurrentSubscriptionPlanName();
+        User admin = company.getAdmin();
+        String email = admin != null ? admin.getEmail() : null;
+        String phone = admin != null ? admin.getPhoneNumber() : null;
         return new CompanyFeedItemResponse(
                 company.getId(), company.getName(), company.getTaxId(),
                 company.getBusinessLicenseUrl(), company.getImageUrl(),
                 company.getDescription(), company.getAddress(),
-                company.getWebsiteUrl(),company.getAdmin().getEmail(),
-                company.getAdmin().getPhoneNumber(), company.getStatus(), planName,company.getCreatedAt(),0
+                company.getWebsiteUrl(), email, phone, company.getStatus(), planName, company.getCreatedAt(), 0
         );
+    }
+
+    /**
+     * Cho phép user đăng ký doanh nghiệp mới khi hồ sơ trước đó là PENDING và họ là admin duy nhất — tránh vi phạm UK user_id trên company_members.
+     */
+    private void releasePendingSoleAdminRegistrationIfPresent(User user) {
+        companyMemberRepository.findByUser_Id(user.getId()).ifPresent(existingMember -> {
+            Company existingCompany = existingMember.getCompany();
+            boolean soleAdminOfPendingCompany =
+                    existingCompany.getStatus() == CompanyStatus.PENDING
+                            && existingMember.getRole() == CompanyRole.ADMIN
+                            && companyMemberRepository.findByCompany_Id(existingCompany.getId()).size() == 1;
+            if (soleAdminOfPendingCompany) {
+                companyMemberRepository.delete(existingMember);
+                existingCompany.setDeleted(true);
+                companyRepository.save(existingCompany);
+            } else {
+                throw new AppException(ErrorCode.RECRUITER_BOUND_TO_OTHER_COMPANY);
+            }
+        });
     }
     /** Yêu cầu gia nhập công ty nếu công ty đã tồn tại */
     @Transactional
@@ -454,6 +512,11 @@ public class CompanyService {
                     .isPresent();
 
             if (!alreadyMember) {
+                companyMemberRepository.findByUser_Id(requestUser.getId()).ifPresent(oldMembership -> {
+                    if (!oldMembership.getCompany().getId().equals(company.getId())) {
+                        companyMemberRepository.delete(oldMembership);
+                    }
+                });
                 CompanyMember newMember = new CompanyMember();
                 newMember.setCompany(company);
                 newMember.setUser(requestUser);
