@@ -245,6 +245,18 @@ export const CVParser = () => {
         setCvData(prev => ({...prev, [field]: value}));
     };
 
+    const handleNumberInputKeyDown = (e) => {
+        if (e.ctrlKey || e.metaKey) return;
+        
+        // Chỉ chặn nếu người dùng gõ một ký tự in được (length === 1) nhưng không phải là số
+        if (e.key.length === 1) {
+            if (!/^\d$/.test(e.key)) {
+                e.preventDefault();
+                toast.warning("Chỉ được nhập chữ số, không nhập chữ cái hoặc ký tự đặc biệt!");
+            }
+        }
+    };
+
     // --- Autocomplete Handlers ---
     const handleCategoryChange = (e) => {
         const value = e.target.value;
@@ -683,8 +695,13 @@ export const CVParser = () => {
                                         </div>
                                         <div className="form-group">
                                             <label>Năm tốt nghiệp</label>
-                                            <input type="number" value={item.graduationYear}
-                                                   onChange={(e) => updateDegreeItem(item.id, 'graduationYear', e.target.value)}/>
+                                            <input type="number" value={item.graduationYear} min="0" onKeyDown={handleNumberInputKeyDown}
+                                                   onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === '' || /^\d+$/.test(val)) {
+                                                            updateDegreeItem(item.id, 'graduationYear', val);
+                                                        }
+                                                   }}/>
                                         </div>
                                     </div>
                                     <div className="form-group">
@@ -715,8 +732,13 @@ export const CVParser = () => {
                                         </div>
                                         <div className="form-group">
                                             <label>Năm</label>
-                                            <input type="number" value={item.year}
-                                                   onChange={(e) => updateDegreeItem(item.id, 'year', e.target.value)}/>
+                                            <input type="number" value={item.year} min="0" onKeyDown={handleNumberInputKeyDown}
+                                                   onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === '' || /^\d+$/.test(val)) {
+                                                            updateDegreeItem(item.id, 'year', val);
+                                                        }
+                                                   }}/>
                                         </div>
                                     </div>
                                     <div className="form-group">
@@ -774,12 +796,16 @@ export const CVParser = () => {
                                             type="number"
                                             className="skill-year-input"
                                             value={skill.experienceYears}
+                                            min="0"
+                                            onKeyDown={handleNumberInputKeyDown}
                                             onChange={(e) => {
                                                 const newVal = e.target.value;
-                                                setCvData(prev => ({
-                                                    ...prev,
-                                                    skills: prev.skills.map((s, i) => i === index ? { ...s, experienceYears: newVal } : s)
-                                                }));
+                                                if (newVal === '' || /^\d+$/.test(newVal)) {
+                                                    setCvData(prev => ({
+                                                        ...prev,
+                                                        skills: prev.skills.map((s, i) => i === index ? { ...s, experienceYears: newVal } : s)
+                                                    }));
+                                                }
                                             }}
                                         />
                                         <span className="skill-exp-label">năm</span>

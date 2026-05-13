@@ -78,8 +78,20 @@ const NotificationCard = ({
         {/* <p className="sb-notif-text">{content}</p> */}
         <p
           className="sb-notif-text"
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
-        />
+          title={(() => {
+            if (!content) return "";
+            const tmp = document.createElement("div");
+            tmp.innerHTML = content.replace(/<br[^>]*>|<\/p>|<\/div>/gi, ' ');
+            return (tmp.textContent || tmp.innerText || "").trim();
+          })()}
+        >
+          {(() => {
+            if (!content) return "";
+            const tmp = document.createElement("div");
+            tmp.innerHTML = content.replace(/<br[^>]*>|<\/p>|<\/div>/gi, ' ');
+            return (tmp.textContent || tmp.innerText || "").trim();
+          })()}
+        </p>
 
         {link && navigate && (
           <button

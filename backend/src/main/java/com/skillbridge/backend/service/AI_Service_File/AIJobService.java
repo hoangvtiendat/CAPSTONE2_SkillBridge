@@ -55,6 +55,9 @@ public class AIJobService {
 
     @Autowired
     EmbeddingService embeddingService;
+    
+    @Autowired
+    org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
 
     LocalDate date = LocalDate.now();
@@ -301,6 +304,12 @@ public class AIJobService {
                         true,
                         "JOB_MODERATION_FAILED"
                 );
+                
+                try {
+                    messagingTemplate.convertAndSend("/topic/jobs/pending_update", "UPDATE");
+                } catch (Exception ex) {
+                    System.out.println("Failed to send WebSocket to admin: " + ex.getMessage());
+                }
             }
 
             else{
@@ -372,6 +381,12 @@ public class AIJobService {
                             true,
                             "JOB_MODERATION_FAILED"
                     );
+                    
+                    try {
+                        messagingTemplate.convertAndSend("/topic/jobs/pending_update", "UPDATE");
+                    } catch (Exception ex) {
+                        System.out.println("Failed to send WebSocket to admin: " + ex.getMessage());
+                    }
                 }
             }
 

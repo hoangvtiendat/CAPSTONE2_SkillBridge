@@ -23,6 +23,7 @@ public class UserResponse {
     String role;
     String status;
     String is2faEnabled;
+    String provider;
     LocalDateTime createdAt;
 
     // Thông tin công ty đi kèm (nếu có)

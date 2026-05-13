@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -61,6 +63,22 @@ public class CompanyMemberController {
                 HttpStatus.OK.value(),
                 "Danh sách thành viên đang chờ duyệt",
                 rs
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Xóa thành viên khỏi công ty
+     */
+    @DeleteMapping("/{memberId}")
+    public ResponseEntity<ApiResponse<String>> removeMember(
+            @PathVariable String memberId
+    ) {
+        companyMemberService.removeMember(memberId);
+        ApiResponse<String> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Xóa thành viên thành công",
+                null
         );
         return ResponseEntity.ok(response);
     }

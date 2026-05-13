@@ -268,6 +268,7 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -296,7 +297,8 @@
     letter-spacing: -0.02em;
 }
 
-.company-management, .industry-management {
+.company-management,
+.industry-management {
     min-height: 100vh;
     padding: 28px;
     box-sizing: border-box;
@@ -638,6 +640,7 @@
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -686,4 +689,120 @@
     background: #eef2ff;
     color: #4f46e5;
     border-color: #c7d2fe;
+}
+
+/* --- PREMIUM SWEETALERT2 STYLES (CLEAN WHITE - MATCHING IMAGE) --- */
+.premium-swal-popup {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    padding: 2.5rem 1.5rem !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.premium-swal-title {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin-bottom: 0.75rem !important;
+}
+
+.premium-swal-text {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    line-height: 1.5 !important;
+}
+
+.premium-swal-confirm,
+.premium-swal-cancel {
+    padding: 10px 28px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    margin: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    min-width: 100px !important;
+    transition: all 0.2s ease !important;
+}
+
+.premium-swal-confirm {
+    background: #10b981 !important;
+    /* Default green */
+    color: white !important;
+}
+
+.premium-swal-cancel {
+    background: #64748b !important;
+    color: white !important;
+}
+
+.premium-swal-confirm:hover,
+.premium-swal-cancel:hover {
+    filter: brightness(0.9) !important;
+    transform: translateY(-1px) !important;
+}
+
+.premium-swal-icon {
+    margin-bottom: 20px !important;
+}
+
+/* Biến thể màu Đỏ cho nút xác nhận hành động nguy hiểm */
+.premium-swal-confirm-danger {
+    background: #ef4444 !important;
+}
+
+/* Biến thể màu Cam/Hổ phách cho các hành động cảnh báo/từ chối */
+.premium-swal-confirm-warning {
+    background: #f59e0b !important;
+}
+
+.premium-swal-title {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    color: #334155 !important;
+    margin-top: 15px !important;
+    letter-spacing: -0.02em !important;
+}
+
+.premium-swal-text {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    line-height: 1.6 !important;
+    margin-top: 10px !important;
+}
+
+.premium-swal-confirm {
+    padding: 12px 32px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    margin: 10px !important;
+    border: none !important;
+    color: #ffffff !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.premium-swal-cancel {
+    padding: 12px 32px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    margin: 10px !important;
+    border: none !important;
+    background-color: #64748b !important;
+    color: #ffffff !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.premium-swal-confirm:hover,
+.premium-swal-cancel:hover {
+    transform: translateY(-2px) !important;
+    filter: brightness(1.1) !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+.premium-swal-icon {
+    border: 3px solid currentColor !important;
 }

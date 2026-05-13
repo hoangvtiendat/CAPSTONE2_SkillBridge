@@ -7,8 +7,8 @@ import { useEffect } from 'react';
  * Hook để kiểm tra và bảo vệ các trang khi công ty bị vô hiệu hóa
  * @param {Array<string>} allowedPathsWhenDeactivated - Danh sách các đường dẫn được phép truy cập khi công ty bị vô hiệu hóa
  * @example
- * // Cho phép truy cập cài đặt và phân tích khi công ty bị vô hiệu hóa
- * useCompanyDeactivationCheck(['/recruiter/settings', '/recruiter/analytics']);
+ * // Cho phép truy cập cài đặt khi công ty bị vô hiệu hóa
+ * useCompanyDeactivationCheck(['/recruiter/settings']);
  */
 export const useCompanyDeactivationCheck = (allowedPathsWhenDeactivated = []) => {
     const { user } = useAuth();
@@ -26,6 +26,7 @@ export const useCompanyDeactivationCheck = (allowedPathsWhenDeactivated = []) =>
 
             if (!isAllowed) {
                 toast.error('Công ty của bạn đã bị vô hiệu hóa', {
+                    id: 'deactivated-company-toast',
                     description: 'Bạn không thể truy cập trang này. Vui lòng liên hệ admin.'
                 });
                 // Chuyển hướng tới trang cài đặt (luôn có thể truy cập)

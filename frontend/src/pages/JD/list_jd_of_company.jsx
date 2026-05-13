@@ -3,7 +3,7 @@ import useCompanyDeactivationCheck from '../../hooks/useCompanyDeactivationCheck
 
 const ListJdOfCompany = () => {
     // Check if company is deactivated and prevent access
-    useCompanyDeactivationCheck(['/recruiter/settings', '/recruiter/analytics']);
+    useCompanyDeactivationCheck(['/recruiter/settings']);
 
     return (
         <div className="recruiter-page-container">

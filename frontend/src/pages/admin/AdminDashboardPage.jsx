@@ -9,10 +9,13 @@ import {
     CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import './AdminDashboard.css';
+import CompanyDetailModal from '../../components/admin/CompanyDetailModal';
 
 const AdminDashboard = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // --- STATE CHO BỘ LỌC ---
     const [filterType, setFilterType] = useState('thisMonth'); // Mặc định: Tháng này
@@ -256,7 +259,10 @@ const AdminDashboard = () => {
                                 <td><span className="job-count-badge">{company.totalJobs} tin</span></td>
                                 <td>
                                     <button className="btn-view"
-                                            onClick={() => window.location.href = `/admin/companies/${company.companyId}`}>Chi
+                                            onClick={() => {
+                                                setSelectedCompanyId(company.companyId);
+                                                setIsModalOpen(true);
+                                            }}>Chi
                                         tiết
                                     </button>
                                 </td>
@@ -266,6 +272,12 @@ const AdminDashboard = () => {
                     </table>
                 </div>
             </div>
+
+            <CompanyDetailModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                companyId={selectedCompanyId} 
+            />
         </div>
     );
 };

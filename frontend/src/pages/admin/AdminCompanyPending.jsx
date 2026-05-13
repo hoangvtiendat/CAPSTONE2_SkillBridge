@@ -4,10 +4,12 @@ import './AdminCompanyPending.css';
 import '../../components/admin/Admin.css';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
+import Swal from 'sweetalert2';
 import {
     Building2, RotateCcw, ShieldCheck, CheckCircle,
     Globe, Hash, ChevronLeft, ChevronRight, XCircle
 } from 'lucide-react';
+import CompanyDetailModal from '../../components/admin/CompanyDetailModal';
 
 const API_BASE_URL = "http://localhost:8081/identity";
 
@@ -15,6 +17,8 @@ const AdminCompanyPending = () => {
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({ page: 0, totalPages: 0, totalElements: 0 });
+    const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
     const getImageUrl = (path) => {
@@ -50,25 +54,64 @@ const AdminCompanyPending = () => {
         navigate(`/admin/tax-lookup?taxCode=${taxId}`);
     };
 
+    const swalConfig = {
+        buttonsStyling: false,
+        customClass: {
+            popup: 'premium-swal-popup',
+            title: 'premium-swal-title',
+            htmlContainer: 'premium-swal-text',
+            confirmButton: 'premium-swal-confirm',
+            cancelButton: 'premium-swal-cancel',
+            icon: 'premium-swal-icon'
+        }
+    };
+
     const handleApprove = async (e, id) => {
         e.stopPropagation();
-        const toastId = toast.loading("Đang duyệt doanh nghiệp...");
-        try {
-            await companyService.responseCompanyPending(id, "ACTIVE");
-            setCompanies(prev => prev.filter(c => c.id !== id));
-            toast.success("Doanh nghiệp đã được kích hoạt!", { id: toastId });
-        } catch (err) { toast.error("Thao tác thất bại", { id: toastId }); }
+        const result = await Swal.fire({
+            ...swalConfig,
+            title: 'Xác nhận duyệt?',
+            text: `Bạn có chắc chắn muốn kích hoạt doanh nghiệp này?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang duyệt doanh nghiệp...");
+            try {
+                await companyService.responseCompanyPending(id, "ACTIVE");
+                setCompanies(prev => prev.filter(c => c.id !== id));
+                toast.success("Doanh nghiệp đã được kích hoạt!", { id: toastId });
+            } catch (err) { toast.error("Thao tác thất bại", { id: toastId }); }
+        }
     };
 
     const handleReject = async (e, id) => {
         e.stopPropagation();
-        if (!window.confirm(`Bạn chắc chắn muốn từ chối doanh nghiệp này?`)) return;
-        const toastId = toast.loading("Đang xử lý...");
-        try {
-            await companyService.responseCompanyPending(id, "BAN");
-            setCompanies(prev => prev.filter(c => c.id !== id));
-            toast.success("Đã từ chối doanh nghiệp!", { id: toastId });
-        } catch (err) { toast.error("Thao tác thất bại", { id: toastId }); }
+        const result = await Swal.fire({
+            ...swalConfig,
+            title: 'Xác nhận từ chối?',
+            text: `Bạn có chắc chắn muốn từ chối doanh nghiệp này?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                ...swalConfig.customClass,
+                confirmButton: 'premium-swal-confirm premium-swal-confirm-danger'
+            }
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang xử lý...");
+            try {
+                await companyService.responseCompanyPending(id, "BAN");
+                setCompanies(prev => prev.filter(c => c.id !== id));
+                toast.success("Đã từ chối doanh nghiệp!", { id: toastId });
+            } catch (err) { toast.error("Thao tác thất bại", { id: toastId }); }
+        }
     };
 
     return (
@@ -105,7 +148,10 @@ const AdminCompanyPending = () => {
                         </thead>
                         <tbody>
                             {companies.map((comp) => (
-                                <tr key={comp.id} className="job-row-item" onClick={() => navigate(`/admin/companies/${comp.id}`)}>
+                                <tr key={comp.id} className="job-row-item" onClick={() => {
+                                    setSelectedCompanyId(comp.id);
+                                    setIsModalOpen(true);
+                                }}>
                                     <td>
                                         <div className="company-main-info">
                                             <div className="company-logo-box">
@@ -123,7 +169,7 @@ const AdminCompanyPending = () => {
                                     <td>
                                         <div className="contact-info-cell">
                                             <span className="email-text">{comp.email}</span>
-                                            <span className="phone-text">{comp.phoneNumber}</span>
+
                                         </div>
                                     </td>
                                     <td className="center timestamp">{new Date(comp.createdAt).toLocaleDateString('vi-VN')}</td>
@@ -156,6 +202,12 @@ const AdminCompanyPending = () => {
                     )}
                 </div>
             </div>
+
+            <CompanyDetailModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                companyId={selectedCompanyId} 
+            />
         </div>
     );
 };

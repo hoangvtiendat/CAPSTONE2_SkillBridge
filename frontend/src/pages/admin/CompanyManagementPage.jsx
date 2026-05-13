@@ -22,15 +22,15 @@ import adminService from '../../services/api/adminService';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import '../../components/admin/Admin.css';
+import CompanyDetailModal from '../../components/admin/CompanyDetailModal';
 
 const API_BASE_URL = "http://localhost:8081/identity";
 
 const CompanyManagementPage = () => {
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedCompany, setSelectedCompany] = useState(null);
+    const [selectedCompanyId, setSelectedCompanyId] = useState(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
-    const [detailLoading, setDetailLoading] = useState(false);
     const [pagination, setPagination] = useState({
         page: 0,
         size: 5,
@@ -71,60 +71,64 @@ const CompanyManagementPage = () => {
         fetchCompanies();
     }, [fetchCompanies]);
 
+    const swalConfig = {
+        buttonsStyling: false,
+        customClass: {
+            popup: 'premium-swal-popup',
+            title: 'premium-swal-title',
+            htmlContainer: 'premium-swal-text',
+            confirmButton: 'premium-swal-confirm',
+            cancelButton: 'premium-swal-cancel',
+            icon: 'premium-swal-icon'
+        }
+    };
+
     const handleBanCompany = async (id, name) => {
         const result = await Swal.fire({
-            title: 'Xác nhận khóa?',
-            text: `Bạn có chắc chắn muốn khóa công ty "${name}"?`,
+            ...swalConfig,
+            title: 'Xác nhận vô hiệu hóa?',
+            text: `Bạn có chắc chắn muốn khóa hoạt động của công ty "${name}"?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: 'Có, khóa ngay',
+            confirmButtonText: 'Xác nhận',
             cancelButtonText: 'Hủy',
             customClass: {
-                popup: 'premium-swal-popup',
-                title: 'premium-swal-title',
-                confirmButton: 'premium-swal-confirm',
-                cancelButton: 'premium-swal-cancel'
+                ...swalConfig.customClass,
+                confirmButton: 'premium-swal-confirm premium-swal-confirm-danger'
             }
         });
 
         if (result.isConfirmed) {
+            const toastId = toast.loading("Đang xử lý khóa công ty...");
             try {
                 await adminService.banCompany(id);
-                toast.success("Đã khóa công ty thành công");
+                toast.success("Đã khóa công ty thành công", { id: toastId });
                 fetchCompanies(pagination.page);
             } catch (error) {
-                toast.error("Thao tác thất bại");
+                toast.error("Thao tác thất bại", { id: toastId });
             }
         }
     };
 
     const handleUnbanCompany = async (id, name) => {
         const result = await Swal.fire({
-            title: 'Xác nhận mở khóa?',
-            text: `Bạn có muốn mở khóa cho công ty "${name}" không?`,
+            ...swalConfig,
+            title: 'Xác nhận khôi phục?',
+            text: `Bạn có muốn mở khóa hoạt động cho công ty "${name}"?`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: 'Có, mở khóa',
-            cancelButtonText: 'Hủy',
-            customClass: {
-                popup: 'premium-swal-popup',
-                title: 'premium-swal-title',
-                confirmButton: 'premium-swal-confirm',
-                cancelButton: 'premium-swal-cancel'
-            }
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy'
         });
 
         if (result.isConfirmed) {
+            const toastId = toast.loading("Đang xử lý mở khóa...");
             try {
                 await adminService.unbanCompany(id);
-                toast.success("Đã mở khóa công ty thành công");
+                toast.success("Đã mở khóa công ty thành công", { id: toastId });
                 fetchCompanies(pagination.page);
             } catch (error) {
-                toast.error("Thao tác thất bại");
+                toast.error("Thao tác thất bại", { id: toastId });
             }
         }
     };
@@ -135,20 +139,9 @@ const CompanyManagementPage = () => {
         }
         window.location.href = `/admin/tax-lookup?taxCode=${filters.taxId}`;
     };
-    const handleViewDetail = async (id) => {
-        setDetailLoading(true);
+    const handleViewDetail = (id) => {
+        setSelectedCompanyId(id);
         setIsDetailOpen(true);
-        try {
-            const data = await adminService.getCompanyDetail(id);
-            if (data && data.result) {
-                setSelectedCompany(data.result);
-            }
-        } catch (error) {
-            toast.error("Không thể lấy thông tin chi tiết");
-            setIsDetailOpen(false);
-        } finally {
-            setDetailLoading(false);
-        }
     };
 
     const getImageUrl = (path) => {
@@ -401,140 +394,11 @@ const CompanyManagementPage = () => {
             </div>
 
             {/* Company Detail Modal */}
-            {isDetailOpen && createPortal(
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    zIndex: 9999,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-                    backdropFilter: 'blur(4px)',
-                    animation: 'fadeIn 0.2s ease-out'
-                }}
-                    onClick={(e) => {
-                        if (e.target === e.currentTarget) setIsDetailOpen(false);
-                    }}>
-                    <div className="modern-card" style={{
-                        width: '95%',
-                        maxWidth: '800px',
-                        maxHeight: '90vh',
-                        padding: 0,
-                        borderRadius: '24px',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden'
-                    }} onClick={e => e.stopPropagation()}>
-                        {/* Header */}
-                        <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fcfcfd' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <div className="icon-box-primary">
-                                    <Building2 size={24} />
-                                </div>
-                                <div>
-                                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>Chi tiết doanh nghiệp</h2>
-                                    <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>Thông tin đầy đủ và trạng thái pháp lý</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setIsDetailOpen(false)}
-                                className="action-btn"
-                                style={{ width: '32px', height: '32px', borderRadius: '8px' }}
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        {/* Content */}
-                        <div style={{ background: '#ffffff', padding: '32px', overflowY: 'auto', flex: 1 }}>
-                            {detailLoading ? (
-                                <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
-                                    <Loader2 className="spinning-icon" size={40} />
-                                </div>
-                            ) : selectedCompany ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                                    {/* Top Section */}
-                                    <div style={{ display: 'flex', gap: '24px' }}>
-                                        <div className="user-avatar-wrapper" style={{ width: '120px', height: '120px', borderRadius: '24px', flexShrink: 0 }}>
-                                            {selectedCompany.imageUrl ? (
-                                                <img src={selectedCompany.imageUrl} className="user-avatar" alt="" />
-                                            ) : (
-                                                <div className="user-avatar-placeholder" style={{ fontSize: '40px' }}>
-                                                    <Building2 size={48} />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>{selectedCompany.name}</h3>
-                                                <div className={`status-indicator ${selectedCompany.status === 'ACTIVE' ? 'active' : selectedCompany.status === 'BAN' ? 'banned' : ''}`}>
-                                                    <div className="status-dot"></div>
-                                                    <span>{selectedCompany.status === 'ACTIVE' ? 'Đã xác thực' : selectedCompany.status === 'BAN' ? 'Đã khóa' : 'Chờ duyệt'}</span>
-                                                </div>
-                                            </div>
-                                            <p style={{ margin: '8px 0', fontSize: '15px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <FileCheck2 size={16} /> MST: <b>{selectedCompany.taxId}</b>
-                                            </p>
-                                            <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
-                                                {selectedCompany.websiteUrl && (
-                                                    <a href={selectedCompany.websiteUrl} target="_blank" rel="noreferrer" className="action-btn" style={{ width: 'auto', padding: '0 16px', gap: '8px', fontSize: '13px', textDecoration: 'none' }}>
-                                                        <Globe size={16} /> Website
-                                                    </a>
-                                                )}
-                                                {selectedCompany.gpkdUrl && (
-                                                    <a href={selectedCompany.gpkdUrl} target="_blank" rel="noreferrer" className="action-btn" style={{ width: 'auto', padding: '0 16px', gap: '8px', fontSize: '13px', textDecoration: 'none', background: '#f5f3ff', color: '#6366f1', borderColor: '#e0e7ff' }}>
-                                                        <Shield size={16} /> Giấy phép kinh doanh
-                                                    </a>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <hr style={{ border: 0, borderTop: '1px solid #f1f5f9', margin: 0 }} />
-
-                                    {/* Grid Info */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                                        <div>
-                                            <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em' }}>Thông tin liên hệ</h4>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                <div className="date-cell">
-                                                    <MapPin size={16} /> <span>{selectedCompany.address || 'Chưa cung cấp địa chỉ'}</span>
-                                                </div>
-                                                <div className="date-cell">
-                                                    <Calendar size={16} /> <span>Ngày tham gia: {new Date(selectedCompany.createdAt).toLocaleDateString('vi-VN')}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em' }}>Mô tả doanh nghiệp</h4>
-                                            <p style={{ fontSize: '14px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
-                                                {selectedCompany.description || "Doanh nghiệp này chưa cập nhật mô tả giới thiệu."}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : null}
-                        </div>
-
-                        {/* Footer */}
-                        <div style={{ padding: '20px 32px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end', background: '#fcfcfd' }}>
-                            <button
-                                onClick={() => setIsDetailOpen(false)}
-                                className="btn-primary"
-                                style={{ borderRadius: '12px' }}
-                            >
-                                Đóng
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+            <CompanyDetailModal 
+                isOpen={isDetailOpen} 
+                onClose={() => setIsDetailOpen(false)} 
+                companyId={selectedCompanyId} 
+            />
         </div>
     );
 };

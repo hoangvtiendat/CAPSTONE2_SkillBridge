@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -97,13 +97,14 @@ function App() {
     const isDashboardLayout = (isAdminPath || isRecruiterPath) && location.pathname !== '/recruiter/identity';
 
     // 2. Quản lý WebSocket cho Thông báo
+    const stompClientRef = useRef(null);
+
     useEffect(() => {
-        let stompClient = null;
-        if (user) {
+        if (user && !stompClientRef.current) {
             const token = localStorage.getItem('accessToken');
             if (!token) return;
 
-            stompClient = new Client({
+            const client = new Client({
                 webSocketFactory: () => new SockJS('http://localhost:8081/identity/ws-log'),
                 connectHeaders: { Authorization: `Bearer ${token}` },
                 reconnectDelay: 5000,
@@ -111,8 +112,8 @@ function App() {
                 heartbeatOutgoing: 4000,
             });
 
-            stompClient.onConnect = (frame) => {
-                stompClient.subscribe('/user/queue/notifications', (message) => {
+            client.onConnect = (frame) => {
+                client.subscribe('/user/queue/notifications', (message) => {
                     const notification = JSON.parse(message.body);
                     toast.custom((t) => (
                         <NotificationCard
@@ -124,12 +125,10 @@ function App() {
                         />
                     ), { duration: 10000 });
 
-                    // Phát sự kiện toàn hệ thống để các component khác (như NotificationBell) cập nhật
                     window.dispatchEvent(new CustomEvent('NEW_NOTIFICATION', { detail: notification }));
                 });
-            };
-              stompClient.onConnect = (frame) => {
-                stompClient.subscribe('/user/queue/Notification_JD', (message) => {
+
+                client.subscribe('/user/queue/Notification_JD', (message) => {
                     const notification = JSON.parse(message.body);
                     toast.custom((t) => (
                         <NotificationCard
@@ -142,7 +141,6 @@ function App() {
                         />
                     ), { duration: 10000 });
 
-                    // Emit a global event so other components (JD list/detail) can react
                     try {
                         const jdId = notification.objId || notification.objID || notification.objIdString || notification.obj_id;
                         const status = notification.status || notification.jobStatus || notification.state || null;
@@ -151,10 +149,24 @@ function App() {
                         console.warn('Failed to emit jdStatusUpdated event', e);
                     }
                 });
+
+                if (user && user.role === 'ADMIN') {
+                    client.subscribe('/topic/jobs/pending_update', (message) => {
+                        window.dispatchEvent(new CustomEvent('ADMIN_PENDING_JOB_UPDATE'));
+                    });
+                }
             };
-            stompClient.activate();
+
+            client.activate();
+            stompClientRef.current = client;
         }
-        return () => { if (stompClient) stompClient.deactivate(); };
+
+        return () => {
+            if (stompClientRef.current) {
+                stompClientRef.current.deactivate();
+                stompClientRef.current = null;
+            }
+        };
     }, [user, navigate]);
 
     // 3. Điều hướng dựa trên Role

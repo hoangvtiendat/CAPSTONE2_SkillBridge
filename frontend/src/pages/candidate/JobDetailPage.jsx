@@ -413,6 +413,18 @@ const JobDetailPage = () => {
         }
     };
 
+    const handleNumberInputKeyDown = (e) => {
+        if (e.ctrlKey || e.metaKey) return;
+        
+        // Chỉ chặn nếu người dùng gõ một ký tự in được (length === 1) nhưng không phải là số
+        if (e.key.length === 1) {
+            if (!/^\d$/.test(e.key)) {
+                e.preventDefault();
+                toast.warning("Chỉ được nhập chữ số, không nhập chữ cái hoặc ký tự đặc biệt!");
+            }
+        }
+    };
+
 
     if (loading) return <div className="candidate-loader-container"><div className="loader-spinner"></div></div>;
 
@@ -596,7 +608,12 @@ const JobDetailPage = () => {
                                         </div>
                                         <div className="confirm-flex-row">
                                             <div className="input-group flex-1"><label>Bằng cấp</label><input value={item.degree} onChange={e => updateDegreeItem(item.id || item._id, 'degree', e.target.value)} /></div>
-                                            <div className="input-group flex-1"><label>Năm tốt nghiệp</label><input type="number" value={item.graduationYear} onChange={e => updateDegreeItem(item.id || item._id, 'graduationYear', e.target.value)} /></div>
+                                            <div className="input-group flex-1"><label>Năm tốt nghiệp</label><input type="number" value={item.graduationYear} min="0" onKeyDown={handleNumberInputKeyDown} onChange={e => {
+                                                const val = e.target.value;
+                                                if (val === '' || /^\d+$/.test(val)) {
+                                                    updateDegreeItem(item.id || item._id, 'graduationYear', val);
+                                                }
+                                            }} /></div>
                                         </div>
                                     </div>
                                 </div>))}
@@ -640,7 +657,12 @@ const JobDetailPage = () => {
                                 </div>
                                 <div className="input-group" style={{ width: '80px' }}>
                                     <label>Số năm</label>
-                                    <input type="number" className="skill-year-mini" value={newSkillExp} onChange={e => setNewSkillExp(e.target.value)} min={1} />
+                                    <input type="number" className="skill-year-mini" value={newSkillExp} min="1" onKeyDown={handleNumberInputKeyDown} onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === '' || /^\d+$/.test(val)) {
+                                            setNewSkillExp(val);
+                                        }
+                                    }} />
                                 </div>
                                 <button type="button" className="btn-add-skill-action" onClick={handleAddSkill}><Plus size={18} /> Thêm</button>
                             </div>

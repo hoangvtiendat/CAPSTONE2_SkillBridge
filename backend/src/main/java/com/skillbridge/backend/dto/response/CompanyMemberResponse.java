@@ -23,4 +23,5 @@ public class CompanyMemberResponse {
     String recruiterAddress;
     String recruiterEmail;
     String recruiterPhoneNumber;
+    Long totalPosts;
 }

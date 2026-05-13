@@ -2,6 +2,7 @@ package com.skillbridge.backend.repository;
 
 import com.skillbridge.backend.dto.response.CompanyFeedItemResponse;
 import com.skillbridge.backend.dto.response.CompanyMemberResponse;
+import com.skillbridge.backend.enums.CompanyRole;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.enums.JoinRequestStatus;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +30,7 @@ public interface CompanyJoinRequestRepository extends JpaRepository<CompanyJoinR
         SELECT new com.skillbridge.backend.dto.response.CompanyMemberResponse(
             cjr.id, c.id, c.name, c.description, c.websiteUrl,
             u.id, null, u.name, u.status, u.address,
-            u.email, u.phoneNumber
+            u.email, u.phoneNumber, 0L
         )
         FROM CompanyJoinRequest cjr
         JOIN cjr.company c

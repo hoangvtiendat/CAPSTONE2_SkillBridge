@@ -42,6 +42,13 @@ const AdminJobPending = () => {
 
     useEffect(() => {
         fetchData(0, modFilter);
+
+        const handlePendingJobUpdate = () => {
+            fetchData(0, modFilter); // Reload current filter state
+        };
+
+        window.addEventListener('ADMIN_PENDING_JOB_UPDATE', handlePendingJobUpdate);
+        return () => window.removeEventListener('ADMIN_PENDING_JOB_UPDATE', handlePendingJobUpdate);
     }, [modFilter, fetchData]);
 
     const handleReset = () => {

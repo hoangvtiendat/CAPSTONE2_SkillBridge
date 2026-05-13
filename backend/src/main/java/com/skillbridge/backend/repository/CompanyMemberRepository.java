@@ -35,7 +35,8 @@ public interface CompanyMemberRepository extends JpaRepository<CompanyMember, St
            SELECT new com.skillbridge.backend.dto.response.CompanyMemberResponse(
                 cm.id, c.id, c.name, c.description, c.websiteUrl,
                 u.id, cm.role, u.name, u.status, u.address,
-                u.email, u.phoneNumber
+                u.email, u.phoneNumber,
+                (SELECT COUNT(j) FROM Job j WHERE j.companyMember.id = cm.id)
            )
            FROM CompanyMember cm
            JOIN cm.company c

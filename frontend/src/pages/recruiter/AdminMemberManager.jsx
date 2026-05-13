@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import companyService from '../../services/api/companyService';
 import './AdminMemberManager.css';
 import { toast } from "sonner";
-import { UserCheck, UserPlus, Shield, XCircle, CheckCircle, Phone, MapPin } from 'lucide-react';
+import Swal from 'sweetalert2';
+import { UserCheck, UserPlus, Shield, XCircle, CheckCircle, Phone, MapPin, Trash2 } from 'lucide-react';
 
 const AdminMemberManager = () => {
     const [members, setMembers] = useState([]);
@@ -36,6 +37,36 @@ const AdminMemberManager = () => {
             loadData();
         } catch (err) {
             toast.error("Thao tác thất bại", { id: toastId });
+        }
+    };
+
+    const handleRemoveMember = async (memberId, memberName) => {
+        const result = await Swal.fire({
+            title: 'Xác nhận xóa thành viên?',
+            text: `Bạn có chắc chắn muốn xóa "${memberName}" khỏi công ty không?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Có, xóa ngay',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                popup: 'premium-swal-popup',
+                title: 'premium-swal-title',
+                confirmButton: 'premium-swal-confirm',
+                cancelButton: 'premium-swal-cancel'
+            }
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang xóa thành viên...");
+            try {
+                await companyService.removeMember(memberId);
+                toast.success(`Đã xóa "${memberName}" khỏi công ty!`, { id: toastId });
+                loadData();
+            } catch (err) {
+                toast.error("Xóa thất bại. Vui lòng thử lại.", { id: toastId });
+            }
         }
     };
 
@@ -136,8 +167,11 @@ const AdminMemberManager = () => {
                                     <td className="text-center">{m.totalPosts || 0}</td>
                                     <td className="action-cell">
                                         {m.role !== 'ADMIN' && (
-                                            <button className="btn-delete-text" onClick={() => toast.error("Xác nhận xóa nhân viên?")}>
-                                                Xóa
+                                            <button
+                                                className="btn-delete-text"
+                                                onClick={() => handleRemoveMember(m.memberId || m.id, m.recruiterName)}
+                                            >
+                                                <Trash2 size={14} /> Xóa
                                             </button>
                                         )}
                                         {m.role === 'ADMIN' && <span className="owner-text">Chủ sở hữu</span>}

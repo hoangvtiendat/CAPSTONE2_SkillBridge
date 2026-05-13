@@ -124,6 +124,7 @@ public enum ErrorCode {
     // 7xxx: APPLICATION
     APPLICATION_NOT_FOUND(7000, "Không tìm thấy hồ sơ ứng tuyển", HttpStatus.NOT_FOUND),
     ALREADY_APPLIED(7001, "Bạn đã ứng tuyển vào vị trí này trước đó rồi", HttpStatus.BAD_REQUEST),
+    CANNOT_DELETE_ACTIVE_APPLICATION(7002, "Chỉ có thể xóa ứng viên đã bị từ chối hồ sơ để đảm bảo an toàn dữ liệu.", HttpStatus.BAD_REQUEST),
 
     EVALUATION_NOT_FOUND(8002, "Hiện tại chưa có đánh giá của ứng viên này đối với bài đăng", HttpStatus.BAD_REQUEST),
     AI_SERVICE_BUSY(8003, "Hệ thống AI đang bận", HttpStatus.BAD_REQUEST),

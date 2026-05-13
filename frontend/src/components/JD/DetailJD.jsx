@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Plus, Search, Trash2, X, Users } from 'lucide-react';
 
@@ -342,7 +342,7 @@ const DetailJD = () => {
         setIsUpdating(true);
         try {
             await jobService.updateJd(jdDetail.id, payloadToSubmit);
-            toast.success("Thành công", { description: "Đã cập nhật JD!", style: toastStyles.success });
+            toast.info("Đang xử lý", { description: "Hệ thống AI đang duyệt bản cập nhật JD của bạn...", style: toastStyles.warning });
             await fetchJdDetail();
             handleCloseModal();
         } catch (error) {
@@ -370,7 +370,7 @@ const DetailJD = () => {
     const statusText = jdDetail.status || "PENDING";
     const getStatusClass = (status) => {
         if (!status) return 'status-pending';
-        switch(status.toUpperCase()) {
+        switch (status.toUpperCase()) {
             case 'OPEN': return 'status-open';
             case 'CLOSED': return 'status-closed';
             case 'LOCK': return 'status-closed';
@@ -381,7 +381,7 @@ const DetailJD = () => {
 
     const getStatusText = (status) => {
         if (!status) return 'Đang chờ';
-        switch(status.toUpperCase()) {
+        switch (status.toUpperCase()) {
             case 'OPEN': return 'Đang mở';
             case 'CLOSED': return 'Đã đóng';
             case 'LOCK': return 'Đã khóa';
@@ -392,7 +392,7 @@ const DetailJD = () => {
 
     return (
         <div className="jd-board-container detail-view-container">
-            <Toaster position="top-right" />
+
 
             <header className="detail-header-card form-card">
                 <div className="header-company-info">
@@ -424,7 +424,7 @@ const DetailJD = () => {
                             border: '1px solid #cbd5e1'
                         }}
                     >
-                        <Users size={18}/>
+                        <Users size={18} />
                         Xem danh sách ứng tuyển
                     </button>
                     <span title={hasAppliedCandidate ? 'Hiện tại JD này đã có người ứng tuyển' : ''}>

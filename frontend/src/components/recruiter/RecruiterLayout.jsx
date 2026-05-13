@@ -24,6 +24,7 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import './Recruiter.css';
 import NotificationBell from '../common/NotificationBell';
+import companyMemberService from '../../services/api/companyMemberService';
 
 const API_BASE_URL = "http://localhost:8081/identity";
 
@@ -32,8 +33,9 @@ const RecruiterLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // 1. State lưu số lượng ứng viên
+    // 1. State lưu số lượng ứng viên và role công ty
     const [candidateCount, setCandidateCount] = useState(0);
+    const [companyRole, setCompanyRole] = useState(null);
 
     // 2. Gọi API đếm số lượng ứng viên
     useEffect(() => {
@@ -62,6 +64,19 @@ const RecruiterLayout = () => {
             }
         };
 
+        const fetchRole = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (token) {
+                    const role = await companyMemberService.getCompanyMembersRole(token);
+                    setCompanyRole(role);
+                }
+            } catch (error) {
+                console.error("Không xác định được role công ty:", error);
+            }
+        };
+
+        fetchRole();
         fetchCandidateCount();
     }, [user]);
 
@@ -79,25 +94,13 @@ const RecruiterLayout = () => {
     const alwaysAccessiblePaths = ['/recruiter/settings', '/recruiter/analytics'];
 
     const menuItems = [
-        { icon: <LayoutDashboard size={20} />, label: 'Bảng điều khiển', path: '/recruiter/dashboard' },
-        { icon: <UserCog size={20} />, label: 'Quản lý nhân viên', path: '/company/member' },
-        {
-            icon: <Users size={20} />,
-            label: 'Ứng viên',
-            path: '/recruiter/candidates',
-            badge: candidateCount // Truyền state vào đây
-        },
-        { icon: <FileText size={20} />, label: 'Tin tuyển dụng', path: '/company/jd-list' },
-        { icon: <CreditCard size={20} />, label: 'Gói dịch vụ', path: '/company/subscriptions' },
-        { icon: <Settings size={20} />, label: 'Cài đặt công ty', path: '/recruiter/settings' },
-        { icon: <BarChart3 size={20} />, label: 'Phân tích', path: '/recruiter/analytics' },
         { icon: <LayoutDashboard size={20} />, label: 'Bảng điều khiển', path: '/recruiter/dashboard', disabled: isCompanyDeactivated },
-        { icon: <UserCog size={20} />, label: 'Quản lý nhân viên', path: '/company/member', disabled: isCompanyDeactivated },
-        { icon: <Users size={20} />, label: 'Ứng viên', path: '/recruiter/candidates', badge: 12, disabled: isCompanyDeactivated },
+        { icon: <UserCog size={20} />, label: 'Quản lý nhân viên', path: '/company/member', disabled: isCompanyDeactivated, lockedForMember: true },
+        { icon: <Users size={20} />, label: 'Ứng viên', path: '/recruiter/candidates', badge: candidateCount, disabled: isCompanyDeactivated },
         { icon: <FileText size={20} />, label: 'Tin tuyển dụng', path: '/company/jd-list', disabled: isCompanyDeactivated },
-        { icon: <CreditCard size={20} />, label: 'Gói dịch vụ', path: '/company/subscriptions', disabled: isCompanyDeactivated },
-        { icon: <Settings size={20} />, label: 'Cài đặt công ty', path: '/recruiter/settings', disabled: false },
-        { icon: <BarChart3 size={20} />, label: 'Phân tích', path: '/recruiter/analytics', disabled: false },
+        { icon: <CreditCard size={20} />, label: 'Gói dịch vụ', path: '/company/subscriptions', disabled: isCompanyDeactivated, lockedForMember: true },
+        { icon: <Settings size={20} />, label: 'Cài đặt công ty', path: '/recruiter/settings', disabled: false, lockedForMember: true },
+        { icon: <BarChart3 size={20} />, label: 'Phân tích', path: '/recruiter/analytics', disabled: isCompanyDeactivated },
     ];
 
     const handleMenuItemClick = (e, item) => {
@@ -105,6 +108,11 @@ const RecruiterLayout = () => {
             e.preventDefault();
             toast.error('Danh mục này đã bị khóa vì công ty của bạn đã bị vô hiệu hóa. Vui lòng liên hệ admin.', {
                 description: 'Bạn chỉ có thể truy cập "Cài đặt công ty" hoặc "Phân tích".'
+            });
+        } else if (item.lockedForMember && companyRole && companyRole !== 'ADMIN') {
+            e.preventDefault();
+            toast.error('Bạn không có quyền truy cập chức năng này', {
+                description: 'Chức năng này chỉ dành cho Admin của công ty.'
             });
         }
     };
@@ -130,23 +138,30 @@ const RecruiterLayout = () => {
                 </div>
 
                 <nav className="sidebar-nav">
-                    {menuItems.map((item) => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={(e) => handleMenuItemClick(e, item)}
-                            className={`nav-item ${location.pathname === item.path ? 'active' : ''} ${item.disabled ? 'disabled' : ''}`}
-                            title={item.disabled ? 'Công ty của bạn đã bị vô hiệu hóa' : item.label}
-                        >
-                            {item.icon}
-                            <span className="nav-label">{item.label}</span>
-                            {item.badge && <span className="nav-badge">{item.badge}</span>}
-                            {item.disabled && <Lock size={16} className="nav-lock-icon" />}
+                    {menuItems.map((item) => {
+                        const isLockedForMember = item.lockedForMember && companyRole && companyRole !== 'ADMIN';
+                        const itemClass = `nav-item ${location.pathname === item.path ? 'active' : ''} ${item.disabled ? 'disabled' : ''} ${isLockedForMember ? 'locked' : ''}`;
+                        let title = item.label;
+                        if (item.disabled) title = 'Công ty của bạn đã bị vô hiệu hóa';
+                        else if (isLockedForMember) title = 'Chức năng này chỉ dành cho Admin của công ty';
 
-                            {/* Chỉ hiển thị badge nếu số lượng > 0 */}
-                            {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
-                        </Link>
-                    ))}
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                onClick={(e) => handleMenuItemClick(e, item)}
+                                className={itemClass}
+                                title={title}
+                            >
+                                {item.icon}
+                                <span className="nav-label">{item.label}</span>
+                                {(item.disabled || isLockedForMember) && <Lock size={16} className="nav-lock-icon" />}
+
+                                {/* Chỉ hiển thị badge nếu số lượng > 0 và không bị khóa */}
+                                {item.badge > 0 && !item.disabled && !isLockedForMember && <span className="nav-badge">{item.badge}</span>}
+                            </Link>
+                        );
+                    })}
                 </nav>
             </aside>
 
