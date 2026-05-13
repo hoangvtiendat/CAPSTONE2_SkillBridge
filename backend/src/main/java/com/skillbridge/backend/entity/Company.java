@@ -84,7 +84,8 @@ public class Company extends BaseEntity {
         return this.subscriptions.stream()
                 .filter(sub -> Boolean.TRUE.equals(sub.getIsActive()))
                 .findFirst()
-                .map(sub -> sub.getSubscriptionPlan().getName())
+                .map(SubscriptionOfCompany::getSubscriptionPlan)
+                .map(SubscriptionPlan::getName)
                 .orElse(SubscriptionPlanStatus.FREE);
     }
 
