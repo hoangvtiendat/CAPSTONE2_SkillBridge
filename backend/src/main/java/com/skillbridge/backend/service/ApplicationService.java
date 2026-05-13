@@ -65,7 +65,7 @@ public class ApplicationService {
         // Verify user is member of the company
         companyMemberRepository.findByCompany_IdAndUser_Id(companyId, currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
-        
+
         return applicationRepository.findByJob_Company_Id(companyId);
     }
 
