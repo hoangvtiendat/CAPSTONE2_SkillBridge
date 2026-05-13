@@ -291,7 +291,7 @@ const RecruiterApplications = () => {
                             {compareLoading && (
                                 <div className="compare-modal-loading compare-lg-loading">
                                     <div className="loader-spinner" />
-                                    <span>Đang phân tích với Gemini...</span>
+                                    <span>Đang phân tích với...</span>
                                 </div>
                             )}
                             {!compareLoading && compareResult && (
