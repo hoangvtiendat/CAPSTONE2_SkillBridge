@@ -119,13 +119,15 @@ const AppliedJobsPage = () => {
                                     <UserX size={14} />
                                 </button>
 
-                                <button
-                                    className="btn-book-icon-v3"
-                                    onClick={(e) => handleGoToBooking(e, item.jobId)}
-                                    title="Đặt lịch phỏng vấn"
-                                >
-                                    <Video size={14} />
-                                </button>
+                                {item.status !== 'PENDING' && (
+                                    <button
+                                        className="btn-book-icon-v3"
+                                        onClick={(e) => handleGoToBooking(e, item.jobId)}
+                                        title="Đặt lịch phỏng vấn"
+                                    >
+                                        <Video size={14} />
+                                    </button>
+                                )}
                             </div>
                         </div>
 

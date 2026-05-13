@@ -69,8 +69,8 @@ const candidateService = {
         const response = await api.patch(`/candidates/open-to-work?isOpenToWork=${status}`);
         return response.data;
     },
-    getPotentialCandidates: async (jobId) => {
-        const response = await api.get(`/candidates/potential/${jobId}`);
+    getPotentialCandidates: async (jobId, page = 0, limit = 15) => {
+        const response = await api.get(`/candidates/potential/${jobId}?page=${page}&limit=${limit}`);
         return response.data;
     },
     inviteCandidate: async (jobId, candidateId) => {

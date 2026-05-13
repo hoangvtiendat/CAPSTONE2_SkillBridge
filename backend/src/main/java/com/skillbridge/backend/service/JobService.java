@@ -1101,6 +1101,7 @@ public class JobService {
         }
     }
 
+    @Transactional
     public String inviteJob(String id, String candidateId) {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
@@ -1165,7 +1166,12 @@ public class JobService {
                 formattedExpiration
 
         );
-
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messagingTemplate.convertAndSend("/topic/job-invitations/" + id, "UPDATE");
+            }
+        });
         // --- GỬI THÔNG BÁO ---
         notificationService.createNotification(
                 user,

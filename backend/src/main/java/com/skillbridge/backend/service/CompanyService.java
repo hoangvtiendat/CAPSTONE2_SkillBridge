@@ -200,7 +200,8 @@ public class CompanyService {
                 company.getId(), company.getName(), company.getTaxId(),
                 company.getBusinessLicenseUrl(), company.getImageUrl(),
                 company.getDescription(), company.getAddress(),
-                company.getWebsiteUrl(), company.getStatus(),planName,company.getCreatedAt(),0
+                company.getWebsiteUrl(), company.getAdmin().getEmail(),
+                company.getAdmin().getPhoneNumber(), company.getStatus(),planName,company.getCreatedAt(),0
         );
     }
 
@@ -301,7 +302,8 @@ public class CompanyService {
                     company.getId(), company.getName(),
                     company.getTaxId(), company.getBusinessLicenseUrl(),
                     company.getImageUrl(), company.getDescription(),
-                    company.getAddress(), company.getWebsiteUrl(),
+                    company.getAddress(), company.getWebsiteUrl(),company.getAdmin().getEmail(),
+                    company.getAdmin().getPhoneNumber(),
                     company.getStatus(), planName,company.getCreatedAt(),0);
         }
         throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
@@ -359,7 +361,8 @@ public class CompanyService {
                 company.getId(), company.getName(), company.getTaxId(),
                 company.getBusinessLicenseUrl(), company.getImageUrl(),
                 company.getDescription(), company.getAddress(),
-                company.getWebsiteUrl(), company.getStatus(), planName,company.getCreatedAt(),0
+                company.getWebsiteUrl(),company.getAdmin().getEmail(),
+                company.getAdmin().getPhoneNumber(), company.getStatus(), planName,company.getCreatedAt(),0
         );
     }
     /** Yêu cầu gia nhập công ty nếu công ty đã tồn tại */

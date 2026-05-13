@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,4 +37,7 @@ public interface ApplicationRepository extends JpaRepository<Application, String
     List<Application> findAllByCandidateIdOrderByCreatedAtDesc(String candidateId);
 
     void deleteByCandidate(@NotNull(message = "Ứng viên không được để trống") Candidate candidate);
+
+    @Query("SELECT a.candidate.id FROM Application a WHERE a.job.id = :jobId")
+    List<String> findCandidateIdsByJobId(@Param("jobId") String jobId);
 }

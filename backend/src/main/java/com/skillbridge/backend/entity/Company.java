@@ -1,5 +1,6 @@
 package com.skillbridge.backend.entity;
 
+import com.skillbridge.backend.enums.CompanyRole;
 import com.skillbridge.backend.enums.CompanyStatus;
 import com.skillbridge.backend.enums.SubscriptionPlanStatus;
 import jakarta.persistence.*;
@@ -68,6 +69,9 @@ public class Company extends BaseEntity {
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<SubscriptionOfCompany> subscriptions;
 
+    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+    private List<CompanyMember> members;
+
     /**
      * Lấy trạng thái gói dịch vụ hiện tại.
      */
@@ -83,5 +87,15 @@ public class Company extends BaseEntity {
                 .orElse(SubscriptionPlanStatus.FREE);
     }
 
+    public User getAdmin() {
+        if (this.members == null || this.members.isEmpty()) {
+            return null;
+        }
 
+        return this.members.stream()
+                .filter(member -> CompanyRole.ADMIN.equals(member.getRole()))
+                .findFirst()
+                .map(CompanyMember::getUser)
+                .orElse(null);
+    }
 }
