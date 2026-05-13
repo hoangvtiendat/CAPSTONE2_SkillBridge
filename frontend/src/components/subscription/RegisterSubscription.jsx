@@ -20,6 +20,7 @@ const RegisterSubscription = () => {
     const [customForm, setCustomForm] = useState({
         jobLimit: '',
         candidateViewLimit: '',
+        daySet: '',
         hasPriorityDisplay: true
     });
 
@@ -84,6 +85,15 @@ const RegisterSubscription = () => {
             return;
         }
 
+        if (name === 'daySet') {
+            const day = value === '' ? '' : Number(value);
+            setCustomForm(prev => ({
+                ...prev,
+                daySet: day
+            }));
+            return;
+        }
+
         setCustomForm(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : (value === '' ? '' : Number(value))
@@ -94,12 +104,14 @@ const RegisterSubscription = () => {
         e.preventDefault();
         if (!customForm.jobLimit || customForm.jobLimit <= 0) return toast.warning('Số lượng tin đăng không hợp lệ');
         if (!customForm.candidateViewLimit || customForm.candidateViewLimit <= 0) return toast.warning('Số lượt xem CV không hợp lệ');
+        if (!customForm.daySet || customForm.daySet <= 0) return toast.warning('Số ngày thiết lập không hợp lệ');
 
         setSubmitting(true);
         try {
             const data = {
                 jobLimit: Number(customForm.jobLimit),
                 candidateViewLimit: Number(customForm.candidateViewLimit),
+                daySet: Number(customForm.daySet),
                 hasPriorityDisplay: customForm.hasPriorityDisplay
             };
             const created = await subscriptionService.createSubscriptionOfCompany(data, token);
@@ -203,6 +215,11 @@ const RegisterSubscription = () => {
                         <div className="rs-input-group">
                             <label>Lượt xem hồ sơ ứng viên</label>
                             <input type="number" name="candidateViewLimit" value={customForm.candidateViewLimit} onChange={handleCustomFormChange} min="1" required placeholder="Ví dụ: 120" />
+                        </div>
+
+                        <div className="rs-input-group">
+                            <label>Số ngày thiết lập *</label>
+                            <input type="number" name="daySet" value={customForm.daySet} onChange={handleCustomFormChange} min="1" required placeholder="Ví dụ: 30" />
                         </div>
 
                         <div className="rs-form-actions">

@@ -3,6 +3,7 @@ package com.skillbridge.backend.service.AI_Service_File;
 import com.skillbridge.backend.dto.request.SkillRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
+import com.skillbridge.backend.enums.SubscriptionOfCompanyStatus;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.*;
@@ -55,6 +56,9 @@ public class AIJobService {
 
     @Autowired
     JobRejectionLogRepository jobRejectionLogRepository;
+    @Autowired
+    SubscriptionOfCompanyRepository subscriptionOfCompanyRepository;
+
 
     LocalDate date = LocalDate.now();
 ///  ========= Các Hàm dùng để thực hiện chức năng Đánh giá cơ thế đèn giao thông =========
@@ -315,7 +319,9 @@ public class AIJobService {
             LocalDate startDate = LocalDate.from(job.getStartDate());
             LocalDate endDate = LocalDate.from(job.getEndDate());
             LocalDate today = LocalDate.from(LocalDateTime.now());
-
+            ///  cơ chế cộng ngày trong đăng ký gói cước
+            SubscriptionOfCompany getSubscriptionOfCompany = subscriptionOfCompanyRepository.findByCompanyIdAndStatus(companyId, SubscriptionOfCompanyStatus.OPEN)
+                    .orElseThrow(() -> new AppException(ErrorCode.SUBSCRIPTION_OF_COMPANY));
 
             JobDetailResponse in4JD = getIn4OfJD(idJD);
             String titleText = in4JD.getTitle() != null ? in4JD.getTitle().toString() : "N/A";
@@ -439,6 +445,8 @@ public class AIJobService {
                         System.out.println("MoNgay");
                         finalStatus = JobStatus.OPEN;
                     }
+                    getSubscriptionOfCompany.setCurrentJobCount(getSubscriptionOfCompany.getCurrentViewCount() + 1);
+                    subscriptionOfCompanyRepository.save(getSubscriptionOfCompany);
 
                     job.setStatus(finalStatus);
                     job.setModerationStatus(ModerationStatus.GREEN);

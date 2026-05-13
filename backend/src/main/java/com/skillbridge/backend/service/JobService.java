@@ -601,8 +601,7 @@ public class JobService {
             textBuilder.append(skillBuilder.substring(0, skillBuilder.length() - 2));
         }
         String textFinal = textBuilder.toString();
-        getSubscriptionOfCompany.setCurrentJobCount(getSubscriptionOfCompany.getCurrentJobCount() + 1);
-        subscriptionOfCompanyRepository.save(getSubscriptionOfCompany);
+
         //  Text > Vector
         try {
             float[] vector = embeddingService.createEmbedding(textFinal);

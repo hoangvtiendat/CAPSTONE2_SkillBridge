@@ -163,7 +163,9 @@ const SubscriptionManager = () => {
                 </div>
             ) : (
                 <div className="admin-plans-grid">
-                    {subscriptions.map((sub) => (
+                    {subscriptions
+                        .filter((sub) => !isCustomPlan(sub.name))
+                        .map((sub) => (
                         <div key={sub.id} className={`admin-plan-card ${getThemeClass(sub.name)}`}>
                             <div className="plan-header">
                                 <div className="plan-header-top">

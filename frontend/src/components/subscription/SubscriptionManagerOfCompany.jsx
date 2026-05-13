@@ -564,16 +564,9 @@ const handleDeleteSubscription = async (id, options = {}) => {
                     </li>
                     <li>
                         <Check size={18} className="icon-check" />
-                        {premiumPkg?.hasPriorityDisplay || premiumPkg?.has_priority_display
-                            ? 'Duyệt tin ưu tiên (SkillBridge)'
-                            : 'Thời hạn: ' + (premiumPkg?.postingDuration || premiumPkg?.posting_duration) + ' tháng'}
+                        Thời hạn: {premiumPkg?.postingDuration ?? '30'} ngày
                     </li>
-                    {(premiumPkg?.hasPriorityDisplay || premiumPkg?.has_priority_display) && (
-                        <li>
-                            <Check size={18} className="icon-check" />
-                            Hiển thị ưu tiên trong danh sách
-                        </li>
-                    )}
+                 
                 </ul>
 
                 <div className="sub-actions mt-4">

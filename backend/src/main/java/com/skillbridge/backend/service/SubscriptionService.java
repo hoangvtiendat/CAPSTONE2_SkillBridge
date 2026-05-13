@@ -154,8 +154,6 @@ public class SubscriptionService {
             systemLog.danger(currentUser, "Cố gắng tạo gói đăng ký Custom trái phép");
             throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
         }
-        SubscriptionPlan custom = subscriptionRepository.findByName(SubscriptionPlanStatus.CUSTOM)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION_PRENIUM));
         SubscriptionPlan customPlan = subscriptionRepository.findByName(SubscriptionPlanStatus.CUSTOM)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
@@ -170,7 +168,7 @@ public class SubscriptionService {
         newSubscription.setHasPriorityDisplay(request.getHasPriorityDisplay());
         newSubscription.setPrice(calculatedPrice);
         newSubscription.setStatus(SubscriptionOfCompanyStatus.PENDING_PAYMENT);
-        newSubscription.setPostingDuration(custom.getPostingDuration());
+        newSubscription.setPostingDuration(request.getDaySet());
         newSubscription.setStartDate(LocalDateTime.now());
         newSubscription.setEndDate(LocalDateTime.now().plusDays(30));
         newSubscription.setIsActive(true);
@@ -187,48 +185,119 @@ public class SubscriptionService {
     }
 
     public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request) {
+
         SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
-        BigDecimal premiumPrice = premium.getPrice();
         int premJobLimit = premium.getJobLimit();
         int premViewLimit = premium.getCandidateViewLimit();
+        int premDay = premium.getPostingDuration();
 
-        if (request.getJobLimit() <= 0 || request.getCandidateViewLimit() <= 0) {
+        BigDecimal premiumPrice = premium.getPrice();
+
+        if (request.getJobLimit() <= 0
+                || request.getCandidateViewLimit() <= 0
+                || request.getDaySet() <= 0) {
+
             throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
         }
 
 
-        BigDecimal unitJobPrice = premiumPrice.multiply(new BigDecimal("0.40"))
+        BigDecimal unitJobPrice = premiumPrice
+                .multiply(new BigDecimal("0.30"))
                 .divide(new BigDecimal(premJobLimit), 4, RoundingMode.HALF_UP);
 
-        BigDecimal unitViewPrice = premiumPrice.multiply(new BigDecimal("0.60"))
+        BigDecimal unitViewPrice = premiumPrice
+                .multiply(new BigDecimal("0.40"))
                 .divide(new BigDecimal(premViewLimit), 4, RoundingMode.HALF_UP);
+
+        BigDecimal unitDayPrice = premiumPrice
+                .multiply(new BigDecimal("0.30"))
+                .divide(new BigDecimal(premDay), 4, RoundingMode.HALF_UP);
 
 
         BigDecimal customJobCost;
+
         if (request.getJobLimit() <= premJobLimit) {
-            customJobCost = unitJobPrice.multiply(new BigDecimal(request.getJobLimit()));
+
+            customJobCost = unitJobPrice.multiply(
+                    new BigDecimal(request.getJobLimit())
+            );
+
         } else {
-            BigDecimal baseJobCost = unitJobPrice.multiply(new BigDecimal(premJobLimit));
+
+            BigDecimal baseJobCost = unitJobPrice.multiply(
+                    new BigDecimal(premJobLimit)
+            );
+
             int extraJobs = request.getJobLimit() - premJobLimit;
 
-            BigDecimal extraJobCost = unitJobPrice.multiply(new BigDecimal("0.90")).multiply(new BigDecimal(extraJobs));
+            BigDecimal extraJobCost = unitJobPrice
+                    .multiply(new BigDecimal("0.90"))
+                    .multiply(new BigDecimal(extraJobs));
+
             customJobCost = baseJobCost.add(extraJobCost);
         }
 
+
         BigDecimal customViewCost;
+
         if (request.getCandidateViewLimit() <= premViewLimit) {
-            customViewCost = unitViewPrice.multiply(new BigDecimal(request.getCandidateViewLimit()));
+
+            customViewCost = unitViewPrice.multiply(
+                    new BigDecimal(request.getCandidateViewLimit())
+            );
+
         } else {
-            BigDecimal baseViewCost = unitViewPrice.multiply(new BigDecimal(premViewLimit));
+
+            BigDecimal baseViewCost = unitViewPrice.multiply(
+                    new BigDecimal(premViewLimit)
+            );
+
             int extraViews = request.getCandidateViewLimit() - premViewLimit;
 
-            BigDecimal extraViewCost = unitViewPrice.multiply(new BigDecimal("0.90")).multiply(new BigDecimal(extraViews));
+            BigDecimal extraViewCost = unitViewPrice
+                    .multiply(new BigDecimal("0.90"))
+                    .multiply(new BigDecimal(extraViews));
+
             customViewCost = baseViewCost.add(extraViewCost);
         }
 
-        return customJobCost.add(customViewCost).setScale(2, RoundingMode.HALF_UP);
+        // =========================
+        // DAY COST
+        // =========================
+
+        BigDecimal customDayCost;
+
+        if (request.getDaySet() <= premDay) {
+
+            customDayCost = unitDayPrice.multiply(
+                    new BigDecimal(request.getDaySet())
+            );
+
+        } else {
+
+            BigDecimal baseDayCost = unitDayPrice.multiply(
+                    new BigDecimal(premDay)
+            );
+
+            int extraDays = request.getDaySet() - premDay;
+
+            BigDecimal extraDayCost = unitDayPrice
+                    .multiply(new BigDecimal("0.90"))
+                    .multiply(new BigDecimal(extraDays));
+
+            customDayCost = baseDayCost.add(extraDayCost);
+        }
+
+        // =========================
+        // TOTAL
+        // =========================
+
+        return customJobCost
+                .add(customViewCost)
+                .add(customDayCost)
+                .setScale(2, RoundingMode.HALF_UP);
     }
     /**
      * Xóa (Hủy) gói dịch vụ của công ty

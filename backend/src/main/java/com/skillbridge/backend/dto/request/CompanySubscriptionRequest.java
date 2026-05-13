@@ -22,4 +22,9 @@ public class CompanySubscriptionRequest {
 
     @Builder.Default
     Boolean hasPriorityDisplay = false;
+
+    @NotNull(message = "INVALID_INPUT")
+    @Min(value = 1, message = "INVALID_CUSTOM_LIMITS")
+    Integer daySet;
+
 }
