@@ -70,6 +70,7 @@ public class Company extends BaseEntity {
     private List<SubscriptionOfCompany> subscriptions;
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<CompanyMember> members;
 
     /**
