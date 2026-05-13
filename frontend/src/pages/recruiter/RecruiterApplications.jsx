@@ -55,9 +55,11 @@ const RecruiterApplications = () => {
         const fetchApps = async () => {
             try {
                 const res = await applicationService.getApplicationsByJob(jobId);
-                setApplications(res.result);
+                const list = res?.result;
+                setApplications(Array.isArray(list) ? list : []);
             } catch (err) {
                 toast.error('Không thể tải danh sách ứng viên');
+                setApplications([]);
             } finally {
                 setLoading(false);
             }
@@ -66,7 +68,8 @@ const RecruiterApplications = () => {
     }, [jobId]);
 
     const sortedApplications = useMemo(() => {
-        const arr = [...applications];
+        const list = Array.isArray(applications) ? applications : [];
+        const arr = [...list];
         arr.sort((a, b) => {
             const sa = Number(a.aiMatchingScore ?? 0);
             const sb = Number(b.aiMatchingScore ?? 0);
@@ -76,7 +79,8 @@ const RecruiterApplications = () => {
     }, [applications, matchSortDesc]);
 
     const selectedApps = useMemo(() => {
-        const map = new Map(applications.map((a) => [a.id, a]));
+        const list = Array.isArray(applications) ? applications : [];
+        const map = new Map(list.map((a) => [a.id, a]));
         return selectedIds.map((id) => map.get(id)).filter(Boolean);
     }, [applications, selectedIds]);
 
