@@ -27,9 +27,7 @@ public class SubscriptionOfCompany extends BaseEntity {
     @JsonBackReference
     private Company company;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SubscriptionPlanStatus name;
+
 
     @Column(name = "job_limit")
     private Integer jobLimit;
@@ -66,6 +64,7 @@ public class SubscriptionOfCompany extends BaseEntity {
     @Column(name = "posting_duration")
     private Integer postingDuration;
 
-    @Column(name = "subscriptionPlan_id")
-    private String subscriptionPlan_id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subscriptionPlan_id")
+    private SubscriptionPlan subscriptionPlan;
 }

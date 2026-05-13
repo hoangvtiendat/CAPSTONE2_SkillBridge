@@ -40,6 +40,19 @@ const SubscriptionManager = () => {
         try {
             const response = await subscriptionService.getDetailSubscription(id);
             const data = response?.result || response?.data || response;
+            
+            // Auto-set hasPriorityDisplay = true cho STANDARD và PREMIUM
+            const isStandardOrPremium = data?.name?.toUpperCase().includes('STANDARD') || data?.name?.toUpperCase().includes('PREMIUM');
+            if (isStandardOrPremium) {
+                data.hasPriorityDisplay = true;
+            }
+            
+            // Auto-set isPublic = false cho FREE
+            const isFree = data?.name?.toUpperCase().includes('FREE');
+            if (isFree) {
+                data.isPublic = false;
+            }
+            
             setSelectedSubscription(data);
             setEditForm(data);
         } catch (error) {
@@ -48,6 +61,7 @@ const SubscriptionManager = () => {
             setLoading(false);
         }
     };
+
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -64,12 +78,32 @@ const SubscriptionManager = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            await subscriptionService.UpdateSubcription(selectedSubscription.id, editForm, token);
+            const submitData = { ...editForm };
+            
+            // Ensure hasPriorityDisplay = true for STANDARD/PREMIUM
+            const isStandardOrPremium = submitData.name?.toUpperCase().includes('STANDARD') || submitData.name?.toUpperCase().includes('PREMIUM');
+            if (isStandardOrPremium) {
+                submitData.hasPriorityDisplay = true;
+            }
+            
+            // Ensure isPublic = false for FREE
+            const isFree = submitData.name?.toUpperCase().includes('FREE');
+            if (isFree) {
+                submitData.isPublic = false;
+            }
+            
+            await subscriptionService.UpdateSubcription(selectedSubscription.id, submitData, token);
             toast.success('Cập nhật cấu hình thành công!', { style: toastStyles.success });
             setSelectedSubscription(null);
             fetchSubscriptions();
         } catch (error) {
-            toast.error('Cập nhật thất bại', { style: toastStyles.error });
+            console.error('Update subscription error:', error);
+            const backendMessage = error?.response?.data?.message || error?.response?.data?.result || error?.response?.data || error?.message;
+            if (backendMessage) {
+                toast.error('Cập nhật thất bại', { description: String(backendMessage), style: toastStyles.error });
+            } else {
+                toast.error('Cập nhật thất bại', { style: toastStyles.error });
+            }
         } finally {
             setLoading(false);
         }
@@ -146,14 +180,11 @@ const SubscriptionManager = () => {
                                         <Check size={18} />
                                         <span>Hiệu lực tin: <strong>{sub.postingDuration} ngày</strong></span>
                                     </li>
-                                    <li className={sub.hasPriorityDisplay ? "highlight" : "dimmed"}>
-                                        <Check size={18} />
-                                        <span>Duyệt tin ưu tiên: {sub.hasPriorityDisplay ? 'Có' : 'Không'}</span>
-                                    </li>
-                                    <li className={(sub.isPublic ?? sub.is_public) ? "highlight" : "dimmed"}>
+                                
+                                    {/* <li className={(sub.isPublic ?? sub.is_public) ? "highlight" : "dimmed"}>
                                         <Check size={18} />
                                         <span>Công khai gói: {(sub.isPublic ?? sub.is_public) ? 'Có' : 'Không'}</span>
-                                    </li>
+                                    </li> */}
                                 </ul>
                             </div>
 
@@ -235,31 +266,19 @@ const SubscriptionManager = () => {
                                 />
                             </div>
 
-                            {!editForm.name?.toUpperCase().includes('FREE') && (
+                            {/* {!editForm.name?.toUpperCase().includes('FREE') && (
                                 <div className="form-group" style={{marginTop: '10px'}}>
                                     <label className="checkbox-wrapper">
                                         <input
                                             type="checkbox"
-                                            name="hasPriorityDisplay"
-                                            checked={editForm.hasPriorityDisplay || false}
+                                            name="isPublic"
+                                            checked={Boolean(editForm.isPublic ?? editForm.is_public)}
                                             onChange={handleInputChange}
                                         />
-                                        <span className="checkbox-text">Kích hoạt Ưu tiên hiển thị (Priority)</span>
+                                        <span className="checkbox-text">Hiển thị công khai gói</span>
                                     </label>
                                 </div>
-                            )}
-
-                            <div className="form-group" style={{marginTop: '10px'}}>
-                                <label className="checkbox-wrapper">
-                                    <input
-                                        type="checkbox"
-                                        name="isPublic"
-                                        checked={Boolean(editForm.isPublic ?? editForm.is_public)}
-                                        onChange={handleInputChange}
-                                    />
-                                    <span className="checkbox-text">Hiển thị công khai gói (isPublic)</span>
-                                </label>
-                            </div>
+                            )} */}
 
                             <div className="modal-footer">
                                 <button type="button" className="btn-cancel" onClick={() => setSelectedSubscription(null)}>

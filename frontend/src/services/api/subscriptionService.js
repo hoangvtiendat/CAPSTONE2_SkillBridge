@@ -87,6 +87,19 @@ const subscriptionService = {
         console.error('Error creating payment:', error);
         throw error;
     }
+    },
+    /// Laays ngay dang 
+    postingDuriation: async (id, token) => {
+        try {
+            const response = await api.get(`/subscription/posting-duration/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+        }     });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching posting duration:', error);
+            throw error;
+        }
     }
 }
 export default subscriptionService; 

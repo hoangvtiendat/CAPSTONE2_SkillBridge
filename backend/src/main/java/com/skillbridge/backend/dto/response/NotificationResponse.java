@@ -1,6 +1,7 @@
 package com.skillbridge.backend.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.skillbridge.backend.enums.JobStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -19,4 +20,8 @@ public class NotificationResponse {
     private String type;
     private String link;
     private LocalDateTime createdAt;
+    private String objId;
+    private JobStatus jobStatus;
+    private String action;
+    private String company;
 }

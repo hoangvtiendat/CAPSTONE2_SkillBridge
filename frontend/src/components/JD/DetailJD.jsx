@@ -1,14 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Plus, Search, Trash2, X, Users } from 'lucide-react';
+import { Plus, Search, Trash2, Users } from 'lucide-react';
 
 import { faMapMarkerAlt, faMoneyBillWave, faBriefcase, faBuilding } from "@fortawesome/free-solid-svg-icons"
 import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
+import JDInfoCard from './JDInfoCard';
 import applicationService from '../../services/api/applicationService';
+import subscriptionService from '../../services/api/subscriptionService';
+import vietnamAdministrativeLegacy from '../../data/vietnamAdministrativeLegacy.json';
 import { useParams, useNavigate } from 'react-router-dom';
+import { addDays, format, parse } from 'date-fns';
 import './DetailJD.css';
 
 
@@ -22,6 +26,37 @@ const API_BASE_URL = "http://localhost:8081/identity";
 const normalizeSkillName = (value) => String(value || '').trim().toLowerCase();
 
 const trimText = (value) => String(value || '').trim();
+
+const parseBackendDateTimeToInput = (value) => {
+    if (!value) return '';
+    const text = String(value).trim();
+    const parsed = parse(text, 'dd/MM/yyyy HH:mm:ss', new Date());
+    if (!Number.isNaN(parsed.getTime())) {
+        return format(parsed, 'yyyy-MM-dd');
+    }
+
+    const directDate = new Date(text);
+    if (!Number.isNaN(directDate.getTime())) {
+        return format(directDate, 'yyyy-MM-dd');
+    }
+
+    return '';
+};
+
+const formatDisplayDate = (value) => {
+    const inputDate = parseBackendDateTimeToInput(value);
+    if (!inputDate) return '';
+    const [year, month, day] = inputDate.split('-').map(Number);
+    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+};
+
+const toBackendDateTimeString = (dateString, isEndDate = false) => {
+    if (!dateString) return '';
+    const [year, month, day] = String(dateString).split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    if (Number.isNaN(date.getTime())) return '';
+    return format(date, `dd/MM/yyyy ${isEndDate ? '23:59:59' : '00:00:00'}`);
+};
 
 const cloneTitles = (titles = []) => titles.map(item => ({ key: String(item?.key || ''), value: String(item?.value || '') }));
 
@@ -46,6 +81,8 @@ const normalizeFormForCompare = (form = {}) => ({
     position: trimText(form.position),
     description: trimText(form.description),
     location: trimText(form.location),
+    startDate: trimText(form.startDate),
+    endDate: trimText(form.endDate),
     salaryMin: Number(form.salaryMin || 0),
     salaryMax: Number(form.salaryMax || 0),
     skills: normalizeSkillsForCompare(form.skills || [])
@@ -54,6 +91,11 @@ const normalizeFormForCompare = (form = {}) => ({
 const hasInvalidLeadingTrailingWhitespace = (value) => {
     if (typeof value !== 'string') return false;
     return value !== value.trim();
+};
+
+const isProvinceActive = (province) => {
+    const deletedValue = province?.isDeleted ?? province?.is_delete ?? province?.isDelete ?? 0;
+    return Number(deletedValue) === 0;
 };
 
 const dedupeSkills = (skills = []) => {
@@ -105,11 +147,19 @@ const DetailJD = () => {
     const [skillsList, setSkillsList] = useState([]);
     const [skillSearchTerm, setSkillSearchTerm] = useState("");
     const [hasAppliedCandidate, setHasAppliedCandidate] = useState(false);
+    const [provinces] = useState(vietnamAdministrativeLegacy);
+    const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
+    const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
+    const [selectedWardCode, setSelectedWardCode] = useState("");
+    const [specificAddress, setSpecificAddress] = useState("");
+    const [postingDuration, setPostingDuration] = useState(null);
 
     const fetchJdDetail = useCallback(async () => {
         try {
             const response = await jobService.getDetailJd(id);
-            setJdDetail(response.result);
+
+            console.debug('DetailJD API response:', response);
+            setJdDetail(response?.result ?? response);
             setLoading(false);
         } catch (error) {
             toast.error('Lỗi khi tải chi tiết JD', { style: toastStyles.error });
@@ -139,6 +189,46 @@ const DetailJD = () => {
         checkAppliedStatus();
     }, [id, fetchJdDetail, checkAppliedStatus]);
 
+    useEffect(() => {
+        const fetchPostingDuration = async () => {
+            const companyId = jdDetail?.company?.id || jdDetail?.company?._id || jdDetail?.companyId || jdDetail?.company?.companyId;
+            if (!companyId) return;
+
+            try {
+                const response = await subscriptionService.postingDuriation(companyId);
+                let duration = response;
+                if (response && typeof response === 'object') {
+                    duration = response?.data ?? response?.result ?? response?.postingDuriation ?? response?.postingDuration ?? null;
+                }
+                if (typeof duration === 'string') duration = Number(duration);
+                if (typeof duration === 'number' && !Number.isNaN(duration)) {
+                    setPostingDuration(duration);
+                }
+            } catch (error) {
+                console.error('Failed to fetch posting duration for DetailJD', error);
+            }
+        };
+
+        fetchPostingDuration();
+    }, [jdDetail?.company?.id, jdDetail?.company?._id, jdDetail?.companyId, jdDetail?.company?.companyId]);
+
+    useEffect(() => {
+        const handler = (e) => {
+            try {
+                const { objId } = e.detail || {};
+                if (!objId) return;
+                if (String(objId) === String(id)) {
+                    fetchJdDetail();
+                }
+            } catch (err) {
+                console.warn('Error handling jdStatusUpdated in DetailJD', err);
+            }
+        };
+
+        window.addEventListener('jdStatusUpdated', handler);
+        return () => window.removeEventListener('jdStatusUpdated', handler);
+    }, [id, fetchJdDetail]);
+
     const getListCategories = async () => {
         try {
             const response = await categoryJDService.getListCategories();
@@ -165,6 +255,25 @@ const DetailJD = () => {
         };
         fetchSkills();
     }, [editForm?.categoryId]);
+
+    useEffect(() => {
+        if (!isModalOpen || !editForm) return;
+
+        if (!editForm.startDate && jdDetail?.startDate) {
+            setEditForm(prev => ({ ...prev, startDate: parseBackendDateTimeToInput(jdDetail.startDate) }));
+        }
+
+        if (!editForm.endDate && jdDetail?.endDate) {
+            setEditForm(prev => ({ ...prev, endDate: parseBackendDateTimeToInput(jdDetail.endDate) }));
+        }
+
+        if (postingDuration && editForm.startDate && !editForm.endDate) {
+            setEditForm(prev => ({
+                ...prev,
+                endDate: format(addDays(new Date(prev.startDate), postingDuration - 1), 'yyyy-MM-dd')
+            }));
+        }
+    }, [isModalOpen, editForm, jdDetail?.startDate, jdDetail?.endDate, postingDuration]);
 
     const handleOpenModal = () => {
         if (hasAppliedCandidate) {
@@ -201,6 +310,8 @@ const DetailJD = () => {
             position: jdDetail.position || "",
             description: jdDetail.description || "",
             location: jdDetail.location || "",
+            startDate: parseBackendDateTimeToInput(jdDetail.startDate),
+            endDate: parseBackendDateTimeToInput(jdDetail.endDate),
             salaryMin: jdDetail.salaryMin || "",
             salaryMax: jdDetail.salaryMax || "",
             skills: dedupeSkills(mappedSkills)
@@ -208,6 +319,51 @@ const DetailJD = () => {
 
         const titlesForEdit = cloneTitles(initialTitles);
         const formForEdit = { ...formObj, skills: [...formObj.skills] };
+
+        const locationParts = String(jdDetail.location || '')
+            .split(',')
+            .map((part) => part.trim())
+            .filter(Boolean);
+
+        let provinceCode = '';
+        let districtCode = '';
+        let wardCode = '';
+        let parsedSpecificAddress = '';
+
+        if (locationParts.length > 0) {
+            const provinceName = locationParts[locationParts.length - 1];
+            const foundProvince = provinces
+                .filter(isProvinceActive)
+                .find((province) => province.name === provinceName);
+
+            if (foundProvince) {
+                provinceCode = String(foundProvince.code);
+
+                const districtName = locationParts[locationParts.length - 2];
+                const foundDistrict = foundProvince.districts?.find((district) => district.name === districtName);
+                if (foundDistrict) {
+                    districtCode = String(foundDistrict.code);
+
+                    const wardName = locationParts[locationParts.length - 3];
+                    const foundWard = foundDistrict.wards?.find((ward) => ward.name === wardName);
+                    if (foundWard) {
+                        wardCode = String(foundWard.code);
+                    }
+                }
+
+                const parsedPartCount = wardCode ? 3 : districtCode ? 2 : 1;
+                parsedSpecificAddress = locationParts
+                    .slice(0, Math.max(0, locationParts.length - parsedPartCount))
+                    .join(', ');
+            } else {
+                parsedSpecificAddress = String(jdDetail.location || '');
+            }
+        }
+
+        setSelectedProvinceCode(provinceCode);
+        setSelectedDistrictCode(districtCode);
+        setSelectedWardCode(wardCode);
+        setSpecificAddress(parsedSpecificAddress);
 
         setDynamicTitles(titlesForEdit);
         setEditForm(formForEdit);
@@ -223,6 +379,10 @@ const DetailJD = () => {
         setEditForm(null);
         setInitialFormState(null);
         setSkillSearchTerm("");
+        setSelectedProvinceCode("");
+        setSelectedDistrictCode("");
+        setSelectedWardCode("");
+        setSpecificAddress("");
     };
 
     const handleChange = (e) => {
@@ -265,36 +425,71 @@ const DetailJD = () => {
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
 
+        const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+        const selectedDistrict = selectedProvince?.districts?.find((district) => String(district.code) === selectedDistrictCode);
+        const selectedWard = selectedDistrict?.wards?.find((ward) => String(ward.code) === selectedWardCode);
+        const finalLocation = [
+            specificAddress.trim(),
+            selectedWard?.name,
+            selectedDistrict?.name,
+            selectedProvince?.name
+        ].filter(Boolean).join(', ');
+
         const textFieldConfig = [
             { key: 'position', label: 'Vị trí công việc' },
-            { key: 'description', label: 'Mô tả công việc' },
-            { key: 'location', label: 'Địa điểm làm việc' }
+            { key: 'description', label: 'Mô tả công việc' }
         ];
-
-        const invalidTextField = textFieldConfig.find(({ key }) => hasInvalidLeadingTrailingWhitespace(editForm[key]));
-        if (invalidTextField) {
-            toast.error('Lỗi nhập liệu', {
-                description: `${invalidTextField.label} không được có khoảng trắng ở đầu hoặc cuối`,
-                style: toastStyles.warning
-            });
-            return;
-        }
-
-        const hasInvalidWhitespaceDynamicTitles = dynamicTitles.some(item =>
-            hasInvalidLeadingTrailingWhitespace(item.key) || hasInvalidLeadingTrailingWhitespace(item.value)
-        );
-        if (hasInvalidWhitespaceDynamicTitles) {
-            toast.error('Lỗi nhập liệu', {
-                description: 'Tiêu đề và mô tả chi tiết không được có khoảng trắng ở đầu hoặc cuối',
-                style: toastStyles.warning
-            });
-            return;
-        }
 
         const hasEmptyDynamicTitles = dynamicTitles.some(item => item.key.trim() === "" || item.value.trim() === "");
         if (hasEmptyDynamicTitles) {
             toast.error("Lỗi nhập liệu", { description: "Vui lòng điền đầy đủ Tiêu đề và Mô tả", style: toastStyles.warning });
             return;
+        }
+
+        if (!selectedProvinceCode || !selectedDistrictCode || !selectedWardCode || !specificAddress.trim()) {
+            toast.error("Lỗi nhập liệu", {
+                description: "Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện, Xã/Phường và nhập địa chỉ cụ thể",
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        if (!editForm.startDate || !editForm.endDate) {
+            toast.error('Lỗi nhập liệu', {
+                description: 'Vui lòng chọn ngày bắt đầu và ngày kết thúc',
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        const startDateValue = new Date(editForm.startDate);
+        const endDateValue = new Date(editForm.endDate);
+        if (Number.isNaN(startDateValue.getTime()) || Number.isNaN(endDateValue.getTime())) {
+            toast.error('Lỗi nhập liệu', {
+                description: 'Ngày bắt đầu hoặc ngày kết thúc không hợp lệ',
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        if (endDateValue < startDateValue) {
+            toast.error('Lỗi nhập liệu', {
+                description: 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu',
+                style: toastStyles.warning
+            });
+            return;
+        }
+
+        if (postingDuration) {
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const inclusiveDays = Math.floor((endDateValue - startDateValue) / msPerDay) + 1;
+            if (inclusiveDays > postingDuration) {
+                toast.error('Lỗi nhập liệu', {
+                    description: `Khoảng thời gian đăng tin không thể vượt quá ${postingDuration} ngày`,
+                    style: toastStyles.warning
+                });
+                return;
+            }
         }
 
         if (Number(editForm.salaryMax) < Number(editForm.salaryMin)) {
@@ -334,8 +529,10 @@ const DetailJD = () => {
             categoryId: String(editForm.categoryId || '').trim(),
             position: trimText(editForm.position),
             description: trimText(editForm.description),
-            location: trimText(editForm.location),
+            location: finalLocation,
             title: titleObject,
+            startDate: toBackendDateTimeString(editForm.startDate),
+            endDate: toBackendDateTimeString(editForm.endDate, true),
             skills: dedupedCleanSkills
         };
 
@@ -352,17 +549,34 @@ const DetailJD = () => {
         }
     };
 
-    const isFormChanged = Boolean(initialFormState) && (() => {
-        const normalizedCurrentForm = normalizeFormForCompare(editForm || {});
-        const normalizedCurrentTitles = cloneTitles(dynamicTitles).map(item => ({ key: trimText(item.key), value: trimText(item.value) }));
-        return JSON.stringify(initialFormState.editForm) !== JSON.stringify(normalizedCurrentForm)
-            || JSON.stringify(initialFormState.dynamicTitles) !== JSON.stringify(normalizedCurrentTitles);
-    })();
-
     const filteredSkillsList = skillsList.filter(skill => {
         const skillName = String(skill.name || skill.skillName || skill.title || "").toLowerCase();
         return skillName.includes(skillSearchTerm.toLowerCase());
     });
+
+    const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+    const districtOptions = selectedProvince?.districts || [];
+    const selectedDistrict = districtOptions.find((district) => String(district.code) === selectedDistrictCode);
+    const wardOptions = selectedDistrict?.wards || [];
+
+    const locationPreview = [
+        specificAddress.trim(),
+        wardOptions.find((ward) => String(ward.code) === selectedWardCode)?.name,
+        selectedDistrict?.name,
+        selectedProvince?.name
+    ].filter(Boolean).join(', ');
+
+    const compareLocationValue = locationPreview || trimText(editForm?.location);
+
+    const isFormChanged = Boolean(initialFormState) && (() => {
+        const normalizedCurrentForm = normalizeFormForCompare({
+            ...(editForm || {}),
+            location: compareLocationValue
+        });
+        const normalizedCurrentTitles = cloneTitles(dynamicTitles).map(item => ({ key: trimText(item.key), value: trimText(item.value) }));
+        return JSON.stringify(initialFormState.editForm) !== JSON.stringify(normalizedCurrentForm)
+            || JSON.stringify(initialFormState.dynamicTitles) !== JSON.stringify(normalizedCurrentTitles);
+    })();
 
     if (loading) return <div className="loading-container"><div className="spinner"></div><p>Đang tải dữ liệu...</p></div>;
     if (!jdDetail) return <div className="error-container">Không tìm thấy thông tin JD</div>;
@@ -371,6 +585,7 @@ const DetailJD = () => {
     const getStatusClass = (status) => {
         if (!status) return 'status-pending';
         switch (status.toUpperCase()) {
+            case 'NOT_STARTED': return 'status-not-started';
             case 'OPEN': return 'status-open';
             case 'CLOSED': return 'status-closed';
             case 'LOCK': return 'status-closed';
@@ -381,7 +596,8 @@ const DetailJD = () => {
 
     const getStatusText = (status) => {
         if (!status) return 'Đang chờ';
-        switch (status.toUpperCase()) {
+        switch(status.toUpperCase()) {
+            case 'NOT_STARTED': return 'Sắp bắt đầu';
             case 'OPEN': return 'Đang mở';
             case 'CLOSED': return 'Đã đóng';
             case 'LOCK': return 'Đã khóa';
@@ -463,225 +679,352 @@ const DetailJD = () => {
                 </div>
 
                 <div className="layout-sidebar">
-                    <section className="form-card sidebar-card">
-                        <h3 className="card-title">Thông tin chung</h3>
-                        <div className="info-list">
-                            <div className="info-item-modern">
-                                <div className="icon-box"><FontAwesomeIcon icon={faMapMarkerAlt} /></div>
-                                <div>
-                                    <span className="info-label">Địa điểm</span>
-                                    <span className="info-value">{jdDetail.location}</span>
-                                </div>
-                            </div>
-                            <div className="info-item-modern">
-                                <div className="icon-box green"><FontAwesomeIcon icon={faMoneyBillWave} /></div>
-                                <div>
-                                    <span className="info-label">Mức lương</span>
-                                    <span className="info-value highlight">
-                                        {Number(jdDetail.salaryMin).toLocaleString()} - {Number(jdDetail.salaryMax).toLocaleString()} VND
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="info-item-modern">
-                                <div className="icon-box blue"><FontAwesomeIcon icon={faBriefcase} /></div>
-                                <div>
-                                    <span className="info-label">Danh mục</span>
-                                    <span className="info-value">{jdDetail.category?.name || jdDetail.category?.categoryName || "Chưa có"}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="form-card sidebar-card">
-                        <h3 className="card-title">Kỹ năng yêu cầu</h3>
-                        <div className="skills-tags-container">
-                            {jdDetail.skills?.map((skill, index) => (
-                                <span key={index} className={`skill-tag-modern ${skill.required ? 'required' : ''}`}>
-                                    {skill.name || skill.skillName || skill.title}
-                                    {skill.required && <span className="star-req">*</span>}
-                                </span>
-                            ))}
-                        </div>
-                    </section>
+                    <JDInfoCard jdDetail={jdDetail} />
                 </div>
             </div>
 
 
             {isModalOpen && editForm && (
-                <div className="modal-overlay-modern">
-                    <div className="modal-container-modern">
-
-                        <div className="modal-header-modern">
-                            <h2>Cập nhật mô tả công việc (JD)</h2>
-                            <button onClick={handleCloseModal} className="btn-close-icon"><X size={24} /></button>
+                <div className="update-jd-full-page">
+                    <header className="jd-board-header">
+                        <div className="jd-header-copy">
+                            <h2>Cập Nhật Mô Tả Công Việc</h2>
                         </div>
+                        <div className="header-controls">
+                            <button
+                                type="button"
+                                onClick={handleCloseModal}
+                                className="btn-secondary"
+                            >
+                                Hủy bỏ
+                            </button>
+                            {isFormChanged && (
+                                <button
+                                    type="submit"
+                                    form="update-jd-form"
+                                    disabled={isUpdating}
+                                    className="btn-primary-large btn-header-submit"
+                                >
+                                    {isUpdating ? 'Đang Xử Lý...' : 'Xác Nhận Cập Nhật'}
+                                </button>
+                            )}
+                        </div>
+                    </header>
 
-                        <form onSubmit={handleUpdateSubmit} className="modal-body-scroll">
-                            <div className="jd-board-layout" style={{ gap: '20px' }}>
+                    <form id="update-jd-form" onSubmit={handleUpdateSubmit} className="jd-board-layout">
 
-                                {/* Cột Trái Modal */}
-                                <div className="layout-main-column">
-                                    <div className="form-card">
-                                        <h3 className="card-title">Thông tin cơ bản</h3>
-                                        <div className="input-group-grid">
-                                            <div className="input-item">
-                                                <label>Vị trí công việc</label>
-                                                <input type="text" name="position" value={editForm.position} onChange={handleChange} required />
-                                            </div>
-                                            <div className="input-item">
-                                                <label>Lĩnh vực / Danh mục</label>
-                                                <select value={editForm.categoryId} onChange={handleCategoryChange} required>
-                                                    <option value="">-- Chọn --</option>
-                                                    {categories.map(cat => (
-                                                        <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name || cat.categoryName}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
+                        <div className="layout-main-column">
+                            <section className="form-card scroll-card">
+                                <h3 className="card-title">Thông Tin Cơ Bản</h3>
+                                <div className="input-group-grid">
+                                    <div className="input-item">
+                                        <label>Vị Trí Công Việc</label>
+                                        <input
+                                            type="text"
+                                            name="position"
+                                            value={editForm.position}
+                                            onChange={handleChange}
+                                            required
+                                            placeholder="VD: Nhân viên Marketing..."
+                                        />
                                     </div>
-
-                                    <div className="form-card">
-                                        <h3 className="card-title">Chi tiết công việc</h3>
-                                        <div className="input-item full-width">
-                                            <label>Mô tả công việc</label>
-                                            <textarea name="description" value={editForm.description} onChange={handleChange} required rows="3"></textarea>
-                                        </div>
-
-                                        <div className="dynamic-section">
-                                            <div className="dynamic-header">
-                                                <label>Các mục Tiêu đề & Chi tiết</label>
-                                                <button type="button" onClick={addDynamicTitle} className="btn-add-outline">
-                                                    <Plus size={16} /> Thêm mục
-                                                </button>
-                                            </div>
-                                            <div className="dynamic-body">
-                                                {dynamicTitles.map((item, index) => (
-                                                    <div key={index} className="dynamic-row">
-                                                        <input
-                                                            type="text"
-                                                            value={item.key}
-                                                            onChange={(e) => handleDynamicTitleChange(index, "key", e.target.value)}
-                                                            placeholder="Tiêu đề (Ví dụ: Quyền lợi)"
-                                                            className="dynamic-input-key"
-                                                        />
-                                                        <textarea
-                                                            value={item.value}
-                                                            onChange={(e) => handleDynamicTitleChange(index, "value", e.target.value)}
-                                                            placeholder="Mô tả chi tiết..."
-                                                            rows="2"
-                                                            className="dynamic-input-value"
-                                                        />
-                                                        {dynamicTitles.length > 1 && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeDynamicTitle(index)}
-                                                                className="btn-delete-icon"
-                                                                title="Xóa mục này"
-                                                            >
-                                                                <Trash2 size={18} />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                    <div className="input-item">
+                                        <label>Danh Mục Kỹ Năng</label>
+                                        <select
+                                            className="category-select"
+                                            value={editForm.categoryId}
+                                            onChange={handleCategoryChange}
+                                            required
+                                        >
+                                            <option value="">-- Chọn danh mục --</option>
+                                            {categories.map(cat => (
+                                                <option key={cat.id || cat._id} value={cat.id || cat._id}>
+                                                    {cat.name || cat.categoryName}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
 
-                                <div className="layout-sidebar">
-                                    <div className="form-card sidebar-card">
-                                        <h3 className="card-title">Yêu cầu & Lương</h3>
-                                        <div className="input-item full-width">
-                                            <label>Địa điểm làm việc</label>
-                                            <input type="text" name="location" value={editForm.location} onChange={handleChange} required />
-                                        </div>
-                                        <div className="salary-group">
-                                            <div className="input-item">
-                                                <label>Lương Tối thiểu</label>
-                                                <input
-                                                    type="text"
-                                                    name="salaryMin"
-                                                    value={editForm.salaryMin ? Number(editForm.salaryMin).toLocaleString('vi-VN') : ''}
-                                                    onChange={(e) => {
-                                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
-                                                        const numValue = rawValue ? Number(rawValue) : 0;
-                                                        setEditForm(prev => ({ ...prev, salaryMin: numValue }));
-                                                    }}
-                                                    required
-                                                    className="form-control"
-                                                    placeholder="Ví dụ: 1.000.000"
-                                                />
-                                            </div>
-                                            <div className="input-item">
-                                                <label>Lương Tối đa</label>
-                                                <input
-                                                    type="text"
-                                                    name="salaryMax"
-                                                    value={editForm.salaryMax ? Number(editForm.salaryMax).toLocaleString('vi-VN') : ''}
-                                                    onChange={(e) => {
-                                                        const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
-                                                        const numValue = rawValue ? Number(rawValue) : 0;
-                                                        setEditForm(prev => ({ ...prev, salaryMax: numValue }));
-                                                    }}
-                                                    required
-                                                    className="form-control"
-                                                    placeholder="Ví dụ: 1.000.000"
-                                                />
-                                            </div>
-                                        </div>
+                                <div className="card-section-divider" />
+
+                                <h3 className="card-title">Chi Tiết Công Việc</h3>
+                                <div className="input-item full-width">
+                                    <label>Mô tả công việc</label>
+                                    <textarea
+                                        name="description"
+                                        value={editForm.description}
+                                        onChange={handleChange}
+                                        required
+                                        rows="3"
+                                        placeholder="Mô tả chi tiết về vị trí, trách nhiệm và môi trường làm việc..."
+                                    ></textarea>
+                                </div>
+
+                                <div className="dynamic-section">
+                                    <div className="dynamic-header">
+                                        <label>Các mục tiêu đề & Chi tiết</label>
+                                        <button type="button" onClick={addDynamicTitle} className="btn-add-outline">
+                                            <Plus size={14} /> Thêm mục
+                                        </button>
                                     </div>
 
-                                    <div className="form-card sidebar-card skills-card" style={{ maxHeight: '400px' }}>
-                                        <div className="skills-header">
-                                            <h3 className="card-title">Kỹ năng yêu cầu</h3>
-                                            <div className="search-box">
-                                                <Search size={16} />
-                                                <input type="text" placeholder="Tìm nhanh..." value={skillSearchTerm} onChange={(e) => setSkillSearchTerm(e.target.value)} />
+                                    <div className="dynamic-body job-feed">
+                                        {dynamicTitles.map((item, index) => (
+                                            <div key={index} className="dynamic-row">
+                                                <input
+                                                    type="text"
+                                                    value={item.key}
+                                                    onChange={(e) => handleDynamicTitleChange(index, "key", e.target.value)}
+                                                    placeholder="Ví dụ: Quyền lợi, Yêu cầu..."
+                                                    className="dynamic-input-key"
+                                                />
+                                                <textarea
+                                                    value={item.value}
+                                                    onChange={(e) => handleDynamicTitleChange(index, "value", e.target.value)}
+                                                    placeholder="Nhập chi tiết cho mục này..."
+                                                    rows="2"
+                                                    className="dynamic-input-value"
+                                                />
+                                                {dynamicTitles.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeDynamicTitle(index)}
+                                                        className="btn-delete-icon"
+                                                        title="Xóa mục này"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div className="layout-sidebar">
+                            <section className="form-card sidebar-card scroll-card">
+                                <h3 className="card-title">Địa Điểm & Mức Lương</h3>
+                                <div className="input-item full-width location-input-shell">
+                                    <div className="location-field-group">
+
+                                        <div className="location-grid">
+                                            <div className="location-select-wrap location-field-half">
+                                                <label className="location-mini-label">Tỉnh/Thành Phố</label>
+                                                <select
+                                                    className="location-select"
+                                                    value={selectedProvinceCode}
+                                                    onChange={(e) => {
+                                                        setSelectedProvinceCode(e.target.value);
+                                                        setSelectedDistrictCode("");
+                                                        setSelectedWardCode("");
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="">-- Chọn tỉnh/thành phố --</option>
+                                                    {provinces.filter(isProvinceActive).map((province) => (
+                                                        <option key={province.code} value={province.code}>
+                                                            {province.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="location-select-wrap location-field-half">
+                                                <label className="location-mini-label">Quận/Huyện</label>
+                                                <select
+                                                    className="location-select"
+                                                    value={selectedDistrictCode}
+                                                    onChange={(e) => {
+                                                        setSelectedDistrictCode(e.target.value);
+                                                        setSelectedWardCode("");
+                                                    }}
+                                                    required
+                                                    disabled={!selectedProvinceCode}
+                                                >
+                                                    <option value="">-- Chọn quận/huyện --</option>
+                                                    {districtOptions.map((district) => (
+                                                        <option key={district.code} value={district.code}>
+                                                            {district.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="location-select-wrap location-field-full">
+                                                <label className="location-mini-label">Xã/Phường</label>
+                                                <select
+                                                    className="location-select"
+                                                    value={selectedWardCode}
+                                                    onChange={(e) => setSelectedWardCode(e.target.value)}
+                                                    required
+                                                    disabled={!selectedDistrictCode}
+                                                >
+                                                    <option value="">-- Chọn xã/phường --</option>
+                                                    {wardOptions.map((ward) => (
+                                                        <option key={ward.code} value={ward.code}>
+                                                            {ward.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="location-detail-wrap location-field-full">
+                                                <label className="location-mini-label">Địa Chỉ Cụ Thể</label>
+                                                <input
+                                                    type="text"
+                                                    value={specificAddress}
+                                                    onChange={(e) => setSpecificAddress(e.target.value)}
+                                                    placeholder="VD: Số 12 Nguyễn Huệ"
+                                                    required
+                                                />
                                             </div>
                                         </div>
-                                        <div className="skills-content">
-                                            {filteredSkillsList.length > 0 ? (
-                                                <div className="skills-list-compact">
-                                                    {filteredSkillsList.map(skill => {
-                                                        const listSkillId = String(skill.id || skill._id || skill.skillId || "");
-                                                        const listSkillName = String(skill.name || skill.skillName || skill.title || "").trim().toLowerCase();
-                                                        const selectedSkill = editForm.skills.find(s => (s.skillId && s.skillId === listSkillId) || (s.name && s.name === listSkillName));
-                                                        const isSelected = !!selectedSkill;
 
-                                                        return (
-                                                            <div key={listSkillId} className={`compact-skill-item ${isSelected ? 'active' : ''}`}>
-                                                                <label className="checkbox-main">
-                                                                    <input type="checkbox" checked={isSelected} onChange={() => handleSkillToggle(listSkillId, listSkillName)} />
-                                                                    <span>{skill.name || skill.skillName || skill.title}</span>
-                                                                </label>
-                                                                {isSelected && (
-                                                                    <label className="checkbox-sub">
-                                                                        <input type="checkbox" checked={selectedSkill.isRequired} onChange={(e) => handleSkillRequiredToggle(listSkillId, listSkillName, e.target.checked)} />
-                                                                        Bắt buộc?
-                                                                    </label>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
+                                        {locationPreview && (
+                                            <div className="location-preview">
+                                                <span>Địa Chỉ Đã Chọn</span>
+                                                <strong>{locationPreview}</strong>
+                                            </div>
+                                        )}
+
+                                        <div className="posting-date-group modal-posting-date-group">
+                                            <label className="location-mini-label">Thời Gian Đăng Tin</label>
+                                            <div className="posting-date-row">
+                                                <div className="input-item">
+                                                    <label>Ngày Bắt Đầu</label>
+                                                    <input
+                                                        type="date"
+                                                        name="startDate"
+                                                        value={editForm.startDate || ''}
+                                                        onChange={handleChange}
+                                                        required
+                                                        min={format(new Date(), 'yyyy-MM-dd')}
+                                                        max={postingDuration && editForm.endDate ? format(addDays(new Date(editForm.endDate), 0), 'yyyy-MM-dd') : undefined}
+                                                    />
                                                 </div>
-                                            ) : (
-                                                <p className="empty-text">Không tìm thấy kỹ năng.</p>
+
+                                                <div className="input-item">
+                                                    <label>Ngày Kết Thúc</label>
+                                                    <input
+                                                        type="date"
+                                                        name="endDate"
+                                                        value={editForm.endDate || ''}
+                                                        onChange={handleChange}
+                                                        required
+                                                        min={editForm.startDate || format(new Date(), 'yyyy-MM-dd')}
+                                                        max={postingDuration && editForm.startDate ? format(addDays(new Date(editForm.startDate), postingDuration - 1), 'yyyy-MM-dd') : undefined}
+                                                    />
+                                                </div>
+                                            </div>
+                                            {postingDuration && (
+                                                <div className="posting-duration-note">
+                                                    Gói hiện tại cho phép đăng tối đa <strong>{postingDuration} ngày</strong> kể từ ngày bắt đầu.
+                                                </div>
                                             )}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="modal-footer-modern">
-                                <button type="button" className="btn-secondary" onClick={handleCloseModal}>Hủy bỏ</button>
-                                {isFormChanged && (
-                                    <button type="submit" className="btn-primary" disabled={isUpdating}>
-                                        {isUpdating ? 'Đang lưu...' : 'Lưu thay đổi'}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
+                                <div className="salary-group">
+                                    <div className="input-item">
+                                        <label>Lương Tối Thiểu</label>
+                                        <input
+                                            type="text"
+                                            name="salaryMin"
+                                            value={editForm.salaryMin ? Number(editForm.salaryMin).toLocaleString('vi-VN') : ''}
+                                            onChange={(e) => {
+                                                const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                                const numValue = rawValue ? Number(rawValue) : '';
+                                                setEditForm(prev => ({ ...prev, salaryMin: numValue }));
+                                            }}
+                                            required
+                                            placeholder="VD: 10.000.000"
+                                        />
+                                    </div>
+                                    <div className="input-item">
+                                        <label>Lương Tối Đa</label>
+                                        <input
+                                            type="text"
+                                            name="salaryMax"
+                                            value={editForm.salaryMax ? Number(editForm.salaryMax).toLocaleString('vi-VN') : ''}
+                                            onChange={(e) => {
+                                                const rawValue = e.target.value.replace(/\./g, '').replace(/[^\d]/g, '');
+                                                const numValue = rawValue ? Number(rawValue) : '';
+                                                setEditForm(prev => ({ ...prev, salaryMax: numValue }));
+                                            }}
+                                            required
+                                            placeholder="VD: 20.000.000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="skills-header">
+                                    <h3 className="card-title">Kỹ năng Yêu Cầu</h3>
+                                    {skillsList.length > 0 && (
+                                        <div className="search-box">
+                                            <Search size={16} />
+                                            <input
+                                                type="text"
+                                                placeholder="Tìm kiếm..."
+                                                value={skillSearchTerm}
+                                                onChange={(e) => setSkillSearchTerm(e.target.value)}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="skills-content">
+                                    {skillsList.length > 0 ? (
+                                        <div className="skills-list-compact">
+                                            {filteredSkillsList.length > 0 ? (
+                                                filteredSkillsList.map(skill => {
+                                                    const skillId = skill.id || skill._id;
+                                                    const skillName = skill.name || skill.skillName || skill.title;
+                                                    const selectedSkill = editForm.skills.find(s => s.skillId === skillId || (s.name && s.name === normalizeSkillName(skillName)));
+                                                    const isSelected = !!selectedSkill;
+
+                                                    return (
+                                                        <div key={skillId} className={`compact-skill-item ${isSelected ? 'active' : ''}`}>
+                                                            <label className="checkbox-main">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isSelected}
+                                                                    onChange={() => handleSkillToggle(skillId, normalizeSkillName(skillName))}
+                                                                />
+                                                                <span>{skillName}</span>
+                                                            </label>
+
+                                                            {isSelected && (
+                                                                <label className="checkbox-sub">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedSkill.isRequired}
+                                                                        onChange={(e) => handleSkillRequiredToggle(skillId, normalizeSkillName(skillName), e.target.checked)}
+                                                                    />
+                                                                    Yêu cầu bắt buộc
+                                                                </label>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <p className="empty-text">Không tìm thấy kỹ năng phù hợp</p>
+                                            )}
+                                        </div>
+                                    ) : editForm.categoryId ? (
+                                        <p className="empty-text">Đang tải danh sách kỹ năng...</p>
+                                    ) : (
+                                        <p className="empty-text">Vui lòng chọn danh mục để xem kỹ năng</p>
+                                    )}
+                                </div>
+
+                            </section>
+                        </div>
+                    </form>
+
+                    <div className="update-jd-overlay" onClick={handleCloseModal}></div>
                 </div>
             )}
         </div>

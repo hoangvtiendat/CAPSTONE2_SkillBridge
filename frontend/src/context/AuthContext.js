@@ -50,11 +50,11 @@ export const AuthProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         fetchProfile();
-    }, [fetchProfile]);
+    }, []);
 
     const login = useCallback((userData) => {
         setUser(userData);

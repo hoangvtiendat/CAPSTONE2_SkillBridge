@@ -15,6 +15,10 @@ const notificationService = {
         const response = await api.patch("/notifications/read-all");
         return response.data;
     },
+    notificationByAI: async() => {
+        const response = await api.get("/notifications/Ai");
+        return response.data;
+    }
 };
 
 export default notificationService;

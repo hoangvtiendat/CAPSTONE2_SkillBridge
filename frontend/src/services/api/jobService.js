@@ -256,9 +256,13 @@ const jobService = {
         });
         return response.data;
     },
-    repostJob: async (jobId) => {
+    repostJob: async (jobId, dateParams = {}) => {
         try {
-            const response = await api.post(`/jobs/report-Job/${jobId}`);
+            const payload = dateParams && Object.keys(dateParams).length > 0 
+                ? dateParams 
+                : {};
+            
+            const response = await api.post(`/jobs/report-Job/${jobId}`, payload);
 
             if (!response) {
                 throw new Error("Không nhận được phản hồi từ server");
@@ -289,8 +293,36 @@ const jobService = {
             console.error("Error withdrawing application:", error);
             throw error;
         }
+    },
+    /// Lay thong tin bai dang trung lap
+    jdSpam: async (jdIDSpam) => {
+        try {
+            const response = await api.get(`/jobs/JdSpam/${jdIDSpam}`);
+            return response.data?.result || null;
+        } catch (error) {
+            console.error("Error reporting job as spam:", error);
+            throw error;
+        }
+    },
+    listJDSpam: async () => {
+        try {
+            const response = await api.get(`/jobs/spam`);
+            return Array.isArray(response.data) ? response.data : [];
+        } catch (error) {
+            console.error("Error fetching spam job list:", error);
+            throw error;        
+        }
+    },
+    ListJDLog: async () => {
+        try {
+            const response = await api.get(`/jobs/Log-JD`);
+            const payload = response.data?.result ?? response.data;
+            return Array.isArray(payload) ? payload : [];
+        } catch (error) {
+            console.error("Error fetching job logs:", error);
+            throw error;        
+        }
     }
-
 };
 
 export default jobService;

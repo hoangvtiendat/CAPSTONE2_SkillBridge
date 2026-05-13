@@ -109,7 +109,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
             j.id, j.title, j.position,j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
-            c.name,c.imageUrl,soc.name, cat.name
+            c.name, c.imageUrl, soc.subscriptionPlan.name, cat.name 
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -137,7 +137,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT DISTINCT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
-            c.name, c.imageUrl, soc.name, cat.name
+            c.name, c.imageUrl, soc.subscriptionPlan.name, cat.name
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -161,7 +161,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
-            soc.name, cat.name, j.status, j.moderationStatus
+            soc.subscriptionPlan.name, cat.name, j.status, j.moderationStatus 
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -183,7 +183,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
-            soc.name, cat.name, j.status, j.moderationStatus
+            soc.subscriptionPlan.name, cat.name, j.status, j.moderationStatus 
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -202,18 +202,18 @@ public interface JobRepository extends JpaRepository<Job, String> {
 
     /// Lấy dạnh sách VECTOR từng JD của cty đó
     @Query(value = """
-    SELECT j.id, j.vector_embedding
-    FROM jobs j
-    WHERE j.company_id = :companyId
-      AND j.id != :excludeJobId
-      AND j.vector_embedding IS NOT NULL
-      AND j.is_deleted = false
-        AND j.status = :status
-    """, nativeQuery = true)
+        SELECT j.id, j.vector_embedding
+        FROM jobs j
+        WHERE j.company_id = :companyId
+          AND j.id != :excludeJobId
+          AND j.vector_embedding IS NOT NULL
+          AND j.is_deleted = false
+          AND j.status IN (:statuses) 
+""", nativeQuery = true)
     List<Object[]> listAllVectorsByCompanyIdExceptCurrent(
             @Param("companyId") String companyId,
             @Param("excludeJobId") String excludeJobId,
-            @Param("status") String status
+            @Param("statuses") List<String> statuses // Chuyển thành List
     );
     ///  So sánh Vector chức năng đăng lại bài
     @Query(value = """
@@ -240,39 +240,108 @@ public interface JobRepository extends JpaRepository<Job, String> {
             @Param("jobId") String jobId,
             @Param("companyId") String companyId
     );
-    /// lệnh truy vấn theo nhu cầy của người dùng
     @Query(value = """
     SELECT j.* FROM jobs j
-    LEFT JOIN categories c ON j.category_id = c.id AND c.is_deleted = false
+    LEFT JOIN categories c 
+        ON j.category_id = c.id 
+        AND c.is_deleted = false
+
     WHERE j.is_deleted = false
       AND j.status = :status
-      
-      -- Xử lý điều kiện địa lý phân rã (Bắt buộc thỏa mãn tất cả các cấp độ nếu có)
-      AND (:loc1 IS NULL OR :loc1 = '' OR j.location LIKE CONCAT('%', :loc1, '%'))
-      AND (:loc2 IS NULL OR :loc2 = '' OR j.location LIKE CONCAT('%', :loc2, '%'))
-      AND (:loc3 IS NULL OR :loc3 = '' OR j.location LIKE CONCAT('%', :loc3, '%'))
-      
-      AND (:categoryName IS NULL OR :categoryName = '' OR c.name LIKE CONCAT('%', :categoryName, '%'))
+
+      -- LOCATION
       AND (
-          :salaryExpect IS NULL 
-          OR (j.salary_min <= :salaryExpect AND j.salary_max >= :salaryExpect)
+            :loc1 IS NULL 
+            OR :loc1 = '' 
+            OR j.location LIKE CONCAT('%', :loc1, '%')
       )
+
       AND (
-          :jobPosition IS NULL OR :jobPosition = '' 
-          OR REPLACE(REPLACE(REPLACE(LOWER(j.title), ' ', ''), '-', ''), '_', '') 
-             LIKE CONCAT('%', REPLACE(REPLACE(REPLACE(LOWER(:jobPosition), ' ', ''), '-', ''), '_', ''), '%')
-          OR REPLACE(REPLACE(REPLACE(LOWER(j.position), ' ', ''), '-', ''), '_', '') 
-             LIKE CONCAT('%', REPLACE(REPLACE(REPLACE(LOWER(:jobPosition), ' ', ''), '-', ''), '_', ''), '%')
-      ) 
+            :loc2 IS NULL 
+            OR :loc2 = '' 
+            OR j.location LIKE CONCAT('%', :loc2, '%')
+      )
+
+      AND (
+            :loc3 IS NULL 
+            OR :loc3 = '' 
+            OR j.location LIKE CONCAT('%', :loc3, '%')
+      )
+
+      -- CATEGORY
+      AND (
+            :categoryName IS NULL 
+            OR :categoryName = '' 
+            OR c.name LIKE CONCAT('%', :categoryName, '%')
+      )
+
+      -- SALARY
+      AND (
+            :salaryExpect IS NULL
+            OR (
+                j.salary_min <= :salaryExpect
+                AND j.salary_max >= :salaryExpect
+            )
+      )
+
+      -- POSITION
+      AND (
+
+            (
+                (:jobPositionVi IS NULL OR :jobPositionVi = '')
+                AND
+                (:jobPositionEn IS NULL OR :jobPositionEn = '')
+            )
+
+            OR
+
+            -- CHECK TITLE
+            REPLACE(REPLACE(REPLACE(LOWER(j.title), ' ', ''), '-', ''), '_', '')
+                LIKE CONCAT('%', :jobPositionVi, '%')
+
+            OR
+
+            REPLACE(REPLACE(REPLACE(LOWER(j.title), ' ', ''), '-', ''), '_', '')
+                LIKE CONCAT('%', :jobPositionEn, '%')
+
+            OR
+
+            -- CHECK POSITION
+            REPLACE(REPLACE(REPLACE(LOWER(j.position), ' ', ''), '-', ''), '_', '')
+                LIKE CONCAT('%', :jobPositionVi, '%')
+
+            OR
+
+            REPLACE(REPLACE(REPLACE(LOWER(j.position), ' ', ''), '-', ''), '_', '')
+                LIKE CONCAT('%', :jobPositionEn, '%')
+
+            OR
+
+            -- CHECK OTHER_POSITION
+            REPLACE(REPLACE(REPLACE(LOWER(j.other_position), ' ', ''), '-', ''), '_', '')
+                LIKE CONCAT('%', :jobPositionVi, '%')
+
+            OR
+
+            REPLACE(REPLACE(REPLACE(LOWER(j.other_position), ' ', ''), '-', ''), '_', '')
+                LIKE CONCAT('%', :jobPositionEn, '%')
+      )
+
 """, nativeQuery = true)
     List<Job> findJobsByRequirements(
+
             @Param("status") String status,
+
             @Param("loc1") String loc1,
             @Param("loc2") String loc2,
             @Param("loc3") String loc3,
+
             @Param("categoryName") String categoryName,
+
             @Param("salaryExpect") Long salaryExpect,
-            @Param("jobPosition") String jobPosition
+
+            @Param("jobPositionVi") String jobPositionVi,
+            @Param("jobPositionEn") String jobPositionEn
     );
     @Query(value = """
             SELECT JSON_OBJECT(
@@ -288,4 +357,10 @@ public interface JobRepository extends JpaRepository<Job, String> {
             WHERE j.id = :jobId
             """, nativeQuery = true)
     String getJobAsJson(@Param("jobId") String jobId);
+
+    // Tìm các Job chưa bắt đầu nhưng đã đến (hoặc qua) ngày startDate
+    List<Job> findByStatusAndStartDateLessThanEqual(JobStatus status, LocalDateTime date);
+
+    // Tìm các Job đang mở nhưng đã qua ngày endDate
+    List<Job> findByStatusAndEndDateLessThanEqual(JobStatus status, LocalDateTime date);
 }

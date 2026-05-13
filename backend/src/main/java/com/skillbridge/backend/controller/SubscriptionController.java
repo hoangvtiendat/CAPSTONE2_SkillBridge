@@ -70,4 +70,18 @@ public class SubscriptionController {
     public ResponseEntity<List<SubscriptionOfCompany>> getAllSubscriptionPlans() {
         return ResponseEntity.ok(subscriptionService.getMyCompanySubscriptions());
     }
+
+    @GetMapping("/posting-duration/{id}")
+    public ResponseEntity<Integer> getPostingDuration(@PathVariable String id) {
+        return ResponseEntity.ok(subscriptionService.getJobDay(id));
+    }
+//    @PostMapping("/create/Subscriftion")
+//    public ResponseEntity<ApiResponse<SubscriptionPlan>> createSubscriptionPlan(@RequestBody SubscriptionPlan subscriptionPlan) {
+//        subscriptionService.createSubscriptionPlan(subscriptionPlan);
+//        return ResponseEntity.ok(new ApiResponse<>(
+//                200,
+//                "Tạo gói cước thành công",
+//                null
+//        ));
+//    }
 }

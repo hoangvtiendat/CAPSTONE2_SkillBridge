@@ -67,6 +67,28 @@
     gap: 8px;
 }
 
+.jd-company-id-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--pjd-border);
+    background: var(--pjd-surface);
+    color: var(--pjd-text-2);
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: var(--pjd-shadow-soft);
+}
+
+.jd-company-id-badge strong {
+    color: var(--pjd-accent);
+    font-weight: 700;
+    font-family: var(--pjd-mono);
+    letter-spacing: 0.02em;
+}
+
 .eyebrow {
     margin: 0;
     font-family: var(--pjd-mono);
@@ -105,7 +127,7 @@
     max-width: 1400px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
     gap: 32px;
     align-items: start;
 }
@@ -405,6 +427,124 @@
     font-size: 13px;
     font-weight: 600;
     word-break: break-word;
+}
+
+.posting-time-card {
+    margin-top: 20px;
+    padding: 8px 10px 10px;
+    border-color: rgba(148, 163, 184, 0.55);
+    background:
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 34%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.posting-time-card .card-title {
+    margin-bottom: 12px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+}
+
+.posting-date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 0;
+}
+
+.posting-date-card {
+    display: block;
+    width: 100%;
+    margin-top: 0;
+    padding: 10px 12px 10px;
+    border-radius: 18px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.posting-date-card:first-child {
+    border-left: 4px solid #2563eb;
+}
+
+.posting-date-card:last-of-type {
+    border-left: 4px solid #8b5cf6;
+}
+
+.posting-date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    width: 100%;
+}
+
+.posting-date-field label {
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #0f172a;
+}
+
+.posting-date-field input[type='date'] {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1.5px solid #d7dee9;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    color: #0f172a;
+    font-family: var(--pjd-font);
+    font-size: 13px;
+    font-weight: 600;
+    box-sizing: border-box;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+    transition:
+        border-color var(--pjd-transition),
+        box-shadow var(--pjd-transition),
+        background-color var(--pjd-transition);
+}
+
+.posting-date-field input[type='date']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.posting-date-field input[type='date']:hover {
+    border-color: #9ca3af;
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.posting-date-field input[type='date']:focus {
+    border-color: var(--pjd-accent);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), 0 10px 20px rgba(37, 99, 235, 0.08);
+}
+
+.posting-duration-note {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 6px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(59, 130, 246, 0.16);
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.98));
+    color: #334155;
+    font-size: 12px;
+    line-height: 1.45;
+    box-shadow: 0 8px 18px rgba(59, 130, 246, 0.06);
+}
+
+.posting-duration-note strong {
+    color: #2563eb;
+    font-weight: 800;
 }
 
 /* Dynamic section */
@@ -746,7 +886,7 @@
 /* Responsive */
 @media (max-width: 1200px) {
     .jd-board-layout {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
         gap: 28px;
     }
 
@@ -816,6 +956,11 @@
     .location-field-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .posting-time-card {
+        padding: 8px 10px 10px;
+        margin-top: 16px;
     }
 
     .location-field-hint {

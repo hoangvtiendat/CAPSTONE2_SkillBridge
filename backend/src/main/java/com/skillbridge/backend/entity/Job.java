@@ -93,5 +93,8 @@ public class Job extends BaseEntity {
     @Column(name = "end_date")
     private LocalDateTime endDate;
 
+    @Column(name = "other_position")
+    private String otherPosition;
+
 
 }

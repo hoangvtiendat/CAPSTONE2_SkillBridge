@@ -160,7 +160,6 @@ public class PaymentService {
 
         SubscriptionOfCompany newSub = new SubscriptionOfCompany();
         newSub.setCompany(company);
-        newSub.setName(plan.getName());
         newSub.setJobLimit(plan.getJobLimit());
         newSub.setCandidateViewLimit(plan.getCandidateViewLimit());
         newSub.setHasPriorityDisplay(plan.getHasPriorityDisplay());
@@ -170,8 +169,7 @@ public class PaymentService {
         newSub.setStartDate(LocalDateTime.now());
         newSub.setEndDate(LocalDateTime.now().plusMonths(plan.getPostingDuration() != null ? plan.getPostingDuration() : 1));
         newSub.setIsActive(true);
-        newSub.setSubscriptionPlan_id(transaction.getIdOfSubscription());
-
+        newSub.setSubscriptionPlan(plan);
         updateJobDurations(transaction.getCompanyId(), plan.getPostingDuration());
         subscriptionOfCompanyRepository.save(newSub);
     }

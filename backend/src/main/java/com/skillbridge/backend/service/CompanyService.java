@@ -128,7 +128,6 @@ public class CompanyService {
                 SubscriptionOfCompany freeSubscription = SubscriptionOfCompany.builder()
 
                         .company(company)
-                        .name(freePlan.getName())
                         .jobLimit(freePlan.getJobLimit())
                         .candidateViewLimit(freePlan.getCandidateViewLimit())
                         .postingDuration(freePlan.getPostingDuration())
@@ -140,7 +139,7 @@ public class CompanyService {
                         .startDate(LocalDateTime.now())
                         .endDate(LocalDateTime.now().plusYears(10))
                         .isActive(true)
-                        .subscriptionPlan_id(freePlan.getId())
+                        .subscriptionPlan(freePlan)
                         .build();
 
                 subscriptionOfCompanyRepository.save(freeSubscription);

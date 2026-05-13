@@ -3,7 +3,14 @@ import {useNavigate} from 'react-router-dom';
 import {toast} from 'sonner';
 import {useCompany} from '../../hooks/useCompany';
 import companyService from '../../services/api/companyService';
+import vietnamAdministrativeLegacy from '../../data/vietnamAdministrativeLegacy.json';
 import './BusinessIdentity.css';
+
+
+const isProvinceActive = (province) => {
+    const deletedValue = province?.isDeleted ?? province?.is_delete ?? province?.isDelete ?? 0;
+    return Number(deletedValue) === 0;
+};
 
 
 const BusinessRegisterForm = ({taxCode, onBack}) => {
@@ -15,6 +22,11 @@ const BusinessRegisterForm = ({taxCode, onBack}) => {
     const [logoPreview, setLogoPreview] = useState(null);
     const [gpkdFile, setGpkdFile] = useState(null);
     const [licensePreview, setLicensePreview] = useState(null);
+    const [provinces] = useState(vietnamAdministrativeLegacy);
+    const [selectedProvinceCode, setSelectedProvinceCode] = useState('');
+    const [selectedDistrictCode, setSelectedDistrictCode] = useState('');
+    const [selectedWardCode, setSelectedWardCode] = useState('');
+    const [specificAddress, setSpecificAddress] = useState('');
 
     const [formData, setFormData] = useState({
         name: '', taxcode: taxCode, address: '', websiteUrl: '', description: ''
@@ -50,10 +62,27 @@ const BusinessRegisterForm = ({taxCode, onBack}) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!logoFile || !gpkdFile) return toast.warning("Vui lòng chọn đủ Logo và GPKD");
+        if (!selectedProvinceCode || !selectedDistrictCode || !selectedWardCode || !specificAddress.trim()) {
+            return toast.warning("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, Xã/Phường và địa chỉ cụ thể");
+        }
+
+        const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+        const selectedDistrict = selectedProvince?.districts?.find(
+            (district) => String(district.code) === selectedDistrictCode
+        );
+        const selectedWard = selectedDistrict?.wards?.find((ward) => String(ward.code) === selectedWardCode);
+
+        const finalAddress = [
+            specificAddress.trim(),
+            selectedWard?.name,
+            selectedDistrict?.name,
+            selectedProvince?.name
+        ].filter(Boolean).join(', ');
 
         setIsSubmitting(true);
         const data = new FormData();
-        const jsonBlob = new Blob([JSON.stringify(formData)], {type: 'application/json'});
+        const payload = {...formData, address: finalAddress};
+        const jsonBlob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
         data.append('request', jsonBlob);
         data.append('logo', logoFile);
         data.append('license', gpkdFile);
@@ -70,6 +99,18 @@ const BusinessRegisterForm = ({taxCode, onBack}) => {
             }
         });
     };
+
+    const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+    const districtOptions = selectedProvince?.districts || [];
+    const selectedDistrict = districtOptions.find((district) => String(district.code) === selectedDistrictCode);
+    const wardOptions = selectedDistrict?.wards || [];
+
+    const locationPreview = [
+        specificAddress.trim(),
+        wardOptions.find((ward) => String(ward.code) === selectedWardCode)?.name,
+        selectedDistrict?.name,
+        selectedProvince?.name
+    ].filter(Boolean).join(', ');
 
     return (
         <form onSubmit={handleSubmit} className="identity-card animate-in">
@@ -129,7 +170,84 @@ const BusinessRegisterForm = ({taxCode, onBack}) => {
                 </div>
                 <div className="form-group full-width">
                     <label className="form-label">Địa chỉ trụ sở chính</label>
-                    <input name="address" required onChange={handleChange} className="form-input"/>
+                    <div className="identity-location-grid">
+                        <div className="identity-location-field">
+                            <label className="form-label identity-mini-label">Tỉnh/Thành phố</label>
+                            <select
+                                className="form-input"
+                                value={selectedProvinceCode}
+                                onChange={(e) => {
+                                    setSelectedProvinceCode(e.target.value);
+                                    setSelectedDistrictCode('');
+                                    setSelectedWardCode('');
+                                }}
+                                required
+                            >
+                                <option value="">-- Chọn tỉnh/thành phố --</option>
+                                {provinces.filter(isProvinceActive).map((province) => (
+                                    <option key={province.code} value={province.code}>
+                                        {province.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="identity-location-field">
+                            <label className="form-label identity-mini-label">Quận/Huyện</label>
+                            <select
+                                className="form-input"
+                                value={selectedDistrictCode}
+                                onChange={(e) => {
+                                    setSelectedDistrictCode(e.target.value);
+                                    setSelectedWardCode('');
+                                }}
+                                required
+                                disabled={!selectedProvinceCode}
+                            >
+                                <option value="">-- Chọn quận/huyện --</option>
+                                {districtOptions.map((district) => (
+                                    <option key={district.code} value={district.code}>
+                                        {district.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="identity-location-field full-width">
+                            <label className="form-label identity-mini-label">Xã/Phường</label>
+                            <select
+                                className="form-input"
+                                value={selectedWardCode}
+                                onChange={(e) => setSelectedWardCode(e.target.value)}
+                                required
+                                disabled={!selectedDistrictCode}
+                            >
+                                <option value="">-- Chọn xã/phường --</option>
+                                {wardOptions.map((ward) => (
+                                    <option key={ward.code} value={ward.code}>
+                                        {ward.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="identity-location-field full-width">
+                            <label className="form-label identity-mini-label">Địa chỉ cụ thể</label>
+                            <input
+                                value={specificAddress}
+                                onChange={(e) => setSpecificAddress(e.target.value)}
+                                className="form-input"
+                                placeholder="VD: Số 12 Nguyễn Huệ"
+                                required
+                            />
+                        </div>
+                    </div>
+                    {locationPreview && (
+                        <div className="identity-location-preview">
+                            <span>Địa chỉ đã chọn</span>
+                            <strong>{locationPreview}</strong>
+                        </div>
+                    )}
                 </div>
 
                 <div className="form-group full-width">

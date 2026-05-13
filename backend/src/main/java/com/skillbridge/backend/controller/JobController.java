@@ -3,12 +3,14 @@ package com.skillbridge.backend.controller;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.InviteRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
+import com.skillbridge.backend.dto.request.repostJDDayRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.Job;
+import com.skillbridge.backend.entity.JobRejectionLog;
 import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
+import com.skillbridge.backend.service.AI_Service_File.AIJobService;
 import com.skillbridge.backend.service.JobService;
-import com.skillbridge.backend.entity.provinces;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -22,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ import java.util.Properties;
 @RequestMapping("/jobs")
 public class JobController {
     JobService jobService;
+    AIJobService aiJobService;
 
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFeed(
@@ -188,7 +190,7 @@ public class JobController {
     public ResponseEntity<ApiResponse<JobResponse>> getJob(@PathVariable String id) {
         JobResponse in4_job = jobService.getIn4_of_JD_of_Company(id);
         return ResponseEntity.ok(
-                new ApiResponse<>(200, "Lấy thông tin thành công", in4_job)
+                new ApiResponse<>(200, "Lấy thông tin thành con công", in4_job)
         );
     }
 
@@ -217,8 +219,8 @@ public class JobController {
         }
 ///  đăng lại bài
     @PostMapping("/report-Job/{id}")
-    public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id) {
-        Job rePost = jobService.repostJD(id);
+    public ResponseEntity<ApiResponse<Job>> repostJD(@PathVariable String id, @RequestBody repostJDDayRequest request) {
+        Job rePost = jobService.repostJD(id, request);
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Đăng lại bài đăng thành ", rePost)
         );
@@ -274,19 +276,37 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/ListProvinces")
-    public ResponseEntity<ApiResponse<List<provinces>>>  getAllProvinces() {
-        List<provinces> result = jobService.getALlProvinces();
-        ApiResponse<List<provinces>> response = ApiResponse.<List<provinces>>builder()
-                .result(result)
-                .message("Lấy danh sách tỉnh thành, thành công")
+
+    ///  Laasy JD bi SPAM
+    @GetMapping("/JdSpam/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getJdSpam(@PathVariable String id) {
+
+        Map<String, Object> responseData = aiJobService.getJDTarget(id);
+
+        ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
+                .result(responseData)
+                .message("Lấy thông tin bài đăng trùng lặp thành công")
                 .build();
+
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/spam")
+    public ResponseEntity<?> getSpamJobs() {
+        try {
+            List<String> spamList = aiJobService.getListSPamJD();
 
-    @PutMapping("/Update-provinces/{id}")
-    public provinces updateProvince(@PathVariable String id, @RequestBody provinces provinces) {
-        provinces updateProvinces = jobService.updateProvince(id, provinces);
-        return updateProvinces;
+            return ResponseEntity.ok(spamList);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi khi lấy dữ liệu: " + e.getMessage());
+        }
+    }
+    @GetMapping("/Log-JD")
+    public ResponseEntity<?> getLogJDJobs() {
+        try {
+            List<JobRejectionLog> logJob = jobService.getAllRejectedJobs();
+            return ResponseEntity.ok(logJob);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

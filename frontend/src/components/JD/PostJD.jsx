@@ -7,6 +7,9 @@ import jobService from '../../services/api/jobService';
 import skillService from '../../services/api/skillService';
 import categoryJDService from '../../services/api/categoryJD';
 import vietnamAdministrativeLegacy from '../../data/vietnamAdministrativeLegacy.json';
+import { useAuth } from '../../context/AuthContext';
+import subscriptionService from '../../services/api/subscriptionService';
+import { addDays, format, parseISO } from 'date-fns';
 
 import './PostJD.css';
 
@@ -23,6 +26,7 @@ const isProvinceActive = (province) => {
 
 const PostJD = () => {
     const navigate = useNavigate();
+    const { user, token } = useAuth();
     const [loading, setLoading] = useState(false);
 
     const [categories, setCategories] = useState([]);
@@ -35,8 +39,8 @@ const PostJD = () => {
     const [specificAddress, setSpecificAddress] = useState("");
 
     const [dynamicTitles, setDynamicTitles] = useState([
-        { key: "Quyền lợi", value: "" },
-        { key: "Yêu cầu", value: "" }
+        { key: "Yêu cầu", value: "" },
+        { key: "Quyền lợi", value: "" }
     ]);
 
     const [formData, setFormData] = useState({
@@ -49,9 +53,71 @@ const PostJD = () => {
         skills: []
     });
 
+    const [postingDuration, setPostingDuration] = useState(null); // days
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+
     useEffect(() => {
         getListCategories();
     }, []);
+
+    // Fetch posting duration for company (in days)
+    useEffect(() => {
+        const fetchDuration = async () => {
+            if (!user?.companyId) return;
+            try {
+                const resp = await subscriptionService.postingDuriation(user.companyId, token);
+                // service returns response.data; could be a raw number or wrapped object
+                let dur = resp;
+                if (resp && typeof resp === 'object') {
+                    dur = resp?.data ?? resp?.result ?? resp?.postingDuriation ?? resp?.postingDuration ?? null;
+                }
+                if (typeof dur === 'string') dur = Number(dur);
+                if (typeof dur === 'number' && !Number.isNaN(dur)) {
+                    setPostingDuration(dur);
+                }
+            } catch (err) {
+                console.error('Failed to fetch posting duration', err);
+            }
+        };
+        fetchDuration();
+    }, [user?.companyId, token]);
+
+    useEffect(() => {
+        if (!postingDuration) return;
+
+        const today = formatDateForInput(new Date());
+        if (!startDate) {
+            setStartDate(today);
+        }
+        if (!endDate) {
+            setEndDate(formatDateForInput(addDays(new Date(), postingDuration - 1)));
+        }
+    }, [postingDuration, startDate, endDate]);
+
+    const formatDateForInput = (d) => {
+        try {
+            return format(typeof d === 'string' ? parseISO(d) : d, 'yyyy-MM-dd');
+        } catch (e) {
+            const dt = new Date(d);
+            if (isNaN(dt)) return '';
+            const yyyy = dt.getFullYear();
+            const mm = String(dt.getMonth() + 1).padStart(2, '0');
+            const dd = String(dt.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+    };
+
+    const toBackendDateTimeString = (dateString, isEndDate = false) => {
+        if (!dateString) return '';
+        const [year, month, day] = dateString.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        if (Number.isNaN(date.getTime())) return '';
+        const dayPart = String(date.getDate()).padStart(2, '0');
+        const monthPart = String(date.getMonth() + 1).padStart(2, '0');
+        const yearPart = date.getFullYear();
+        return `${dayPart}/${monthPart}/${yearPart} ${isEndDate ? '23:59:59' : '00:00:00'}`;
+    };
 
     useEffect(() => {
         if (formData.categoryId) {
@@ -126,6 +192,26 @@ const PostJD = () => {
             return;
         }
 
+        // Validate posting date range if postingDuration is available
+        if (postingDuration) {
+            if (!startDate || !endDate) {
+                toast.error("Lỗi nhập liệu", { description: `Vui lòng chọn ngày bắt đầu và kết thúc trong phạm vi ${postingDuration} ngày`, style: toastStyles.warning });
+                return;
+            }
+            const s = new Date(startDate);
+            const eDate = new Date(endDate);
+            if (eDate < s) {
+                toast.error("Lỗi nhập liệu", { description: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu", style: toastStyles.warning });
+                return;
+            }
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const inclusiveDays = Math.floor((eDate - s) / msPerDay) + 1;
+            if (inclusiveDays > postingDuration) {
+                toast.error("Lỗi nhập liệu", { description: `Khoảng thời gian đăng tin không thể vượt quá ${postingDuration} ngày`, style: toastStyles.warning });
+                return;
+            }
+        }
+
         const titleObject = {};
         dynamicTitles.forEach(item => {
             const finalKey = item.key.trim() === "" ? "Mục khác" : item.key.trim();
@@ -148,7 +234,9 @@ const PostJD = () => {
         const payloadToSubmit = {
             ...formData,
             location: finalLocation,
-            title: titleObject
+            title: titleObject,
+            startDate: toBackendDateTimeString(startDate),
+            endDate: toBackendDateTimeString(endDate, true)
         };
 
         setLoading(true);
@@ -176,6 +264,24 @@ const PostJD = () => {
             categoryId: selectedCategoryId,
             skills: []
         }));
+    };
+
+    const handleStartDateChange = (value) => {
+        setStartDate(value);
+        if (postingDuration && value) {
+            try {
+                const max = formatDateForInput(addDays(parseISO(value), postingDuration - 1));
+                if (!endDate || new Date(endDate) > new Date(max)) {
+                    setEndDate(max);
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+    };
+
+    const handleEndDateChange = (value) => {
+        setEndDate(value);
     };
 
     const handleSkillToggle = (skillId) => {
@@ -235,6 +341,7 @@ const PostJD = () => {
             <header className="jd-board-header">
                 <div className="jd-header-copy">
                     <h2>Tạo Bài Tuyển Dụng Mới</h2>
+                 
                 </div>
 
                 <button
@@ -425,6 +532,39 @@ const PostJD = () => {
                                         <strong>{locationPreview}</strong>
                                     </div>
                                 )}
+
+                                {/* Posting date range selectors (constrained by subscription postingDuration) */}
+                                <div className="posting-date-group">
+                                    <label className="location-mini-label">Thời Gian Đăng Tin</label>
+                                    <div className="posting-date-row">
+                                        <div className="input-item">
+                                            <label>Ngày Bắt Đầu</label>
+                                            <input
+                                                type="date"
+                                                value={startDate}
+                                                onChange={(e) => handleStartDateChange(e.target.value)}
+                                                min={formatDateForInput(new Date())}
+                                            />
+                                        </div>
+
+                                        <div className="input-item">
+                                            <label>Ngày Kết Thúc</label>
+                                            <input
+                                                type="date"
+                                                value={endDate}
+                                                onChange={(e) => handleEndDateChange(e.target.value)}
+                                                min={startDate || formatDateForInput(new Date())}
+                                                max={startDate && postingDuration ? formatDateForInput(addDays(parseISO(startDate), postingDuration - 1)) : undefined}
+                                            />
+                                        </div>
+                                       {postingDuration && (
+                                                <div className="posting-duration-note">
+                                                    Gói hiện tại cho phép đăng tối đa <strong>{postingDuration} ngày</strong> kể từ ngày bắt đầu.
+                                                </div>
+                                            )}
+                                    </div>
+                                  
+                                </div>
                             </div>
                         </div>
 

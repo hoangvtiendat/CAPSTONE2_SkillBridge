@@ -2,6 +2,7 @@ package com.skillbridge.backend.controller;
 
 import com.skillbridge.backend.dto.response.ApiResponse;
 import com.skillbridge.backend.dto.response.NotificationResponse;
+import com.skillbridge.backend.entity.NotificationForAI;
 import com.skillbridge.backend.entity.User;
 import com.skillbridge.backend.service.NotificationService;
 import com.skillbridge.backend.service.UserService;
@@ -53,4 +54,16 @@ public class NotificationController {
                 null
         ));
     }
+    @GetMapping("/Ai")
+    public ResponseEntity<ApiResponse<List<NotificationForAI>>> getNotificationsByAi() {
+        User currentUser = userService.getMe();
+        String company_id = currentUser.getCompanyId();
+        List<NotificationForAI> notificationAI = notificationService.getNotificationsByAI(company_id);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Lấy danh sách thông báo thành công",
+                notificationAI
+        ));
+    }
+
 }

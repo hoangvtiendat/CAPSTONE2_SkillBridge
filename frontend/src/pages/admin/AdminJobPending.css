@@ -135,17 +135,28 @@
 .pill-YELLOW .dot { width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; }
 
 /* --- Action Buttons --- */
-.action-btns-group { display: flex; gap: 8px; justify-content: flex-end; }
+.action-btns-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.action-btns-vertical {
+    min-width: 140px;
+}
 
 .btn-action-approve {
     background: rgba(16, 185, 129, 0.1);
     color: #059669;
     border: 1px solid #10b981;
-    padding: 8px 14px;
+    padding: 9px 14px;
     border-radius: 12px;
     font-weight: 800; font-size: 12px;
     display: flex; align-items: center; gap: 6px;
     transition: all 0.3s ease;
+    width: 100%;
+    justify-content: center;
 }
 
 .btn-action-approve:hover {
@@ -153,14 +164,41 @@
     transform: translateY(-2px);
 }
 
+.btn-action-spam {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1d4ed8;
+    border: 1px solid rgba(59, 130, 246, 0.28);
+    padding: 9px 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-action-spam:hover {
+    background: #2563eb;
+    color: white;
+    transform: translateY(-2px);
+}
+
 .btn-action-reject {
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
     border: 1px solid #ef4444;
-    padding: 8px 14px;
+    padding: 9px 14px;
     border-radius: 12px;
     font-weight: 800; font-size: 12px;
     transition: all 0.3s ease;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .btn-action-reject:hover {
@@ -174,6 +212,7 @@
     font-size: 15px;
     color: var(--text-main);
     max-width: 400px;
+    line-clamp: 2;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -189,6 +228,119 @@
 .company-info-cell {
     font-weight: 700; color: #475569;
     display: flex; align-items: center; gap: 8px;
+}
+
+.spam-white-table-wrap {
+    margin-top: 22px;
+    padding: 20px;
+    border-radius: 24px;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+    position: relative;
+    z-index: 1;
+}
+
+.spam-white-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.spam-white-table-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 850;
+    color: #0f172a;
+}
+
+.spam-white-table-header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.spam-white-table-close {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.spam-white-table-shell {
+    overflow-x: auto;
+}
+
+.spam-white-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background: white;
+}
+
+.spam-col-label {
+    width: 18%;
+}
+
+.spam-col-target,
+.spam-col-spam {
+    width: 41%;
+}
+
+.spam-white-table th,
+.spam-white-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: top;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.spam-white-table th {
+    background: #f8fafc;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.spam-field-name {
+    font-weight: 650;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.spam-white-table td {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Modal overlay for singleton spam compare */
+.spam-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+}
+.spam-modal-window {
+    max-width: 980px;
+    width: 95%;
+    max-height: 85vh;
+    overflow: auto;
+    border-radius: 8px;
 }
 
 /* Thừa hưởng các animation từ AdminJob.css */

@@ -26,4 +26,5 @@ public interface JobSkillRepository extends JpaRepository<JobSkill, String> {
             WHERE js.job.id = :jobId
     """)
     void deleteByJobId(@Param("jobId") String jobId);
+
 }

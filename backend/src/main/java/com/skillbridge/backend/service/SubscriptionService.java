@@ -12,6 +12,7 @@ import com.skillbridge.backend.exception.AppException;
 import com.skillbridge.backend.exception.ErrorCode;
 import com.skillbridge.backend.repository.CompanyMemberRepository;
 import com.skillbridge.backend.repository.SubscriptionOfCompanyRepository;
+import com.skillbridge.backend.repository.SubscriptionPlanRepository;
 import com.skillbridge.backend.repository.SubscriptionRepository;
 import com.skillbridge.backend.utils.SecurityUtils;
 import lombok.AccessLevel;
@@ -26,6 +27,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -68,6 +70,7 @@ public class SubscriptionService {
         plan.setJobLimit(subscriptionPlan.getJobLimit());
         plan.setCandidateViewLimit(subscriptionPlan.getCandidateViewLimit());
         plan.setHasPriorityDisplay(subscriptionPlan.getHasPriorityDisplay());
+        plan.setIsPublic(subscriptionPlan.getIsPublic());
 
         SubscriptionPlan savedPlan = subscriptionRepository.save(plan);
 
@@ -160,7 +163,6 @@ public class SubscriptionService {
 
         SubscriptionOfCompany newSubscription = new SubscriptionOfCompany();
         newSubscription.setCompany(currentCompany);
-        newSubscription.setName(SubscriptionPlanStatus.CUSTOM);
         newSubscription.setJobLimit(request.getJobLimit());
         newSubscription.setCandidateViewLimit(request.getCandidateViewLimit());
         newSubscription.setHasPriorityDisplay(request.getHasPriorityDisplay());
@@ -182,8 +184,7 @@ public class SubscriptionService {
         return saved;
     }
 
-    public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request)
-    {
+    public BigDecimal priceForCompanySubscriptions(CompanySubscriptionRequest request) {
         SubscriptionPlan premium = subscriptionRepository.findByName(SubscriptionPlanStatus.PREMIUM)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND_SUBSCRIPTION));
 
@@ -195,23 +196,13 @@ public class SubscriptionService {
             throw new AppException(ErrorCode.INVALID_CUSTOM_LIMITS);
         }
 
-        double requestRatio = (double) request.getCandidateViewLimit() / request.getJobLimit();
 
-        double minRatio = 8.0;
-        double maxRatio = 12.0;
-
-        if (requestRatio < minRatio || requestRatio > maxRatio) {
-            throw new AppException(ErrorCode.UNBALANCED_CUSTOM_PLAN);
-        }
-
-
-        BigDecimal unitJobPrice = premiumPrice.multiply(new BigDecimal("0.70"))
+        BigDecimal unitJobPrice = premiumPrice.multiply(new BigDecimal("0.40"))
                 .divide(new BigDecimal(premJobLimit), 4, RoundingMode.HALF_UP);
 
-        BigDecimal unitViewPrice = premiumPrice.multiply(new BigDecimal("0.25"))
+        BigDecimal unitViewPrice = premiumPrice.multiply(new BigDecimal("0.60"))
                 .divide(new BigDecimal(premViewLimit), 4, RoundingMode.HALF_UP);
 
-        BigDecimal priorityFixedPrice = premiumPrice.multiply(new BigDecimal("0.05"));
 
         BigDecimal customJobCost;
         if (request.getJobLimit() <= premJobLimit) {
@@ -219,6 +210,7 @@ public class SubscriptionService {
         } else {
             BigDecimal baseJobCost = unitJobPrice.multiply(new BigDecimal(premJobLimit));
             int extraJobs = request.getJobLimit() - premJobLimit;
+
             BigDecimal extraJobCost = unitJobPrice.multiply(new BigDecimal("0.90")).multiply(new BigDecimal(extraJobs));
             customJobCost = baseJobCost.add(extraJobCost);
         }
@@ -229,18 +221,13 @@ public class SubscriptionService {
         } else {
             BigDecimal baseViewCost = unitViewPrice.multiply(new BigDecimal(premViewLimit));
             int extraViews = request.getCandidateViewLimit() - premViewLimit;
+
             BigDecimal extraViewCost = unitViewPrice.multiply(new BigDecimal("0.90")).multiply(new BigDecimal(extraViews));
             customViewCost = baseViewCost.add(extraViewCost);
         }
 
-        BigDecimal totalPriorityCost = Boolean.TRUE.equals(request.getHasPriorityDisplay())
-                ? priorityFixedPrice
-                : BigDecimal.ZERO;
-
-        return customJobCost.add(customViewCost).add(totalPriorityCost)
-                .setScale(2, RoundingMode.HALF_UP);
+        return customJobCost.add(customViewCost).setScale(2, RoundingMode.HALF_UP);
     }
-
     /**
      * Xóa (Hủy) gói dịch vụ của công ty
      */
@@ -280,11 +267,6 @@ public class SubscriptionService {
             var recruiter = companyMemberRepository.findByUser_Id(currentUser.getUserId())
                     .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
-            if (!CompanyRole.ADMIN.equals(recruiter.getRole())) {
-                systemLog.danger(currentUser, ErrorCode.EXITS_YOUR_ROLE.getMessage());
-                throw new AppException(ErrorCode.EXITS_YOUR_ROLE);
-            }
-
             List<SubscriptionOfCompany> subscriptions = subcriptionOfCompanyRepository.findByCompanyId(recruiter.getCompany().getId());
 
             return subscriptions;
@@ -297,4 +279,31 @@ public class SubscriptionService {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
+    ///  Lấy ngày đăng
+    public int getJobDay(String id_company) {
+        return subcriptionOfCompanyRepository.findPostingDuration(id_company, SubscriptionOfCompanyStatus.OPEN)
+                .orElse(0);
+    }
+    ///  Tạo gói cước bắt đầu
+//    public SubscriptionPlan createSubscriptionPlan(SubscriptionPlan subscriptionPlan) {
+//        try {
+//           SubscriptionPlan createSub = new SubscriptionPlan();
+//           createSub.setName(subscriptionPlan.getName());
+//           createSub.setPrice(subscriptionPlan.getPrice());
+//           createSub.setJobLimit(subscriptionPlan.getJobLimit());
+//           createSub.setPostingDuration(subscriptionPlan.getPostingDuration());
+//           createSub.setCandidateViewLimit(subscriptionPlan.getCandidateViewLimit());
+//           createSub.setHasPriorityDisplay(subscriptionPlan.getHasPriorityDisplay());
+//           createSub.setIsPublic(subscriptionPlan.getIsPublic());
+//           subscriptionRepository.save(createSub);
+//           return createSub;
+//       }
+//       catch (Exception e) {
+//           throw new AppException(ErrorCode.EXIT_SUB);
+//       }
+//       finally {
+//           System.out.println("Đã chay chức năng thêm gói cước mới");
+//       }
+//    }
+
 }

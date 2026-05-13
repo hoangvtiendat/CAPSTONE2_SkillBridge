@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InterviewRepository extends JpaRepository<Interview, String> {
@@ -27,4 +28,6 @@ public interface InterviewRepository extends JpaRepository<Interview, String> {
     List<Interview> findAllBySlot(InterviewSlot interviewSlot);
 
     List<Interview> findAllBySlot_StartTimeBetween(LocalDateTime start, LocalDateTime end);
+
+    Optional<Interview> findByApplicationId(String id);
 }

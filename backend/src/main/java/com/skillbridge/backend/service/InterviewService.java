@@ -30,6 +30,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -228,6 +229,28 @@ public class InterviewService {
             throw new AppException(ErrorCode.INTERVIEW_ALREADY_SCHEDULED);
         }
 
+        List<Application> myApps = applicationRepository.findAllByCandidateId(userId);
+
+        for (Application existingApp : myApps) {
+            Optional<Interview> existingInterviewOpt = interviewRepository.findByApplicationId(existingApp.getId());
+
+            if (existingInterviewOpt.isPresent()) {
+                Interview existingInterview = existingInterviewOpt.get();
+
+                if (existingInterview.getStatus() == InterviewStatus.CONFIRMED ||
+                        existingInterview.getStatus() == InterviewStatus.PENDING) {
+
+                    InterviewSlot oldSlot = existingInterview.getSlot();
+
+                    if (slot.getStartTime().isBefore(oldSlot.getEndTime()) &&
+                            slot.getEndTime().isAfter(oldSlot.getStartTime())) {
+
+                        throw new AppException(ErrorCode.INTERVIEW_TIME_CONFLICT);
+                    }
+                }
+            }
+        }
+
         slot.setCurrentOccupancy(slot.getCurrentOccupancy() + 1);
         if (slot.getCurrentOccupancy() >= slot.getCapacity()) {
             slot.setStatus(SlotStatus.FULL);
@@ -261,7 +284,6 @@ public class InterviewService {
 
         return mapToInterviewResponse(savedInterview);
     }
-
     public List<CandidateResponse> getCandidatesInSlot(String slotId) {
         InterviewSlot slot = slotRepository.findById(slotId)
                 .orElseThrow(() -> new AppException(ErrorCode.SLOT_NOT_FOUND));
@@ -301,6 +323,7 @@ public class InterviewService {
     @Transactional
     public InterviewResponse rescheduleInterview(String interviewId, String newSlotId) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
+        String userId = currentUser.getUserId();
 
         // 1. Lấy thông tin cuộc phỏng vấn cũ
         Interview currentInterview = interviewRepository.findById(interviewId)
@@ -310,7 +333,7 @@ public class InterviewService {
 
         // Kiểm tra điều kiện 24h cho slot cũ
         if (oldSlot.getStartTime().isBefore(LocalDateTime.now().plusHours(24))) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.UNAUTHORIZED); // Hoặc tạo lỗi riêng: TOO_LATE_TO_RESCHEDULE
         }
 
         // 2. Kiểm tra Slot mới
@@ -324,10 +347,37 @@ public class InterviewService {
         if (newSlot.getStartTime().isBefore(LocalDateTime.now())) {
             throw new AppException(ErrorCode.SLOT_EXPIRED);
         }
+
+
+        List<Application> myApps = applicationRepository.findAllByCandidateId(userId);
+
+        for (Application existingApp : myApps) {
+            Optional<Interview> existingInterviewOpt = interviewRepository.findByApplicationId(existingApp.getId());
+
+            if (existingInterviewOpt.isPresent()) {
+                Interview existingInterview = existingInterviewOpt.get();
+
+                if (existingInterview.getId().equals(interviewId)) {
+                    continue;
+                }
+
+                if (existingInterview.getStatus() == InterviewStatus.CONFIRMED ||
+                        existingInterview.getStatus() == InterviewStatus.PENDING) {
+
+                    InterviewSlot existingSlot = existingInterview.getSlot();
+
+                    if (newSlot.getStartTime().isBefore(existingSlot.getEndTime()) &&
+                            newSlot.getEndTime().isAfter(existingSlot.getStartTime())) {
+
+                        throw new AppException(ErrorCode.INTERVIEW_TIME_CONFLICT);
+                    }
+                }
+            }
+        }
+
         oldSlot.setCurrentOccupancy(Math.max(0, oldSlot.getCurrentOccupancy() - 1));
         if (oldSlot.getStatus() == SlotStatus.FULL) oldSlot.setStatus(SlotStatus.AVAILABLE);
 
-        // - Tăng occupancy slot mới
         newSlot.setCurrentOccupancy(newSlot.getCurrentOccupancy() + 1);
         if (newSlot.getCurrentOccupancy() >= newSlot.getCapacity()) {
             newSlot.setStatus(SlotStatus.FULL);
@@ -343,8 +393,13 @@ public class InterviewService {
             @Override
             public void afterCommit() {
                 messagingTemplate.convertAndSend("/topic/job-slots/" + oldSlot.getJob().getId(), "UPDATE");
+                // Nên bắn thêm update cho cả Job của slot mới nữa để frontend realtime chuẩn xác
+                if (!oldSlot.getJob().getId().equals(newSlot.getJob().getId())) {
+                    messagingTemplate.convertAndSend("/topic/job-slots/" + newSlot.getJob().getId(), "UPDATE");
+                }
             }
         });
+
         notificationService.createNotification(
                 currentInterview.getApplication().getCandidate().getUser(),
                 null,

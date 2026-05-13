@@ -6,6 +6,7 @@ import com.skillbridge.backend.config.CustomUserDetails;
 import com.skillbridge.backend.dto.request.CreateJobRequest;
 import com.skillbridge.backend.dto.request.JobApplicationRequest;
 import com.skillbridge.backend.dto.request.JobSkillRequest;
+import com.skillbridge.backend.dto.request.repostJDDayRequest;
 import com.skillbridge.backend.dto.response.*;
 import com.skillbridge.backend.entity.*;
 import com.skillbridge.backend.enums.*;
@@ -72,9 +73,9 @@ public class JobService {
     ApplicationMatchScoringService applicationMatchScoringService;
     AIJobService aiJobService;
     MailServiceImpl mailService;
-    provincesRepository provincesRepository;
     JobInvitationRepository jobInvitationRepository;
-
+    JD_SimilaritiesRepository jdSimilaritiesRepository;
+    JobRejectionLogRepository jobRejectionLogRepository;
     LocalDate date = LocalDate.now();
 
     @NonFinal
@@ -463,17 +464,30 @@ public class JobService {
             String subject = "";
             String color = "";
 
+            LocalDate today = LocalDate.now();
+            LocalDate startDate = job.getStartDate() != null ? LocalDate.from(job.getStartDate()) : today;
+            LocalDate endDate = job.getEndDate() != null ? LocalDate.from(job.getEndDate()) : today.plusDays(job.getPostingDay());
+
             if ("OPEN".equals(status)) {
                 job.setModerationStatus(ModerationStatus.GREEN);
-                job.setStatus(JobStatus.OPEN);
-                job.setStartDate(date.atStartOfDay());
-                LocalDate endDate = LocalDate.now().plusDays(job.getPostingDay());
-                job.setEndDate(endDate.atStartOfDay());
+
+                if (today.isBefore(startDate)) {
+                    job.setStatus(JobStatus.NOT_STARTED);
+                } else if (today.isAfter(endDate)) {
+                    job.setStatus(JobStatus.CLOSED);
+                } else {
+                    job.setStatus(JobStatus.OPEN);
+                }
+
+
 
                 actionDescription = "đã được PHÊ DUYỆT và hiển thị công khai";
                 subject = "Tin tuyển dụng của bạn đã được phê duyệt";
                 color = "#10b981";
+
             } else {
+                job.setModerationStatus(ModerationStatus.RED);
+
                 job.setStatus(JobStatus.LOCK);
 
                 actionDescription = "đã bị TỪ CHỐI bởi quản trị viên";
@@ -547,6 +561,8 @@ public class JobService {
         Job savedJob = jobRepository.save(job);
         job.setViewCount(0);
         job.setModerationScore(0f);
+        job.setStartDate(request.getStartDate());
+        job.setEndDate(request.getEndDate());
 
         for (JobSkillRequest skillRequest : request.getSkills()) {
             Skill skill = skillRepository.findById(skillRequest.getSkillId())
@@ -562,7 +578,6 @@ public class JobService {
             }
         }
 
-//        job.setModerationStatus(ModerationStatus.YELLOW);
 
         //object > Text
         textBuilder.append(job.getPosition()).append(". ");
@@ -626,7 +641,7 @@ public class JobService {
             subscriptionOfCompanyRepository.save(expiredSub);
 
             Optional<SubscriptionOfCompany> oldFreeSubOpt = subscriptionOfCompanyRepository
-                    .findByCompanyIdAndName(expiredSub.getCompany().getId(), SubscriptionPlanStatus.FREE);
+                    .findByCompanyIdAndSubscriptionPlanName(expiredSub.getCompany().getId(), SubscriptionPlanStatus.FREE);
 
             if (oldFreeSubOpt.isPresent()) {
                 SubscriptionOfCompany freeSub = oldFreeSubOpt.get();
@@ -642,8 +657,7 @@ public class JobService {
         }
 
         List<SubscriptionOfCompany> expiredFreeSubs = subscriptionOfCompanyRepository
-                .findAllByEndDateBeforeAndStatusAndName(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
-
+                .findAllByEndDateBeforeAndStatusAndSubscriptionPlanName(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
         for (SubscriptionOfCompany freeSub : expiredFreeSubs) {
             freeSub.setCurrentJobCount(0);
             freeSub.setStartDate(now);
@@ -691,7 +705,8 @@ public class JobService {
             .status(job.getStatus() != null ? job.getStatus().name() : null)
             .salaryMin(job.getSalaryMin())
             .salaryMax(job.getSalaryMax())
-
+                .startDate(job.getStartDate() != null ? LocalDate.from(job.getStartDate()) : null)
+                .endDate(job.getEndDate() != null ? LocalDate.from(job.getEndDate()) : null)
             .category(job.getCategory() != null ?
                 JobResponse.CategoryDTO.builder()
                     .id(job.getCategory().getId())
@@ -817,6 +832,17 @@ public class JobService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
+
+        Boolean checkSpam = false;
+        checkSpam = jdSimilaritiesRepository.existsByTarget_jd_id(jobId);
+        System.out.println("checkSpam" + checkSpam);
+        if(checkSpam == true){
+            System.out.println("JOOB" + jobId);
+            System.out.println("Ddang cahy xoa");
+            jdSimilaritiesRepository.deleteTargetJobBySourceId(jobId);
+
+        }
+
         var category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -830,6 +856,8 @@ public class JobService {
         job.setStatus(JobStatus.PENDING);
         job.setModerationStatus(ModerationStatus.YELLOW);
         job.setModerationScore(0f);
+        job.setStartDate(request.getStartDate());
+        job.setEndDate(request.getEndDate());
 
         job.getJobSkills().clear();
 
@@ -903,7 +931,7 @@ public class JobService {
     private EntityManager entityManager;
 
     @Transactional(rollbackFor = Exception.class)
-    public Job repostJD(String id) {
+    public Job repostJD(String id, repostJDDayRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
         String userId = currentUser.getUserId();
 
@@ -937,6 +965,22 @@ public class JobService {
             throw new AppException(ErrorCode.EXIT_SUBSCRIPTION);
         }
 
+        LocalDate today = LocalDate.from(LocalDateTime.now());
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
+        JobStatus finalStatus;
+        if (today.isBefore(startDate)) {
+            System.out.println("ChuaDenNgay");
+            finalStatus = JobStatus.NOT_STARTED;
+        } else if (today.isAfter(endDate)) {
+            System.out.println("DongNgay");
+            finalStatus = JobStatus.CLOSED;
+        } else {
+            System.out.println("MoNgay");
+            finalStatus = JobStatus.OPEN;
+        }
+
+
 
 
         float[] vectorToCheck = oldJob.getVectorEmbedding();
@@ -946,7 +990,6 @@ public class JobService {
                 throw new AppException(ErrorCode.SPAM_JD);
             }
         }
-        int postingDay = subscription.getPostingDuration();
 
         Job newJob = Job.builder()
                 .title(oldJob.getTitle() != null ? new HashMap<>(oldJob.getTitle()) : null)
@@ -958,14 +1001,14 @@ public class JobService {
                 .salaryMin(oldJob.getSalaryMin())
                 .salaryMax(oldJob.getSalaryMax())
                 .companyMember(recruiter)
-                .status(JobStatus.OPEN)
+                .status(finalStatus)
                 .viewCount(0)
                 .moderationScore(0f)
                 .moderationStatus(ModerationStatus.GREEN)
                 .postingDay(subscription.getPostingDuration())
                 .vectorEmbedding(oldJob.getVectorEmbedding() != null ? oldJob.getVectorEmbedding().clone() : null)
-                .startDate(date.atStartOfDay())
-                .endDate(date.atStartOfDay().plusDays(postingDay))
+                .startDate(startDate.atStartOfDay())
+                .endDate(endDate.atStartOfDay())
                 .build();
 
         Job savedJob = jobRepository.saveAndFlush(newJob);
@@ -1208,28 +1251,43 @@ public class JobService {
                 .build())
             .collect(Collectors.toList());
     }
+//    @Scheduled(cron = "0 0 0 * * ?") //// dùng cho chạy dự án làm mới khi tới 00H
+   @Scheduled(fixedRate = 60000) ///  test chạy ngâm 6s
+    @Transactional
+    public void autoUpdateJobStatuses() {
+        LocalDateTime now = LocalDateTime.now();
+        log.info("Bắt đầu chạy CronJob kiểm tra trạng thái Job lúc: {}", now);
 
-    ///  Lấy danh sách địa phương
-    public List<provinces> getALlProvinces() {
-        return provincesRepository.findAllProvincesCustom();
-    }
-    public provinces deleteProvince(String id) {
-        provinces deleteProvince = provincesRepository.findById(id).orElse(null);
-        deleteProvince.setIsDeleted(!deleteProvince.getIsDeleted());
+        try {
+            List<Job> jobsToOpen = jobRepository.findByStatusAndStartDateLessThanEqual(JobStatus.NOT_STARTED, now);
+            if (!jobsToOpen.isEmpty()) {
+                for (Job job : jobsToOpen) {
+                    job.setStatus(JobStatus.OPEN);
+                }
+                jobRepository.saveAll(jobsToOpen);
+                log.info("Đã tự động MỞ (OPEN) {} bài tuyển dụng.", jobsToOpen.size());
+            }
 
-        return provincesRepository.save(deleteProvince);
-    }
-    public provinces updateProvince(String id, provinces request) {
-        provinces existingProvince = provincesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tỉnh thành với ID: " + id));
+            List<Job> jobsToClose = jobRepository.findByStatusAndEndDateLessThanEqual(JobStatus.OPEN, now);
+            if (!jobsToClose.isEmpty()) {
+                for (Job job : jobsToClose) {
+                    job.setStatus(JobStatus.CLOSED);
+                }
+                jobRepository.saveAll(jobsToClose);
+                log.info("Đã tự động ĐÓNG (CLOSED) {} bài tuyển dụng.", jobsToClose.size());
+            }
 
-        if (request.getName() != null) {
-            existingProvince.setName(request.getName());
+        } catch (Exception e) {
+            log.error("Lỗi khi chạy CronJob cập nhật trạng thái Job: {}", e.getMessage());
         }
-   if (request.getIsDeleted() != null) {
-            existingProvince.setIsDeleted(request.getIsDeleted());
-        }
-    return provincesRepository.save(existingProvince);
+
+        log.info("Kết thúc CronJob kiểm tra trạng thái Job.");
     }
+    public List<JobRejectionLog>getAllRejectedJobs() {
+        return jobRejectionLogRepository.findAll();
+    }
+
+
+
 
 }

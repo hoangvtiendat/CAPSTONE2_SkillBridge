@@ -1,5 +1,6 @@
 package com.skillbridge.backend.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -8,6 +9,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -41,4 +44,11 @@ public class CreateJobRequest {
 
     @NotEmpty(message = "SKILL_NOT_FOUND")
     List<JobSkillRequest> skills;
+    @NotNull(message = "Ngày bắt đầu không được để trống")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
+    private LocalDateTime startDate;
+
+    @NotNull(message = "Ngày kết thúc không được để trống")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
+    private LocalDateTime endDate;
 }
