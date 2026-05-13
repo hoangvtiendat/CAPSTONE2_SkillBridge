@@ -163,7 +163,6 @@ public class SubscriptionService {
 
         SubscriptionOfCompany newSubscription = new SubscriptionOfCompany();
         newSubscription.setCompany(currentCompany);
-        newSubscription.setName(SubscriptionPlanStatus.CUSTOM);
         newSubscription.setJobLimit(request.getJobLimit());
         newSubscription.setCandidateViewLimit(request.getCandidateViewLimit());
         newSubscription.setHasPriorityDisplay(request.getHasPriorityDisplay());
@@ -306,4 +305,5 @@ public class SubscriptionService {
 //           System.out.println("Đã chay chức năng thêm gói cước mới");
 //       }
 //    }
+
 }

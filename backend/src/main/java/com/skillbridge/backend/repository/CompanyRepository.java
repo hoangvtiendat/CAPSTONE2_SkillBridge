@@ -46,20 +46,11 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     List<TopCompanyDTO> findTop5ByJobCount(Pageable pageable);
 
 
-
-
-
-
-
-
-
-
-
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, soc.name,
-            c.createdAt,
+            c.description, c.address, c.websiteUrl, c.status,
+            soc.subscriptionPlan.name, c.createdAt,
             (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
         )
         FROM Company c
@@ -74,26 +65,16 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
             Pageable pageable
     );
 
-    @Query("""
-        SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
-            c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, cs.name,
-            c.createdAt,(SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)
-        )
-        FROM Company c
-        LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        WHERE (:status IS NULL OR c.status = :status)
-        AND c.isDeleted = false
-        AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-        AND (:categoryId IS NULL OR EXISTS (
-            SELECT 1 FROM Job j
-            WHERE j.company.id = c.id
-            AND j.category.id = :categoryId
-            AND j.status = 'OPEN'
-            AND j.isDeleted = false
-        ))
-        ORDER BY c.createdAt DESC
-    """)
+    @Query("SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(" +
+            "c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl, c.description, c.address, " +
+            "c.websiteUrl, c.status, cs.subscriptionPlan.name, c.createdAt, " + // <-- THAY ĐỔI Ở ĐÂY: cs.name -> cs.subscriptionPlan.name
+            "(SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.status = 'OPEN' AND j.isDeleted = false)) " +
+            "FROM Company c LEFT JOIN c.subscriptions cs ON cs.isActive = true " +
+            "WHERE (:status IS NULL OR c.status = :status) " +
+            "AND c.isDeleted = false " +
+            "AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:categoryId IS NULL OR EXISTS (SELECT 1 FROM Job j WHERE j.company.id = c.id AND j.category.id = :categoryId AND j.status = 'OPEN' AND j.isDeleted = false)) " +
+            "ORDER BY c.createdAt DESC")
     Page<CompanyFeedItemResponse> getCompanyFeedSearch(
             @Param("status") CompanyStatus status,
             @Param("keyword") String keyword,
@@ -104,14 +85,14 @@ public interface CompanyRepository extends JpaRepository<Company, String>, JpaSp
     @Query("""
         SELECT new com.skillbridge.backend.dto.response.CompanyFeedItemResponse(
             c.id, c.name, c.taxId, c.businessLicenseUrl, c.imageUrl,
-            c.description, c.address, c.websiteUrl, c.status, cs.name,c.createdAt,
-            (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.isDeleted = false AND j.status = JobStatus.OPEN)
+            c.description, c.address, c.websiteUrl, c.status,
+            cs.subscriptionPlan.name, c.createdAt,
+            (SELECT COUNT(j) FROM Job j WHERE j.company.id = c.id AND j.isDeleted = false AND j.status = 'OPEN')
         )
         FROM Company c
         LEFT JOIN c.subscriptions cs ON cs.isActive = true
-        WHERE c.status = CompanyStatus.PENDING
+        WHERE c.status = 'PENDING' 
         ORDER BY c.createdAt ASC
     """)
     Page<CompanyFeedItemResponse> getCompanyFeedPending(Pageable pageable);
-
 }
