@@ -97,4 +97,42 @@ public class CompanyMemberService {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
+
+    /**
+     * Xóa một thành viên khỏi công ty (Soft Delete).
+     * Chỉ ADMIN mới được phép thực hiện, và không thể xóa chính mình.
+     */
+    public void removeMember(String memberId) {
+        CustomUserDetails currentUser = securityUtils.getCurrentUser();
+
+        // Xác minh người thực hiện là ADMIN của công ty
+        CompanyMember actor = companyMemberRepository.findByUser_Id(currentUser.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (actor.getRole() != CompanyRole.ADMIN) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Tìm thành viên cần xóa
+        CompanyMember target = companyMemberRepository.findById(memberId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Không cho phép xóa chính mình hoặc xóa ADMIN khác
+        if (target.getUser().getId().equals(currentUser.getUserId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        if (target.getRole() == CompanyRole.ADMIN) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Đảm bảo thành viên thuộc cùng công ty
+        if (!target.getCompany().getId().equals(actor.getCompany().getId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        target.setDeleted(true);
+        companyMemberRepository.save(target);
+
+        systemLog.warn(currentUser, "Xóa thành viên ID: " + memberId + " khỏi công ty " + actor.getCompany().getName());
+    }
 }

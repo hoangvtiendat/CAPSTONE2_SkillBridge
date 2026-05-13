@@ -233,16 +233,32 @@ public class JobService {
     }
 
 
+    // LRU Cache for view counting to prevent double counting from the same IP
+    private static final java.util.Map<String, Long> jobViewCache = java.util.Collections.synchronizedMap(
+        new java.util.LinkedHashMap<String, Long>(1000, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(java.util.Map.Entry<String, Long> eldest) {
+                return size() > 5000;
+            }
+        }
+    );
+
     /**
      * lấy chi tiết của 1 job theo id
      */
     public JobDetailResponse getJobDetail(String jobId, HttpServletRequest request) {
         CustomUserDetails currentUser = securityUtils.getCurrentUserOptional();
-        HttpSession session = request.getSession();
 
         try {
-            String sessionKey = "VIEWED_JOB_" + jobId;
-            boolean hasViewed = session.getAttribute(sessionKey) != null;
+            String clientIp = request.getRemoteAddr();
+            String cacheKey = clientIp + "_" + jobId;
+            long currentTime = System.currentTimeMillis();
+            
+            boolean hasViewed = false;
+            Long lastViewed = jobViewCache.get(cacheKey);
+            if (lastViewed != null && (currentTime - lastViewed < 30 * 60 * 1000)) { // 30 mins cache
+                hasViewed = true;
+            }
 
             boolean shouldIncrement = !hasViewed;
 
@@ -255,7 +271,7 @@ public class JobService {
 
             if (shouldIncrement) {
                 jobRepository.incrementViewCount(jobId);
-                session.setAttribute(sessionKey, true);
+                jobViewCache.put(cacheKey, currentTime);
             }
 
             Job job = jobRepository.findById(jobId)

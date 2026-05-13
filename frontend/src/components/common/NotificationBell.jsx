@@ -130,10 +130,19 @@ const NotificationBell = () => {
                                     </div>
                                     <div className="notif-content">
                                         <p className="notif-title">{notif.title}</p>
-                                        <p
-                                            className="notif-text"
-                                            dangerouslySetInnerHTML={{ __html: notif.content }}
-                                        />
+                                        <p className="notif-text" title={(() => {
+                                                if (!notif.content) return "";
+                                                const tmp = document.createElement("div");
+                                                tmp.innerHTML = notif.content.replace(/<br[^>]*>|<\/p>|<\/div>/gi, ' ');
+                                                return (tmp.textContent || tmp.innerText || "").trim();
+                                            })()}>
+                                            {(() => {
+                                                if (!notif.content) return "";
+                                                const tmp = document.createElement("div");
+                                                tmp.innerHTML = notif.content.replace(/<br[^>]*>|<\/p>|<\/div>/gi, ' ');
+                                                return (tmp.textContent || tmp.innerText || "").trim();
+                                            })()}
+                                        </p>
                                         <span className="notif-time">
                                             {formatDistanceToNow(new Date(notif.createdAt), {
                                                 addSuffix: true,

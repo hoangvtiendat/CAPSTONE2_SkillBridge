@@ -11,14 +11,15 @@ import {
     Calendar,
     Briefcase,
     MoreVertical,
-    CheckCircle2,
-    XCircle,
     Clock,
     UserCheck,
-    AlertCircle
+    AlertCircle,
+    CheckCircle,
+    XCircle,
+    UserX
 } from 'lucide-react';
 import { toast } from 'sonner';
-import DeleteConfirmPage from '../admin/DeleteConfirmPage';
+import Swal from 'sweetalert2';
 import './CandidateList.css';
 
 const CandidateList = () => {
@@ -27,7 +28,18 @@ const CandidateList = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
-    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
+
+    const swalConfig = {
+        buttonsStyling: false,
+        customClass: {
+            popup: 'premium-swal-popup',
+            title: 'premium-swal-title',
+            htmlContainer: 'premium-swal-text',
+            confirmButton: 'premium-swal-confirm',
+            cancelButton: 'premium-swal-cancel',
+            icon: 'premium-swal-icon'
+        }
+    };
 
     const API_BASE_URL = "http://localhost:8081/identity";
     const DEFAULT_AVATAR = `${API_BASE_URL}/avatars/default.jpg`;
@@ -69,26 +81,109 @@ const CandidateList = () => {
     }, [applications, searchTerm, statusFilter]);
 
     const handleAddBack = async (appId) => {
-        try {
-            await applicationService.respondToApplication(appId, 'TALENT_POOL');
-            setApplications(prev => prev.map(app =>
-                app.id === appId ? { ...app, status: 'TALENT_POOL' } : app
-            ));
-            toast.success("Đã thêm ứng viên vào kho dữ liệu");
-        } catch (err) {
-            toast.error("Thao tác thất bại");
+        const result = await Swal.fire({
+            ...swalConfig,
+            title: 'Xác nhận khôi phục?',
+            text: "Bạn có muốn đưa ứng viên này trở lại danh sách chờ duyệt?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Khôi phục',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang khôi phục...");
+            try {
+                await applicationService.respondToApplication(appId, 'PENDING');
+                setApplications(prev => prev.map(app =>
+                    app.id === appId ? { ...app, status: 'PENDING', updatedAt: new Date().toISOString() } : app
+                ));
+                toast.success("Đã khôi phục ứng viên thành công", { id: toastId });
+            } catch (err) {
+                toast.error("Thao tác thất bại", { id: toastId });
+            }
         }
     };
 
-    const handleDelete = async () => {
-        if (!deleteModal.id) return;
-        try {
-            await applicationService.deleteApplication(deleteModal.id);
-            setApplications(prev => prev.filter(app => app.id !== deleteModal.id));
-            toast.success("Đã xóa ứng viên khỏi danh sách");
-            setDeleteModal({ show: false, id: null });
-        } catch (err) {
-            toast.error("Lỗi khi xóa ứng viên");
+    const handleApprove = async (appId) => {
+        const result = await Swal.fire({
+            ...swalConfig,
+            title: 'Xác nhận chấp nhận?',
+            text: "Bạn có chắc chắn muốn duyệt hồ sơ ứng viên này không?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang xử lý duyệt hồ sơ...");
+            try {
+                await applicationService.respondToApplication(appId, 'INTERVIEW');
+                setApplications(prev => prev.map(app =>
+                    app.id === appId ? { ...app, status: 'INTERVIEW', updatedAt: new Date().toISOString() } : app
+                ));
+                toast.success("Đã chấp nhận hồ sơ ứng viên", { id: toastId });
+            } catch (err) {
+                toast.error("Thao tác thất bại", { id: toastId });
+            }
+        }
+    };
+
+    const handleReject = async (appId) => {
+        const result = await Swal.fire({
+            ...swalConfig,
+            title: 'Xác nhận từ chối?',
+            text: "Bạn có chắc chắn muốn từ chối hồ sơ ứng viên này?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                ...swalConfig.customClass,
+                confirmButton: 'premium-swal-confirm premium-swal-confirm-warning'
+            }
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang xử lý từ chối...");
+            try {
+                await applicationService.respondToApplication(appId, 'REJECTED');
+                setApplications(prev => prev.map(app =>
+                    app.id === appId ? { ...app, status: 'REJECTED', updatedAt: new Date().toISOString() } : app
+                ));
+                toast.success("Đã từ chối hồ sơ ứng viên", { id: toastId });
+            } catch (err) {
+                toast.error("Thao tác thất bại", { id: toastId });
+            }
+        }
+    };
+
+    const handleDelete = async (appId) => {
+        const result = await Swal.fire({
+            ...swalConfig,
+            title: 'Xác nhận xóa?',
+            text: "Dữ liệu ứng tuyển này sẽ bị xóa vĩnh viễn khỏi hệ thống.",
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonText: 'Có, xóa ngay',
+            cancelButtonText: 'Hủy',
+            customClass: {
+                ...swalConfig.customClass,
+                confirmButton: 'premium-swal-confirm premium-swal-confirm-danger'
+            }
+        });
+
+        if (result.isConfirmed) {
+            const toastId = toast.loading("Đang xóa dữ liệu...");
+            try {
+                await applicationService.deleteApplication(appId);
+                setApplications(prev => prev.filter(app => app.id !== appId));
+                toast.success("Đã xóa hoàn toàn dữ liệu ứng viên", { id: toastId });
+            } catch (err) {
+                const errorMsg = err.response?.data?.message || "Lỗi khi xóa ứng viên";
+                toast.error(errorMsg, { id: toastId });
+            }
         }
     };
 
@@ -99,7 +194,7 @@ const CandidateList = () => {
             case 'INTERVIEW':
                 return <span className="badge badge-interview"><UserPlus size={12} /> Phỏng vấn</span>;
             case 'HIRED':
-                return <span className="badge badge-hired"><CheckCircle2 size={12} /> Đã thuê</span>;
+                return <span className="badge badge-hired"><CheckCircle size={12} /> Đã thuê</span>;
             case 'REJECTED':
                 return <span className="badge badge-rejected"><XCircle size={12} /> Đã từ chối</span>;
             case 'TALENT_POOL':
@@ -204,23 +299,44 @@ const CandidateList = () => {
                                 </td>
                                 <td>
                                     <div className="candidate-actions">
-                                        {app.status === 'REJECTED' && (
-                                            <button
-                                                className="btn-action-add"
-                                                title="Thêm lại vào danh sách"
-                                                onClick={() => handleAddBack(app.id)}
-                                            >
-                                                <UserPlus size={16} />
-                                                <span>Thêm lại</span>
-                                            </button>
+                                        {app.status !== 'REJECTED' && app.status !== 'HIRED' && (
+                                            <>
+                                                <button
+                                                    className="btn-action-approve"
+                                                    title="Chấp nhận hồ sơ"
+                                                    onClick={() => handleApprove(app.id)}
+                                                >
+                                                    <CheckCircle size={22} />
+                                                </button>
+                                                <button
+                                                    className="btn-action-reject"
+                                                    title="Từ chối hồ sơ"
+                                                    onClick={() => handleReject(app.id)}
+                                                >
+                                                    <XCircle size={22} />
+                                                </button>
+                                            </>
                                         )}
-                                        <button
-                                            className="btn-action-delete"
-                                            title="Xóa ứng viên"
-                                            onClick={() => setDeleteModal({ show: true, id: app.id })}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                        
+                                        {app.status === 'REJECTED' && (
+                                            <>
+                                                <button
+                                                    className="btn-action-add"
+                                                    title="Thêm lại vào danh sách"
+                                                    onClick={() => handleAddBack(app.id)}
+                                                >
+                                                    <UserPlus size={16} />
+                                                    <span>Khôi phục</span>
+                                                </button>
+                                                <button
+                                                    className="btn-action-delete"
+                                                    title="Xóa vĩnh viễn"
+                                                    onClick={() => handleDelete(app.id)}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -236,14 +352,6 @@ const CandidateList = () => {
                 </table>
             </div>
 
-            {/* Reusable Delete Confirmation Modal */}
-            <DeleteConfirmPage
-                isOpen={deleteModal.show}
-                onCancel={() => setDeleteModal({ show: false, id: null })}
-                onConfirm={handleDelete}
-                title="Xác nhận xóa ứng viên"
-                message="Bạn có chắc chắn muốn xóa hồ sơ ứng viên này khỏi danh sách quản lý? Hành động này không thể hoàn tác."
-            />
         </div>
     );
 };

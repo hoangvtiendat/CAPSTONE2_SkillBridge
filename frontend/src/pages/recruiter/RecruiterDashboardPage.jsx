@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 
 const RecruiterDashboardPage = () => {
     // Check if company is deactivated and prevent access
-    useCompanyDeactivationCheck(['/recruiter/settings', '/recruiter/analytics']);
+    useCompanyDeactivationCheck(['/recruiter/settings']);
 
     const [loading, setLoading] = useState(true);
     const [statsData, setStatsData] = useState(null);
@@ -40,6 +40,28 @@ const RecruiterDashboardPage = () => {
 
     useEffect(() => {
         fetchAnalytics();
+
+        // Lắng nghe các sự kiện WebSocket để cập nhật dashboard real-time
+        const handleRealtimeUpdate = () => {
+            fetchAnalytics();
+            fetchJobs();
+        };
+
+        window.addEventListener('NEW_NOTIFICATION', handleRealtimeUpdate);
+        window.addEventListener('jdStatusUpdated', handleRealtimeUpdate);
+        window.addEventListener('ADMIN_PENDING_JOB_UPDATE', handleRealtimeUpdate);
+
+        // Polling mỗi 30 giây để cập nhật các chỉ số chạy ngầm như lượt xem (không có thông báo)
+        const intervalId = setInterval(() => {
+            fetchAnalytics();
+        }, 30000);
+
+        return () => {
+            window.removeEventListener('NEW_NOTIFICATION', handleRealtimeUpdate);
+            window.removeEventListener('jdStatusUpdated', handleRealtimeUpdate);
+            window.removeEventListener('ADMIN_PENDING_JOB_UPDATE', handleRealtimeUpdate);
+            clearInterval(intervalId);
+        };
     }, [filters]);
 
     const fetchJobs = async () => {

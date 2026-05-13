@@ -76,6 +76,11 @@ public class ApplicationService {
         // Verify recruiter belongs to the company that owns the job
         companyMemberRepository.findByCompany_IdAndUser_Id(application.getJob().getCompany().getId(), currentUser.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_COMPANY_MEMBER));
+
+        // Enforce business rule: Only allowed to delete if status is REJECTED
+        if (application.getStatus() != ApplicationStatus.REJECTED) {
+            throw new AppException(ErrorCode.CANNOT_DELETE_ACTIVE_APPLICATION);
+        }
         
         applicationRepository.delete(application);
     }

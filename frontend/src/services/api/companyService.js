@@ -70,6 +70,16 @@ const companyService = {
         }
     },
 
+    removeMember: async (memberId) => {
+        try {
+            const response = await api.delete(`/company-member/${memberId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Lỗi xóa thành viên:", error);
+            throw error;
+        }
+    },
+
     respondJoinRequest: async (requestId, status) => {
         try {
             const response = await api.post(`/companies/join-request/${requestId}`, {

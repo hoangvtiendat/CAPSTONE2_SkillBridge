@@ -130,40 +130,46 @@ const ProfilePage = () => {
                                         Bảo mật
                                     </h3>
 
-                                    <div className="security-item">
-                                        <div className="security-info">
-                                            <span className="security-icon">
-                                                <Shield size={14} />
-                                            </span>
-                                            <span className="security-text">
-                                                Xác thực 2 bước (2FA)
-                                            </span>
+                                    {user?.provider?.toUpperCase() !== 'GOOGLE' && (
+                                        <div className="security-item">
+                                            <div className="security-info">
+                                                <span className="security-icon">
+                                                    <Shield size={14} />
+                                                </span>
+                                                <span className="security-text">
+                                                    Xác thực 2 bước (2FA)
+                                                </span>
+                                            </div>
+
+                                            <label className={`toggle-switch ${isToggling2FA ? 'opacity-50 cursor-wait' : ''}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={is2faEnabledLocal}
+                                                    disabled={isToggling2FA}
+                                                    onChange={handleToggle2FA}
+                                                />
+                                                <span className="toggle-slider"></span>
+                                            </label>
                                         </div>
+                                    )}
 
-                                        <label className={`toggle-switch ${isToggling2FA ? 'opacity-50 cursor-wait' : ''}`}>
-                                            <input
-                                                type="checkbox"
-                                                checked={is2faEnabledLocal}
-                                                disabled={isToggling2FA}
-                                                onChange={handleToggle2FA}
+                                    {user?.provider?.toUpperCase() !== 'GOOGLE' && (
+                                        <>
+                                            <button
+                                                className="security-action-btn"
+                                                onClick={() => setIsChangePassOpen(true)}
+                                            >
+                                                <KeyRound size={16} />
+                                                Đổi mật khẩu
+                                            </button>
+
+                                            {/* 3. Chèn Modal vào cuối Component */}
+                                            <ChangePasswordModal
+                                                isOpen={isChangePassOpen}
+                                                onClose={() => setIsChangePassOpen(false)}
                                             />
-                                            <span className="toggle-slider"></span>
-                                        </label>
-                                    </div>
-
-                                    <button
-                                        className="security-action-btn"
-                                        onClick={() => setIsChangePassOpen(true)}
-                                    >
-                                        <KeyRound size={16} />
-                                        Đổi mật khẩu
-                                    </button>
-
-                                    {/* 3. Chèn Modal vào cuối Component */}
-                                    <ChangePasswordModal
-                                        isOpen={isChangePassOpen}
-                                        onClose={() => setIsChangePassOpen(false)}
-                                    />
+                                        </>
+                                    )}
                                 </div>
                             </aside>
 

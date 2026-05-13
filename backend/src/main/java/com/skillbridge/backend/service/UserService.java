@@ -155,6 +155,7 @@ public class UserService {
                 .role(user.getRole())
                 .status(user.getStatus())
                 .is2faEnabled(user.getIs2faEnabled())
+                .provider(user.getProvider())
                 .createdAt(user.getCreatedAt())
                 .companyName(user.getCompanyName())
                 .companyId(user.getCompanyId())
