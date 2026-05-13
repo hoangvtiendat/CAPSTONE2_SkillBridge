@@ -545,7 +545,6 @@ public class JobService {
             }
         }
 
-//        job.setModerationStatus(ModerationStatus.YELLOW);
 
         //object > Text
         textBuilder.append(job.getPosition()).append(". ");
@@ -609,7 +608,7 @@ public class JobService {
             subscriptionOfCompanyRepository.save(expiredSub);
 
             Optional<SubscriptionOfCompany> oldFreeSubOpt = subscriptionOfCompanyRepository
-                    .findByCompanyIdAndName(expiredSub.getCompany().getId(), SubscriptionPlanStatus.FREE);
+                    .findByCompanyIdAndSubscriptionPlanName(expiredSub.getCompany().getId(), SubscriptionPlanStatus.FREE);
 
             if (oldFreeSubOpt.isPresent()) {
                 SubscriptionOfCompany freeSub = oldFreeSubOpt.get();
@@ -625,8 +624,7 @@ public class JobService {
         }
 
         List<SubscriptionOfCompany> expiredFreeSubs = subscriptionOfCompanyRepository
-                .findAllByEndDateBeforeAndStatusAndName(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
-
+                .findAllByEndDateBeforeAndStatusAndSubscriptionPlanName(now, SubscriptionOfCompanyStatus.OPEN, SubscriptionPlanStatus.FREE);
         for (SubscriptionOfCompany freeSub : expiredFreeSubs) {
             freeSub.setCurrentJobCount(0);
             freeSub.setStartDate(now);

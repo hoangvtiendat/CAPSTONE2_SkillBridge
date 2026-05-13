@@ -75,12 +75,11 @@ public interface SubscriptionOfCompanyRepository extends JpaRepository<Subscript
     );
 
     /** Tìm các gói cước hết hạn theo chính xác trạng thái và tên gói */
-    List<SubscriptionOfCompany> findAllByEndDateBeforeAndStatusAndName(
+    List<SubscriptionOfCompany> findAllByEndDateBeforeAndStatusAndSubscriptionPlanName(
             LocalDateTime date,
             SubscriptionOfCompanyStatus status,
             SubscriptionPlanStatus name
     );
 
     /** Tìm kiếm gói đăng ký cụ thể dựa trên ID công ty và tên loại gói */
-    Optional<SubscriptionOfCompany> findByCompanyIdAndName(String companyId, SubscriptionPlanStatus name);
-}
+    Optional<SubscriptionOfCompany> findByCompanyIdAndSubscriptionPlanName(String companyId, SubscriptionPlanStatus name);}

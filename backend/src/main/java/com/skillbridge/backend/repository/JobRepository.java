@@ -109,7 +109,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
             j.id, j.title, j.position,j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
-            c.name,c.imageUrl,soc.name, cat.name
+            c.name, c.imageUrl, soc.subscriptionPlan.name, cat.name 
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -137,7 +137,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT DISTINCT new com.skillbridge.backend.dto.response.JobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location,
             j.salaryMin, j.salaryMax, j.createdAt,
-            c.name, c.imageUrl, soc.name, cat.name
+            c.name, c.imageUrl, soc.subscriptionPlan.name, cat.name
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -161,7 +161,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
-            soc.name, cat.name, j.status, j.moderationStatus
+            soc.subscriptionPlan.name, cat.name, j.status, j.moderationStatus 
         )
         FROM Job j
         LEFT JOIN j.company c
@@ -183,7 +183,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
         SELECT new com.skillbridge.backend.dto.response.AdminJobFeedItemResponse(
             j.id, j.title, j.position, j.description, j.location, j.salaryMin,
             j.salaryMax, j.createdAt, c.name, c.imageUrl,
-            soc.name, cat.name, j.status, j.moderationStatus
+            soc.subscriptionPlan.name, cat.name, j.status, j.moderationStatus 
         )
         FROM Job j
         LEFT JOIN j.company c

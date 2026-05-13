@@ -341,6 +341,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
         return true;
     });
     const premiumPkg = systemPackages.length > 0 ? systemPackages[0] : null;
+    const currentSubscriptionName = currentSubscription?.name || currentSubscription?.subscriptionPlan?.name || 'Đang hoạt động';
 
     const hasPartialUsage = !!currentSubscription && (
         (Number(currentSubscription.currentJobCount || 0) > 0 && Number(currentSubscription.currentJobCount || 0) < Number(currentSubscription.jobLimit || 0)) ||
@@ -462,7 +463,7 @@ const handleDeleteSubscription = async (id, options = {}) => {
                             </span>
                         </div>
                         <div className="sub-title-row">
-                            <h2 className="sub-name">{currentSubscription?.name || "Đang xác thực"}</h2>
+                            <h2 className="sub-name">{currentSubscriptionName}</h2>
 
                         </div>
                     </div>
