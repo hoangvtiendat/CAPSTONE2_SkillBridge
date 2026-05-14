@@ -157,19 +157,19 @@ const RecruiterDashboardPage = () => {
         totalApplications: 0,
         qualifiedCandidates: 0,
         totalInterviews: 0,
-        successfulHires: 0,
-        timeToHire: 0,
         timeToFill: 0
     };
 
-    const funnelData = statsData?.conversionFunnel || [];
+    const funnelData = (statsData?.conversionFunnel || []).filter((step) => {
+        const stage = String(step?.stage || '').toLowerCase();
+        return !stage.includes('hire') && !stage.includes('hired');
+    });
     const trendData = statsData?.trends || [];
 
     const statsCards = [
         { label: 'Số lượt xem', value: summary.totalViews.toLocaleString(), sub: 'Tổng lượt tương tác', trend: 'neutral' },
         { label: 'Ứng viên', value: summary.totalApplications.toLocaleString(), sub: `${summary.qualifiedCandidates} đạt yêu cầu`, trend: 'positive' },
         { label: 'Phỏng vấn', value: summary.totalInterviews.toLocaleString(), sub: 'Quy trình hoạt động', trend: 'neutral' },
-        { label: 'Tuyển dụng', value: summary.successfulHires.toLocaleString(), sub: 'Thành công', trend: 'positive' },
     ];
 
     return (
@@ -271,20 +271,10 @@ const RecruiterDashboardPage = () => {
             {/* Efficiency Metrics */}
             <div className="efficiency-grid">
                 <div className="efficiency-card">
-                    <span className="eff-label">Time-to-Hire trung bình</span>
-                    <span className="eff-value">{summary.timeToHire.toFixed(1)} ngày</span>
-                </div>
-                <div className="efficiency-card">
                     <span className="eff-label">Time-to-Fill trung bình</span>
                     <span className="eff-value">{summary.timeToFill.toFixed(1)} ngày</span>
                 </div>
             </div>
-
-            <div className="dashboard-sections-header" style={{ marginTop: '40px' }}>
-                <h3>Phễu ứng viên gần đây</h3>
-                <a href="/recruiter/candidates" className="btn-view-all">Quản lý ứng viên</a>
-            </div>
-            {/* The existing candidate pipeline columns could be kept or simplified */}
         </div>
     );
 };
