@@ -242,108 +242,61 @@ public interface JobRepository extends JpaRepository<Job, String> {
             @Param("companyId") String companyId
     );
     @Query(value = """
-    SELECT j.* FROM jobs j
-    LEFT JOIN categories c 
-        ON j.category_id = c.id 
-        AND c.is_deleted = false
+SELECT j.* FROM jobs j
+LEFT JOIN categories c
+ON j.category_id = c.id
+AND c.is_deleted = false
+WHERE j.is_deleted = false
+  AND j.status = :status
 
-    WHERE j.is_deleted = false
-      AND j.status = :status
+  -- LOCATION
+  AND (
+        :loc1 IS NULL
+        OR :loc1 = ''
+        OR j.location LIKE CONCAT('%', :loc1, '%')
+  )
 
-      -- LOCATION
-      AND (
-            :loc1 IS NULL 
-            OR :loc1 = '' 
-            OR j.location LIKE CONCAT('%', :loc1, '%')
-      )
+  AND (
+        :loc2 IS NULL
+        OR :loc2 = ''
+        OR j.location LIKE CONCAT('%', :loc2, '%')
+  )
 
-      AND (
-            :loc2 IS NULL 
-            OR :loc2 = '' 
-            OR j.location LIKE CONCAT('%', :loc2, '%')
-      )
+  AND (
+        :loc3 IS NULL
+        OR :loc3 = ''
+        OR j.location LIKE CONCAT('%', :loc3, '%')
+  )
 
-      AND (
-            :loc3 IS NULL 
-            OR :loc3 = '' 
-            OR j.location LIKE CONCAT('%', :loc3, '%')
-      )
+  -- CATEGORY
+  AND (
+        :categoryName IS NULL
+        OR :categoryName = ''
+        OR c.name LIKE CONCAT('%', :categoryName, '%')
+  )
 
-      -- CATEGORY
-      AND (
-            :categoryName IS NULL 
-            OR :categoryName = '' 
-            OR c.name LIKE CONCAT('%', :categoryName, '%')
-      )
-
-      -- SALARY
-      AND (
-            :salaryExpect IS NULL
-            OR (
-                j.salary_min <= :salaryExpect
-                AND j.salary_max >= :salaryExpect
-            )
-      )
-
-      -- POSITION
-      AND (
-
-            (
-                (:jobPositionVi IS NULL OR :jobPositionVi = '')
-                AND
-                (:jobPositionEn IS NULL OR :jobPositionEn = '')
-            )
-
-            OR
-
-            -- CHECK TITLE
-            REPLACE(REPLACE(REPLACE(LOWER(j.title), ' ', ''), '-', ''), '_', '')
-                LIKE CONCAT('%', :jobPositionVi, '%')
-
-            OR
-
-            REPLACE(REPLACE(REPLACE(LOWER(j.title), ' ', ''), '-', ''), '_', '')
-                LIKE CONCAT('%', :jobPositionEn, '%')
-
-            OR
-
-            -- CHECK POSITION
-            REPLACE(REPLACE(REPLACE(LOWER(j.position), ' ', ''), '-', ''), '_', '')
-                LIKE CONCAT('%', :jobPositionVi, '%')
-
-            OR
-
-            REPLACE(REPLACE(REPLACE(LOWER(j.position), ' ', ''), '-', ''), '_', '')
-                LIKE CONCAT('%', :jobPositionEn, '%')
-
-            OR
-
-            -- CHECK OTHER_POSITION
-            REPLACE(REPLACE(REPLACE(LOWER(j.other_position), ' ', ''), '-', ''), '_', '')
-                LIKE CONCAT('%', :jobPositionVi, '%')
-
-            OR
-
-            REPLACE(REPLACE(REPLACE(LOWER(j.other_position), ' ', ''), '-', ''), '_', '')
-                LIKE CONCAT('%', :jobPositionEn, '%')
-      )
+  -- SALARY
+  AND (
+        :salaryExpect IS NULL
+        OR (
+            j.salary_min <= :salaryExpect
+            AND j.salary_max >= :salaryExpect
+        )
+  )
 
 """, nativeQuery = true)
     List<Job> findJobsByRequirements(
-
             @Param("status") String status,
+@Param("loc1") String loc1,
+@Param("loc2") String loc2,
+@Param("loc3") String loc3,
 
-            @Param("loc1") String loc1,
-            @Param("loc2") String loc2,
-            @Param("loc3") String loc3,
+@Param("categoryName") String categoryName,
 
-            @Param("categoryName") String categoryName,
+@Param("salaryExpect") Long salaryExpect
 
-            @Param("salaryExpect") Long salaryExpect,
-
-            @Param("jobPositionVi") String jobPositionVi,
-            @Param("jobPositionEn") String jobPositionEn
     );
+
     @Query(value = """
             SELECT JSON_OBJECT(
                 'title', j.title,

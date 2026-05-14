@@ -579,88 +579,111 @@ public class AIJobService {
             String aiResponse = aiService.Ai_OF_SKILLBRIDGE(requestForAI, 3);
             System.out.println("aiResponse: " + aiResponse);
 
-            JsonNode rootNode = objectMapper.readTree(aiResponse);
-            // LẤY CATEGORY
-            String categoryName = (rootNode.has("category_name") && !rootNode.get("category_name").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("category_name").asText()))
-                    ? rootNode.get("category_name").asText() : null;
+            JsonNode rootNode;
 
-            // LẤY CITY
-            String cityRaw = (rootNode.has("city") && !rootNode.get("city").asText().isEmpty() && !"null".equalsIgnoreCase(rootNode.get("city").asText()))
-                    ? rootNode.get("city").asText() : null;
+            try {
+                rootNode = objectMapper.readTree(aiResponse);
+            } catch (Exception e) {
+                System.out.println("AI trả JSON lỗi -> fallback rỗng");
+                rootNode = objectMapper.createObjectNode();
+            }
+
+            String categoryName = null;
+
+            if (rootNode.has("category_name")
+                    && !rootNode.get("category_name").isNull()) {
+
+                String temp = rootNode.get("category_name").asText().trim();
+
+                if (!temp.isEmpty() && !"null".equalsIgnoreCase(temp)) {
+                    categoryName = temp;
+                }
+
+            }
+
+            String cityRaw = null;
+
+            if (rootNode.has("city")
+                    && !rootNode.get("city").isNull()) {
+
+                String temp = rootNode.get("city").asText().trim();
+
+                if (!temp.isEmpty() && !"null".equalsIgnoreCase(temp)) {
+                    cityRaw = temp;
+                }
+
+            }
+
 
             String loc1 = null;
             String loc2 = null;
             String loc3 = null;
 
             if (cityRaw != null) {
+
+
                 String[] parts = cityRaw.split(",");
+
                 if (parts.length > 0 && !parts[0].trim().isEmpty()) {
                     loc1 = parts[0].trim();
                 }
+
                 if (parts.length > 1 && !parts[1].trim().isEmpty()) {
                     loc2 = parts[1].trim();
                 }
+
                 if (parts.length > 2 && !parts[2].trim().isEmpty()) {
                     loc3 = parts[2].trim();
                 }
+
             }
 
-            // LẤY MỨC LƯƠNG
-            Long salaryExpect = rootNode.path("salary_expect").isNull() ? null : rootNode.path("salary_expect").asLong();
 
-            // LẤY VECTOR QUERY
-            String getQueryEmbedding = rootNode.path("search_query").asText("");
-            // Lấy position
-            String positionVi = null;
-            String positionEn = null;
+            Long salaryExpect = null;
 
-            JsonNode jobPositionNode = rootNode.get("job_position");
+            if (rootNode.has("salary_expect")
+                    && !rootNode.get("salary_expect").isNull()) {
 
-            if (jobPositionNode != null && !jobPositionNode.isNull()) {
-
-                JsonNode viNode = jobPositionNode.get("vi");
-                JsonNode enNode = jobPositionNode.get("en");
-
-                if (viNode != null
-                        && !viNode.isNull()
-                        && !viNode.asText().trim().isEmpty()
-                        && !"null".equalsIgnoreCase(viNode.asText())) {
-
-                    positionVi = viNode.asText()
-                            .toLowerCase()
-                            .replace(" ", "")
-                            .replace("-", "")
-                            .replace("_", "");
+                try {
+                    salaryExpect = rootNode.get("salary_expect").asLong();
+                } catch (Exception e) {
+                    System.out.println("salary_expect không hợp lệ");
                 }
 
-                if (enNode != null
-                        && !enNode.isNull()
-                        && !enNode.asText().trim().isEmpty()
-                        && !"null".equalsIgnoreCase(enNode.asText())) {
-
-                    positionEn = enNode.asText()
-                            .toLowerCase()
-                            .replace(" ", "")
-                            .replace("-", "")
-                            .replace("_", "");
-                }
             }
-            // Lấy search_query
-            String StringOfsearch_query = rootNode.path("search_query").asText("");
 
+            String getQueryEmbedding = null;
 
+            if (rootNode.has("search_query")
+                    && !rootNode.get("search_query").isNull()) {
 
-            // GỌI REPOSITORY
+                String temp = rootNode.get("search_query").asText().trim();
+
+                if (!temp.isEmpty() && !"null".equalsIgnoreCase(temp)) {
+                    getQueryEmbedding = temp;
+                }
+
+            }
+
+            if (getQueryEmbedding == null || getQueryEmbedding.isBlank()) {
+
+                System.out.println("AI không trả search_query -> fallback user request");
+
+                getQueryEmbedding = requestOfCandidate;
+
+            }
+
+            String StringOfsearch_query = getQueryEmbedding;
+
             List<Job> jobsFromDb = jobRepository.findJobsByRequirements(
                     JobStatus.OPEN.name(),
                     loc1,
                     loc2,
                     loc3,
                     categoryName,
-                    salaryExpect,
-                    positionVi,
-                    positionEn
+                    salaryExpect
             );
+
             System.out.println("jobsFromDb: " + jobsFromDb);
             System.out.println("--> ẢI 1 (SQL): " + jobsFromDb.size() + " jobs lọt qua.");
 
@@ -720,8 +743,9 @@ public class AIJobService {
                             ... (Nội dung Prompt của bạn) ...
                             [Danh sách các JD ]: %s
                             [YÊU CẦU TỪ NGƯỜI DÙNG]: "%s"
+                            [CV của Người dùng]: "%s"
                             """;
-                    String promptAIChekRequest = String.format(promptTemplate2, JDListString, StringOfsearch_query);
+                    String promptAIChekRequest = String.format(promptTemplate2, JDListString ,StringOfsearch_query, jsonStringCandidate);
                     System.out.println("promptAICpromptAIChekRequesthekRequest" + promptAIChekRequest);
                     String aiFinalReSpond = aiService.Ai_OF_SKILLBRIDGE(promptAIChekRequest, 4);
                     System.out.println("aiFinalReSpond: " + aiFinalReSpond);
