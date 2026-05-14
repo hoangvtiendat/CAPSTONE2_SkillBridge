@@ -413,10 +413,9 @@ public class AiService {
                       }
 """;
     private static final String SEMANTIC_SEARCH = """
-              ````text id="skillbridge_full_prompt_v2"
                                     VAI TRÒ:
                                     Bạn là công cụ trích xuất dữ liệu ứng viên (Data Extractor) cho hệ thống SkillBridge.
-                       \s
+                       
                                     Nhiệm vụ:
                                     - đọc [YÊU CẦU TỪ NGƯỜI DÙNG]
                                     - đọc [DỮ LIỆU CV HIỆN TẠI]
@@ -514,53 +513,103 @@ public class AiService {
                                     Nếu không đủ dữ liệu:
                                     - textOfAI = null
                        \s
-                                    ==================================================
-                                    QUY TẮC city
-                                    ==================================================
-                       \s
-                                    Ưu tiên:
-                                    1. lấy từ yêu cầu người dùng
-                                    2. nếu không có -> lấy location trong CV
-                       \s
-                                    ==================================================
-                                    QUAN TRỌNG — GIỮ NGUYÊN CƠ CHẾ LOCATION
-                                    ==================================================
-                       \s
-                                    KHÔNG được:
-                                    - rewrite địa điểm
-                                    - normalize location
-                                    - đổi tên location
-                                    - mapping location khác
-                                    - tự convert location
-                       \s
-                                    Nếu user ghi:
-                                    - quanh tôi
-                                    - gần tôi
-                                    - near me
-                                    - nearby
-                       \s
-                                    => PHẢI GIỮ NGUYÊN CƠ CHẾ LOCATION CỦA HỆ THỐNG
-                       \s
-                                    KHÔNG được:
-                                    - đổi thành null
-                                    - đổi thành GPS
-                                    - đổi thành tỉnh khác
-                       \s
-                                    ==================================================
-                                    VALIDATION LOCATION
-                                    ==================================================
-                       \s
-                                    Nếu dữ liệu location chứa:
-                                    - email
-                                    - text rác
-                                    - ký tự vô nghĩa
-                       \s
-                                    Ví dụ:
-                                    - abc@gmail.com
-                                    - xyz@@@
-                       \s
-                                    => city = null
-                       \s
+                         ==================================================
+                         QUY TẮC city
+                         ==================================================
+            
+                         city:
+                         - là địa điểm tìm việc
+                         - ưu tiên lấy từ yêu cầu người dùng
+                         - nếu user không đề cập location:
+                           -> được phép lấy từ CV.location
+            
+                         ==================================================
+                         QUY TẮC GIỮ NGUYÊN LOCATION
+                         ==================================================
+            
+                         Khi dùng location từ user hoặc CV:
+            
+                         KHÔNG được:
+                         - rewrite địa điểm
+                         - normalize location
+                         - mapping location khác
+                         - convert sang GPS
+                         - đổi sang tỉnh/thành khác
+                         - tự rút gọn địa điểm
+            
+                         PHẢI giữ nguyên text location gốc.
+            
+                         Ví dụ:
+            
+                         CV:
+                         "Đà Nẵng , Liên Chiễu "
+            
+                         => city:
+                         "Đà Nẵng , Liên Chiễu "
+            
+                         ==================================================
+                         QUY TẮC LOCATION USER
+                         ==================================================
+            
+                         Nếu user ghi:
+                         - quanh tôi
+                         - gần tôi
+                         - nearby
+                         - near me
+            
+                         THÌ:
+                         - giữ nguyên text đó trong city
+                         - KHÔNG đổi thành GPS
+                         - KHÔNG đổi thành null
+            
+                         Ví dụ:
+            
+                         User:
+                         "tìm việc gần tôi"
+            
+                         =>
+            
+                         ```json
+                         {
+                           "city": "gần tôi"
+                         }
+                         ==================================================
+                         VALIDATION LOCATION
+                         ==================================================
+            
+                         CHỈ set city = null khi location rõ ràng là dữ liệu rác.
+            
+                         Ví dụ dữ liệu rác:
+                         - abc@gmail.com
+                         - xyz@@@
+                         - ######
+                         - 123123123
+                         - asdasdasd
+            
+                         ==================================================
+                         QUY TẮC ƯU TIÊN
+                         ==================================================
+            
+                         1. location từ user
+                         2. location từ CV
+                         3. null nếu cả hai không hợp lệ
+            
+                         ==================================================
+                         VÍ DỤ
+                         ==================================================
+            
+                         User:
+                         "tìm việc backend"
+            
+                         CV:
+                         location = "Đà Nẵng"
+            
+                         =>
+            
+                         ```json
+                         {
+                           "city": "Đà Nẵng"
+                         }
                                     ==================================================
                                     QUY TẮC salary_expect
                                     ==================================================
@@ -943,7 +992,7 @@ public class AiService {
                                     - search_query luôn phải có giá trị
                                     - không được làm mất ngữ cảnh ngôi thứ nhất của user
                                     ````
-                       \s
+                       
             """;
     private static final String AI_EVALUATOR =
     """
