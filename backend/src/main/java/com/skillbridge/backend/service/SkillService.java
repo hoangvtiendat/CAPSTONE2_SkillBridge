@@ -78,7 +78,7 @@ public class SkillService {
         Skill updatedSkill = skillRepository.save(skill);
 
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
-        systemLog.warn(currentUser, "Admin cập nhật kỹ năng ID: " + id + " thành " + updatedSkill.getName());
+        systemLog.warn(currentUser, "Admin cập nhật kỹ năng ID: " + request.getName() + " thành " + updatedSkill.getName());
 
         messagingTemplate.convertAndSend("/topic/skills", updatedSkill);
 
