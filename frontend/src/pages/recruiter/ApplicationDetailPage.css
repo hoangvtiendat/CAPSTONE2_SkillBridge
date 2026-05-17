@@ -7,25 +7,25 @@
     color: var(--lg-text);
 }
 
-.apd-profile{
+.apd-profile {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
-.apd-contact{
+.apd-contact {
     display: flex;
     align-items: center;
 }
+
 .apd-wrapper::before {
     content: "";
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background:
-            linear-gradient(135deg, rgba(255,255,255,0.22), transparent 30%),
-            linear-gradient(315deg, rgba(255,255,255,0.12), transparent 35%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 30%),
+    linear-gradient(315deg, rgba(255, 255, 255, 0.12), transparent 35%);
     opacity: 0.8;
 
 }
@@ -35,7 +35,7 @@
    BACK BUTTON
 ================================ */
 .apd-btn-back {
-    background: rgba(255,255,255,0.45);
+    background: rgba(255, 255, 255, 0.45);
     border: 1px solid var(--lg-border);
     backdrop-filter: var(--lg-blur);
     border-radius: 999px;
@@ -48,7 +48,7 @@
 .apd-btn-back:hover {
     transform: translateY(-2px);
     color: var(--lg-accent-strong);
-    border-color: rgba(59,130,246,0.3);
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
 
@@ -58,7 +58,7 @@
 .apd-card,
 .apd-sidebar-card {
     position: relative;
-    background: linear-gradient(135deg, rgba(255,255,255,0.65), rgba(255,255,255,0.35));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.35));
     border: 1px solid var(--lg-border);
     border-radius: var(--lg-radius-xl);
     backdrop-filter: var(--lg-blur);
@@ -68,7 +68,8 @@
     margin: 20px;
     padding: 20px;
 }
-.apd-btn-back{
+
+.apd-btn-back {
     margin-left: 20px;
 }
 
@@ -82,7 +83,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.05));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.05));
     pointer-events: none;
     z-index: 0;
 }
@@ -99,10 +100,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-
+    margin-bottom: 10px;
     background: linear-gradient(135deg, #dbeafe, #f0f9ff);
     border: 4px solid white;
-    box-shadow: 0 10px 25px rgba(59,130,246,0.2);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
 }
 
 .apd-name {
@@ -154,7 +155,7 @@
 
 .apd-btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 16px 30px rgba(59,130,246,0.35);
+    box-shadow: 0 16px 30px rgba(59, 130, 246, 0.35);
 }
 
 .apd-btn-danger {
@@ -171,7 +172,7 @@
 }
 
 .apd-btn-danger:hover {
-    background: rgba(239,68,68,0.2);
+    background: rgba(239, 68, 68, 0.2);
 }
 
 
@@ -198,7 +199,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    border-left: 2px solid rgba(59,130,246,0.2);
+    border-left: 2px solid rgba(59, 130, 246, 0.2);
     padding-left: 14px;
 }
 
@@ -246,7 +247,7 @@
 }
 
 .apd-border {
-    border-bottom: 1px solid rgba(255,255,255,0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
     padding-bottom: 12px;
 }
 
@@ -263,8 +264,8 @@
 }
 
 .apd-skill {
-    background: rgba(34,197,94,0.12);
-    border: 1px solid rgba(34,197,94,0.2);
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.2);
     color: var(--lg-success-text);
     padding: 6px 10px;
     border-radius: 10px;
@@ -290,14 +291,14 @@
 .apd-exp-item {
     padding: 14px;
     border-radius: 14px;
-    background: rgba(255,255,255,0.45);
-    border: 1px solid rgba(255,255,255,0.5);
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.25s ease;
 }
 
 .apd-exp-item:hover {
     transform: translateY(-2px);
-    border-color: rgba(59,130,246,0.3);
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
 .apd-exp-head {
@@ -309,7 +310,7 @@
 .apd-exp-date {
     font-size: 11px;
     font-weight: 700;
-    background: rgba(255,255,255,0.6);
+    background: rgba(255, 255, 255, 0.6);
     padding: 4px 8px;
     border-radius: 8px;
 }
@@ -379,17 +380,24 @@
     color: var(--lg-text-muted);
     font-style: italic;
 }
+
 .apd-card {
     animation: fadeIn 0.4s ease;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .apd-skill:hover {
-    box-shadow: 0 4px 12px rgba(34,197,94,0.3);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
 /* ================================
@@ -423,7 +431,7 @@
     padding: 32px;
     width: 100%;
     max-width: 480px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.2) inset;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
     transform: translateY(20px) scale(0.95);
     animation: modalSlideUp 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -510,14 +518,311 @@
 
 /* Animations */
 @keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes modalSlideUp {
     from {
         opacity: 0;
         transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ================================
+   WRAPPER & GLOBAL ACCENTS
+================================ */
+.apd-wrapper {
+    position: relative;
+    font-family: 'Inter', sans-serif;
+    color: var(--lg-text, #1e293b);
+}
+
+.apd-profile {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.apd-wrapper::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 30%),
+    linear-gradient(315deg, rgba(255, 255, 255, 0.12), transparent 35%);
+    opacity: 0.8;
+    z-index: -1;
+}
+
+
+/* ================================
+   BACK BUTTON
+================================ */
+.apd-btn-back {
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid var(--lg-border, #e2e8f0);
+    backdrop-filter: blur(12px);
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-left: 20px;
+}
+
+.apd-btn-back:hover {
+    transform: translateX(-4px);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.4);
+    background: #ffffff;
+}
+
+
+/* ================================
+   CARD BASE (MODERNISED LIQUID GLASS)
+================================ */
+.apd-card,
+.apd-sidebar-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 24px;
+}
+
+.apd-card:hover,
+.apd-sidebar-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+}
+
+
+/* ================================
+   PROFILE & SIDEBAR ELEMENTS
+================================ */
+.apd-avatar {
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
+    border: 3px solid #ffffff;
+}
+
+/* ĐÃ SỬA BUG PADDING 300px TẠI ĐÂY */
+.apd-actions {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0; /* Đưa về 0 để khít chuẩn sidebar */
+}
+
+.apd-btn-primary {
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.apd-btn-primary:hover {
+    background: #1d4ed8 !important;
+    transform: translateY(-1px);
+}
+
+.apd-btn-danger {
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.apd-btn-danger:hover {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    border-color: #fca5a5 !important;
+}
+
+
+/* ================================
+   AI MATCHING SCORE & PILLS
+================================ */
+.text-green-600 {
+    color: #16a34a;
+}
+
+.bg-green-50 {
+    background-color: #f0fdf4;
+}
+
+.border-green-200 {
+    border-color: #bbf7d0;
+}
+
+.text-orange-500 {
+    color: #ea580c;
+}
+
+.bg-orange-50 {
+    background-color: #fff7ed;
+}
+
+.border-orange-200 {
+    border-color: #ffedd5;
+}
+
+.text-red-500 {
+    color: #dc2626;
+}
+
+.bg-red-50 {
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+    font-weight: 800;
+    color: #2177d3;
+    font-size: 22px;
+}
+
+.border-red-200 {
+    border-color: #ffeeec;
+}
+
+.text-xxs {
+    font-size: 11px;
+}
+
+
+/* ================================
+   TIMELINE (EDUCATION & BAGGAGES)
+================================ */
+.apd-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.apd-timeline-item {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.apd-timeline-item::after {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    background: #3b82f6;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+
+/* ================================
+   EXPERIENCE & FORMATTING
+================================ */
+.apd-exp-item {
+    padding: 16px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    transition: all 0.25s ease;
+}
+
+.apd-exp-item:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    transform: scale(1.005);
+}
+
+/* Đảm bảo kinh nghiệm hiển thị đúng hàng, đúng đoạn bẻ từ database */
+.whitespace-pre-line {
+    white-space: pre-line;
+}
+
+
+/* ================================
+   CV VIEWER PREVIEW
+================================ */
+.apd-cv-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.apd-download {
+    text-decoration: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.apd-download:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+
+/* ================================
+   OVERLAY MODAL RESPOND SYSTEM
+================================ */
+.apd-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.apd-modal-content {
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.2);
+}
+
+.apd-modal-textarea:focus {
+    background: #ffffff;
+    border-color: #3b82f6 !important; /* Đổi về màu xanh chủ đạo thay vì đỏ rực rỡ */
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+}
+
+.apd-btn-cancel {
+    height: 40px;
+    padding: 0 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+
+/* ================================
+   ANIMATIONS & TAILWIND REPLACEMENTS
+================================ */
+.animate-in {
+    animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
     }
     to {
         opacity: 1;
