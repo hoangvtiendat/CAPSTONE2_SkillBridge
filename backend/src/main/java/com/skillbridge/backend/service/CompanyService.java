@@ -126,9 +126,9 @@ public class CompanyService {
 
     /** ADMIN phản hồi yêu cầu từ công ty */
     @Transactional
-    public String responseCompanies(String id,String status){
+    public String responseCompanies(String id, String status) {
         CustomUserDetails currentUser = securityUtils.getCurrentUser();
-        try{
+        try {
             Company company = companyRepository.findById(id)
                     .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 
@@ -143,17 +143,16 @@ public class CompanyService {
             User user = userRepository.findById(userCreator.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
             String subject = "[SkillBridge] Thông báo kết quả duyệt hồ sơ công ty";
             String content = "";
+            String returnMessage = ""; // Biến lưu thông báo phản hồi động
 
-            if("ACTIVE".equals(status)){
+            if ("ACTIVE".equals(status)) {
                 company.setStatus(CompanyStatus.ACTIVE);
                 user.setRole("RECRUITER");
 
                 SubscriptionPlan freePlan = subscriptionPlanRepository.findByName(SubscriptionPlanStatus.FREE)
                         .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION));
 
-
                 SubscriptionOfCompany freeSubscription = SubscriptionOfCompany.builder()
-
                         .company(company)
                         .jobLimit(freePlan.getJobLimit())
                         .candidateViewLimit(freePlan.getCandidateViewLimit())
@@ -171,46 +170,61 @@ public class CompanyService {
 
                 subscriptionOfCompanyRepository.save(freeSubscription);
 
+                // CHÚ Ý: Di chuyển dòng save company vào trong khối IF duyệt thành công
+                companyRepository.save(company);
+
                 content = String.format(
-                    "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
-                            "<h2 style='color: #28a745;'>Chúc mừng! Công ty của bạn đã được duyệt</h2>" +
-                            "<p>Chào <b>%s</b>,</p>" +
-                            "<p>Yêu cầu đăng ký công ty <b>%s</b> của bạn đã được quản trị viên hệ thống phê duyệt.</p>" +
-                            "<p>Hiện tại bạn đã có quyền <b>Quản trị viên (Recruiter)</b> để đăng tin tuyển dụng và quản lý nhân sự cho công ty.</p>" +
-                            "<p>Vui lòng đăng nhập để trải nghiệm các tính năng dành cho doanh nghiệp.</p>" +
-                            "<br><p>Trân trọng,<br>SkillBridge Team</p></div>",
+                        "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
+                                "<h2 style='color: #28a745;'>Chúc mừng! Công ty của bạn đã được duyệt</h2>" +
+                                "<p>Chào <b>%s</b>,</p>" +
+                                "<p>Yêu cầu đăng ký công ty <b>%s</b> của bạn đã được quản trị viên hệ thống phê duyệt.</p>" +
+                                "<p>Hiện tại bạn đã có quyền <b>Quản trị viên (Recruiter)</b> để đăng tin tuyển dụng và quản lý nhân sự cho công ty.</p>" +
+                                "<p>Vui lòng đăng nhập để trải nghiệm các tính năng dành cho doanh nghiệp.</p>" +
+                                "<br><p>Trân trọng,<br>SkillBridge Team</p></div>",
                         user.getName(), company.getName()
                 );
                 systemLogService.info(currentUser, "Admin phê duyệt công ty: " + company.getName());
-            }else{
-                company.setStatus(CompanyStatus.BAN);
+                returnMessage = "Duyệt yêu cầu tạo công ty thành công";
+
+            } else {
+                // Khối ELSE: Xử lý khi từ chối hồ sơ (Xóa khỏi DB)
                 content = String.format(
-                    "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
-                            "    <h2 style='color: #dc3545;'>Thông báo từ chối hồ sơ</h2>" +
-                            "    <p>Chào <b>%s</b>,</p>" +
-                            "    <p>Rất tiếc, hồ sơ đăng ký công ty <b>%s</b> của bạn đã bị từ chối/khóa bởi quản trị viên hệ thống.</p>" +
-                            "    <p><b>Lưu ý:</b> Nếu bạn cho rằng đây là một sự nhầm lẫn, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi để được giải quyết.</p>" +
-                            "    <br><p>Trân trọng,<br><b>SkillBridge Team</b></p>" +
-                            "</div>",
+                        "<div style='font-family: Arial; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>" +
+                                "    <h2 style='color: #dc3545;'>Thông báo từ chối hồ sơ</h2>" +
+                                "    <p>Chào <b>%s</b>,</p>" +
+                                "    <p>Rất tiếc, hồ sơ đăng ký công ty <b>%s</b> của bạn đã bị từ chối bởi quản trị viên hệ thống.</p>" +
+                                "    <p><b>Lưu ý:</b> Nếu bạn cho rằng đây là một sự nhầm lẫn, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi để được giải quyết.</p>" +
+                                "    <br><p>Trân trọng,<br><b>SkillBridge Team</b></p>" +
+                                "</div>",
                         user.getName(), company.getName()
                 );
-                systemLogService.warn(currentUser, "Admin từ chối/ban công ty: " + company.getName());
+                systemLogService.warn(currentUser, "Admin từ chối và xóa công ty: " + company.getName());
+
+                // 1. Xóa các bản ghi liên quan ở bảng CompanyMember trước để tránh lỗi ràng buộc khóa ngoại (FK)
+                companyMemberRepository.deleteAll(members);
+
+                // 2. Xóa hẳn công ty khỏi database
+                companyRepository.delete(company);
+
+                returnMessage = "Từ chối và xóa yêu cầu tạo công ty thành công";
             }
-            companyRepository.save(company);
+
+            // Gửi thông báo và cập nhật qua socket (vẫn hoạt động bình thường vì ta dùng biến tạm 'user' và 'id')
             notificationService.createNotification(
                     user,
                     null,
                     subject,
                     content,
                     "COMPANY_MODERATION",
-                    "/companies/" + id,
+                    "",
                     true
             );
 
             messagingTemplate.convertAndSend("/topic/companies", id);
 
-            return "Duyệt yêu cầu tạo công ty thành công";
-        }catch(Exception e){
+            return returnMessage;
+
+        } catch (Exception e) {
             System.out.println("Loi" + e);
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
