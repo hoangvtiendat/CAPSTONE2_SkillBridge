@@ -415,7 +415,7 @@ const JobDetailPage = () => {
 
     const handleNumberInputKeyDown = (e) => {
         if (e.ctrlKey || e.metaKey) return;
-        
+
         // Chỉ chặn nếu người dùng gõ một ký tự in được (length === 1) nhưng không phải là số
         if (e.key.length === 1) {
             if (!/^\d$/.test(e.key)) {
@@ -449,8 +449,31 @@ const JobDetailPage = () => {
                                 <div className="job-meta-tags">
                                     <span><MapPin size={16} /> {job?.location}</span>
                                     <span className="salary-tag"><Banknote size={16} /> {formatSalary(job.salaryMin)} - {formatSalary(job.salaryMax)}</span>
+                                    {/* THÊM HIỂN THỊ CATEGORY TẠI ĐÂY */}
+                                    {job?.categoryName && (
+                                        <span><Tag size={16} /> {job.categoryName}</span>
+                                    )}
                                     <span><Clock size={16} /> {job?.createdAt && formatDistanceToNow(new Date(job.createdAt), { locale: vi, addSuffix: true })}</span>
                                 </div>
+
+                                {/* THÊM HIỂN THỊ DANH SÁCH SKILLS TẠI ĐÂY */}
+                                {job?.skills && job.skills.length > 0 && (
+                                    <div className="job-skills-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+                                        {job.skills.map((skill, index) => (
+                                            <span key={index} className="job-skill-badge" style={{
+                                                backgroundColor: '#f1f5f9',
+                                                color: '#475569',
+                                                fontSize: '13px',
+                                                padding: '4px 10px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #e2e8f0',
+                                                fontWeight: '500'
+                                            }}>
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="candidate-action-panel side-panel">
@@ -506,11 +529,11 @@ const JobDetailPage = () => {
 
                     <div className="apply-method-tabs">
                         <button className={`tab-item ${applyMethod === 'upload' ? 'active' : ''}`}
-                            onClick={() => {
-                                setApplyMethod('upload');
-                                setCvData({ name: '', description: '', address: '', categoryId: '', category: '', degrees: [], skills: [], experience: [] });
-                                setCvFile(null);
-                            }}>
+                                onClick={() => {
+                                    setApplyMethod('upload');
+                                    setCvData({ name: '', description: '', address: '', categoryId: '', category: '', degrees: [], skills: [], experience: [] });
+                                    setCvFile(null);
+                                }}>
                             <Upload size={16} /> Tải CV mới
                         </button>
                         <button className={`tab-item ${applyMethod === 'existing' ? 'active' : ''}`} onClick={handleUseExistingCV}>
@@ -595,7 +618,7 @@ const JobDetailPage = () => {
                         {/* Bằng cấp */}
                         <div className="confirm-section">
                             <div className="flex justify-between items-center mb-3">
-                                <h3 className="confirm-section-title">Bằng cấp & Học vấn</h3>
+                                <h3 className="confirm-section-title">Bằng cấp & Học văn</h3>
                                 <button className="btn-add-mini" onClick={() => addDegree('DEGREE')}><Plus size={14} /> Thêm</button>
                             </div>
                             {cvData.degrees.filter(d => d.type === 'DEGREE').map((item, idx) => (

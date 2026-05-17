@@ -91,6 +91,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin: 15px 0;
 }
 
 .search-bar:focus-within {
