@@ -361,10 +361,11 @@ public class CandidateService {
             YÊU CẦU NGHIÊM NGẶT:
             1. Chỉ trả về JSON, không giải thích.
             2. Ánh xạ 'categoryId' từ danh sách ngành phù hợp nhất.
-            3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%%, hãy chọn cái gần nhất.
+            3. Với mỗi kỹ năng trong CV, hãy tìm 'skillId' tương ứng trong danh sách kỹ năng của ngành đó. Nếu không khớp 100%, hãy chọn cái gần nhất.
             4. Nếu mảng 'experience' hoặc 'skills' quá dài, hãy tóm tắt lại để đảm bảo JSON không bị cắt ngang.
             5. Kiểm tra kỹ các dấu đóng ngoặc } và ] trước khi kết thúc.
             6. Nếu endDate là hiện tại thì trả ngày hiện tại theo định dạng yyyy-MM-dd.
+            7. Trong trường hợp CV chỉ có tháng và năm và không có ngày thì mặc định lấy ngày đầu tiên của tháng đó.
             
             Cấu trúc JSON yêu cầu:
             {

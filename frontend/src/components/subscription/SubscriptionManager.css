@@ -364,10 +364,6 @@
     gap: 14px;
 }
 
-.form-group {
-    margin: 0;
-}
-
 .form-group > label:not(.checkbox-wrapper) {
     display: block;
     margin-bottom: 8px;
